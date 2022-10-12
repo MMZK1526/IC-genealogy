@@ -1,7 +1,6 @@
 package mmzk.genealogy.tables
 
 import org.jetbrains.exposed.dao.IntIdTable
-import org.jetbrains.exposed.sql.*
 
 object IndividualTable : IntIdTable() {
     val name = varchar("name", 255)
@@ -9,5 +8,5 @@ object IndividualTable : IntIdTable() {
     val dateOfDeath = date("date_of_death").nullable()
     val placeOfBirth = varchar("place_of_birth", 255).nullable()
     val placeOfDeath = varchar("place_of_death", 255).nullable()
-    val gender = char("gender")
+    val gender = char("gender") // 'M' or 'F'
 }

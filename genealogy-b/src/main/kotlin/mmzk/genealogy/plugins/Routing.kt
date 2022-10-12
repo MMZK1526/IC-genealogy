@@ -21,11 +21,7 @@ fun Application.configureRouting() {
             val allPeople = transaction {
                 addLogger(StdOutSqlLogger)
                 SchemaUtils.create(IndividualTable)
-                buildList {
-                    for (person in Individual.all()) {
-                        add(IndividualDTO(person))
-                    }
-                }
+                Individual.all().map(::IndividualDTO)
             }
             call.respond(allPeople)
         }
