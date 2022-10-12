@@ -1,5 +1,6 @@
 package mmzk.genealogy.plugins
 
+import io.ktor.http.*
 import io.ktor.server.routing.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
@@ -24,6 +25,20 @@ fun Application.configureRouting() {
                 Individual.all().map(::IndividualDTO)
             }
             call.respond(allPeople)
+        }
+
+        get("/search") {
+            call.request.queryParameters["q"]?.let { name ->
+                val peopleWithMatchedName = transaction {
+                    addLogger(StdOutSqlLogger)
+                    SchemaUtils.create(IndividualTable)
+                    Individual.find { IndividualTable.name.regexp("(?i).*$name.*") }.map(::IndividualDTO)
+                }
+                call.respond(peopleWithMatchedName)
+            } ?: call.respond(
+                HttpStatusCode.BadRequest,
+                "error" to "Missing query parameter \"q\"!"
+            )
         }
     }
 }
