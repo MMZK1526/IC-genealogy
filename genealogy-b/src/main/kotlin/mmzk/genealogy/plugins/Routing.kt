@@ -4,7 +4,8 @@ import io.ktor.server.routing.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import mmzk.genealogy.DatabaseFactory
-import mmzk.genealogy.Individual
+import mmzk.genealogy.dao.Individual
+import mmzk.genealogy.tables.IndividualTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -18,13 +19,13 @@ fun Application.configureRouting() {
         get("/everything") {
             val allPeople = transaction {
                 addLogger(StdOutSqlLogger)
-                SchemaUtils.create(Individual)
+                SchemaUtils.create(IndividualTable)
                 buildString {
-                    for (person in Individual.selectAll()) {
+                    for (person in Individual.all()) {
                         appendLine(
-                            "${person[Individual.name]} (id: ${person[Individual.id]}), " +
-                                    "born ${person[Individual.dateOfBirth]} ${person[Individual.placeOfBirth]}, " +
-                                    "died ${person[Individual.dateOfDeath]} ${person[Individual.placeOfDeath]}"
+                            "${person.name} (id: ${person.id}), " +
+                                    "born ${person.dateOfBirth} ${person.placeOfBirth}, " +
+                                    "died ${person.dateOfDeath} ${person.placeOfDeath}"
                         )
                     }
                 }
