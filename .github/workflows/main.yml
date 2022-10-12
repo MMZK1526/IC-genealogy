@@ -27,4 +27,6 @@ jobs:
 
       # Build
       - name: Build
-        run: gradle clean build
+        run: |
+          cd genealogy-b
+          gradle clean build
