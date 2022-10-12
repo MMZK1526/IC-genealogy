@@ -30,3 +30,5 @@ jobs:
         run: |
           cd genealogy-b
           gradle clean build
+        env:
+          DATABASE_URL: postgres://fohtvtfzbhfori:364d0e8934f7b92bbf5c2ffc383c0b97914224248ea68192064df5dc76b425e9@ec2-52-51-3-22.eu-west-1.compute.amazonaws.com:5432/df2gehn965tlr2
