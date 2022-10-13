@@ -4,6 +4,7 @@ import org.jetbrains.exposed.dao.IntIdTable
 
 object IndividualTable : IntIdTable() {
     val name = varchar("name", 255)
+    val personalName = varchar("personal_name", 255)
     val dateOfBirth = date("date_of_birth").nullable()
     val dateOfDeath = date("date_of_death").nullable()
     val placeOfBirth = varchar("place_of_birth", 255).nullable()

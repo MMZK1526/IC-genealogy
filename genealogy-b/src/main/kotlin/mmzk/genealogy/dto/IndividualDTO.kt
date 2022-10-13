@@ -7,6 +7,7 @@ import mmzk.genealogy.dao.Individual
 data class IndividualDTO(
     var id: Int,
     var name: String,
+    var personalName: String,
     var dateOfBirth: String?,
     var dateOfDeath: String?,
     var placeOfBirth: String?,
@@ -16,6 +17,7 @@ data class IndividualDTO(
     constructor(x: Individual): this(
         x.id.value,
         x.name,
+        x.personalName,
         x.dateOfBirth?.toLocalDate().toString(),
         x.dateOfDeath?.toLocalDate().toString(),
         x.placeOfBirth,

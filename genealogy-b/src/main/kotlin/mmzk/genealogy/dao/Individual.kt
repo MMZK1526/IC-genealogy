@@ -9,6 +9,7 @@ class Individual(id: EntityID<Int>): IntEntity(id) {
     companion object : IntEntityClass<Individual>(IndividualTable)
 
     var name by IndividualTable.name
+    var personalName by IndividualTable.personalName
     var dateOfBirth by IndividualTable.dateOfBirth
     var dateOfDeath by IndividualTable.dateOfDeath
     var placeOfBirth by IndividualTable.placeOfBirth

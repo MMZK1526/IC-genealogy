@@ -1,12 +1,9 @@
 package mmzk.genealogy
 
-import com.typesafe.config.ConfigFactory
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import io.ktor.server.config.HoconApplicationConfig
 import org.jetbrains.exposed.sql.Database
 import java.net.URI
-import java.net.URL
 
 object DatabaseFactory {
 
@@ -30,5 +27,4 @@ object DatabaseFactory {
         config.validate()
         return HikariDataSource(config)
     }
-
 }
