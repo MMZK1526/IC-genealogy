@@ -1,12 +1,12 @@
 package mmzk.genealogy.dao
 
 import mmzk.genealogy.tables.IndividualTable
+import mmzk.genealogy.tables.StringEntity
+import mmzk.genealogy.tables.StringEntityClass
 import org.jetbrains.exposed.dao.EntityID
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
 
-class Individual(id: EntityID<Int>): IntEntity(id) {
-    companion object : IntEntityClass<Individual>(IndividualTable)
+class Individual(id: EntityID<String>): StringEntity(id) {
+    companion object : StringEntityClass<Individual>(IndividualTable)
 
     var name by IndividualTable.name
     var personalName by IndividualTable.personalName

@@ -1,8 +1,6 @@
 package mmzk.genealogy.tables
 
-import org.jetbrains.exposed.dao.IntIdTable
-
-object IndividualTable : IntIdTable() {
+object IndividualTable : StringIdTable() {
     val name = varchar("name", 255)
     val personalName = varchar("personal_name", 255)
     val dateOfBirth = date("date_of_birth").nullable()

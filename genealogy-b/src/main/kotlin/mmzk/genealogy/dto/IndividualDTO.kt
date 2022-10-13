@@ -5,7 +5,7 @@ import mmzk.genealogy.dao.Individual
 
 @Serializable
 data class IndividualDTO(
-    var id: Int,
+    var id: String,
     var name: String,
     var personalName: String,
     var dateOfBirth: String?,
