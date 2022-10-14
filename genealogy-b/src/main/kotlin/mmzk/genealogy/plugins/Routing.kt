@@ -68,5 +68,17 @@ fun Application.configureRouting() {
                 mapOf("error" to "Missing query parameter \"q\"!")
             )
         }
+
+        get("/test") {
+            call.request.queryParameters["id"]?.let { id ->
+                val typeFilter = call.request.queryParameters["types"]?.split(",")
+                val result = WikiData.searchId(id, typeFilter)
+                call.respond(result)
+
+            } ?: call.respond(
+                HttpStatusCode.BadRequest,
+                "error" to "Missing query parameter \"id\"!"
+            )
+        }
     }
 }
