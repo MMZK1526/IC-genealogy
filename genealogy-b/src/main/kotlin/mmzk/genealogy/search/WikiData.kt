@@ -4,6 +4,7 @@ import mmzk.genealogy.dao.Individual
 import mmzk.genealogy.dto.IndividualDTO
 import mmzk.genealogy.dto.RelationsResponse
 import mmzk.genealogy.dto.RelationshipDTO
+import org.jetbrains.exposed.sql.transactions.transaction
 
 class WikiData {
     companion object {
@@ -66,7 +67,7 @@ class WikiData {
             }
 
             val (people, relations) = visit(frontier = mutableListOf(0 to id))
-            val target = IndividualDTO(Individual.findById(id)!!)
+            val target = IndividualDTO(transaction { Individual.findById(id) }!!)
 
             return RelationsResponse(target, people.toList(), relations.toList())
         }
