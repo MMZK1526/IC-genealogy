@@ -17,5 +17,17 @@ class Fields {
                 else -> null to split[1]
             }
         }
+
+        val gender = "P21"
+        val givenName = "P735"
+        val familyName = "P734"
+        val dateOfBirth = "P569"
+        val placeOfBirth = "P19"
+        val dateOfDeath = "P570"
+        val placeOfDeath = "P20"
+        val country = "P17"
+        val spouse = "P26"
+        val father = "P22"
+        val mother = "P23"
     }
 }

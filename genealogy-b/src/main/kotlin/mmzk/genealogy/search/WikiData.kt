@@ -8,6 +8,8 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 class WikiData {
     companion object {
+        fun mkID(id: String): String = "WD-" + id
+
         fun searchId(id: String, typeFilter: List<String>?, depth: Int = 1): RelationsResponse {
             fun visit(
                 visited: MutableList<String> = mutableListOf(),
