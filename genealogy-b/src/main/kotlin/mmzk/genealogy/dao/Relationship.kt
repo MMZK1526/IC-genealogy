@@ -1,8 +1,6 @@
 package mmzk.genealogy.dao
 
-import mmzk.genealogy.tables.IndividualTable
-import mmzk.genealogy.tables.RelationshipTable
-import mmzk.genealogy.tables.RelationshipTypeTable
+import mmzk.genealogy.tables.*
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -15,8 +13,8 @@ class Relationship(id: EntityID<Int>): IntEntity(id) {
     var type by RelationshipType referencedOn RelationshipTable.type
 }
 
-class RelationshipType(id: EntityID<Int>): IntEntity(id) {
-    companion object : IntEntityClass<RelationshipType>(RelationshipTypeTable)
+class RelationshipType(id: EntityID<String>): StringEntity(id) {
+    companion object : StringEntityClass<RelationshipType>(RelationshipTypeTable)
 
     var name by RelationshipTypeTable.name
 }
