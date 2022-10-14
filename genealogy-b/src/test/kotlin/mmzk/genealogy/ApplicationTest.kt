@@ -1,18 +1,13 @@
 package mmzk.genealogy
 
-import io.ktor.server.routing.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.plugins.cors.routing.*
-import io.ktor.server.application.*
-import io.ktor.server.response.*
-import io.ktor.server.request.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import kotlin.test.*
 import io.ktor.server.testing.*
 import mmzk.genealogy.plugins.configureRouting
+import mmzk.genealogy.tables.Fields
+import mmzk.genealogy.tables.IDType
 
 class ApplicationTest {
     @Test
@@ -24,5 +19,26 @@ class ApplicationTest {
             assertEquals(HttpStatusCode.OK, status)
             assertEquals("Hello World!", bodyAsText())
         }
+    }
+
+    @Test
+    fun `can parse WikiData ID`() {
+        val wdID = "WD-Q12"
+        val parsed = Fields.parseID(wdID)
+        assertEquals(IDType.WIKI_DATA to "Q12", parsed)
+    }
+
+    @Test
+    fun `can parse Unknown ID`() {
+        val wdID = "STH-Q12"
+        val parsed = Fields.parseID(wdID)
+        assertEquals(null to "Q12", parsed)
+    }
+
+    @Test
+    fun `cannot parse invalid ID`() {
+        val wdID = "_Q12"
+        val parsed = Fields.parseID(wdID)
+        assertEquals(null, parsed)
     }
 }
