@@ -13,8 +13,9 @@ data class IndividualDTO(
     var placeOfBirth: String?,
     var placeOfDeath: String?,
     var gender: Char,
+    var isCached: Boolean
 ) {
-    constructor(x: Individual): this(
+    constructor(x: Individual) : this(
         x.id.value,
         x.name,
         x.personalName,
@@ -22,6 +23,7 @@ data class IndividualDTO(
         x.dateOfDeath?.toLocalDate().toString(),
         x.placeOfBirth,
         x.placeOfDeath,
-        x.gender
+        x.gender,
+        x.isCached
     )
 }

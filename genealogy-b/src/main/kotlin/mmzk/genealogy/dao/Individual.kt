@@ -15,4 +15,5 @@ class Individual(id: EntityID<String>): StringEntity(id) {
     var placeOfBirth by IndividualTable.placeOfBirth
     var placeOfDeath by IndividualTable.placeOfDeath
     var gender by IndividualTable.gender
+    var isCached by IndividualTable.isCached
 }
