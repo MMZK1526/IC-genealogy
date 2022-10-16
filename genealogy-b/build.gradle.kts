@@ -40,6 +40,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed:0.17.14")
     implementation("org.postgresql:postgresql:42.5.0")
     implementation("com.zaxxer:HikariCP:2.7.8")
+    implementation("com.google.code.gson:gson:2.9.1")
 
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")

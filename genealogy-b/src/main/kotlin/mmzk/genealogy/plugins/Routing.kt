@@ -29,6 +29,10 @@ fun Application.configureRouting() {
             call.respond(allPeople)
         }
 
+        get("/test") {
+            WikiData.query("Q9685")?.let { call.respond(it) }
+        }
+
         get("/search") {
             call.request.queryParameters["q"]?.let { name ->
                 val peopleWithMatchedName = transaction {
