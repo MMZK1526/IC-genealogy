@@ -1,5 +1,8 @@
 package mmzk.genealogy.search
 
+//import io.ktor.client.request.*
+//import io.ktor.client.statement.*
+import io.ktor.http.*
 import mmzk.genealogy.dao.Individual
 import mmzk.genealogy.dto.IndividualDTO
 import mmzk.genealogy.dto.RelationsResponse
@@ -8,7 +11,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 class WikiData {
     companion object {
-        fun mkID(id: String): String = "WD-" + id
+        fun mkID(id: String): String = "WD-$id"
 
         fun searchId(id: String, typeFilter: List<String>?, depth: Int = 1): RelationsResponse {
             fun visit(
