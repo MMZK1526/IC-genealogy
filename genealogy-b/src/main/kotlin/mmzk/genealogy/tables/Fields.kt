@@ -29,5 +29,12 @@ class Fields {
         val spouse = "P26"
         val father = "P22"
         val mother = "P23"
+        val female = "Q6581072"
+        val male = "Q6581097"
+
+        val wikiBaseEntityId = "wikibase-entityid"
+        val string = "string"
+        val time = "time"
+
     }
 }
