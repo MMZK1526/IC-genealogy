@@ -26,14 +26,6 @@ class WikiData {
 
         fun mkID(id: String): String = "WD-$id"
 
-
-        //
-//        fun Any.peel2Array(key: String) = try {
-//            (this as Map<*, *>)[key] as List<Map<*, *>>
-//        } catch (e: Exception) {
-//            println(e)
-//            null
-//        }
         suspend fun query(id: String): IndividualDTO? {
             fun Any.peel2Map(key: String) = if (this is Map<*, *> && this[key] is Map<*, *>) {
                 this[key] as Map<*, *>
@@ -57,7 +49,7 @@ class WikiData {
                     Fields.wikiBaseEntityId -> async {
                         dataValue.peel2Map("value")?.get("id")?.toString()?.let {
                             val url =
-                                "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=$id&props=labels&languages=en&formatversion=2&format=json"
+                                "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=$it&props=labels&languages=en&formatversion=2&format=json"
                             val response = client.get(url)
                             Gson().fromJson<Map<String, *>>(
                                 response.bodyAsText(),
