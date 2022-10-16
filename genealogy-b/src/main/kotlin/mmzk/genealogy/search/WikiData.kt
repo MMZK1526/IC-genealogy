@@ -361,6 +361,7 @@ object WikiData {
                     if (ordinal != 0) {
                         hasOrdinal = true
                     }
+                    else -> async { null }
                 }
             }
 
