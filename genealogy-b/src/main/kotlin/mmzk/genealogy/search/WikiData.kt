@@ -1,8 +1,12 @@
 package mmzk.genealogy.search
 
-//import io.ktor.client.request.*
-//import io.ktor.client.statement.*
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.logging.*
+import io.ktor.client.request.*
 import io.ktor.http.*
+import io.netty.handler.logging.LogLevel
+import kotlinx.coroutines.runBlocking
 import mmzk.genealogy.dao.Individual
 import mmzk.genealogy.dto.IndividualDTO
 import mmzk.genealogy.dto.RelationsResponse
@@ -12,6 +16,18 @@ import org.jetbrains.exposed.sql.transactions.transaction
 class WikiData {
     companion object {
         fun mkID(id: String): String = "WD-$id"
+
+        fun query(id: String) {
+            runBlocking {
+                val client = HttpClient(CIO) {
+                    install(Logging) {
+                        level = LogLevel.INFO
+                    }
+                }
+
+                client.get("https://ktor.io/docs/welcome.html")
+            }
+        }
 
         fun searchId(id: String, typeFilter: List<String>?, depth: Int = 1): RelationsResponse {
             fun visit(
