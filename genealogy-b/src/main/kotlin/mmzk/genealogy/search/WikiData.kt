@@ -4,8 +4,6 @@ import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
-import io.ktor.http.*
-import io.netty.handler.logging.LogLevel
 import kotlinx.coroutines.runBlocking
 import mmzk.genealogy.dao.Individual
 import mmzk.genealogy.dto.IndividualDTO
