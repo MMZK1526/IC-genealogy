@@ -54,7 +54,7 @@ class WikiData {
                             Gson().fromJson<Map<String, *>>(
                                 response.bodyAsText(),
                                 Map::class.java
-                            ).peel2Map("entities")?.peel2Map(id)?.peel2Map("labels")?.peel2Map("en")?.get("value")
+                            ).peel2Map("entities")?.peel2Map(it)?.peel2Map("labels")?.peel2Map("en")?.get("value")
                                 .toString()
                         }
 
