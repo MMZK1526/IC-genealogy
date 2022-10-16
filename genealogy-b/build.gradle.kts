@@ -33,11 +33,10 @@ dependencies {
     implementation("io.ktor:ktor-server-cors-jvm:$ktor_version")
     implementation("io.ktor:ktor-server-netty-jvm:$ktor_version")
     implementation("ch.qos.logback:logback-classic:$logback_version")
+    implementation("org.jetbrains.exposed:exposed:0.17.14")
+    implementation("org.postgresql:postgresql:42.5.0")
+    implementation("com.zaxxer:HikariCP:5.0.1")
+
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
-// https://mvnrepository.com/artifact/org.jetbrains.exposed/exposed
-    implementation("org.jetbrains.exposed:exposed:0.17.14")
-    implementation("org.postgresql:postgresql:42.2.2")
-    implementation("com.zaxxer:HikariCP:2.7.8")
-
 }
