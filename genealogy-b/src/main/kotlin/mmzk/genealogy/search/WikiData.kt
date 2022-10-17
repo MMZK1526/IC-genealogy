@@ -397,6 +397,22 @@ object WikiData {
                     null
                 }
             }
+
+        suspend fun JsonElement.readPropertyReferenceAsync(): Deferred<Pair<String?, JsonElement?>> =
+            readPropertyReferenceAsync { str, _ -> coroutineScope { async { str } } }
+
+        suspend fun JsonElement.readPropertyAsync(callback: suspend (String?, JsonElement?) -> Deferred<String?>): Deferred<String?> =
+            coroutineScope {
+                val (str, _) = readPropertyReferenceAsync(callback).await()
+                async { str }
+            }
+
+        suspend fun JsonElement.readPropertyAsync() = readPropertyAsync { str, _ -> coroutineScope { async { str } } }
+
+        suspend fun countryOfPlaceAsync(place: String?, claims: JsonElement?): Deferred<String?> = coroutineScope {
+            val country =
+                claims?.asObjectOrNull?.get(Fields.country)?.asArrayOrNull?.get(0)?.readPropertyAsync()?.await()
+            async { place?.let { p -> country?.let { "$p, $it" } ?: p } }
         }
 
         return coroutineScope {
