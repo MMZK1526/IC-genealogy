@@ -13,7 +13,7 @@ class App extends React.Component {
 class NameForm extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {value: '', json: ''};
+        this.state = {value: '', disambiguationJson: '', relationsJson: ''};
         this.requests = new Requests();
 
         this.handleChange = this.handleChange.bind(this);
@@ -35,8 +35,14 @@ class NameForm extends React.Component {
                     <input type="submit" value="Submit"/>
                 </form>
                 <div>
-                    {this.state.json
-                        ? this.state.json
+                    {this.state.disambiguationJson
+                        ? this.state.disambiguationJson
+                        : 'No data fetched'
+                    }
+                </div>
+                <div>
+                    {this.state.relationsJson
+                        ? this.state.relationsJson
                         : 'No data fetched'
                     }
                 </div>
@@ -48,7 +54,12 @@ class NameForm extends React.Component {
         event.preventDefault();
         await this.requests.search(this.state.value).then(r => {
             this.setState({
-                json: JSON.stringify(r)
+                disambiguationJson: JSON.stringify(r)
+            });
+        });
+        await this.requests.relations().then(r => {
+            this.setState({
+                relationsJson: JSON.stringify(r)
             });
         });
     }
