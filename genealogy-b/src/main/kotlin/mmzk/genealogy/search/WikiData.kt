@@ -28,80 +28,89 @@ object WikiData {
     // Translate a WikiData ID into a Database ID
     fun makeID(id: String): String = "WD-$id"
 
-    suspend fun query(id: String): IndividualDTO? {
-        // Get the values and claims corresponding to the list of WikiData IDs
-        suspend fun getValuesAndClaims(ids: List<String>) = coroutineScope {
-            if (ids.isEmpty()) {
-                mapOf()
-            } else {
-                val idsStr = ids.reduce { id1, id2 -> "$id1|$id2" }
-                val url =
-                    "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=$idsStr&props=labels%7Cclaims&languages=en&formatversion=2&format=json"
-                val response = client.get(url)
+    // Get the values and claims corresponding to the list of WikiData IDs
+    suspend fun getValuesAndClaims(ids: List<String>) = coroutineScope {
+        if (ids.isEmpty()) {
+            mapOf()
+        } else {
+            val idsStr = ids.reduce { id1, id2 -> "$id1|$id2" }
+            val url =
+                "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=$idsStr&props=labels%7Cclaims&languages=en&formatversion=2&format=json"
+            val response = client.get(url)
 
-                ids.map {
-                    it to run {
-                        val entity = JsonParser.parseString(response.bodyAsText()).asObjectOrNull?.get("entities")
-                            ?.asObjectOrNull?.get(it)?.asObjectOrNull
-                        entity
-                            ?.get("labels")
-                            ?.asObjectOrNull?.get("en")
-                            ?.asObjectOrNull?.get("value")
-                            ?.asStringOrNull to entity?.get("claims")
-                    }
-                }.associate { it }
-            }
+            ids.map {
+                it to run {
+                    val entity = JsonParser.parseString(response.bodyAsText()).asObjectOrNull?.get("entities")
+                        ?.asObjectOrNull?.get(it)?.asObjectOrNull
+                    entity
+                        ?.get("labels")
+                        ?.asObjectOrNull?.get("en")
+                        ?.asObjectOrNull?.get("value")
+                        ?.asStringOrNull to entity?.get("claims")
+                }
+            }.associate { it }
         }
+    }
 
-        suspend fun JsonElement.readPropertiesReferences(queries: Map<String, (suspend (String?, JsonElement?) -> String?)?>) =
+    suspend fun query(id: String): IndividualDTO? {
+        suspend fun JsonElement.readProperties(queries: Map<String, (suspend (List<Triple<String?, JsonElement?, JsonElement?>>) -> String?)?>) =
             coroutineScope {
-                val knownResults = mutableMapOf<String, Pair<String?, JsonElement?>>();
-                val deferrals = mutableMapOf<String, Deferred<Pair<String?, JsonElement?>>>();
-                val indirections = mutableMapOf<String, Pair<String?, JsonElement?>>();
+                val knownResults = mutableMapOf<String, MutableList<Triple<String?, JsonElement?, JsonElement?>>>()
+                val deferrals = mutableMapOf<String, Deferred<String?>>()
+                val indirections = mutableMapOf<String, MutableList<Pair<String?, JsonElement?>>>()
+                val results = mutableMapOf<String, String?>()
                 for (query in queries) {
-                    val data =
-                        this@readPropertiesReferences.asObjectOrNull?.get(query.key)?.asArrayOrNull?.get(0)?.asObjectOrNull
-                    val references = data?.get("references")
-                    val dataValue = data?.get("mainsnak")?.asObjectOrNull?.get("datavalue")?.asObjectOrNull
-                    when (dataValue?.get("type")?.asStringOrNull) {
-                        Fields.string -> deferrals[query.key] = async {
-                            val propertyValue = dataValue["value"].asStringOrNull
-                            (query.value?.invoke(propertyValue, null) ?: propertyValue) to references
+                    knownResults[query.key] = mutableListOf()
+                    indirections[query.key] = mutableListOf()
+                    this@readProperties.asObjectOrNull?.get(query.key)?.asArrayOrNull?.map { data ->
+                        val references = data.asObjectOrNull?.get("references")
+                        val dataValue =
+                            data.asObjectOrNull?.get("mainsnak")?.asObjectOrNull?.get("datavalue")?.asObjectOrNull
+
+                        when (dataValue?.get("type")?.asStringOrNull) {
+                            Fields.string -> knownResults[query.key]?.add(
+                                Triple(dataValue["value"].asStringOrNull, null, references)
+                            )
+                            Fields.time -> knownResults[query.key]?.add(
+                                Triple(
+                                    dataValue.asObjectOrNull?.get("value")?.asObjectOrNull?.get("time")?.asStringOrNull,
+                                    null,
+                                    references
+                                )
+                            )
+                            Fields.wikiBaseEntityId -> indirections[query.key]?.add(
+                                dataValue.asObjectOrNull?.get("value")?.asObjectOrNull?.get("id")?.asStringOrNull to references
+                            )
+                            else -> null
                         }
-                        Fields.time -> deferrals[query.key] = async {
-                            val timestamp =
-                                dataValue.asObjectOrNull?.get("value")?.asObjectOrNull?.get("time")?.asStringOrNull
-                            (query.value?.invoke(timestamp, null)
-                                ?: timestamp) to references
-                        }
-                        Fields.wikiBaseEntityId -> indirections[query.key] =
-                            dataValue.asObjectOrNull?.get("value")?.asObjectOrNull?.get("id")?.asStringOrNull to references
                     }
                 }
 
-                val valueClaims = getValuesAndClaims(indirections.values.mapNotNull { it.first }.toList())
+                val valueClaims = getValuesAndClaims(indirections.values.flatten().mapNotNull { it.first }.toList())
                 for (i in indirections) {
+                    knownResults[i.key]?.addAll(i.value.map { (id, references) ->
+                        Triple(
+                            valueClaims[id]?.first,
+                            valueClaims[id]?.second,
+                            references
+                        )
+                    })
                     deferrals[i.key] = async {
-                        i.value.first?.let {
-                            queries[i.key]?.invoke(
-                                valueClaims[it]?.first,
-                                valueClaims[it]?.second
-                            ) ?: valueClaims[it]?.first
-                        } to indirections[i.key]?.second
+                        knownResults[i.key]?.let { queries[i.key]?.invoke(it) ?: it.firstOrNull()?.first }
                     }
                 }
 
                 for (d in deferrals) {
-                    knownResults[d.key] = d.value.await()
+                    results[d.key] = d.value.await()
                 }
 
-                knownResults
+                results
             }
 
-        suspend fun countryOfPlace(place: String?, claims: JsonElement?): String? = coroutineScope {
-            val country =
-                claims?.asObjectOrNull?.readPropertiesReferences(mapOf(Fields.country to null))?.values?.first()?.first
-            place?.let { p -> country?.let { "$p, $it" } ?: p }
+        suspend fun countryOfPlace(pcrs: List<Triple<String?, JsonElement?, JsonElement?>>): String? = coroutineScope {
+            val pcr = pcrs.firstOrNull()
+            val country = pcr?.second?.asObjectOrNull?.readProperties(mapOf(Fields.country to null))?.values?.first()
+            pcr?.first?.let { p -> country?.let { "$p, $it" } ?: p }
         }
 
         return coroutineScope {
@@ -124,7 +133,7 @@ object WikiData {
                         Fields.placeOfBirth to ::countryOfPlace,
                         Fields.placeOfDeath to ::countryOfPlace
                     )
-                val queryResults = claims?.readPropertiesReferences(queries)
+                val queryResults = claims?.readProperties(queries)
 //                val placeOfBirthAsync = async {
 //                    claims?.asObjectOrNull?.get(Fields.placeOfBirth)?.asArrayOrNull?.get(0)
 //                        ?.readProperty(::countryOfPlace)
@@ -144,10 +153,10 @@ object WikiData {
                         id,
                         it,
                         personalName,
-                        queryResults?.get(Fields.dateOfBirth)?.first,
-                        queryResults?.get(Fields.dateOfDeath)?.first,
-                        queryResults?.get(Fields.placeOfBirth)?.first,
-                        queryResults?.get(Fields.placeOfDeath)?.first,
+                        queryResults?.get(Fields.dateOfBirth),
+                        queryResults?.get(Fields.dateOfDeath),
+                        queryResults?.get(Fields.placeOfBirth),
+                        queryResults?.get(Fields.placeOfDeath),
                         gender,
                         false
                     )
