@@ -222,6 +222,28 @@ object WikiData {
         }
     }
 
+    // Get the values corresponding to the list of WikiData IDs.
+    suspend fun getValues(ids: List<String>) = coroutineScope {
+        val url = ids.joinToString(separator = "|").let {
+            "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=$it&props=labels&languages=en&formatversion=2&format=json"
+        }
+        val response = client.get(url)
+
+        ids.map {
+            it to run {
+                val entity =
+                    JsonParser.parseString(response.bodyAsText()).asObjectOrNull?.get("entities")
+                        ?.asObjectOrNull?.get(it)?.asObjectOrNull
+                entity
+                    ?.get("labels")
+                    ?.asObjectOrNull?.get("en")
+                    ?.asObjectOrNull?.get("value")
+                    ?.asStringOrNull
+
+            }
+        }.associate { it }
+    }
+
     // Get the values and claims corresponding to the list of WikiData IDs
     private suspend fun getValuesAndClaims(ids: List<String>) = coroutineScope {
         if (ids.isEmpty()) {
@@ -403,7 +425,7 @@ object WikiData {
                         Triple(
                             valueClaims[id]?.first,
                             valueClaims[id]?.second,
-                            references
+                            qualifiers
                         )
                     })
                     deferrals[i.key] = async {
@@ -418,10 +440,59 @@ object WikiData {
                 results
             }
 
-        suspend fun countryOfPlace(pcrs: List<Triple<String?, JsonElement?, JsonElement?>>): String? = coroutineScope {
-            val pcr = pcrs.firstOrNull()
-            val country = pcr?.second?.asObjectOrNull?.readProperties(mapOf(Fields.country to null))?.values?.first()
-            pcr?.first?.let { p -> country?.let { "$p, $it" } ?: p }
+        suspend fun countryOfPlace(pcqs: List<Triple<String?, JsonElement?, JsonElement?>>) = coroutineScope {
+            val pcq = pcqs.firstOrNull()
+            val country = pcq?.second?.asObjectOrNull?.readProperties(listOf(Fields.country))?.values?.first()
+            pcq?.first?.let { p -> country?.let { "$p, $it" } ?: p }
+        }
+
+        suspend fun parseGivenName(pcqs: List<Triple<String?, JsonElement?, JsonElement?>>) = coroutineScope {
+            var hasOrdinal = false
+            val nameOrdList = mutableListOf<Pair<String, Int>>()
+
+            for (pcq in pcqs) {
+                val ordinal =
+                    pcq.third?.asObjectOrNull?.get(Fields.seriesOrdinal)?.asArrayOrNull?.firstOrNull()?.asObjectOrNull
+                        ?.get("datavalue")?.asObjectOrNull?.get("value")?.asStringOrNull?.toIntOrNull() ?: 0
+                if (ordinal != 0) {
+                    hasOrdinal = true
+                }
+
+                pcq.first?.let {
+                    nameOrdList.add(it to ordinal)
+                    if (ordinal != 0) {
+                        hasOrdinal = true
+                    }
+                }
+            }
+
+            if (hasOrdinal) {
+                nameOrdList.sortBy { it.second }
+                nameOrdList.filter { it.second != 0 }.map { it.first }.reduceOrNull { n1, n2 -> "$n1 $n2" }
+            } else {
+                nameOrdList.firstOrNull()?.first
+            }
+        }
+
+        suspend fun parseFamilyName(pcqs: List<Triple<String?, JsonElement?, JsonElement?>>) = coroutineScope {
+            var maidenName: String? = null
+            var familyName: String? = null
+
+            for (pcq in pcqs) {
+                if (pcq.third?.asObjectOrNull?.get(Fields.objectHasRole)?.asArrayOrNull?.firstOrNull()?.asObjectOrNull
+                        ?.get("datavalue")?.asObjectOrNull?.get("value")?.asObjectOrNull?.get("id")?.asStringOrNull == Fields.maidenName
+                ) {
+                    maidenName = pcq.first
+                } else {
+                    familyName = pcq.first
+                }
+
+                if (maidenName != null && familyName != null) {
+                    break
+                }
+            }
+
+            listOfNotNull(familyName, maidenName).joinToString(separator = "&")
         }
 
         return coroutineScope {
