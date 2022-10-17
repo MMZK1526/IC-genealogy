@@ -79,16 +79,20 @@ object WikiData {
                         "datavalue"
                     )
                         ?.asObjectOrNull?.get("value")?.asObjectOrNull?.get("id")
-                        ?.toString()) {
+                        ?.asStringOrNull) {
                         Fields.female -> 'F'
                         Fields.male -> 'M'
-                        else -> run { println(claims?.asObjectOrNull?.get(Fields.gender)); 'U' }
+                        else -> 'U'
                     }
-                val placeOfBirthAsync = async { claims?.asObjectOrNull?.get(Fields.placeOfBirth)?.asArrayOrNull?.get(0)
-                    ?.readProperty(::countryOfPlace) }
+                val placeOfBirthAsync = async {
+                    claims?.asObjectOrNull?.get(Fields.placeOfBirth)?.asArrayOrNull?.get(0)
+                        ?.readProperty(::countryOfPlace)
+                }
                 val placeOfDeathAsync =
-                    async { claims?.asObjectOrNull?.get(Fields.placeOfDeath)?.asArrayOrNull?.get(0)
-                        ?.readProperty(::countryOfPlace) }
+                    async {
+                        claims?.asObjectOrNull?.get(Fields.placeOfDeath)?.asArrayOrNull?.get(0)
+                            ?.readProperty(::countryOfPlace)
+                    }
                 val dateOfBirthAsync =
                     async { claims?.asObjectOrNull?.get(Fields.dateOfBirth)?.asArrayOrNull?.get(0)?.readProperty() }
                 val dateOfDeathAsync =
@@ -99,10 +103,10 @@ object WikiData {
                         id,
                         it,
                         personalName,
-                        dateOfBirthAsync?.await(),
-                        dateOfDeathAsync?.await(),
-                        placeOfBirthAsync?.await(),
-                        placeOfDeathAsync?.await(),
+                        dateOfBirthAsync.await(),
+                        dateOfDeathAsync.await(),
+                        placeOfBirthAsync.await(),
+                        placeOfDeathAsync.await(),
                         gender,
                         false
                     )
