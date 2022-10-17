@@ -1,16 +1,14 @@
 export class Requests {
     search(name) {
-        const url = `https://db-de-genealogie.herokuapp.com/search?q=${name}`;
+        const url = `https://intense-anchorage-84008.herokuapp.com/https://db-de-genealogie.herokuapp.com/search?q=${name}`;
         return fetch(url, {
-            mode: 'no-cors', credentials: 'omit', headers: {
-                'Content-Type': 'application/json'
-            }
+            // mode: 'no-cors'
         })
             .then(response => {
                 return response.json();
             })
-            .then(response => {
-                return response;
+            .catch((error) => {
+                console.error(`Error: ${error}`);
             });
     }
 }

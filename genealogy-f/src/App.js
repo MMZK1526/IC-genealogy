@@ -13,9 +13,8 @@ class App extends React.Component {
 class NameForm extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {value: ''};
+        this.state = {value: '', json: ''};
         this.requests = new Requests();
-        this.json = '';
 
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -36,8 +35,8 @@ class NameForm extends React.Component {
                     <input type="submit" value="Submit"/>
                 </form>
                 <div>
-                    {this.json
-                        ? this.json
+                    {this.state.json
+                        ? this.state.json
                         : 'No data fetched'
                     }
                 </div>
