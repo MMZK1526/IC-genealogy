@@ -397,17 +397,29 @@ object WikiData {
                 it.ifBlank {
                     null
                 }
-            }
 
-        suspend fun JsonElement.readProperty(callback: suspend (String?, JsonElement?) -> String? = { str, _ -> str }): String? =
-            coroutineScope {
-                val (str, _) = readPropertyReference(callback)
-                str
+                val valueClaims = getValuesAndClaims(indirections.values.mapNotNull { it.first }.toList())
+                for (i in indirections) {
+                    deferrals[i.key] = async {
+                        i.value.first?.let {
+                            queries[i.key]?.invoke(
+                                valueClaims[it]?.first,
+                                valueClaims[it]?.second
+                            ) ?: valueClaims[it]?.first
+                        } to indirections[i.key]?.second
+                    }
+                }
+
+                for (d in deferrals) {
+                    knownResults[d.key] = d.value.await()
+                }
+
+                knownResults
             }
 
         suspend fun countryOfPlace(place: String?, claims: JsonElement?): String? = coroutineScope {
             val country =
-                claims?.asObjectOrNull?.get(Fields.country)?.asArrayOrNull?.get(0)?.readProperty()
+                claims?.asObjectOrNull?.readPropertiesReferences(mapOf(Fields.country to null))?.values?.first()?.first
             place?.let { p -> country?.let { "$p, $it" } ?: p }
         }
 
