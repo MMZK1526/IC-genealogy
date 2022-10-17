@@ -15,9 +15,9 @@ class NameForm extends React.Component {
         super(props);
         this.state = {
             initialName: '',
-            disambiguationJson: [],
+            disambiguationJsons: [],
             chosenId: '',
-            relationsJson: [],
+            relationsJson: {},
         };
         this.requests = new Requests();
 
@@ -47,18 +47,18 @@ class NameForm extends React.Component {
                     <input type="submit" value="Submit"/>
                 </form>
                 <div>
-                    {this.state.disambiguationJson
-                        ? JSON.stringify(this.state.disambiguationJson)
+                    {this.state.disambiguationJsons
+                        ? this.tableFromArray('disambiguation', this.state.disambiguationJsons)
                         : 'No data fetched'
                     }
                 </div>
-                {this.state.disambiguationJson
+                {this.state.disambiguationJsons
                     ? <form onSubmit={this.handleSubmit2}>
                         <label>
                             Disambiguation:
                             <select value={this.state.chosenId} onChange={this.handleChange2}>
                                 {
-                                    this.state.disambiguationJson.map((x) =>
+                                    this.state.disambiguationJsons.map((x) =>
                                         <option value={x.id} key={x.id}>{x.name}</option>
                                     )
                                 }
@@ -70,10 +70,53 @@ class NameForm extends React.Component {
                 }
                 <div>
                     {this.state.relationsJson
-                        ? JSON.stringify(this.state.relationsJson)
+                        ? Object.entries(this.state.relationsJson).map((kv) => {
+                            let y = kv[1];
+                            if (!Array.isArray(y)) {
+                                y = [y];
+                            }
+                            console.assert(Array.isArray(y));
+                            return this.tableFromArray(kv[0], y);
+                        })
                         : 'No data fetched'
                     }
                 </div>
+            </div>
+        );
+    }
+
+    tableFromArray(title, arr) {
+        let keys = arr.length > 0 ? Object.keys(arr[0]) : [];
+        return (
+            <div>
+                <h3>
+                    {title}
+                </h3>
+                <table key={title}>
+                    <thead>
+                        <tr>
+                            {
+                                keys.map((k) => (
+                                    <th key={k}>{k}</th>
+                                ))
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {
+                        arr.map((x, ix) => (
+                            <tr key={ix}>
+                                {
+                                    Object.entries(x).map((kv) => (
+                                        <td key={kv[0]}>{kv[1]}</td>
+                                    ))
+                                }
+                            </tr>
+                        ))
+                    }
+                    </tbody>
+
+                </table>
             </div>
         );
     }
@@ -82,7 +125,7 @@ class NameForm extends React.Component {
         event.preventDefault();
         await this.requests.search(this.state.initialName).then(r => {
             this.setState({
-                disambiguationJson: r,
+                disambiguationJsons: r,
                 chosenId: r[0].id
             });
         });
