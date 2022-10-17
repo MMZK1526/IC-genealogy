@@ -11,6 +11,7 @@ import mmzk.genealogy.dto.RelationshipDTO
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import io.ktor.client.statement.*
+import io.ktor.http.userAgent
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -22,7 +23,6 @@ object WikiData {
         install(Logging) {
             level = LogLevel.INFO
         }
-        this.engine { this.threadsCount = 8 }
     }
 
     // Translate a WikiData ID into a Database ID
@@ -36,7 +36,9 @@ object WikiData {
             val idsStr = ids.reduce { id1, id2 -> "$id1|$id2" }
             val url =
                 "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=$idsStr&props=labels%7Cclaims&languages=en&formatversion=2&format=json"
-            val response = client.get(url)
+            val response = client.get(url) {
+                userAgent("WikiData Crawler for Genealogy Visualiser WebApp - Contact yc4120@ic.ac.uk")
+            }
 
             ids.map {
                 it to run {
