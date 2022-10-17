@@ -56,6 +56,7 @@ object WikiData {
         install(Logging) {
             level = LogLevel.INFO
         }
+        this.engine { this.threadsCount = 8 }
     }
 
     // Translate a WikiData ID into a Database ID.
@@ -398,21 +399,16 @@ object WikiData {
                 }
             }
 
-        suspend fun JsonElement.readPropertyReferenceAsync(): Deferred<Pair<String?, JsonElement?>> =
-            readPropertyReferenceAsync { str, _ -> coroutineScope { async { str } } }
-
-        suspend fun JsonElement.readPropertyAsync(callback: suspend (String?, JsonElement?) -> Deferred<String?>): Deferred<String?> =
+        suspend fun JsonElement.readProperty(callback: suspend (String?, JsonElement?) -> String? = { str, _ -> str }): String? =
             coroutineScope {
-                val (str, _) = readPropertyReferenceAsync(callback).await()
-                async { str }
+                val (str, _) = readPropertyReference(callback)
+                str
             }
 
-        suspend fun JsonElement.readPropertyAsync() = readPropertyAsync { str, _ -> coroutineScope { async { str } } }
-
-        suspend fun countryOfPlaceAsync(place: String?, claims: JsonElement?): Deferred<String?> = coroutineScope {
+        suspend fun countryOfPlace(place: String?, claims: JsonElement?): String? = coroutineScope {
             val country =
-                claims?.asObjectOrNull?.get(Fields.country)?.asArrayOrNull?.get(0)?.readPropertyAsync()?.await()
-            async { place?.let { p -> country?.let { "$p, $it" } ?: p } }
+                claims?.asObjectOrNull?.get(Fields.country)?.asArrayOrNull?.get(0)?.readProperty()
+            place?.let { p -> country?.let { "$p, $it" } ?: p }
         }
 
         return coroutineScope {
