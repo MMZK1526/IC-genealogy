@@ -1,0 +1,14 @@
+.FilterSidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-width: 300px;
+  justify-content: start;
+  align-items: flex-start;
+  /* margin-left: 414px;
+  padding-top: 50px;
+  padding-right: 50px;
+  padding-bottom: 50px;
+  padding-left: 50px; */
+  background-color: rgba(201, 220, 236, 1);
+}

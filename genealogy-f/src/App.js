@@ -1,11 +1,19 @@
 import './App.css';
+import {FiltersSidebar} from './components/sidebar/Sidebar.js';
+import { ProSidebarProvider } from 'react-pro-sidebar';
 import {Requests} from './requests';
 import React from "react";
+// import { FilterForm } from './components/filter/Filter';
 
 class App extends React.Component {
     render() {
         return (
-            <NameForm/>
+            <div className='App'>
+                <NameForm />
+                <ProSidebarProvider>
+                    <FiltersSidebar />
+                </ProSidebarProvider>
+            </div>
         );
     }
 }
