@@ -18,23 +18,23 @@ class Fields {
             }
         }
 
-        val gender = "P21"
-        val givenName = "P735"
-        val familyName = "P734"
-        val dateOfBirth = "P569"
-        val placeOfBirth = "P19"
-        val dateOfDeath = "P570"
-        val placeOfDeath = "P20"
-        val country = "P17"
-        val spouse = "P26"
-        val father = "P22"
-        val mother = "P23"
-        val female = "Q6581072"
-        val male = "Q6581097"
+        const val gender = "P21"
+        const val givenName = "P735"
+        const val familyName = "P734"
+        const val dateOfBirth = "P569"
+        const val placeOfBirth = "P19"
+        const val dateOfDeath = "P570"
+        const val placeOfDeath = "P20"
+        const val country = "P17"
+        const val spouse = "P26"
+        const val father = "P22"
+        const val mother = "P23"
+        const val female = "Q6581072"
+        const val male = "Q6581097"
 
-        val wikiBaseEntityId = "wikibase-entityid"
-        val string = "string"
-        val time = "time"
+        const val wikiBaseEntityId = "wikibase-entityid"
+        const val string = "string"
+        const val time = "time"
 
     }
 }
