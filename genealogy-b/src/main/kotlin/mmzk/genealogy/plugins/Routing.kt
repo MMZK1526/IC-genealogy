@@ -4,7 +4,6 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import mmzk.genealogy.DatabaseFactory
 import mmzk.genealogy.dao.Individual
 import mmzk.genealogy.dto.IndividualDTO
 import mmzk.genealogy.search.Database
@@ -14,7 +13,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 fun Application.configureRouting() {
-    DatabaseFactory.init()
+    Database.init()
     routing {
         get("/") {
             call.respondText("Hello World!")
