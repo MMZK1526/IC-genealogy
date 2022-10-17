@@ -274,6 +274,8 @@ object WikiData {
 
                 knownResults
             }
+        }
+    }
 
         suspend fun readProperties(
             claims: Map<String?, JsonObject>,
@@ -363,7 +365,6 @@ object WikiData {
                     }
                     else -> async { null }
                 }
-            }
 
             if (hasOrdinal) {
                 nameOrdList.sortBy { it.second }
@@ -526,6 +527,8 @@ object WikiData {
 
                         visited.add(it.targets.first().id)
                     }
+                } ?: run {
+                    // TODO: Look up entry on WikiData
                 }
             }
 
