@@ -1,0 +1,42 @@
+.sidebar {
+  position: absolute;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-self: flex-end;
+  align-items: flex-start;
+  height: 100vh;
+  min-width: 240px;
+  background-color: rgba(201, 220, 236, 1);
+}
+
+.sidebar .name-field{
+  margin-left: 20px;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.sidebar .date-from-field{
+  margin-left: 20px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.sidebar .date-to-field{
+  margin-left: 20px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.sidebar .apply-button{
+  display: inline-block;
+  align-self: stretch;
+  text-align: start;
+  margin: 20px;
+  font-size: large;
+  color: white;
+  background-color:mediumblue;
+  border-style:hidden;
+  padding: 5px;
+  border-radius: 5px;
+}
