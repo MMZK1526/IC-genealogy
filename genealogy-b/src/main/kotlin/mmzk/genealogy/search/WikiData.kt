@@ -11,7 +11,6 @@ import mmzk.genealogy.dto.RelationshipDTO
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import io.ktor.client.statement.*
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import mmzk.genealogy.tables.Fields
@@ -22,12 +21,13 @@ object WikiData {
         install(Logging) {
             level = LogLevel.INFO
         }
+        this.engine { this.threadsCount = 8 }
     }
 
     fun makeID(id: String): String = "WD-$id"
 
     suspend fun query(id: String): IndividualDTO? {
-        suspend fun getValueAndClaimsAsync(id: String) = coroutineScope {
+        suspend fun getValueAndClaims(id: String) = coroutineScope {
             val url =
                 "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=$id&props=labels%7Cclaims&languages=en&formatversion=2&format=json"
             val response = client.get(url)
@@ -39,48 +39,41 @@ object WikiData {
                 ?.asObjectOrNull?.get("value")
                 ?.asStringOrNull
             val claims = entity?.asObjectOrNull?.get("claims")
-            async { value to claims }
+            value to claims
         }
 
-        suspend fun JsonElement.readPropertyReferenceAsync(callback: suspend (String?, JsonElement?) -> Deferred<String?>): Deferred<Pair<String?, JsonElement?>> =
+        suspend fun JsonElement.readPropertyReference(callback: suspend (String?, JsonElement?) -> String? = { str, _ -> str }): Pair<String?, JsonElement?> =
             coroutineScope {
                 val dataValue =
-                    this@readPropertyReferenceAsync.asObjectOrNull?.get("mainsnak")?.asObjectOrNull?.get("datavalue")
+                    this@readPropertyReference.asObjectOrNull?.get("mainsnak")?.asObjectOrNull?.get("datavalue")
                 val dataValueMap = dataValue?.asObjectOrNull
-                val references = this@readPropertyReferenceAsync.asObjectOrNull?.get("references")
+                val references = this@readPropertyReference.asObjectOrNull?.get("references")
                 when (dataValueMap?.get("type")?.asStringOrNull) {
-                    Fields.string -> async { dataValueMap["value"].asStringOrNull to references }
-                    Fields.time -> async { dataValue.asObjectOrNull?.get("value")?.asObjectOrNull?.get("time")?.asStringOrNull to references }
-                    Fields.wikiBaseEntityId -> async {
-                        dataValue.asObjectOrNull?.get("value")?.asObjectOrNull?.get("id")?.asStringOrNull?.let {
-                            val (value, claims) = getValueAndClaimsAsync(it).await()
-                            callback(value, claims).await()
-                        } to references
-                    }
-                    else -> async { null to references }
+                    Fields.string -> dataValueMap["value"].asStringOrNull to references
+                    Fields.time -> dataValue.asObjectOrNull?.get("value")?.asObjectOrNull?.get("time")?.asStringOrNull to references
+                    Fields.wikiBaseEntityId -> dataValue.asObjectOrNull?.get("value")?.asObjectOrNull?.get("id")?.asStringOrNull?.let {
+                        val (value, claims) = getValueAndClaims(it)
+                        callback(value, claims)
+                    } to references
+                    else -> null to references
                 }
             }
 
-        suspend fun JsonElement.readPropertyReferenceAsync(): Deferred<Pair<String?, JsonElement?>> =
-            readPropertyReferenceAsync { str, _ -> coroutineScope { async { str } } }
-
-        suspend fun JsonElement.readPropertyAsync(callback: suspend (String?, JsonElement?) -> Deferred<String?>): Deferred<String?> =
+        suspend fun JsonElement.readProperty(callback: suspend (String?, JsonElement?) -> String? = { str, _ -> str }): String? =
             coroutineScope {
-                val (str, _) = readPropertyReferenceAsync(callback).await()
-                async { str }
+                val (str, _) = readPropertyReference(callback)
+                str
             }
 
-        suspend fun JsonElement.readPropertyAsync() = readPropertyAsync { str, _ -> coroutineScope { async { str } } }
-
-        suspend fun countryOfPlaceAsync(place: String?, claims: JsonElement?): Deferred<String?> = coroutineScope {
+        suspend fun countryOfPlace(place: String?, claims: JsonElement?): String? = coroutineScope {
             val country =
-                claims?.asObjectOrNull?.get(Fields.country)?.asArrayOrNull?.get(0)?.readPropertyAsync()?.await()
-            async { place?.let { p -> country?.let { "$p, $it" } ?: p } }
+                claims?.asObjectOrNull?.get(Fields.country)?.asArrayOrNull?.get(0)?.readProperty()
+            place?.let { p -> country?.let { "$p, $it" } ?: p }
         }
 
         return coroutineScope {
             try {
-                val (name, claims) = getValueAndClaimsAsync(id).await()
+                val (name, claims) = getValueAndClaims(id)
                 val gender =
                     when (claims?.asObjectOrNull?.get(Fields.gender)?.asArrayOrNull?.get(0)?.asObjectOrNull?.get("mainsnak")?.asObjectOrNull?.get(
                         "datavalue"
@@ -91,15 +84,15 @@ object WikiData {
                         Fields.male -> 'M'
                         else -> run { println(claims?.asObjectOrNull?.get(Fields.gender)); 'U' }
                     }
-                val placeOfBirthAsync = claims?.asObjectOrNull?.get(Fields.placeOfBirth)?.asArrayOrNull?.get(0)
-                    ?.readPropertyAsync(::countryOfPlaceAsync)
+                val placeOfBirthAsync = async { claims?.asObjectOrNull?.get(Fields.placeOfBirth)?.asArrayOrNull?.get(0)
+                    ?.readProperty(::countryOfPlace) }
                 val placeOfDeathAsync =
-                    claims?.asObjectOrNull?.get(Fields.placeOfDeath)?.asArrayOrNull?.get(0)
-                        ?.readPropertyAsync(::countryOfPlaceAsync)
+                    async { claims?.asObjectOrNull?.get(Fields.placeOfDeath)?.asArrayOrNull?.get(0)
+                        ?.readProperty(::countryOfPlace) }
                 val dateOfBirthAsync =
-                    claims?.asObjectOrNull?.get(Fields.dateOfBirth)?.asArrayOrNull?.get(0)?.readPropertyAsync()
+                    async { claims?.asObjectOrNull?.get(Fields.dateOfBirth)?.asArrayOrNull?.get(0)?.readProperty() }
                 val dateOfDeathAsync =
-                    claims?.asObjectOrNull?.get(Fields.dateOfDeath)?.asArrayOrNull?.get(0)?.readPropertyAsync()
+                    async { claims?.asObjectOrNull?.get(Fields.dateOfDeath)?.asArrayOrNull?.get(0)?.readProperty() }
                 val personalName = "TODO" // TODO
                 name?.let {
                     IndividualDTO(
