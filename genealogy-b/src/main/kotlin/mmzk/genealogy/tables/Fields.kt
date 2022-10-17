@@ -31,6 +31,9 @@ class Fields {
         const val mother = "P23"
         const val female = "Q6581072"
         const val male = "Q6581097"
+        const val seriesOrdinal = "P1545"
+        const val objectHasRole = "P3831"
+        const val maidenName = "Q1376230"
 
         const val wikiBaseEntityId = "wikibase-entityid"
         const val string = "string"
