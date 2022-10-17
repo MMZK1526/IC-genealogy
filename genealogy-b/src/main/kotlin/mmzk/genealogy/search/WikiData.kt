@@ -56,7 +56,6 @@ object WikiData {
         install(Logging) {
             level = LogLevel.INFO
         }
-        this.engine { this.threadsCount = 8 }
     }
 
     // Translate a WikiData ID into a Database ID.
