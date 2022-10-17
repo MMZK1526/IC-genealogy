@@ -400,27 +400,29 @@ object WikiData {
 
                 val valueClaims = getValuesAndClaims(indirections.values.mapNotNull { it.first }.toList())
                 for (i in indirections) {
+                    knownResults[i.key]?.addAll(i.value.map { (id, references) ->
+                        Triple(
+                            valueClaims[id]?.first,
+                            valueClaims[id]?.second,
+                            references
+                        )
+                    })
                     deferrals[i.key] = async {
-                        i.value.first?.let {
-                            queries[i.key]?.invoke(
-                                valueClaims[it]?.first,
-                                valueClaims[it]?.second
-                            ) ?: valueClaims[it]?.first
-                        } to indirections[i.key]?.second
+                        knownResults[i.key]?.let { queries[i.key]?.invoke(it) ?: it.firstOrNull()?.first }
                     }
                 }
 
                 for (d in deferrals) {
-                    knownResults[d.key] = d.value.await()
+                    results[d.key] = d.value.await()
                 }
 
-                knownResults
+                results
             }
 
-        suspend fun countryOfPlace(place: String?, claims: JsonElement?): String? = coroutineScope {
-            val country =
-                claims?.asObjectOrNull?.readPropertiesReferences(mapOf(Fields.country to null))?.values?.first()?.first
-            place?.let { p -> country?.let { "$p, $it" } ?: p }
+        suspend fun countryOfPlace(pcrs: List<Triple<String?, JsonElement?, JsonElement?>>): String? = coroutineScope {
+            val pcr = pcrs.firstOrNull()
+            val country = pcr?.second?.asObjectOrNull?.readProperties(mapOf(Fields.country to null))?.values?.first()
+            pcr?.first?.let { p -> country?.let { "$p, $it" } ?: p }
         }
 
         return coroutineScope {
