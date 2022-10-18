@@ -593,7 +593,7 @@ object WikiData {
                             false
                         )
                     }
-                }.filterNotNull()
+                }
             } catch (e: Exception) {
                 println(e)
                 listOf()
