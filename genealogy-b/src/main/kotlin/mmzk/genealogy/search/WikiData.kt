@@ -222,6 +222,7 @@ object WikiData {
 
         return coroutineScope {
             try {
+                val humanIds = mutableListOf<String>()
                 val genderMap = mutableMapOf<String, Char>()
                 val nameMap = mutableMapOf<String, String>()
                 val claimMap = mutableMapOf<String?, JsonObject>()
@@ -232,7 +233,20 @@ object WikiData {
                 for (entry in nameClaims) {
                     val id = entry.key
                     val (name, claims) = entry.value
-                    genderMap[id] = when (claims?.asObjectOrNull?.get(Fields.gender)?.asArrayOrNull?.firstOrNull()
+
+                    if (claims?.asObjectOrNull?.get(Fields.instanceOf)?.asArrayOrNull?.map
+                        {
+                            it?.asObjectOrNull?.get("mainsnak")?.asObjectOrNull?.get("datavalue")?.asObjectOrNull
+                                ?.get("value")?.asObjectOrNull?.get("id")?.asStringOrNull
+                        }
+                            ?.contains(Fields.human) == true
+                    ) {
+                        humanIds.add(id)
+                    } else {
+                        continue
+                    }
+
+                    genderMap[id] = when (claims.asObjectOrNull?.get(Fields.gender)?.asArrayOrNull?.firstOrNull()
                         ?.asObjectOrNull?.get("mainsnak")?.asObjectOrNull?.get("datavalue")
                         ?.asObjectOrNull?.get("value")?.asObjectOrNull?.get("id")?.asStringOrNull) {
                         Fields.female -> 'F'
@@ -240,7 +254,7 @@ object WikiData {
                         else -> 'U'
                     }
                     name?.let { nameMap[id] = it }
-                    claims?.asObjectOrNull?.let { claimMap[id] = it }
+                    claims.asObjectOrNull?.let { claimMap[id] = it }
                     queries[id to Fields.dateOfBirth] = null
                     queries[id to Fields.dateOfDeath] = null
                     queries[id to Fields.placeOfBirth] = ::countryOfPlace
@@ -251,7 +265,7 @@ object WikiData {
 
                 val queryResults = readProperties(claimMap, queries)
 
-                ids.map { id ->
+                humanIds.mapNotNull { id ->
                     val givenName = queryResults[id to Fields.givenName]
                     val personalName = queryResults[id to Fields.familyName]?.let { familyName ->
                         val familyNameSplit = familyName.split("&", limit = 2)
@@ -276,7 +290,7 @@ object WikiData {
                             false
                         )
                     }
-                }.filterNotNull()
+                }
             } catch (e: Exception) {
                 println(e)
                 listOf()
