@@ -1,22 +1,21 @@
 package mmzk.genealogy.search
 
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import kotlinx.coroutines.*
 import mmzk.genealogy.dao.Individual
 import mmzk.genealogy.dto.IndividualDTO
 import mmzk.genealogy.dto.RelationsResponse
 import mmzk.genealogy.dto.RelationshipDTO
-import com.google.gson.JsonElement
-import com.google.gson.JsonObject
-import com.google.gson.JsonParser
-import io.ktor.client.statement.*
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import mmzk.genealogy.tables.Fields
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.net.URLEncoder
 
 object WikiData {
     private val client = HttpClient(CIO) {
@@ -26,50 +25,71 @@ object WikiData {
     }
 
     // Translate a WikiData ID into a Database ID
-    fun makeID(id: String): String = "WD-$id"
+    private fun makeID(id: String): String = "WD-$id"
+
+    // Fetch at most four IDs that partially matches the search query
+    suspend fun searchName(name: String) = coroutineScope {
+        val urlEncodedName = withContext(Dispatchers.IO) {
+            URLEncoder.encode(name, "utf-8")
+        }
+        val url =
+            "https://www.wikidata.org/w/api.php?action=wbsearchentities&format=json&search=$urlEncodedName&language=en&limit=4&props=url&formatversion=latest"
+        val response = client.get(url)
+        JsonParser.parseString(response.bodyAsText()).asObjectOrNull?.get("search")?.asArrayOrNull?.mapNotNull {
+            it?.asObjectOrNull?.get("id")?.asStringOrNull
+        }
+    }
 
     // Get the values corresponding to the list of WikiData IDs.
-    suspend fun getValues(ids: List<String>) = coroutineScope {
-        val url = ids.joinToString(separator = "|").let {
-            "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=$it&props=labels&languages=en&formatversion=2&format=json"
-        }
-        val response = client.get(url)
-
-        ids.map {
-            it to run {
-                val entity =
-                    JsonParser.parseString(response.bodyAsText()).asObjectOrNull?.get("entities")
-                        ?.asObjectOrNull?.get(it)?.asObjectOrNull
-                entity
-                    ?.get("labels")
-                    ?.asObjectOrNull?.get("en")
-                    ?.asObjectOrNull?.get("value")
-                    ?.asStringOrNull
-
+    private suspend fun getValues(ids: List<String>) = coroutineScope {
+        if (ids.isEmpty()) {
+            mapOf()
+        } else {
+            val url = ids.joinToString(separator = "|").let {
+                "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=$it&props=labels&languages=en&formatversion=2&format=json"
             }
-        }.associate { it }
+            val response = client.get(url)
+
+            ids.map {
+                it to run {
+                    val entity =
+                        JsonParser.parseString(response.bodyAsText()).asObjectOrNull?.get("entities")
+                            ?.asObjectOrNull?.get(it)?.asObjectOrNull
+                    entity
+                        ?.get("labels")
+                        ?.asObjectOrNull?.get("en")
+                        ?.asObjectOrNull?.get("value")
+                        ?.asStringOrNull
+
+                }
+            }.associate { it }
+        }
     }
 
     // Get the values and claims corresponding to the list of WikiData IDs
-    suspend fun getValuesAndClaims(ids: List<String>) = coroutineScope {
-        val url = ids.joinToString(separator = "|").let {
-            "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=$it&props=labels|claims&languages=en&formatversion=2&format=json"
-        }
-        val response = client.get(url)
-
-        ids.map {
-            it to run {
-                val entity =
-                    JsonParser.parseString(response.bodyAsText()).asObjectOrNull?.get("entities")
-                        ?.asObjectOrNull?.get(it)?.asObjectOrNull
-                entity
-                    ?.get("labels")
-                    ?.asObjectOrNull?.get("en")
-                    ?.asObjectOrNull?.get("value")
-                    ?.asStringOrNull to entity?.get("claims")
-
+    private suspend fun getValuesAndClaims(ids: List<String>) = coroutineScope {
+        if (ids.isEmpty()) {
+            mapOf()
+        } else {
+            val url = ids.joinToString(separator = "|").let {
+                "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=$it&props=labels|claims&languages=en&formatversion=2&format=json"
             }
-        }.associate { it }
+            val response = client.get(url)
+
+            ids.map {
+                it to run {
+                    val entity =
+                        JsonParser.parseString(response.bodyAsText()).asObjectOrNull?.get("entities")
+                            ?.asObjectOrNull?.get(it)?.asObjectOrNull
+                    entity
+                        ?.get("labels")
+                        ?.asObjectOrNull?.get("en")
+                        ?.asObjectOrNull?.get("value")
+                        ?.asStringOrNull to entity?.get("claims")
+
+                }
+            }.associate { it }
+        }
     }
 
     suspend fun query(ids: List<String>): List<IndividualDTO> {
@@ -217,7 +237,13 @@ object WikiData {
                 }
             }
 
-            listOfNotNull(familyName, maidenName).joinToString(separator = "&")
+            listOfNotNull(familyName, maidenName).joinToString(separator = "&").let {
+                if (it.isBlank()) {
+                    null
+                } else {
+                    it
+                }
+            }
         }
 
         return coroutineScope {
@@ -279,7 +305,7 @@ object WikiData {
 
                     nameMap[id]?.let {
                         IndividualDTO(
-                            id,
+                            makeID(id),
                             it,
                             personalName ?: it,
                             queryResults[id to Fields.dateOfBirth],
