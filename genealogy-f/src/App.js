@@ -143,6 +143,7 @@ class NameForm extends React.Component {
         await this.requests.search(this.state.initialName).then(r => {
             var from = this.state.fromYear
             var to = this.state.toYear
+            console.log(typeof(from))
             if (from !== '' && to !== '') {
                 r = Object.values(r).filter(function (v) {
                     return parseInt(v.dateOfBirth.substring(0,4)) >= parseInt(from) && parseInt(v.dateOfBirth.substring(0,4)) <= parseInt(to)

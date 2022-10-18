@@ -1,9 +1,9 @@
-import { Sidebar, Menu, MenuItem } from 'react-pro-sidebar';
 import Button from 'react-bootstrap/Button';
 import {FilterForm} from '../filter/Filter.js'
+import React, { useState } from "react";
 import "./Sidebar.css"
 
-export function FiltersSidebar() {
+export function Sidebar() {
   return (
     <div className='sidebar'>
       <div className='name-field'>
@@ -20,5 +20,5 @@ export function FiltersSidebar() {
       </Button>{' '}
     </div>
   );
+  
 }
-
