@@ -29,7 +29,7 @@ fun Application.configureRouting() {
         }
 
         get("/test") {
-            WikiData.query("Q9685")?.let { call.respond(it) }
+            call.respond(WikiData.query(listOf("Q9685", "Q9682")))
         }
 
         get("/search") {
