@@ -21,14 +21,36 @@ class NameForm extends React.Component {
             searchJsons: [],
             chosenId: '',
             relationsJson: {},
+            fromYear: '',
+            toYear: ''
         };
         this.requests = new Requests();
 
-        this.handleSearchChange = this.handleSearchChange.bind(this);
+        this.handleChangeInitialName = this.handleChangeInitialName.bind(this);
+        this.handleChangeChosenId = this.handleChangeChosenId.bind(this);
+        this.handleChangeFrom = this.handleChangeFrom.bind(this);
+        this.handleChangeTo = this.handleChangeTo.bind(this);
+
         this.handleSearchSubmit = this.handleSearchSubmit.bind(this);
-        this.handleRelationsChange = this.handleRelationsChange.bind(this);
         this.handleRelationsSubmit = this.handleRelationsSubmit.bind(this);
     }
+
+    handleChangeInitialName(event) {
+        this.setState({initialName: event.target.value});
+    }
+
+    handleChangeChosenId(event) {
+        this.setState({chosenId: event.target.value});
+    }
+
+    handleChangeFrom(event) {
+        this.setState({fromYear: event.target.value});
+    }
+
+    handleChangeTo(event) {
+        this.setState({toYear: event.target.value});
+    }
+
 
     render() {
         return (
@@ -36,8 +58,17 @@ class NameForm extends React.Component {
                 <form onSubmit={this.handleSearchSubmit}>
                     <label>
                         Name:
-                        <input type="text" value={this.state.initialName} onChange={this.handleSearchChange}/>
+                        <input type="text" value={this.state.initialName} onChange={this.handleChangeInitialName}/>
                     </label>
+
+                    <label> From:
+                        <input type="text" value={this.state.fromYear} onChange={this.handleChangeFrom}/>
+                    </label>
+
+                    <label> To:                      
+                        <input type="text" value={this.state.toYear} onChange={this.handleChangeTo}/>
+                    </label>  
+
                     <input type="submit" value="Submit"/>
                 </form>
                 {/*<div>*/}
@@ -50,7 +81,7 @@ class NameForm extends React.Component {
                     ? <form onSubmit={this.handleRelationsSubmit}>
                         <label>
                             Disambiguation:
-                            <select value={this.state.chosenId} onChange={this.handleRelationsChange}>
+                            <select value={this.state.chosenId} onChange={this.handleChangeChosenId}>
                                 {
                                     this.state.searchJsons.map((x) =>
                                         <option value={x.id} key={x.id}>{x.name}</option>
@@ -78,7 +109,7 @@ class NameForm extends React.Component {
                 <div>
                     {
                         !_.isEmpty(this.state.relationsJson)
-                        ? <FamilyTree data={this.state.relationsJson} />
+                        ? <FamilyTree data={this.state.relationsJson} showChildren={false} />
                             : 'No data fetched'
                     }
                 </div>
@@ -123,17 +154,23 @@ class NameForm extends React.Component {
         );
     }
 
-    handleSearchChange(event) {
-        this.setState({initialName: event.target.value});
-    }
-
-    handleRelationsChange(event) {
-        this.setState({chosenId: event.target.value});
-    }
-
     async handleSearchSubmit(event) {
         event.preventDefault();
         await this.requests.search(this.state.initialName).then(r => {
+            var from = this.state.fromYear
+            var to = this.state.toYear
+            if (from !== '' && to !== '') {
+                r = Object.values(r).filter(function (v) {
+                    return parseInt(v.dateOfBirth.substring(0,4)) >= parseInt(from) && parseInt(v.dateOfBirth.substring(0,4)) <= parseInt(to)
+                });
+            } else if (from !== '') {
+                r = Object.values(r).filter(function (v) {
+                    return parseInt(v.dateOfBirth.substring(0,4)) >= parseInt(from)});
+            } else if (to !== '') {
+                r = Object.values(r).filter(function (v) {
+                    return parseInt(v.dateOfBirth.substring(0,4)) <= parseInt(to)});
+            }
+            
             this.setState({
                 searchJsons: r,
                 chosenId: r[0].id,
@@ -153,7 +190,5 @@ class NameForm extends React.Component {
     }
 
 }
-
-
 
 export default App;
