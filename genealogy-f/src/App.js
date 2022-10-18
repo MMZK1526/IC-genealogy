@@ -109,7 +109,7 @@ class NameForm extends React.Component {
                 <div>
                     {
                         !_.isEmpty(this.state.relationsJson)
-                        ? <FamilyTree data={this.state.relationsJson} />
+                        ? <FamilyTree data={this.state.relationsJson} showChildren={false} />
                             : 'No data fetched'
                     }
                 </div>
