@@ -4,7 +4,6 @@ import _ from "lodash";
 import {Sidebar} from './components/sidebar/Sidebar.js';
 import {Requests} from './requests';
 import React from "react";
-// import { FilterForm } from './components/filter/Filter';
 
 import {Topbar} from './components/topbar/Topbar.js'
 
