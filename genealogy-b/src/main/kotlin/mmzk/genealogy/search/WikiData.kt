@@ -224,11 +224,16 @@ object WikiData {
 
     // Fetch at most four IDs that partially matches the search query
     suspend fun searchName(name: String) = coroutineScope {
-        val urlEncodedName = withContext(Dispatchers.IO) {
-            URLEncoder.encode(name, "utf-8")
+        val url = url {
+            host = "www.wikidata.org"
+            path("/w/api.php")
+            parameters.append("action", "wbsearchentities")
+            parameters.append("format", "json")
+            parameters.append("search", name)
+            parameters.append("language", "en")
+            parameters.append("limit", "4")
+            parameters.append("formatversion", "latest")
         }
-        val url =
-            "https://www.wikidata.org/w/api.php?action=wbsearchentities&format=json&search=$urlEncodedName&language=en&limit=4&props=url&formatversion=latest"
         val response = client.get(url)
         JsonParser.parseString(response.bodyAsText()).asObjectOrNull?.get("search")?.asArrayOrNull?.mapNotNull {
             it?.asObjectOrNull?.get("id")?.asStringOrNull
@@ -241,7 +246,16 @@ object WikiData {
             mapOf()
         } else {
             val url = ids.joinToString(separator = "|").let {
-                "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=$it&props=labels&languages=en&formatversion=2&format=json"
+                url {
+                    host = "www.wikidata.org"
+                    path("/w/api.php")
+                    parameters.append("action", "wbgetentities")
+                    parameters.append("format", "json")
+                    parameters.append("ids", it)
+                    parameters.append("language", "en")
+                    parameters.append("props", "labels")
+                    parameters.append("formatversion", "2")
+                }
             }
             val response = client.get(url)
 
@@ -505,10 +519,8 @@ object WikiData {
             }
 
             listOfNotNull(familyName, maidenName).joinToString(separator = "&").let {
-                if (it.isBlank()) {
+                it.ifBlank {
                     null
-                } else {
-                    it
                 }
             }
         }
