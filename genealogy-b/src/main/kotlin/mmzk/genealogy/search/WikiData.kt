@@ -565,6 +565,35 @@ object WikiData {
                         )
                     }
                 }
+
+                val queryResults = readProperties(claimMap, queries)
+
+                ids.map { id ->
+                    val givenName = queryResults[id to Fields.givenName]
+                    val personalName = queryResults[id to Fields.familyName]?.let { familyName ->
+                        val familyNameSplit = familyName.split("&", limit = 2)
+                        if (familyNameSplit.size == 1) {
+                            givenName?.let { "$familyName, $givenName" } ?: familyName
+                        } else {
+                            givenName?.let { "${familyNameSplit[0]}, $givenName, née ${familyNameSplit[1]}" }
+                                ?: "${familyNameSplit[0]}, née ${familyNameSplit[1]}"
+                        }
+                    } ?: givenName
+
+                    nameMap[id]?.let {
+                        IndividualDTO(
+                            id,
+                            it,
+                            personalName ?: it,
+                            queryResults[id to Fields.dateOfBirth],
+                            queryResults[id to Fields.dateOfDeath],
+                            queryResults[id to Fields.placeOfBirth],
+                            queryResults[id to Fields.placeOfDeath],
+                            genderMap[id] ?: 'U',
+                            false
+                        )
+                    }
+                }.filterNotNull()
             } catch (e: Exception) {
                 println(e)
                 listOf()
@@ -623,8 +652,6 @@ object WikiData {
 
                         visited.add(it.targets.first().id)
                     }
-                } ?: run {
-                    // TODO: Look up entry on WikiData
                 }
             }
 
