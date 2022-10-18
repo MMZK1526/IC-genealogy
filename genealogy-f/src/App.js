@@ -11,9 +11,7 @@ import './components/topbar/Topbar.css'
 class App extends React.Component {
     render() {
         return (
-            <div className='App'>
-                <NameForm />
-            </div>
+            <NameForm />
         );
     }
 }
@@ -83,7 +81,7 @@ class NameForm extends React.Component {
                     yearToChange={this.handleChangeTo}
                     onClick={this.handleSearchSubmit}
                 />
-                <div>
+                {/* <div>
                     {this.state.relationsJson
                         ? Object.entries(this.state.relationsJson).map((kv) => {
                             let y = kv[1];
@@ -95,12 +93,16 @@ class NameForm extends React.Component {
                         })
                         : ''
                     }
-                </div>
-                <div>
+                </div> */}
+                <div className='tree-box'>
                     {
                         !_.isEmpty(this.state.relationsJson)
                         ? <FamilyTree data={this.state.relationsJson} showChildren={false} />
-                            : ''
+                        : <div id='welcome'>
+                            <label id='title'>Genealogy Project</label>
+                            <br></br>
+                            <label id='desc'>Search a name to start</label>
+                        </div>
                     }
                 </div>
             </div>
@@ -153,7 +155,6 @@ class NameForm extends React.Component {
         await this.requests.search(this.state.initialName).then(r => {
             var from = this.state.fromYear
             var to = this.state.toYear
-            console.log(typeof(from))
             if (from !== '' && to !== '') {
                 r = Object.values(r).filter(function (v) {
                     return parseInt(v.dateOfBirth.substring(0,4)) >= parseInt(from) && parseInt(v.dateOfBirth.substring(0,4)) <= parseInt(to)

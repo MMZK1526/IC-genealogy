@@ -52,10 +52,8 @@ export class FamilyTree extends React.Component {
 
     render() {
         return (
-            <div id="treeWrapper" style={{width: '50em', height: '30em'}} className='center' >
-                <Tree data={this.state.data} pathFunc='step' orientation='vertical' translate={{x: 100, y: 50}}
-                      depthFactor={this.showChildren ? 100 : -100} separation={{siblings: 3}} />
-            </div>
+        <Tree data={this.state.data} pathFunc='step' orientation='vertical' translate={{x: 100, y: 50}}
+                depthFactor={this.showChildren ? 100 : -100} separation={{siblings: 3}} />
         );
     }
 
