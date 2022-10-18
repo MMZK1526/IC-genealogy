@@ -9,6 +9,7 @@ import mmzk.genealogy.dto.IndividualDTO
 import mmzk.genealogy.dto.RelationsResponse
 import mmzk.genealogy.dto.RelationshipDTO
 import com.google.gson.JsonElement
+import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import io.ktor.client.statement.*
 import kotlinx.coroutines.Deferred
@@ -71,45 +72,50 @@ object WikiData {
         }.associate { it }
     }
 
-    suspend fun query(id: String): IndividualDTO? {
-        suspend fun JsonElement.readProperties(queries: List<String>) = coroutineScope {
-            val knownResults = mutableMapOf<String, String?>()
-            val indirections = mutableMapOf<String, String?>()
+    suspend fun query(ids: List<String>): List<IndividualDTO> {
+        suspend fun readProperties(claims: Map<String?, JsonObject>, queries: List<Pair<String?, String>>) =
+            coroutineScope {
+                val knownResults = mutableMapOf<Pair<String?, String>, String?>()
+                val indirections = mutableMapOf<Pair<String?, String>, String?>()
 
-            for (query in queries) {
-                this@readProperties.asObjectOrNull?.get(query)?.asArrayOrNull?.get(0)?.asObjectOrNull?.let { data ->
-                    val dataValue =
-                        data.asObjectOrNull?.get("mainsnak")?.asObjectOrNull?.get("datavalue")?.asObjectOrNull
+                for (query in queries) {
+                    claims[query.first]?.asObjectOrNull?.get(query.second)?.asArrayOrNull?.get(0)?.asObjectOrNull?.let { data ->
+                        val dataValue =
+                            data.asObjectOrNull?.get("mainsnak")?.asObjectOrNull?.get("datavalue")?.asObjectOrNull
 
-                    when (dataValue?.get("type")?.asStringOrNull) {
-                        Fields.string -> knownResults[query] = dataValue["value"].asStringOrNull
-                        Fields.time -> knownResults[query] =
-                            dataValue.asObjectOrNull?.get("value")?.asObjectOrNull?.get("time")?.asStringOrNull
-                        Fields.wikiBaseEntityId -> indirections[query] =
-                            dataValue.asObjectOrNull?.get("value")?.asObjectOrNull?.get("id")?.asStringOrNull
+                        when (dataValue?.get("type")?.asStringOrNull) {
+                            Fields.string -> knownResults[query] = dataValue["value"].asStringOrNull
+                            Fields.time -> knownResults[query] =
+                                dataValue.asObjectOrNull?.get("value")?.asObjectOrNull?.get("time")?.asStringOrNull
+                            Fields.wikiBaseEntityId -> indirections[query] =
+                                dataValue.asObjectOrNull?.get("value")?.asObjectOrNull?.get("id")?.asStringOrNull
+                        }
                     }
                 }
+
+                val values = getValues(indirections.values.filterNotNull().toList())
+
+                for (i in indirections) {
+                    knownResults[i.key] = i.value?.let { values[it] }
+                }
+
+                knownResults
             }
 
-            val values = getValues(indirections.values.filterNotNull().toList())
-
-            for (i in indirections) {
-                knownResults[i.key] = i.value?.let { values[it] }
-            }
-
-            knownResults
-        }
-
-        suspend fun JsonElement.readProperties(queries: Map<String, (suspend (List<Triple<String?, JsonElement?, JsonElement?>>) -> String?)?>) =
+        suspend fun readProperties(
+            claims: Map<String?, JsonObject>,
+            queries: Map<Pair<String?, String>, (suspend (List<Triple<String?, JsonElement?, JsonElement?>>) -> String?)?>
+        ) =
             coroutineScope {
-                val knownResults = mutableMapOf<String, MutableList<Triple<String?, JsonElement?, JsonElement?>>>()
-                val deferrals = mutableMapOf<String, Deferred<String?>>()
-                val indirections = mutableMapOf<String, MutableList<Pair<String?, JsonElement?>>>()
-                val results = mutableMapOf<String, String?>()
+                val knownResults =
+                    mutableMapOf<Pair<String?, String>, MutableList<Triple<String?, JsonElement?, JsonElement?>>>()
+                val deferrals = mutableMapOf<Pair<String?, String>, Deferred<String?>>()
+                val indirections = mutableMapOf<Pair<String?, String>, MutableList<Pair<String?, JsonElement?>>>()
+                val results = mutableMapOf<Pair<String?, String>, String?>()
                 for (query in queries) {
                     knownResults[query.key] = mutableListOf()
                     indirections[query.key] = mutableListOf()
-                    this@readProperties.asObjectOrNull?.get(query.key)?.asArrayOrNull?.map { data ->
+                    claims[query.key.first]?.asObjectOrNull?.get(query.key.second)?.asArrayOrNull?.map { data ->
                         val qualifiers = data.asObjectOrNull?.get("qualifiers")
                         val dataValue =
                             data.asObjectOrNull?.get("mainsnak")?.asObjectOrNull?.get("datavalue")?.asObjectOrNull
@@ -156,7 +162,12 @@ object WikiData {
 
         suspend fun countryOfPlace(pcqs: List<Triple<String?, JsonElement?, JsonElement?>>) = coroutineScope {
             val pcq = pcqs.firstOrNull()
-            val country = pcq?.second?.asObjectOrNull?.readProperties(listOf(Fields.country))?.values?.first()
+            val country = pcq?.second?.asObjectOrNull?.let {
+                readProperties(
+                    mapOf(null to it),
+                    listOf(null to Fields.country)
+                ).values.first()
+            }
             pcq?.first?.let { p -> country?.let { "$p, $it" } ?: p }
         }
 
@@ -211,52 +222,64 @@ object WikiData {
 
         return coroutineScope {
             try {
-                val (name, claims) = getValuesAndClaims(listOf(id)).values.first()
-                val gender =
-                    when (claims?.asObjectOrNull?.get(Fields.gender)?.asArrayOrNull?.firstOrNull()
+                val genderMap = mutableMapOf<String, Char>()
+                val nameMap = mutableMapOf<String, String>()
+                val claimMap = mutableMapOf<String?, JsonObject>()
+                val queries =
+                    mutableMapOf<Pair<String?, String>, (suspend (List<Triple<String?, JsonElement?, JsonElement?>>) -> String?)?>()
+                val nameClaims = getValuesAndClaims(ids)
+
+                for (entry in nameClaims) {
+                    val id = entry.key
+                    val (name, claims) = entry.value
+                    genderMap[id] = when (claims?.asObjectOrNull?.get(Fields.gender)?.asArrayOrNull?.firstOrNull()
                         ?.asObjectOrNull?.get("mainsnak")?.asObjectOrNull?.get("datavalue")
                         ?.asObjectOrNull?.get("value")?.asObjectOrNull?.get("id")?.asStringOrNull) {
                         Fields.female -> 'F'
                         Fields.male -> 'M'
                         else -> 'U'
                     }
-                val queries =
-                    mapOf(
-                        Fields.dateOfBirth to null,
-                        Fields.dateOfDeath to null,
-                        Fields.placeOfBirth to ::countryOfPlace,
-                        Fields.placeOfDeath to ::countryOfPlace,
-                        Fields.givenName to ::parseGivenName,
-                        Fields.familyName to ::parseFamilyName
-                    )
-                val queryResults = claims?.readProperties(queries)
-                val givenName = queryResults?.get(Fields.givenName)
-                val personalName = queryResults?.get(Fields.familyName)?.let { familyName ->
-                    val familyNameSplit = familyName.split("&", limit = 2)
-                    if (familyNameSplit.size == 1) {
-                        givenName?.let { "$familyName, $givenName" } ?: familyName
-                    } else {
-                        givenName?.let { "${familyNameSplit[0]}, $givenName, née ${familyNameSplit[1]}" }
-                            ?: "${familyNameSplit[0]}, née ${familyNameSplit[1]}"
-                    }
-                } ?: givenName
-
-                name?.let {
-                    IndividualDTO(
-                        id,
-                        it,
-                        personalName ?: it,
-                        queryResults?.get(Fields.dateOfBirth),
-                        queryResults?.get(Fields.dateOfDeath),
-                        queryResults?.get(Fields.placeOfBirth),
-                        queryResults?.get(Fields.placeOfDeath),
-                        gender,
-                        false
-                    )
+                    name?.let { nameMap[id] = it }
+                    claims?.asObjectOrNull?.let { claimMap[id] = it }
+                    queries[id to Fields.dateOfBirth] = null
+                    queries[id to Fields.dateOfDeath] = null
+                    queries[id to Fields.placeOfBirth] = ::countryOfPlace
+                    queries[id to Fields.placeOfDeath] = ::countryOfPlace
+                    queries[id to Fields.givenName] = ::parseGivenName
+                    queries[id to Fields.familyName] = ::parseFamilyName
                 }
+
+                val queryResults = readProperties(claimMap, queries)
+
+                ids.map { id ->
+                    val givenName = queryResults[id to Fields.givenName]
+                    val personalName = queryResults[id to Fields.familyName]?.let { familyName ->
+                        val familyNameSplit = familyName.split("&", limit = 2)
+                        if (familyNameSplit.size == 1) {
+                            givenName?.let { "$familyName, $givenName" } ?: familyName
+                        } else {
+                            givenName?.let { "${familyNameSplit[0]}, $givenName, née ${familyNameSplit[1]}" }
+                                ?: "${familyNameSplit[0]}, née ${familyNameSplit[1]}"
+                        }
+                    } ?: givenName
+
+                    nameMap[id]?.let {
+                        IndividualDTO(
+                            id,
+                            it,
+                            personalName ?: it,
+                            queryResults[id to Fields.dateOfBirth],
+                            queryResults[id to Fields.dateOfDeath],
+                            queryResults[id to Fields.placeOfBirth],
+                            queryResults[id to Fields.placeOfDeath],
+                            genderMap[id] ?: 'U',
+                            false
+                        )
+                    }
+                }.filterNotNull()
             } catch (e: Exception) {
                 println(e)
-                null
+                listOf()
             }
         }
     }
@@ -280,7 +303,7 @@ object WikiData {
 
                 val curResult = Database.findRelatedPeople(curId, typeFilter)
 
-                curResult?.let {
+                curResult.let {
                     if (it.targets.first().isCached) {
                         people.addAll(it.people)
                         relations.addAll(it.relations)
@@ -303,7 +326,8 @@ object WikiData {
                                 }
 
                                 frontier.add(curDepth + 1 to p.id)
-                                relativeCountMap[it.targets.first().id] = 1 + (relativeCountMap[it.targets.first().id] ?: 0)
+                                relativeCountMap[it.targets.first().id] =
+                                    1 + (relativeCountMap[it.targets.first().id] ?: 0)
                                 reverseRelatives[p.id]?.add(it.targets.first().id)
                                     ?: run { reverseRelatives[p.id] = mutableSetOf(it.targets.first().id) }
                             }
@@ -311,8 +335,6 @@ object WikiData {
 
                         visited.add(it.targets.first().id)
                     }
-                } ?: run {
-                    // TODO: Look up entry on WikiData
                 }
             }
 
