@@ -1,0 +1,14 @@
+.label {
+  display: flex;
+  font-size: large;
+  color: darkslategray;
+  margin-bottom: 10px;
+}
+
+.control {
+  display: inline;
+  font-size: large;
+  color: rgb(50, 50, 50);
+  background-color: transparent;
+  border-style:dashed;
+}
