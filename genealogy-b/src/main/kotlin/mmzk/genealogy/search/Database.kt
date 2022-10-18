@@ -106,19 +106,19 @@ object Database {
         return this.map { dao ->
             IndividualDTO(dao, additionalPropertiesByIndividual[dao.id.value]?.map(::AdditionalProperty) ?: listOf())
         }
-        val individuals = relationships.map {
-            IndividualDTO(
-                if (it.person1.id.value == id) {
-                    it.person2
-                } else {
-                    it.person1
-                }
-            )
+        val individuals = relationships.mapNotNull {
+            if (it.person1.id.value in ids && it.person2.id.value in ids) {
+                null
+            } else if (it.person1.id.value in ids) {
+                it.person2
+            } else {
+                it.person1
+            }
         }
 
         RelationsResponse(
-            target = IndividualDTO(target),
-            people = individuals,
+            targets = targets.toDTOWithAdditionalProperties(),
+            people = individuals.toDTOWithAdditionalProperties(),
             relations = relationships.map(::RelationshipDTO)
         )
     }
