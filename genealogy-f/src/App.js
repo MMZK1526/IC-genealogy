@@ -71,14 +71,15 @@ class NameForm extends React.Component {
 
                     <input type="submit" value="Submit"/>
                 </form>
-                {/*<div>*/}
-                {/*    {this.state.searchJsons*/}
-                {/*        ? this.tableFromArray('disambiguation', this.state.searchJsons)*/}
-                {/*        : 'No data fetched'*/}
-                {/*    }*/}
-                {/*</div>*/}
-                {this.state.searchJsons
-                    ? <form onSubmit={this.handleRelationsSubmit}>
+
+                <div>
+                    {this.state.disambiguationJsons
+                        ? this.tableFromArray('disambiguation', this.state.disambiguationJsons)
+                        : 'No data fetched'
+                    }
+                </div>
+                {this.state.disambiguationJsons
+                    ? <form onSubmit={this.handleSubmit2}>
                         <label>
                             Disambiguation:
                             <select value={this.state.chosenId} onChange={this.handleChangeChosenId}>
