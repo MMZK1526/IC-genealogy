@@ -142,6 +142,10 @@ class NameForm extends React.Component {
     }
 
     async handleSearchSubmit(event) {
+        if (this.state.initialName === '') {
+            alert("Please enter a name!");
+            return;
+        }
         event.preventDefault();
         await this.requests.search(this.state.initialName).then(r => {
             var from = this.state.fromYear
@@ -169,6 +173,10 @@ class NameForm extends React.Component {
     }
 
     async handleRelationsSubmit(event) {
+        if (this.state.chosenId === '') {
+            alert("Haven't selected a person!")
+            return
+        }
         event.preventDefault();
         await this.requests.relations({id: this.state.chosenId}).then(r => {
             this.setState({
