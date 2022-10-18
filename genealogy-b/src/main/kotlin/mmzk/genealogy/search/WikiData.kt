@@ -281,7 +281,7 @@ object WikiData {
                 val curResult = Database.findRelatedPeople(curId, typeFilter)
 
                 curResult?.let {
-                    if (it.target.isCached) {
+                    if (it.targets.first().isCached) {
                         people.addAll(it.people)
                         relations.addAll(it.relations)
 
@@ -290,7 +290,7 @@ object WikiData {
                                 .map { curDepth + 1 to id })
                         }
 
-                        visited.add(it.target.id)
+                        visited.add(it.targets.first().id)
                     } else {
                         val (newPeople, newRelations) = mutableSetOf<IndividualDTO>() to mutableSetOf<RelationshipDTO>()
                         people.addAll(newPeople)
@@ -303,13 +303,13 @@ object WikiData {
                                 }
 
                                 frontier.add(curDepth + 1 to p.id)
-                                relativeCountMap[it.target.id] = 1 + (relativeCountMap[it.target.id] ?: 0)
-                                reverseRelatives[p.id]?.add(it.target.id)
-                                    ?: run { reverseRelatives[p.id] = mutableSetOf(it.target.id) }
+                                relativeCountMap[it.targets.first().id] = 1 + (relativeCountMap[it.targets.first().id] ?: 0)
+                                reverseRelatives[p.id]?.add(it.targets.first().id)
+                                    ?: run { reverseRelatives[p.id] = mutableSetOf(it.targets.first().id) }
                             }
                         }
 
-                        visited.add(it.target.id)
+                        visited.add(it.targets.first().id)
                     }
                 } ?: run {
                     // TODO: Look up entry on WikiData
@@ -322,7 +322,7 @@ object WikiData {
         val (people, relations) = visit(frontier = mutableListOf(0 to id))
         val target = IndividualDTO(transaction { Individual.findById(id) }!!)
 
-        return RelationsResponse(target, people.toList(), relations.toList())
+        return RelationsResponse(listOf(target), people.toList(), relations.toList())
     }
 }
 

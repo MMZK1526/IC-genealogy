@@ -46,12 +46,7 @@ fun Application.configureRouting() {
             call.request.queryParameters["id"]?.let { id ->
                 val typeFilter = call.request.queryParameters["types"]?.split(",")
                 val result = Database.findRelatedPeople(id, typeFilter)
-                if (result != null) {
-                    call.respond(result)
-                } else {
-                    call.respond(HttpStatusCode.BadRequest, "error" to "Person with id $id not found!")
-                }
-
+                call.respond(result)
             } ?: call.respond(
                 HttpStatusCode.BadRequest,
                 "error" to "Missing query parameter \"id\"!"

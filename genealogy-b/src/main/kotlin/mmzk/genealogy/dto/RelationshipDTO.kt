@@ -20,7 +20,11 @@ data class RelationshipDTO(
 
 @Serializable
 data class RelationsResponse(
-    val target: IndividualDTO,
+    val targets: List<IndividualDTO>,
     val people: List<IndividualDTO>,
     val relations: List<RelationshipDTO>
-)
+) {
+    companion object {
+        val empty = RelationsResponse(listOf(), listOf(), listOf())
+    }
+}
