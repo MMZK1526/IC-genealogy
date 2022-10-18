@@ -4,6 +4,7 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.async
 import mmzk.genealogy.dao.Individual
 import mmzk.genealogy.dto.IndividualDTO
 import mmzk.genealogy.search.Database
@@ -34,11 +35,26 @@ fun Application.configureRouting() {
 
         get("/search") {
             call.request.queryParameters["q"]?.let { name ->
-                val peopleWithMatchedName = Database.findPersonByName(name)
-                call.respond(peopleWithMatchedName)
+                val matchedNamesInDBAsync = async { Database.findPersonByName(name) }
+                val searchedID = WikiData.searchName(name) ?: listOf()
+                val searchedNames = WikiData.query(searchedID)
+                println(searchedID)
+                println(searchedNames)
+                val matchedNamesInDB = matchedNamesInDBAsync.await()
+                val matchedIDsInDB = matchedNamesInDB.map { it.id }.toSet()
+                val newNames = mutableListOf<IndividualDTO>()
+
+                for (n in searchedNames) {
+                    if (!matchedIDsInDB.contains(n.id)) {
+                        newNames.add(n)
+                    }
+                }
+
+                newNames.addAll(matchedNamesInDB)
+                call.respond(newNames)
             } ?: call.respond(
                 HttpStatusCode.BadRequest,
-                "error" to "Missing query parameter \"q\"!"
+                mapOf("error" to "Missing query parameter \"q\"!")
             )
         }
 
@@ -49,7 +65,7 @@ fun Application.configureRouting() {
                 call.respond(result)
             } ?: call.respond(
                 HttpStatusCode.BadRequest,
-                "error" to "Missing query parameter \"id\"!"
+                mapOf("error" to "Missing query parameter \"q\"!")
             )
         }
     }
