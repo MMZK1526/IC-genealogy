@@ -34,11 +34,7 @@ fun Application.configureRouting() {
 
         get("/search") {
             call.request.queryParameters["q"]?.let { name ->
-                val peopleWithMatchedName = transaction {
-                    addLogger(StdOutSqlLogger)
-                    SchemaUtils.create(IndividualTable)
-                    Individual.find { IndividualTable.name.regexp("(?i).*$name.*") }.map(::IndividualDTO)
-                }
+                val peopleWithMatchedName = Database.findPersonByName(name)
                 call.respond(peopleWithMatchedName)
             } ?: call.respond(
                 HttpStatusCode.BadRequest,
@@ -49,24 +45,12 @@ fun Application.configureRouting() {
         get("/relations") {
             call.request.queryParameters["id"]?.let { id ->
                 val typeFilter = call.request.queryParameters["types"]?.split(",")
-                val result = Database.searchId(id, typeFilter)
+                val result = Database.findRelatedPeople(id, typeFilter)
                 if (result != null) {
                     call.respond(result)
                 } else {
                     call.respond(HttpStatusCode.BadRequest, "error" to "Person with id $id not found!")
                 }
-
-            } ?: call.respond(
-                HttpStatusCode.BadRequest,
-                "error" to "Missing query parameter \"id\"!"
-            )
-        }
-
-        get("/test") {
-            call.request.queryParameters["id"]?.let { id ->
-                val typeFilter = call.request.queryParameters["types"]?.split(",")
-                val result = WikiData.searchId(id, typeFilter)
-                call.respond(result)
 
             } ?: call.respond(
                 HttpStatusCode.BadRequest,

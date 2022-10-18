@@ -11,7 +11,6 @@ import mmzk.genealogy.dto.RelationshipDTO
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import io.ktor.client.statement.*
-import io.ktor.http.userAgent
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -279,7 +278,7 @@ object WikiData {
                     continue
                 }
 
-                val curResult = Database.searchId(curId, typeFilter)
+                val curResult = Database.findRelatedPeople(curId, typeFilter)
 
                 curResult?.let {
                     if (it.target.isCached) {
