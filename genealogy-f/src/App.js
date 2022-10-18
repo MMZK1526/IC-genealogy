@@ -2,19 +2,21 @@ import './App.css';
 // import './FamilyTree.css';
 import {FamilyTree} from "./FamilyTree";
 import _ from "lodash";
-import {FiltersSidebar} from './components/sidebar/Sidebar.js';
-import { ProSidebarProvider } from 'react-pro-sidebar';
+import {Sidebar} from './components/sidebar/Sidebar.js';
 import {Requests} from './requests';
 import React from "react";
+
+import {FilterForm} from './components/filter/Filter.js'
+import Button from 'react-bootstrap/Button';
+import "./components/sidebar/Sidebar.css"
+
 
 class App extends React.Component {
     render() {
         return (
             <div className='App'>
-                {/* <NameForm /> */}
-                <ProSidebarProvider>
-                    <FiltersSidebar />
-                </ProSidebarProvider>
+                <NameForm />
+                {/* <Sidebar /> */}
             </div>
         );
     }
@@ -58,12 +60,25 @@ class NameForm extends React.Component {
         this.setState({toYear: event.target.value});
     }
 
-
     render() {
         return (
-            <div>
-                <form onSubmit={this.handleSearchSubmit}>
-                    <label>
+            <div className='App'>
+                {/* <form onSubmit={this.handleSearchSubmit}> */}
+                    <div className='sidebar'>
+                        <div className='name-field'>
+                            <FilterForm title="Name :" placeholder="Name" type="text" onChange={this.handleChangeInitialName}/>
+                        </div>
+                        <div className='date-from-field'>
+                            <FilterForm title="From :" placeholder="Year" type="text" onChange={this.handleChangeFrom}/>
+                        </div>
+                        <div className='date-to-field'>
+                            <FilterForm title="To :" placeholder="Year" type="text" onChange={this.handleChangeTo}/>
+                        </div>
+                        <Button className='apply-button' size='lg' type='primary' onClick={this.handleSearchSubmit}>
+                            Apply filters
+                        </Button>
+                    </div>
+                    {/* <label>
                         Name:
                         <input type="text" value={this.state.initialName} onChange={this.handleChangeInitialName}/>
                     </label>
@@ -76,8 +91,8 @@ class NameForm extends React.Component {
                         <input type="text" value={this.state.toYear} onChange={this.handleChangeTo}/>
                     </label>  
 
-                    <input type="submit" value="Submit"/>
-                </form>
+                    <input type="submit" value="Submit"/> */}
+                {/* </form> */}
                 {/*<div>*/}
                 {/*    {this.state.searchJsons*/}
                 {/*        ? this.tableFromArray('disambiguation', this.state.searchJsons)*/}
@@ -166,6 +181,7 @@ class NameForm extends React.Component {
         await this.requests.search(this.state.initialName).then(r => {
             var from = this.state.fromYear
             var to = this.state.toYear
+            console.log(typeof(from))
             if (from !== '' && to !== '') {
                 r = Object.values(r).filter(function (v) {
                     return parseInt(v.dateOfBirth.substring(0,4)) >= parseInt(from) && parseInt(v.dateOfBirth.substring(0,4)) <= parseInt(to)
