@@ -222,27 +222,39 @@ object WikiData {
         }
     }
 
-    // Get the values corresponding to the list of WikiData IDs.
-    suspend fun getValues(ids: List<String>) = coroutineScope {
-        val url = ids.joinToString(separator = "|").let {
-            "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=$it&props=labels&languages=en&formatversion=2&format=json"
+    // Fetch at most four IDs that partially matches the search query
+    suspend fun searchName(name: String) = coroutineScope {
+        val urlEncodedName = withContext(Dispatchers.IO) {
+            URLEncoder.encode(name, "utf-8")
         }
+        val url =
+            "https://www.wikidata.org/w/api.php?action=wbsearchentities&format=json&search=$urlEncodedName&language=en&limit=4&props=url&formatversion=latest"
         val response = client.get(url)
-
-        ids.map {
-            it to run {
-                val entity =
-                    JsonParser.parseString(response.bodyAsText()).asObjectOrNull?.get("entities")
-                        ?.asObjectOrNull?.get(it)?.asObjectOrNull
-                entity
-                    ?.get("labels")
-                    ?.asObjectOrNull?.get("en")
-                    ?.asObjectOrNull?.get("value")
-                    ?.asStringOrNull
-
-            }
-        }.associate { it }
+        JsonParser.parseString(response.bodyAsText()).asObjectOrNull?.get("search")?.asArrayOrNull?.mapNotNull {
+            it?.asObjectOrNull?.get("id")?.asStringOrNull
+        }
     }
+
+    // Get the values corresponding to the list of WikiData IDs.
+    private suspend fun getValues(ids: List<String>) = coroutineScope {
+        if (ids.isEmpty()) {
+            mapOf()
+        } else {
+            val url = ids.joinToString(separator = "|").let {
+                "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=$it&props=labels&languages=en&formatversion=2&format=json"
+            }
+            val response = client.get(url)
+
+            ids.map {
+                it to run {
+                    val entity =
+                        JsonParser.parseString(response.bodyAsText()).asObjectOrNull?.get("entities")
+                            ?.asObjectOrNull?.get(it)?.asObjectOrNull
+                    entity
+                        ?.get("labels")
+                        ?.asObjectOrNull?.get("en")
+                        ?.asObjectOrNull?.get("value")
+                        ?.asStringOrNull
 
     // Get the values and claims corresponding to the list of WikiData IDs
     private suspend fun getValuesAndClaims(ids: List<String>) = coroutineScope {
@@ -492,7 +504,13 @@ object WikiData {
                 }
             }
 
-            listOfNotNull(familyName, maidenName).joinToString(separator = "&")
+            listOfNotNull(familyName, maidenName).joinToString(separator = "&").let {
+                if (it.isBlank()) {
+                    null
+                } else {
+                    it
+                }
+            }
         }
 
         return coroutineScope {
