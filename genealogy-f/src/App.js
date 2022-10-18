@@ -6,12 +6,13 @@ import {Sidebar} from './components/sidebar/Sidebar.js';
 import {Requests} from './requests';
 import React from "react";
 
+import './components/topbar/Topbar.css'
+
 class App extends React.Component {
     render() {
         return (
             <div className='App'>
                 <NameForm />
-                {/* <Sidebar /> */}
             </div>
         );
     }
@@ -58,28 +59,30 @@ class NameForm extends React.Component {
     render() {
         return (
             <div className='App'>
-                <Sidebar
-                    nameChange={this.handleChangeInitialName}
-                    yearFromChange={this.handleChangeFrom}
-                    yearToChange={this.handleChangeTo}
-                    onClick={this.handleSearchSubmit}
-                />
                 {this.state.searchJsons
-                    ? <form onSubmit={this.handleRelationsSubmit}>
-                        <label>
-                            Disambiguation:
-                            <select value={this.state.chosenId} onChange={this.handleChangeChosenId}>
+                    ? <div className='topbar'>
+                        <form onSubmit={this.handleRelationsSubmit}>
+                            <label>
+                                {'Are you looking for... '}
+                            </label>
+                            <select className='dropdown-menu' value={this.state.chosenId} onChange={this.handleChangeChosenId}>
                                 {
                                     this.state.searchJsons.map((x) =>
                                         <option value={x.id} key={x.id}>{x.name}</option>
                                     )
                                 }
                             </select>
-                        </label>
-                        <input type="submit" value="Submit" />
-                    </form>
+                            <input className='apply-button' type="submit" value="Submit" />
+                        </form>
+                    </div>
                     : 'No data fetched'
                 }
+                <Sidebar
+                    nameChange={this.handleChangeInitialName}
+                    yearFromChange={this.handleChangeFrom}
+                    yearToChange={this.handleChangeTo}
+                    onClick={this.handleSearchSubmit}
+                />
                 <div>
                     {this.state.relationsJson
                         ? Object.entries(this.state.relationsJson).map((kv) => {
