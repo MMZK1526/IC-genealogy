@@ -11,6 +11,7 @@ import mmzk.genealogy.dto.RelationshipDTO
 import mmzk.genealogy.tables.AdditionalPropertiesTable
 import mmzk.genealogy.tables.IndividualTable
 import mmzk.genealogy.tables.RelationshipTable
+import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
@@ -41,42 +42,55 @@ object Database {
     }
 
     fun findPersonByName(name: String): List<IndividualDTO> = transaction {
-        val daos = Individual.find { IndividualTable.name.regexp("(?i).*$name.*") }
-            .limit(20)
+        Individual.find { IndividualTable.name.regexp("(?i).*$name.*") }
+            .limit(20).toDTOWithAdditionalProperties()
+    }
+
+    fun findRelatedPeople(ids: Set<String>, typeFilter: List<String>?, peopleFilter: List<String> = listOf()) = transaction TRANS@{
+        val targets = Individual.find {
+            IndividualTable.id.asStringColumn.inList(ids)
+        }
+        if (targets.empty()) {
+            return@TRANS RelationsResponse.empty
+        }
+        val relationships = Relationship.find {
+            var exp = RelationshipTable.person1.asStringColumn.inList(ids) or
+                    RelationshipTable.person2.asStringColumn.inList(ids) and
+                    RelationshipTable.person1.asStringColumn.notInList(peopleFilter) and
+                    RelationshipTable.person2.asStringColumn.notInList(peopleFilter)
+            if (typeFilter != null && typeFilter != listOf("all")) {
+                exp = exp and RelationshipTable.type.asStringColumn.inList(typeFilter)
+            }
+            exp
+        }
+        val individuals = relationships.mapNotNull {
+            if (it.person1.id.value in ids && it.person2.id.value in ids) {
+                null
+            } else if (it.person1.id.value in ids) {
+                it.person2
+            } else {
+                it.person1
+            }
+        }
+
+        RelationsResponse(
+            targets = targets.toDTOWithAdditionalProperties(),
+            people = individuals.toDTOWithAdditionalProperties(),
+            relations = relationships.map(::RelationshipDTO)
+        )
+    }
+
+    fun findRelatedPeople(id: String, typeFilter: List<String>?) =
+        findRelatedPeople(setOf(id), typeFilter)
+
+    private fun Iterable<Individual>.toDTOWithAdditionalProperties(): List<IndividualDTO> {
         val additionalPropertiesByIndividual = AdditionalPropertiesTable.select {
-            AdditionalPropertiesTable.individualId.inList(daos.map { it.id.value })
+            AdditionalPropertiesTable.individualId.inList(this@toDTOWithAdditionalProperties.map { it.id.value })
         }.groupBy { it[AdditionalPropertiesTable.individualId] }
-        daos.map { dao ->
+        return this.map { dao ->
             IndividualDTO(dao, additionalPropertiesByIndividual[dao.id.value]?.map(::AdditionalProperty) ?: listOf())
         }
     }
 
-    fun findRelatedPeople(id: String, typeFilter: List<String>?): RelationsResponse? = transaction TRANS@{
-        val target = Individual.findById(id) ?: return@TRANS null
-        val relationships = if (typeFilter != null && typeFilter != listOf("all")) {
-            Relationship.find {
-                (RelationshipTable.person1 eq id) or (RelationshipTable.person2 eq id) and
-                        RelationshipTable.type.castTo<String>(VarCharColumnType(32)).inList(typeFilter)
-            }
-        } else {
-            Relationship.find {
-                (RelationshipTable.person1 eq id) or (RelationshipTable.person2 eq id)
-            }
-        }
-        val individuals = relationships.map {
-            IndividualDTO(
-                if (it.person1.id.value == id) {
-                    it.person2
-                } else {
-                    it.person1
-                }
-            )
-        }
-
-        RelationsResponse(
-            target = IndividualDTO(target),
-            people = individuals,
-            relations = relationships.map(::RelationshipDTO)
-        )
-    }
+    private val Column<EntityID<String>>.asStringColumn get() = castTo<String>(VarCharColumnType(32))
 }
