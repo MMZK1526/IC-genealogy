@@ -1,6 +1,9 @@
 import './App.css';
+// import './FamilyTree.css';
 import {Requests} from './requests';
 import React from "react";
+import {FamilyTree} from "./FamilyTree";
+import _ from "lodash";
 
 class App extends React.Component {
     render() {
@@ -15,7 +18,7 @@ class NameForm extends React.Component {
         super(props);
         this.state = {
             initialName: '',
-            disambiguationJsons: [],
+            searchJsons: [],
             chosenId: '',
             relationsJson: {},
             fromYear: '',
@@ -28,8 +31,8 @@ class NameForm extends React.Component {
         this.handleChangeFrom = this.handleChangeFrom.bind(this);
         this.handleChangeTo = this.handleChangeTo.bind(this);
 
-        this.handleSubmit = this.handleSubmit.bind(this);
-        this.handleSubmit2 = this.handleSubmit2.bind(this);
+        this.handleSearchSubmit = this.handleSearchSubmit.bind(this);
+        this.handleRelationsSubmit = this.handleRelationsSubmit.bind(this);
     }
 
     handleChangeInitialName(event) {
@@ -52,7 +55,7 @@ class NameForm extends React.Component {
     render() {
         return (
             <div>
-                <form onSubmit={this.handleSubmit}>
+                <form onSubmit={this.handleSearchSubmit}>
                     <label>
                         Name:
                         <input type="text" value={this.state.initialName} onChange={this.handleChangeInitialName}/>
@@ -68,20 +71,19 @@ class NameForm extends React.Component {
 
                     <input type="submit" value="Submit"/>
                 </form>
-
-                <div>
-                    {this.state.disambiguationJsons
-                        ? this.tableFromArray('disambiguation', this.state.disambiguationJsons)
-                        : 'No data fetched'
-                    }
-                </div>
-                {this.state.disambiguationJsons
-                    ? <form onSubmit={this.handleSubmit2}>
+                {/*<div>*/}
+                {/*    {this.state.searchJsons*/}
+                {/*        ? this.tableFromArray('disambiguation', this.state.searchJsons)*/}
+                {/*        : 'No data fetched'*/}
+                {/*    }*/}
+                {/*</div>*/}
+                {this.state.searchJsons
+                    ? <form onSubmit={this.handleRelationsSubmit}>
                         <label>
                             Disambiguation:
                             <select value={this.state.chosenId} onChange={this.handleChangeChosenId}>
                                 {
-                                    this.state.disambiguationJsons.map((x) =>
+                                    this.state.searchJsons.map((x) =>
                                         <option value={x.id} key={x.id}>{x.name}</option>
                                     )
                                 }
@@ -104,9 +106,17 @@ class NameForm extends React.Component {
                         : 'No data fetched'
                     }
                 </div>
+                <div>
+                    {
+                        !_.isEmpty(this.state.relationsJson)
+                        ? <FamilyTree data={this.state.relationsJson} />
+                            : 'No data fetched'
+                    }
+                </div>
             </div>
         );
     }
+
 
     tableFromArray(title, arr) {
         let keys = arr.length > 0 ? Object.keys(arr[0]) : [];
@@ -144,7 +154,7 @@ class NameForm extends React.Component {
         );
     }
 
-    async handleSubmit(event) {
+    async handleSearchSubmit(event) {
         event.preventDefault();
         await this.requests.search(this.state.initialName).then(r => {
             var from = this.state.fromYear
@@ -162,18 +172,19 @@ class NameForm extends React.Component {
             }
             
             this.setState({
-                disambiguationJsons: r,
-                chosenId: r[0].id
+                searchJsons: r,
+                chosenId: r[0].id,
+                relationsJson: {},
             });
         });
 
     }
 
-    async handleSubmit2(event) {
+    async handleRelationsSubmit(event) {
         event.preventDefault();
         await this.requests.relations({id: this.state.chosenId}).then(r => {
             this.setState({
-                relationsJson: r
+                relationsJson: r,
             });
         });
     }
