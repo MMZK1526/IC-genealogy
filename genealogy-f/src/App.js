@@ -18,21 +18,34 @@ class NameForm extends React.Component {
             disambiguationJsons: [],
             chosenId: '',
             relationsJson: {},
+            fromYear: '',
+            toYear: ''
         };
         this.requests = new Requests();
 
-        this.handleChange = this.handleChange.bind(this);
+        this.handleChangeInitialName = this.handleChangeInitialName.bind(this);
+        this.handleChangeChosenId = this.handleChangeChosenId.bind(this);
+        this.handleChangeFrom = this.handleChangeFrom.bind(this);
+        this.handleChangeTo = this.handleChangeTo.bind(this);
+
         this.handleSubmit = this.handleSubmit.bind(this);
-        this.handleChange2 = this.handleChange2.bind(this);
         this.handleSubmit2 = this.handleSubmit2.bind(this);
     }
 
-    handleChange(event) {
+    handleChangeInitialName(event) {
         this.setState({initialName: event.target.value});
     }
 
-    handleChange2(event) {
+    handleChangeChosenId(event) {
         this.setState({chosenId: event.target.value});
+    }
+
+    handleChangeFrom(event) {
+        this.setState({fromYear: event.target.value});
+    }
+
+    handleChangeTo(event) {
+        this.setState({toYear: event.target.value});
     }
 
 
@@ -42,10 +55,20 @@ class NameForm extends React.Component {
                 <form onSubmit={this.handleSubmit}>
                     <label>
                         Name:
-                        <input type="text" value={this.state.initialName} onChange={this.handleChange}/>
+                        <input type="text" value={this.state.initialName} onChange={this.handleChangeInitialName}/>
                     </label>
+
+                    <label> From:
+                        <input type="text" value={this.state.fromYear} onChange={this.handleChangeFrom}/>
+                    </label>
+
+                    <label> To:                      
+                        <input type="text" value={this.state.toYear} onChange={this.handleChangeTo}/>
+                    </label>  
+
                     <input type="submit" value="Submit"/>
                 </form>
+
                 <div>
                     {this.state.disambiguationJsons
                         ? this.tableFromArray('disambiguation', this.state.disambiguationJsons)
@@ -56,7 +79,7 @@ class NameForm extends React.Component {
                     ? <form onSubmit={this.handleSubmit2}>
                         <label>
                             Disambiguation:
-                            <select value={this.state.chosenId} onChange={this.handleChange2}>
+                            <select value={this.state.chosenId} onChange={this.handleChangeChosenId}>
                                 {
                                     this.state.disambiguationJsons.map((x) =>
                                         <option value={x.id} key={x.id}>{x.name}</option>
@@ -124,6 +147,20 @@ class NameForm extends React.Component {
     async handleSubmit(event) {
         event.preventDefault();
         await this.requests.search(this.state.initialName).then(r => {
+            var from = this.state.fromYear
+            var to = this.state.toYear
+            if (from !== '' && to !== '') {
+                r = Object.values(r).filter(function (v) {
+                    return parseInt(v.dateOfBirth.substring(0,4)) >= parseInt(from) && parseInt(v.dateOfBirth.substring(0,4)) <= parseInt(to)
+                });
+            } else if (from !== '') {
+                r = Object.values(r).filter(function (v) {
+                    return parseInt(v.dateOfBirth.substring(0,4)) >= parseInt(from)});
+            } else if (to !== '') {
+                r = Object.values(r).filter(function (v) {
+                    return parseInt(v.dateOfBirth.substring(0,4)) <= parseInt(to)});
+            }
+            
             this.setState({
                 disambiguationJsons: r,
                 chosenId: r[0].id
@@ -142,7 +179,5 @@ class NameForm extends React.Component {
     }
 
 }
-
-
 
 export default App;
