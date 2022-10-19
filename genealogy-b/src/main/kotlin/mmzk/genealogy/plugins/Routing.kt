@@ -29,16 +29,10 @@ fun Application.configureRouting() {
             call.respond(allPeople)
         }
 
-        get("/test") {
-            call.respond(WikiData.foo())
-        }
-
         get("/search") {
             call.request.queryParameters["q"]?.let { name ->
                 val matchedNamesInDBAsync = async { Database.findPersonByName(name) }
-                val searchedID = WikiData.searchName(name) ?: listOf()
-                val searchedNames = WikiData.query(searchedID)
-                println(searchedID)
+                val searchedNames =  WikiData.searchByName(name)
                 println(searchedNames)
                 val matchedNamesInDB = matchedNamesInDBAsync.await()
                 val matchedIDsInDB = matchedNamesInDB.map { it.id }.toSet()

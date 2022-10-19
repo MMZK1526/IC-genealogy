@@ -19,6 +19,7 @@ import mmzk.genealogy.dto.IndividualName
 import mmzk.genealogy.dto.RelationsResponse
 import mmzk.genealogy.dto.RelationshipDTO
 import mmzk.genealogy.tables.Fields
+import org.eclipse.rdf4j.queryrender.RenderUtils
 import org.eclipse.rdf4j.repository.sparql.SPARQLRepository
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
@@ -94,37 +95,37 @@ object WikiData {
             null
         }
 
-    suspend fun foo() = coroutineScope {
+    suspend fun searchByName(partialName: String) = coroutineScope {
         val sparqlEndpoint = "https://query.wikidata.org/sparql"
         val repo = SPARQLRepository(sparqlEndpoint)
 
-        val userAgent = "Wikidata RDF4J Java Example/0.1 (https://query.wikidata.org/)"
+        val userAgent = "WikiData Crawler for Genealogy Visualiser WebApp, Contact piopio555888@gmail.com"
         repo.additionalHttpHeaders =
             Collections.singletonMap("User-Agent", userAgent)
 
         val querySelect = """
-              SELECT ?$item ?$name ?${givenName}Label ?${familyName}Label ?$ordinal ?${familyNameType}Label ?$dateOfBirth ?$dateOfDeath ?${placeOfBirth}Label ?${placeOfBirthCountry}Label ?${placeOfDeath}Label ?${placeOfDeathCountry}Label ?${gender}Label WHERE {
-                  ?$item wdt:P31 wd:Q5.
+              SELECT ?${SPARQL.item} ?${SPARQL.name} ?${SPARQL.givenName}Label ?${SPARQL.familyName}Label ?${SPARQL.ordinal} ?${SPARQL.familyNameType}Label ?${SPARQL.dateOfBirth} ?${SPARQL.dateOfDeath} ?${SPARQL.placeOfBirth}Label ?${SPARQL.placeOfBirthCountry}Label ?${SPARQL.placeOfDeath}Label ?${SPARQL.placeOfDeathCountry}Label ?${SPARQL.gender}Label WHERE {
+                  ?${SPARQL.item} wdt:P31 wd:Q5.
                 
-                  ?$item p:P735 ?${givenName}_ .
-                  ?${givenName}_ ps:P735 ?$givenName .
-                  OPTIONAL { ?${givenName}_ pq:P1545 ?$ordinal . }
-                  OPTIONAL { ?$item p:P734 ?${familyName}_ .
-                             ?${familyName}_ ps:P734 ?$familyName .
-                             ?${familyName}_ pq:P3831 ?$familyNameType . }
-                  OPTIONAL { ?$item wdt:P569 ?$dateOfBirth . }
-                  OPTIONAL { ?$item wdt:P570 ?$dateOfDeath . }
-                  OPTIONAL { ?$item p:P19 ?${placeOfBirth}_ .
-                             ?${placeOfBirth}_ ps:P19 ?$placeOfBirth .
-                             ?$placeOfBirth wdt:P17 ?$placeOfBirthCountry . }
-                  OPTIONAL { ?$item p:P20 ?${placeOfDeath}_ .
-                             ?${placeOfDeath}_ ps:P20 ?$placeOfDeath .
-                             ?$placeOfDeath wdt:P17 ?$placeOfDeathCountry . }
-                  OPTIONAL { ?$item wdt:P21 ?$gender . }
+                  ?${SPARQL.item} p:P735 ?${SPARQL.givenName}_ .
+                  ?${SPARQL.givenName}_ ps:P735 ?${SPARQL.givenName} .
+                  OPTIONAL { ?${SPARQL.givenName}_ pq:P1545 ?${SPARQL.ordinal} . }
+                  OPTIONAL { ?${SPARQL.item} p:P734 ?${SPARQL.familyName}_ .
+                             ?${SPARQL.familyName}_ ps:P734 ?${SPARQL.familyName} .
+                             ?${SPARQL.familyName}_ pq:P3831 ?${SPARQL.familyNameType} . }
+                  OPTIONAL { ?${SPARQL.item} wdt:P569 ?${SPARQL.dateOfBirth} . }
+                  OPTIONAL { ?${SPARQL.item} wdt:P570 ?${SPARQL.dateOfDeath} . }
+                  OPTIONAL { ?${SPARQL.item} p:P19 ?${SPARQL.placeOfBirth}_ .
+                             ?${SPARQL.placeOfBirth}_ ps:P19 ?${SPARQL.placeOfBirth} .
+                             ?${SPARQL.placeOfBirth} wdt:P17 ?${SPARQL.placeOfBirthCountry} . }
+                  OPTIONAL { ?${SPARQL.item} p:P20 ?${SPARQL.placeOfDeath}_ .
+                             ?${SPARQL.placeOfDeath}_ ps:P20 ?${SPARQL.placeOfDeath} .
+                             ?${SPARQL.placeOfDeath} wdt:P17 ?${SPARQL.placeOfDeathCountry} . }
+                  OPTIONAL { ?${SPARQL.item} wdt:P21 ?${SPARQL.gender} . }
                   SERVICE wikibase:mwapi {
                     bd:serviceParam wikibase:api "EntitySearch" .
                     bd:serviceParam wikibase:endpoint "www.wikidata.org" .
-                    bd:serviceParam mwapi:search "Diana" .
+                    bd:serviceParam mwapi:search "${RenderUtils.escape(partialName)}" .
                     bd:serviceParam mwapi:action "wbsearchentities" .
                     bd:serviceParam mwapi:language "en" .
                     ?item wikibase:apiOutputItem mwapi:item .
@@ -141,19 +142,25 @@ object WikiData {
                 for (value in result) {
                     row[value.name] = value.value.stringValue()
                 }
-                val id = row[item]?.let(::Url)?.pathSegments?.lastOrNull() ?: continue
+                val id = row[SPARQL.item]?.let(::Url)?.pathSegments?.lastOrNull() ?: continue
                 if (!dtos.contains(id)) {
-                    val name = row[name]
+                    val name = row[SPARQL.name]
                     if (name != null) {
                         dtos[id] = IndividualDTO(
                             id,
                             name,
                             "",
-                            row[dateOfBirth],
-                            row[dateOfDeath],
-                            formatLocationWithCountry(row["${placeOfBirth}Label"], row["${placeOfBirthCountry}Label"]),
-                            formatLocationWithCountry(row["${placeOfDeath}Label"], row["${placeOfDeathCountry}Label"]),
-                            when (row["${gender}Label"]) {
+                            row[SPARQL.dateOfBirth],
+                            row[SPARQL.dateOfDeath],
+                            formatLocationWithCountry(
+                                row["${SPARQL.placeOfBirth}Label"],
+                                row["${SPARQL.placeOfBirthCountry}Label"]
+                            ),
+                            formatLocationWithCountry(
+                                row["${SPARQL.placeOfDeath}Label"],
+                                row["${SPARQL.placeOfDeathCountry}Label"]
+                            ),
+                            when (row["${SPARQL.gender}Label"]) {
                                 "male" -> 'M'
                                 "female" -> 'F'
                                 else -> 'U'
@@ -162,9 +169,13 @@ object WikiData {
                         personalNames[id] = IndividualName()
                     }
                 }
-                row["${givenName}Label"]?.let { n -> personalNames[id]?.givenNames?.set(row[ordinal]?.toIntOrNull() ?: 0, n) }
-                row["${familyName}Label"]?.let { n ->
-                    if (row["${familyNameType}Label"] == "maiden name") {
+                row["${SPARQL.givenName}Label"]?.let { n ->
+                    personalNames[id]?.givenNames?.set(
+                        row[SPARQL.ordinal]?.toIntOrNull() ?: 0, n
+                    )
+                }
+                row["${SPARQL.familyName}Label"]?.let { n ->
+                    if (row["${SPARQL.familyNameType}Label"] == "maiden name") {
                         personalNames[id]?.maidenName = n
                     } else {
                         personalNames[id]?.marriageName = n
@@ -537,19 +548,21 @@ object WikiData {
         return RelationsResponse(listOf(target), people.toList(), relations.toList())
     }
 
-    private const val item = "item"
-    private const val name = "itemLabel"
-    private const val gender = "gender"
-    private const val givenName = "fname"
-    private const val familyName = "lname"
-    private const val ordinal = "ordinal"
-    private const val familyNameType = "maiden"
-    private const val dateOfBirth = "dateOfBirth"
-    private const val dateOfDeath = "dateOfDeath"
-    private const val placeOfBirth = "placeOfBirth"
-    private const val placeOfBirthCountry = "placeOfBirthCountry"
-    private const val placeOfDeath = "placeOfDeath"
-    private const val placeOfDeathCountry = "placeOfDeathCountry"
+    private object SPARQL {
+        const val item = "item"
+        const val name = "itemLabel"
+        const val gender = "gender"
+        const val givenName = "fname"
+        const val familyName = "lname"
+        const val ordinal = "ordinal"
+        const val familyNameType = "maiden"
+        const val dateOfBirth = "dateOfBirth"
+        const val dateOfDeath = "dateOfDeath"
+        const val placeOfBirth = "placeOfBirth"
+        const val placeOfBirthCountry = "placeOfBirthCountry"
+        const val placeOfDeath = "placeOfDeath"
+        const val placeOfDeathCountry = "placeOfDeathCountry"
+    }
 }
 
 val JsonElement.asObjectOrNull
