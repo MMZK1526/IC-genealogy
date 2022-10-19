@@ -2,44 +2,6 @@ import React from 'react';
 import Tree from 'react-d3-tree';
 import './FamilyTree.css';
 
-
-const exampleData = {
-    name: 'CEO',
-    children: [
-        {
-            name: 'Manager',
-            attributes: {
-                department: 'Production',
-            },
-            children: [
-                {
-                    name: 'Foreman',
-                    attributes: {
-                        department: 'Fabrication',
-                    },
-                    children: [
-                        {
-                            name: 'Worker',
-                        },
-                    ],
-                },
-                {
-                    name: 'Foreman',
-                    attributes: {
-                        department: 'Assembly',
-                    },
-                    children: [
-                        {
-                            name: 'Worker',
-                        },
-                    ],
-                },
-            ],
-        },
-    ],
-};
-
-
 export class FamilyTree extends React.Component {
     constructor(props) {
         super(props);
@@ -49,10 +11,14 @@ export class FamilyTree extends React.Component {
 
     render() {
         return (
-            <div id="treeWrapper" style={{width: '50em', height: '30em'}} className='center' >
-                <Tree data={this.transform(this.props.data)}pathFunc='step' orientation='vertical' translate={{x: 100, y: 50}}
-                      depthFactor={this.state.showChildren ? 100 : -100} separation={{siblings: 3}} />
-            </div>
+            <Tree
+                data={this.transform(this.props.data)}
+                pathFunc='step'
+                orientation='vertical'
+                translate={{x: 100, y: 50}}
+                depthFactor={this.state.showChildren ? 100 : -100}
+                separation={{siblings: 3}}
+            />
         );
     }
 

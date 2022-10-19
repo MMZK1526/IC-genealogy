@@ -1,5 +1,4 @@
 import './App.css';
-// import './FamilyTree.css';
 import {FamilyTree} from "./FamilyTree";
 import _ from "lodash";
 import {Sidebar} from './components/sidebar/Sidebar.js';
@@ -56,14 +55,11 @@ class NameForm extends React.Component {
     render() {
         return ( 
             <div className='App'>
-                {this.state.searchJsons
-                    ? <Topbar
-                        state={this.state}
-                        onChange={this.handleChangeChosenId}
-                        onSubmit={this.handleRelationsSubmit}
-                    />
-                    : 'No data fetched'
-                }
+                <Topbar
+                    state={this.state}
+                    onChange={this.handleChangeChosenId}
+                    onSubmit={this.handleRelationsSubmit}
+                />
                 <Sidebar
                     nameChange={this.handleChangeInitialName}
                     yearFromChange={this.handleChangeFrom}
