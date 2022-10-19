@@ -45,6 +45,7 @@ fun Application.configureRouting() {
                 }
 
                 newNames.addAll(matchedNamesInDB)
+                println("REALLY DONE!")
                 call.respond(newNames)
             } ?: call.respond(
                 HttpStatusCode.BadRequest,
