@@ -145,14 +145,14 @@ class NameForm extends React.Component {
             var to = this.state.toYear
             console.log(typeof(from))
             if (from !== '' && to !== '') {
-                r = Object.values(r).filter(function (v) {
-                    return parseInt(v.dateOfBirth.substring(0,4)) >= parseInt(from) && parseInt(v.dateOfBirth.substring(0,4)) <= parseInt(to)
-                });
+                r = r.filter((v) => (
+                    parseInt(v.dateOfBirth.substring(0,4)) >= parseInt(from) && parseInt(v.dateOfBirth.substring(0,4)) <= parseInt(to)
+                    ));
             } else if (from !== '') {
-                r = Object.values(r).filter(function (v) {
+                r = r.filter(function (v) {
                     return parseInt(v.dateOfBirth.substring(0,4)) >= parseInt(from)});
             } else if (to !== '') {
-                r = Object.values(r).filter(function (v) {
+                r = r.filter(function (v) {
                     return parseInt(v.dateOfBirth.substring(0,4)) <= parseInt(to)});
             }
             
