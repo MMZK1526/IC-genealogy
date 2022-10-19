@@ -55,9 +55,7 @@ object WikiData {
     private fun formatLocationWithCountry(location: String?, country: String?) =
         if (location != null && country != null) {
             "$location, $country"
-        } else if (location != null) {
-            location
-        } else if (country != null) {
+        } else location ?: if (country != null) {
             country
         } else {
             null
@@ -132,8 +130,8 @@ object WikiData {
                   ?${SPARQL.givenName}_ ps:P735 ?${SPARQL.givenName} .
                   OPTIONAL { ?${SPARQL.givenName}_ pq:P1545 ?${SPARQL.ordinal} . }
                   OPTIONAL { ?${SPARQL.item} p:P734 ?${SPARQL.familyName}_ .
-                             ?${SPARQL.familyName}_ ps:P734 ?${SPARQL.familyName} . }
-                  OPTIONAL { ?${SPARQL.familyName}_ pq:P3831 ?${SPARQL.familyNameType} . }
+                             ?${SPARQL.familyName}_ ps:P734 ?${SPARQL.familyName} .
+                             OPTIONAL { ?${SPARQL.familyName}_ pq:P3831 ?${SPARQL.familyNameType} . } }
                   OPTIONAL { ?${SPARQL.item} wdt:P569 ?${SPARQL.dateOfBirth} . }
                   OPTIONAL { ?${SPARQL.item} wdt:P570 ?${SPARQL.dateOfDeath} . }
                   OPTIONAL { ?${SPARQL.item} p:P19 ?${SPARQL.placeOfBirth}_ .
@@ -156,12 +154,12 @@ object WikiData {
         """.trimIndent()
         val results = try {
             repo.connection.prepareTupleQuery(querySelect).evaluate()
-
         } catch (exception: Exception) {
             exception.printStackTrace()
             null
         }
 
+        println("FINIED")
         results?.let { parseSearchResults(it) } ?: listOf()
     }
 
@@ -179,8 +177,8 @@ object WikiData {
                   ?${SPARQL.givenName}_ ps:P735 ?${SPARQL.givenName} .
                   OPTIONAL { ?${SPARQL.givenName}_ pq:P1545 ?${SPARQL.ordinal} . }
                   OPTIONAL { ?${SPARQL.item} p:P734 ?${SPARQL.familyName}_ .
-                             ?${SPARQL.familyName}_ ps:P734 ?${SPARQL.familyName} . }
-                  OPTIONAL { ?${SPARQL.familyName}_ pq:P3831 ?${SPARQL.familyNameType} . }
+                             ?${SPARQL.familyName}_ ps:P734 ?${SPARQL.familyName} .
+                              OPTIONAL { ?${SPARQL.familyName}_ pq:P3831 ?${SPARQL.familyNameType} . } }
                   OPTIONAL { ?${SPARQL.item} wdt:P569 ?${SPARQL.dateOfBirth} . }
                   OPTIONAL { ?${SPARQL.item} wdt:P570 ?${SPARQL.dateOfDeath} . }
                   OPTIONAL { ?${SPARQL.item} p:P19 ?${SPARQL.placeOfBirth}_ .
