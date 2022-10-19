@@ -222,54 +222,6 @@ object WikiData {
         }
     }
 
-    // Fetch at most four IDs that partially matches the search query
-    suspend fun searchName(name: String) = coroutineScope {
-        val url = url {
-            host = "www.wikidata.org"
-            path("/w/api.php")
-            parameters.append("action", "wbsearchentities")
-            parameters.append("format", "json")
-            parameters.append("search", name)
-            parameters.append("language", "en")
-            parameters.append("limit", "4")
-            parameters.append("formatversion", "latest")
-        }
-        val response = client.get(url)
-        JsonParser.parseString(response.bodyAsText()).asObjectOrNull?.get("search")?.asArrayOrNull?.mapNotNull {
-            it?.asObjectOrNull?.get("id")?.asStringOrNull
-        }
-    }
-
-    // Get the values corresponding to the list of WikiData IDs.
-    private suspend fun getValues(ids: List<String>) = coroutineScope {
-        if (ids.isEmpty()) {
-            mapOf()
-        } else {
-            val url = ids.joinToString(separator = "|").let {
-                url {
-                    host = "www.wikidata.org"
-                    path("/w/api.php")
-                    parameters.append("action", "wbgetentities")
-                    parameters.append("format", "json")
-                    parameters.append("ids", it)
-                    parameters.append("language", "en")
-                    parameters.append("props", "labels")
-                    parameters.append("formatversion", "2")
-                }
-            }
-            val response = client.get(url)
-
-            ids.map {
-                it to run {
-                    val entity =
-                        JsonParser.parseString(response.bodyAsText()).asObjectOrNull?.get("entities")
-                            ?.asObjectOrNull?.get(it)?.asObjectOrNull
-                    entity
-                        ?.get("labels")
-                        ?.asObjectOrNull?.get("en")
-                        ?.asObjectOrNull?.get("value")
-                        ?.asStringOrNull
-
     // Get the values and claims corresponding to the list of WikiData IDs
     private suspend fun getValuesAndClaims(ids: List<String>) = coroutineScope {
         if (ids.isEmpty()) {
@@ -322,8 +274,6 @@ object WikiData {
 
                 knownResults
             }
-        }
-    }
 
         suspend fun readProperties(
             claims: Map<String?, JsonObject>,
@@ -391,84 +341,6 @@ object WikiData {
                     listOf(null to Fields.country)
                 ).values.first()
             }
-            pcq?.first?.let { p -> country?.let { "$p, $it" } ?: p }
-        }
-
-        suspend fun parseGivenName(pcqs: List<Triple<String?, JsonElement?, JsonElement?>>) = coroutineScope {
-            var hasOrdinal = false
-            val nameOrdList = mutableListOf<Pair<String, Int>>()
-
-            for (pcq in pcqs) {
-                val ordinal =
-                    pcq.third?.asObjectOrNull?.get(Fields.seriesOrdinal)?.asArrayOrNull?.firstOrNull()?.asObjectOrNull
-                        ?.get("datavalue")?.asObjectOrNull?.get("value")?.asStringOrNull?.toIntOrNull() ?: 0
-                if (ordinal != 0) {
-                    hasOrdinal = true
-                }
-
-                pcq.first?.let {
-                    nameOrdList.add(it to ordinal)
-                    if (ordinal != 0) {
-                        hasOrdinal = true
-                    }
-                    else -> async { null }
-                }
-
-            if (hasOrdinal) {
-                nameOrdList.sortBy { it.second }
-                nameOrdList.filter { it.second != 0 }.map { it.first }.reduceOrNull { n1, n2 -> "$n1 $n2" }
-            } else {
-                nameOrdList.firstOrNull()?.first
-            }
-        }
-
-        suspend fun parseFamilyName(pcqs: List<Triple<String?, JsonElement?, JsonElement?>>) = coroutineScope {
-            var maidenName: String? = null
-            var familyName: String? = null
-
-            for (pcq in pcqs) {
-                if (pcq.third?.asObjectOrNull?.get(Fields.objectHasRole)?.asArrayOrNull?.firstOrNull()?.asObjectOrNull
-                        ?.get("datavalue")?.asObjectOrNull?.get("value")?.asObjectOrNull?.get("id")?.asStringOrNull == Fields.maidenName
-                ) {
-                    maidenName = pcq.first
-                } else {
-                    familyName = pcq.first
-                }
-
-                if (maidenName != null && familyName != null) {
-                    break
-                }
-            }
-
-            listOfNotNull(familyName, maidenName).joinToString(separator = "&").let {
-                it.ifBlank {
-                    null
-                }
-
-                val valueClaims = getValuesAndClaims(indirections.values.mapNotNull { it.first }.toList())
-                for (i in indirections) {
-                    knownResults[i.key]?.addAll(i.value.map { (id, references) ->
-                        Triple(
-                            valueClaims[id]?.first,
-                            valueClaims[id]?.second,
-                            qualifiers
-                        )
-                    })
-                    deferrals[i.key] = async {
-                        knownResults[i.key]?.let { queries[i.key]?.invoke(it) ?: it.firstOrNull()?.first }
-                    }
-                }
-
-                for (d in deferrals) {
-                    results[d.key] = d.value.await()
-                }
-
-                results
-            }
-
-        suspend fun countryOfPlace(pcqs: List<Triple<String?, JsonElement?, JsonElement?>>) = coroutineScope {
-            val pcq = pcqs.firstOrNull()
-            val country = pcq?.second?.asObjectOrNull?.readProperties(listOf(Fields.country))?.values?.first()
             pcq?.first?.let { p -> country?.let { "$p, $it" } ?: p }
         }
 
@@ -584,35 +456,6 @@ object WikiData {
                     nameMap[id]?.let {
                         IndividualDTO(
                             makeID(id),
-                            it,
-                            personalName ?: it,
-                            queryResults[id to Fields.dateOfBirth],
-                            queryResults[id to Fields.dateOfDeath],
-                            queryResults[id to Fields.placeOfBirth],
-                            queryResults[id to Fields.placeOfDeath],
-                            genderMap[id] ?: 'U',
-                            false
-                        )
-                    }
-                }
-
-                val queryResults = readProperties(claimMap, queries)
-
-                ids.map { id ->
-                    val givenName = queryResults[id to Fields.givenName]
-                    val personalName = queryResults[id to Fields.familyName]?.let { familyName ->
-                        val familyNameSplit = familyName.split("&", limit = 2)
-                        if (familyNameSplit.size == 1) {
-                            givenName?.let { "$familyName, $givenName" } ?: familyName
-                        } else {
-                            givenName?.let { "${familyNameSplit[0]}, $givenName, née ${familyNameSplit[1]}" }
-                                ?: "${familyNameSplit[0]}, née ${familyNameSplit[1]}"
-                        }
-                    } ?: givenName
-
-                    nameMap[id]?.let {
-                        IndividualDTO(
-                            id,
                             it,
                             personalName ?: it,
                             queryResults[id to Fields.dateOfBirth],

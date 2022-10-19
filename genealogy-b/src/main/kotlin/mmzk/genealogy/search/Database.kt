@@ -108,40 +108,5 @@ object Database {
         }
     }
 
-    fun findRelatedPeople(ids: Set<String>, typeFilter: List<String>?, peopleFilter: List<String> = listOf()) =
-        transaction TRANS@{
-            val targets = Individual.find {
-                IndividualTable.id.asStringColumn.inList(ids)
-            }
-            if (targets.empty()) {
-                return@TRANS RelationsResponse.empty
-            }
-            val relationships = Relationship.find {
-                var exp = RelationshipTable.person1.asStringColumn.inList(ids) or
-                        RelationshipTable.person2.asStringColumn.inList(ids) and
-                        RelationshipTable.person1.asStringColumn.notInList(peopleFilter) and
-                        RelationshipTable.person2.asStringColumn.notInList(peopleFilter)
-                if (typeFilter != null && typeFilter != listOf("all")) {
-                    exp = exp and RelationshipTable.type.asStringColumn.inList(typeFilter)
-                }
-                exp
-            }
-            val individuals = relationships.mapNotNull {
-                if (it.person1.id.value in ids && it.person2.id.value in ids) {
-                    null
-                } else if (it.person1.id.value in ids) {
-                    it.person2
-                } else {
-                    it.person1
-                }
-            }
-
-            RelationsResponse(
-                targets = targets.toDTOWithAdditionalProperties(),
-                people = individuals.toDTOWithAdditionalProperties(),
-                relations = relationships.map(::RelationshipDTO)
-            )
-        }
-
     private val Column<EntityID<String>>.asStringColumn get() = castTo<String>(VarCharColumnType(32))
 }
