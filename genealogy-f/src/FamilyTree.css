@@ -1,11 +1,10 @@
-.node__root > circle {
+.center {
+  margin: auto;
+}
+.node__default {
+  fill : cornflowerblue;
+}
+
+.node__root {
   fill: red;
-}
-
-.node__branch > circle {
-  fill: cornflowerblue;
-}
-
-.node__leaf > circle {
-  fill: cornflowerblue;
 }

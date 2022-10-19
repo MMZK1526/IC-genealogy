@@ -1,6 +1,44 @@
 import React, {useState} from 'react';
 import Tree from 'react-d3-tree';
 import './FamilyTree.css';
+import Charles from './images/charlesIII.jpg';
+import Elizabeth from './images/elizabeth2nd.jpg';
+import Philip from './images/princePhilip.jpg';
+
+
+
+const picMap = new Map();
+picMap.set("WD-Q9682", Elizabeth);
+picMap.set("WD-Q43274", Charles);
+picMap.set("WD-Q80976", Philip)
+// const img = new Image();
+// img.src = {Charles};
+
+const renderForeignObjectNode = ({
+    nodeDatum,
+    toggleNode,
+    foreignObjectProps
+  }) => (
+
+    <g>
+      <circle r={15} className = {nodeDatum.className}></circle>
+      {/* `foreignObject` requires width & height to be explicitly set. */}
+      <foreignObject {...foreignObjectProps}>
+        {/* <div><img src={Charles} width={img.width} height={img.height} alt="contacts" /></div> */}
+        <text x="30" y ="10">{nodeDatum.name}</text>
+        <div><img src={nodeDatum.image} width="100" height="126" alt="N/A" /></div>
+        {/* <div style={{ border: "1px solid black", backgroundColor: "#dedede" }}>
+          <h3 style={{ textAlign: "center" }}>hello</h3>
+          {nodeDatum.children && (
+            <button style={{ width: "100%" }} onClick={toggleNode}>
+              {nodeDatum.__rd3t.collapsed ? "Expand" : "Collapse"}
+            </button>
+          )}
+        </div> */}
+      </foreignObject>
+    </g>
+  );
+
 
 export class FamilyTree extends React.Component {
     constructor(props) {
@@ -19,6 +57,8 @@ export class FamilyTree extends React.Component {
     }
 
     render() {
+        // const nodeSize = { x: 200, y: 200 };
+        const foreignObjectProps = { width: 100, height: 200, x: 20 };
         return (
             <Tree
                 data={this.transform(this.props.data)}
@@ -27,9 +67,11 @@ export class FamilyTree extends React.Component {
                 translate={{x: 500, y: 500}}
                 depthFactor={this.state.showChildren ? 100 : -100}
                 separation={{siblings: 3}}
-                rootNodeClassName="node__root"
-                branchNodeClassName="node__branch"
                 onNodeMouseOver={this.handleMouseOver}
+                enableLegacyTransitions={true}
+                renderCustomNodeElement={(rd3tProps) =>
+                    renderForeignObjectNode({ ...rd3tProps, foreignObjectProps})
+                  }
             />
         );
     }
@@ -66,9 +108,12 @@ export class FamilyTree extends React.Component {
                 let targets = targetIds.map((id) => (generateNodeHelper({id: id, depth: depth + 1})));
                 let depths = targets.map((x) => x.max_depth);
                 let max_depth = depths.length > 0 ? Math.max(...depths) + 1 : depth;
+                let classname = depth ? "node__default" : "node__root";
                 let res = {
                     name: idName.get(id),
                     children: targets,
+                    image: picMap.get(id),
+                    className: classname,
                     max_depth: max_depth,
                 };
                 return res;
