@@ -11,20 +11,23 @@
   align-self: flex-start;
   align-items: center;
   justify-content: center;
-  width: 80vw;
-  height: 85vh;
-  margin-left: 30px;
-  margin-top: 20px;
-  border: 2px dashed gray;
+  width: 85vw;
+  height: 99vh;
+  /* border: 2px dashed gray; */
+}
+
+.tree-box #welcome{
+  text-align: start;
 }
 
 .tree-box #title{
   font-size: 40pt;
-  margin: 20px;
+  padding-bottom: 10px;
 }
 
 .tree-box #desc{
-  font-size: 16pt;
+  font-size: 20pt;
+  color: darkslategray;
 }
 
 table {

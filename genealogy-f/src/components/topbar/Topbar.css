@@ -1,9 +1,9 @@
 .topbar{
-  display: flex;
+  position: absolute;
+  top: 10px;
   align-self: center;
   align-items: center;
   background-color: beige;
-  margin: 10px;
   padding-left: 20px;
   padding-right: 20px;
   border-radius: 5px;

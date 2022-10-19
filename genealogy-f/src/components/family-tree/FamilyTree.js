@@ -1,11 +1,9 @@
-import React, {useState} from 'react';
+import React from 'react';
 import Tree from 'react-d3-tree';
 import './FamilyTree.css';
 import Charles from './images/charlesIII.jpg';
 import Elizabeth from './images/elizabeth2nd.jpg';
 import Philip from './images/princePhilip.jpg';
-
-
 
 const picMap = new Map();
 picMap.set("WD-Q9682", Elizabeth);
@@ -39,7 +37,6 @@ const renderForeignObjectNode = ({
     </g>
   );
 
-
 export class FamilyTree extends React.Component {
     constructor(props) {
         super(props);
@@ -59,12 +56,13 @@ export class FamilyTree extends React.Component {
     render() {
         // const nodeSize = { x: 200, y: 200 };
         const foreignObjectProps = { width: 100, height: 200, x: 20 };
+        const {innerWidth, innerHeight} = window;
         return (
             <Tree
                 data={this.transform(this.props.data)}
                 pathFunc='step'
                 orientation='vertical'
-                translate={{x: 500, y: 500}}
+                translate={{x: innerWidth / 2, y: innerWidth / 2}}
                 depthFactor={this.state.showChildren ? 100 : -100}
                 separation={{siblings: 3}}
                 onNodeMouseOver={this.handleMouseOver}

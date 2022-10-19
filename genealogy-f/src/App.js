@@ -58,12 +58,7 @@ class NameForm extends React.Component {
     }
     render() {
         return ( 
-            <div className='App'>
-                <Topbar
-                    state={this.state}
-                    onChange={this.handleChangeChosenId}
-                    onSubmit={this.handleRelationsSubmit}
-                />
+            <div className='App'>                
                 <Sidebar
                     nameChange={this.handleChangeInitialName}
                     yearFromChange={this.handleChangeFrom}
@@ -91,12 +86,21 @@ class NameForm extends React.Component {
                             showChildren={true}
                         />
                         : <div id='welcome'>
-                            <label id='title'>Ancesta - Genealogy Project</label>
-                            <br></br>
-                            <label id='desc'>Search a name to start</label>
+                            <div id='title'>Ancesta - Genealogy Project</div>
+                            <div id='desc'>Search a name to start</div>
                         </div>
                     }
                 </div>
+                {
+                    !_.isEmpty(this.state.searchJsons) && _.isEmpty(this.state.relationsJson)
+                    ? <Topbar
+                        state={this.state}
+                        onChange={this.handleChangeChosenId}
+                        onSubmit={this.handleRelationsSubmit}
+                    />
+                    : ''
+                }
+                
             </div>
         );
     }
