@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import Tree from 'react-d3-tree';
 import './FamilyTree.css';
 
@@ -6,7 +6,16 @@ export class FamilyTree extends React.Component {
     constructor(props) {
         super(props);
         this.transform = this.transform.bind(this);
-        this.state = {};
+        this.handleMouseOver = this.handleMouseOver.bind(this);
+        this.state = {
+            currNode: null,
+            showNode: false
+        }
+    }
+
+    handleMouseOver(nodeData, evt) {
+        this.setState({showNode: true})
+        this.setState({currNode: nodeData})
     }
 
     render() {
@@ -15,9 +24,12 @@ export class FamilyTree extends React.Component {
                 data={this.transform(this.props.data)}
                 pathFunc='step'
                 orientation='vertical'
-                translate={{x: 100, y: 50}}
+                translate={{x: 500, y: 500}}
                 depthFactor={this.state.showChildren ? 100 : -100}
                 separation={{siblings: 3}}
+                rootNodeClassName="node__root"
+                branchNodeClassName="node__branch"
+                onNodeMouseOver={this.handleMouseOver}
             />
         );
     }

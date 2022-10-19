@@ -6,7 +6,7 @@
   align-self: flex-end;
   align-items: flex-start;
   height: 100vh;
-  min-width: 240px;
+  width: 15vw;
   background-color: rgba(201, 220, 236, 1);
 }
 
