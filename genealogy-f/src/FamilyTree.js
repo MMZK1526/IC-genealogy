@@ -45,13 +45,12 @@ export class FamilyTree extends React.Component {
         super(props);
         this.transform = this.transform.bind(this);
         this.state = {};
-        this.state.data = this.transform(this.props.data);
     }
 
     render() {
         return (
             <div id="treeWrapper" style={{width: '50em', height: '30em'}} className='center' >
-                <Tree data={this.state.data} pathFunc='step' orientation='vertical' translate={{x: 100, y: 50}}
+                <Tree data={this.transform(this.props.data)}pathFunc='step' orientation='vertical' translate={{x: 100, y: 50}}
                       depthFactor={this.state.showChildren ? 100 : -100} separation={{siblings: 3}} />
             </div>
         );
@@ -63,7 +62,6 @@ export class FamilyTree extends React.Component {
         let people = data.people;
         people.push(target);
         let targetId = target.id;
-        // let targetId = 'WD-Q43274';
         idName.set(targetId, target.name);
         for (let x of data.people) {
             idName.set(x.id, x.name);

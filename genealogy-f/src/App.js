@@ -86,7 +86,10 @@ class NameForm extends React.Component {
                 <div className='tree-box'>
                     {
                         !_.isEmpty(this.state.relationsJson)
-                        ? <FamilyTree data={this.state.relationsJson} showChildren={false} />
+                        ? <FamilyTree
+                            data={this.state.relationsJson}
+                            showChildren={true}
+                        />
                         : <div id='welcome'>
                             <label id='title'>Genealogy Project</label>
                             <br></br>
@@ -166,6 +169,7 @@ class NameForm extends React.Component {
     }
 
     async handleRelationsSubmit(event) {
+        console.log(this.state.chosenId);
         if (this.state.chosenId === '') {
             alert("Haven't selected a person!");
             return;
