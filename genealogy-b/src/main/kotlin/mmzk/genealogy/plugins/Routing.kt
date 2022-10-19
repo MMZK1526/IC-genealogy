@@ -62,5 +62,9 @@ fun Application.configureRouting() {
                 mapOf("error" to "Missing query parameter \"q\"!")
             )
         }
+
+        get("test") {
+            call.respond(WikiData.searchByIDs(listOf("Q9682", "Q9685")))
+        }
     }
 }
