@@ -30,7 +30,7 @@ fun Application.configureRouting() {
         }
 
         get("/test") {
-            call.respond(WikiData.query(listOf("Q9685", "Q9682", "Q5")))
+            call.respond(WikiData.foo())
         }
 
         get("/search") {

@@ -41,6 +41,9 @@ dependencies {
     implementation("org.postgresql:postgresql:42.5.0")
     implementation("com.zaxxer:HikariCP:2.7.8")
     implementation("com.google.code.gson:gson:2.9.1")
+    implementation("org.eclipse.rdf4j:rdf4j-query:4.2.0")
+    implementation("org.eclipse.rdf4j:rdf4j-queryresultio-sparqljson:4.2.0")
+    implementation("org.eclipse.rdf4j:rdf4j-repository-sparql:4.2.0")
 
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")

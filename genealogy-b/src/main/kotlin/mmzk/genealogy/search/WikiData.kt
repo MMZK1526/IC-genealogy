@@ -8,16 +8,48 @@ import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
-import io.ktor.http.path
-import io.ktor.server.util.url
-import kotlinx.coroutines.*
+import io.ktor.http.*
+import io.ktor.server.util.*
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import mmzk.genealogy.dao.Individual
 import mmzk.genealogy.dto.IndividualDTO
+import mmzk.genealogy.dto.IndividualName
 import mmzk.genealogy.dto.RelationsResponse
 import mmzk.genealogy.dto.RelationshipDTO
 import mmzk.genealogy.tables.Fields
+import org.eclipse.rdf4j.repository.sparql.SPARQLRepository
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.net.URLEncoder
+import java.util.*
+import kotlin.collections.List
+import kotlin.collections.Map
+import kotlin.collections.MutableList
+import kotlin.collections.MutableMap
+import kotlin.collections.MutableSet
+import kotlin.collections.associate
+import kotlin.collections.filter
+import kotlin.collections.filterNotNull
+import kotlin.collections.first
+import kotlin.collections.firstOrNull
+import kotlin.collections.flatten
+import kotlin.collections.get
+import kotlin.collections.isNotEmpty
+import kotlin.collections.iterator
+import kotlin.collections.joinToString
+import kotlin.collections.listOf
+import kotlin.collections.listOfNotNull
+import kotlin.collections.map
+import kotlin.collections.mapNotNull
+import kotlin.collections.mapOf
+import kotlin.collections.mutableListOf
+import kotlin.collections.mutableMapOf
+import kotlin.collections.mutableSetOf
+import kotlin.collections.reduceOrNull
+import kotlin.collections.removeFirst
+import kotlin.collections.set
+import kotlin.collections.sortBy
+import kotlin.collections.toList
 
 object WikiData {
     private val client = HttpClient(CIO) {
@@ -26,10 +58,130 @@ object WikiData {
         }
     }
 
-    // Translate a WikiData ID into a Database ID
+    // Translate a WikiData ID into a Database ID.
     private fun makeID(id: String): String = "WD-$id"
 
-    // Fetch at most four IDs that partially matches the search query
+    // Build the WikiData GET request URL with IDs.
+    private fun makeQueryURL(ids: List<String>, getClaims: Boolean) = ids.joinToString(separator = "|").let {
+        url {
+            host = "www.wikidata.org"
+            path("/w/api.php")
+            parameters.append("action", "wbgetentities")
+            parameters.append("format", "json")
+            parameters.append("ids", it)
+            parameters.append("languages", "en")
+            parameters.append(
+                "props", "labels${
+                    if (getClaims) {
+                        "|claims"
+                    } else {
+                        ""
+                    }
+                }"
+            )
+            parameters.append("formatversion", "2")
+        }
+    }
+
+    private fun formatLocationWithCountry(location: String?, country: String?) =
+        if (location != null && country != null) {
+            "$location, $country"
+        } else if (location != null) {
+            location
+        } else if (country != null) {
+            country
+        } else {
+            null
+        }
+
+    suspend fun foo() = coroutineScope {
+        val sparqlEndpoint = "https://query.wikidata.org/sparql"
+        val repo = SPARQLRepository(sparqlEndpoint)
+
+        val userAgent = "Wikidata RDF4J Java Example/0.1 (https://query.wikidata.org/)"
+        repo.additionalHttpHeaders =
+            Collections.singletonMap("User-Agent", userAgent)
+
+        val querySelect = """
+              SELECT ?$item ?$name ?${givenName}Label ?${familyName}Label ?$ordinal ?${familyNameType}Label ?$dateOfBirth ?$dateOfDeath ?${placeOfBirth}Label ?${placeOfBirthCountry}Label ?${placeOfDeath}Label ?${placeOfDeathCountry}Label ?${gender}Label WHERE {
+                  ?$item wdt:P31 wd:Q5.
+                
+                  ?$item p:P735 ?${givenName}_ .
+                  ?${givenName}_ ps:P735 ?$givenName .
+                  OPTIONAL { ?${givenName}_ pq:P1545 ?$ordinal . }
+                  OPTIONAL { ?$item p:P734 ?${familyName}_ .
+                             ?${familyName}_ ps:P734 ?$familyName .
+                             ?${familyName}_ pq:P3831 ?$familyNameType . }
+                  OPTIONAL { ?$item wdt:P569 ?$dateOfBirth . }
+                  OPTIONAL { ?$item wdt:P570 ?$dateOfDeath . }
+                  OPTIONAL { ?$item p:P19 ?${placeOfBirth}_ .
+                             ?${placeOfBirth}_ ps:P19 ?$placeOfBirth .
+                             ?$placeOfBirth wdt:P17 ?$placeOfBirthCountry . }
+                  OPTIONAL { ?$item p:P20 ?${placeOfDeath}_ .
+                             ?${placeOfDeath}_ ps:P20 ?$placeOfDeath .
+                             ?$placeOfDeath wdt:P17 ?$placeOfDeathCountry . }
+                  OPTIONAL { ?$item wdt:P21 ?$gender . }
+                  SERVICE wikibase:mwapi {
+                    bd:serviceParam wikibase:api "EntitySearch" .
+                    bd:serviceParam wikibase:endpoint "www.wikidata.org" .
+                    bd:serviceParam mwapi:search "Diana" .
+                    bd:serviceParam mwapi:action "wbsearchentities" .
+                    bd:serviceParam mwapi:language "en" .
+                    ?item wikibase:apiOutputItem mwapi:item .
+                  }
+                  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+                }
+        """.trimIndent()
+        try {
+            val results = repo.connection.prepareTupleQuery(querySelect).evaluate()
+            val dtos = mutableMapOf<String, IndividualDTO>()
+            val personalNames = mutableMapOf<String, IndividualName>()
+            for (result in results) {
+                val row = mutableMapOf<String, String>()
+                for (value in result) {
+                    row[value.name] = value.value.stringValue()
+                }
+                val id = row[item]?.let(::Url)?.pathSegments?.lastOrNull() ?: continue
+                if (!dtos.contains(id)) {
+                    val name = row[name]
+                    if (name != null) {
+                        dtos[id] = IndividualDTO(
+                            id,
+                            name,
+                            "",
+                            row[dateOfBirth],
+                            row[dateOfDeath],
+                            formatLocationWithCountry(row["${placeOfBirth}Label"], row["${placeOfBirthCountry}Label"]),
+                            formatLocationWithCountry(row["${placeOfDeath}Label"], row["${placeOfDeathCountry}Label"]),
+                            when (row["${gender}Label"]) {
+                                "male" -> 'M'
+                                "female" -> 'F'
+                                else -> 'U'
+                            }
+                        )
+                        personalNames[id] = IndividualName()
+                    }
+                }
+                row["${givenName}Label"]?.let { n -> personalNames[id]?.givenNames?.set(row[ordinal]?.toIntOrNull() ?: 0, n) }
+                row["${familyName}Label"]?.let { n ->
+                    if (row["${familyNameType}Label"] == "maiden name") {
+                        personalNames[id]?.maidenName = n
+                    } else {
+                        personalNames[id]?.marriageName = n
+                    }
+                }
+            }
+            for ((id, dto) in dtos) {
+                dto.personalName = personalNames[id]?.fullName ?: dto.name
+            }
+            dtos.values.toList()
+        } catch (exception: Exception) {
+            exception.printStackTrace()
+            listOf()
+        }
+    }
+
+    // Fetch at most four IDs that partially matches the search query.
     suspend fun searchName(name: String) = coroutineScope {
         val url = url {
             host = "www.wikidata.org"
@@ -52,19 +204,7 @@ object WikiData {
         if (ids.isEmpty()) {
             mapOf()
         } else {
-            val url = ids.joinToString(separator = "|").let {
-                url {
-                    host = "www.wikidata.org"
-                    path("/w/api.php")
-                    parameters.append("action", "wbgetentities")
-                    parameters.append("format", "json")
-                    parameters.append("ids", it)
-                    parameters.append("language", "en")
-                    parameters.append("props", "labels")
-                    parameters.append("formatversion", "2")
-                }
-            }
-            val response = client.get(url)
+            val response = client.get(makeQueryURL(ids, false))
 
             ids.map {
                 it to run {
@@ -87,19 +227,7 @@ object WikiData {
         if (ids.isEmpty()) {
             mapOf()
         } else {
-            val url = ids.joinToString(separator = "|").let {
-                url {
-                    host = "www.wikidata.org"
-                    path("/w/api.php")
-                    parameters.append("action", "wbgetentities")
-                    parameters.append("format", "json")
-                    parameters.append("ids", it)
-                    parameters.append("language", "en")
-                    parameters.append("props", "labels|claims")
-                    parameters.append("formatversion", "2")
-                }
-            }
-            val response = client.get(url)
+            val response = client.get(makeQueryURL(ids, true))
 
             ids.map {
                 it to run {
@@ -282,7 +410,6 @@ object WikiData {
                 for (entry in nameClaims) {
                     val id = entry.key
                     val (name, claims) = entry.value
-
                     if (claims?.asObjectOrNull?.get(Fields.instanceOf)?.asArrayOrNull?.map
                         {
                             it?.asObjectOrNull?.get("mainsnak")?.asObjectOrNull?.get("datavalue")?.asObjectOrNull
@@ -409,6 +536,20 @@ object WikiData {
 
         return RelationsResponse(listOf(target), people.toList(), relations.toList())
     }
+
+    private const val item = "item"
+    private const val name = "itemLabel"
+    private const val gender = "gender"
+    private const val givenName = "fname"
+    private const val familyName = "lname"
+    private const val ordinal = "ordinal"
+    private const val familyNameType = "maiden"
+    private const val dateOfBirth = "dateOfBirth"
+    private const val dateOfDeath = "dateOfDeath"
+    private const val placeOfBirth = "placeOfBirth"
+    private const val placeOfBirthCountry = "placeOfBirthCountry"
+    private const val placeOfDeath = "placeOfDeath"
+    private const val placeOfDeathCountry = "placeOfDeathCountry"
 }
 
 val JsonElement.asObjectOrNull
