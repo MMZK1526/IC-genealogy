@@ -149,17 +149,18 @@ class NameForm extends React.Component {
         }
         event.preventDefault();
         await this.requests.search(this.state.initialName).then(r => {
-            var from = this.state.fromYear
-            var to = this.state.toYear
+            var from = this.state.fromYear;
+            var to = this.state.toYear;
 
             r = Object.values(r).filter(function (v) {
                 var birth = v.dateOfBirth
+                if (birth == null) return true;
                 if (from !== '' && to !== '') {
                     return (birth == null) || (parseInt(birth.substring(0,4)) >= parseInt(from) && parseInt(birth.substring(0,4)) <= parseInt(to))
                 } else if (from !== '') {
-                    return (birth == null) || parseInt(birth.substring(0,4)) >= parseInt(from)
+                    return parseInt(birth.substring(0,4)) >= parseInt(from);
                 } else if (to !== '') {
-                    return (birth == null) || parseInt(birth.substring(0,4)) <= parseInt(to)
+                    return parseInt(birth.substring(0,4)) <= parseInt(to);
                 }
                 return true;   
             });
