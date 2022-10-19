@@ -6,7 +6,7 @@ import {Sidebar} from './components/sidebar/Sidebar.js';
 import {Requests} from './requests';
 import React from "react";
 
-import './components/topbar/Topbar.css'
+import {Topbar} from './components/topbar/Topbar.js'
 
 class App extends React.Component {
     render() {
@@ -53,26 +53,15 @@ class NameForm extends React.Component {
     handleChangeTo(event) {
         this.setState({toYear: event.target.value});
     }
-
     render() {
-        return (
+        return ( 
             <div className='App'>
                 {this.state.searchJsons
-                    ? <div className='topbar'>
-                        <form onSubmit={this.handleRelationsSubmit}>
-                            <label>
-                                {'Are you looking for... '}
-                            </label>
-                            <select className='dropdown-menu' value={this.state.chosenId} onChange={this.handleChangeChosenId}>
-                                {
-                                    this.state.searchJsons.map((x) =>
-                                        <option value={x.id} key={x.id}>{x.name}</option>
-                                    )
-                                }
-                            </select>
-                            <input className='apply-button' type="submit" value="Submit" />
-                        </form>
-                    </div>
+                    ? <Topbar
+                        state={this.state}
+                        onChange={this.handleChangeChosenId}
+                        onSubmit={this.handleRelationsSubmit}
+                    />
                     : 'No data fetched'
                 }
                 <Sidebar

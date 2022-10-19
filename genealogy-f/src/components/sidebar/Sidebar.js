@@ -1,6 +1,6 @@
 import Button from 'react-bootstrap/Button';
 import {FilterForm} from '../filter/Filter.js'
-import React, { useState } from "react";
+import React from "react";
 import "./Sidebar.css"
 
 export function Sidebar(props) {
@@ -17,8 +17,7 @@ export function Sidebar(props) {
       </div>
       <Button className='apply-button' size='lg' type='primary' onClick={props.onClick}>
         Apply filters
-      </Button>{' '}
+      </Button>
     </div>
   );
-  
 }
