@@ -43,55 +43,70 @@ const exampleData = {
 export class FamilyTree extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {
-            data: this.transform(this.props.data),
-        };
-        this.showChildren = props.hasOwnProperty('showChildren') ? props.showChildren : true;
         this.transform = this.transform.bind(this);
+        this.state = {};
+        this.state.data = this.transform(this.props.data);
     }
 
     render() {
         return (
-        <Tree data={this.state.data} pathFunc='step' orientation='vertical' translate={{x: 100, y: 50}}
-                depthFactor={this.showChildren ? 100 : -100} separation={{siblings: 3}} />
+            <div id="treeWrapper" style={{width: '50em', height: '30em'}} className='center' >
+                <Tree data={this.state.data} pathFunc='step' orientation='vertical' translate={{x: 100, y: 50}}
+                      depthFactor={this.state.showChildren ? 100 : -100} separation={{siblings: 3}} />
+            </div>
         );
     }
 
     transform(data) {
         let target = data.targets[0];
-        let id_name = new Map();
+        let idName = new Map();
         let people = data.people;
         people.push(target);
-        let target_id = target.id;
-        // let target_id = 'WD-Q43274';
-        id_name.set(target_id, target.name);
+        let targetId = target.id;
+        // let targetId = 'WD-Q43274';
+        idName.set(targetId, target.name);
         for (let x of data.people) {
-            id_name.set(x.id, x.name);
+            idName.set(x.id, x.name);
         }
-        let relations_filtered = data.relations.filter((x) => x.type === 'mother' || x.type === 'father');
-        let target_map = get_target.bind(this)();
-        let res = generate_node(target_id);
+        let relationsFiltered = data.relations.filter((x) => x.type === 'mother' || x.type === 'father');
+        let showChildren = true;
+        let res = generateNode.bind(this)(targetId);
 
         return res;
 
-        function generate_node(id) {
-            let target_ids = target_map.has(id) ? target_map.get(id) : [];
-            let targets = target_ids.map((id) => (generate_node(id)));
-            let res = {
-                name: id_name.get(id),
-                children: targets,
-            };
+        function generateNode(id) {
+            let targetMap = generateTargetMap();
+            let res1 = generateNodeHelper({id: id});
+            showChildren = false;
+            targetMap = generateTargetMap();
+            let res2 = generateNodeHelper({id: id});
+            let showChildrenExperimental = res1.max_depth >= res2.max_depth;
+            let res = showChildrenExperimental ? res1 : res2;
+            this.state.showChildren = showChildrenExperimental;
             return res;
+
+            function generateNodeHelper({id, depth = 0}={}) {
+                let targetIds = targetMap.has(id) ? targetMap.get(id) : [];
+                let targets = targetIds.map((id) => (generateNodeHelper({id: id, depth: depth + 1})));
+                let depths = targets.map((x) => x.max_depth);
+                let max_depth = depths.length > 0 ? Math.max(...depths) + 1 : depth;
+                let res = {
+                    name: idName.get(id),
+                    children: targets,
+                    max_depth: max_depth,
+                };
+                return res;
+            }
         }
 
-        function get_target() {
+        function generateTargetMap() {
             let res = new Map();
             let v1 = 'person1Id';
             let v2 = 'person2Id';
-            if (this.showChildren) {
+            if (showChildren) {
                 [v1, v2] = [v2, v1];
             }
-            for (let x of relations_filtered) {
+            for (let x of relationsFiltered) {
                 if (!res.has(x[v2])) {
                     res.set(x[v2], []);
                 }

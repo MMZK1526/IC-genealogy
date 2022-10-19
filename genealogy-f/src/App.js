@@ -178,8 +178,8 @@ class NameForm extends React.Component {
 
     async handleRelationsSubmit(event) {
         if (this.state.chosenId === '') {
-            alert("Haven't selected a person!")
-            return
+            alert("Haven't selected a person!");
+            return;
         }
         event.preventDefault();
         await this.requests.relations({id: this.state.chosenId}).then(r => {
