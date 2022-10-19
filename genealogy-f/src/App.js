@@ -1,5 +1,5 @@
 import './App.css';
-import {FamilyTree} from "./FamilyTree";
+import {FamilyTree} from "./components/family-tree/FamilyTree";
 import _ from "lodash";
 import {Sidebar} from './components/sidebar/Sidebar.js';
 import {Requests} from './requests';
@@ -8,6 +8,10 @@ import React from "react";
 import {Topbar} from './components/topbar/Topbar.js'
 
 class App extends React.Component {
+    componentDidMount(){
+        document.title = "Ancesta - Genealogy Project"
+    }
+
     render() {
         return (
             <NameForm />
@@ -87,7 +91,7 @@ class NameForm extends React.Component {
                             showChildren={true}
                         />
                         : <div id='welcome'>
-                            <label id='title'>Genealogy Project</label>
+                            <label id='title'>Ancesta - Genealogy Project</label>
                             <br></br>
                             <label id='desc'>Search a name to start</label>
                         </div>

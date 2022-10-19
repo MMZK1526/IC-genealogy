@@ -5,7 +5,7 @@ import "./Sidebar.css"
 
 export function Sidebar(props) {
   return (
-    <div className='sidebar'>
+    <div className='sidebar' onSubmit={props.onClick}>
       <div className='name-field'>
         <FilterForm title="Name :" placeholder="Name" type="text" onChange={props.nameChange}/>
       </div>
