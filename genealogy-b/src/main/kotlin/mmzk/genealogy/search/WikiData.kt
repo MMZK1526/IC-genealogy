@@ -142,7 +142,7 @@ object WikiData {
                 for (value in result) {
                     row[value.name] = value.value.stringValue()
                 }
-                val id = row[SPARQL.item]?.let(::Url)?.pathSegments?.lastOrNull() ?: continue
+                val id = row[SPARQL.item]?.let(::Url)?.pathSegments?.lastOrNull()?. let { makeID(it) } ?: continue
                 if (!dtos.contains(id)) {
                     val name = row[SPARQL.name]
                     if (name != null) {
