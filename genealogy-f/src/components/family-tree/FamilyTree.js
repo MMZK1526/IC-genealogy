@@ -23,7 +23,7 @@ const renderForeignObjectNode = ({
       {/* `foreignObject` requires width & height to be explicitly set. */}
       <foreignObject {...foreignObjectProps}>
         {/* <div><img src={Charles} width={img.width} height={img.height} alt="contacts" /></div> */}
-        <text x="30" y ="10">{nodeDatum.name}</text>
+        <div x="30" y ="10">{nodeDatum.name}</div>
         <div><img src={nodeDatum.image} width="100" height="126" alt="N/A" /></div>
         {/* <div style={{ border: "1px solid black", backgroundColor: "#dedede" }}>
           <h3 style={{ textAlign: "center" }}>hello</h3>
