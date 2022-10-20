@@ -20,11 +20,7 @@ object WikiData {
     private fun formatLocationWithCountry(location: String?, country: String?) =
         if (location != null && country != null) {
             "$location, $country"
-        } else location ?: if (country != null) {
-            country
-        } else {
-            null
-        }
+        } else location ?: country
 
     private suspend fun parseRelationSearchResults(results: TupleQueryResult) = coroutineScope {
         val relations = mutableSetOf<RelationshipDTO>()
