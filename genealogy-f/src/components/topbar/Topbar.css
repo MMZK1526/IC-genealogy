@@ -6,11 +6,13 @@
   background-color: beige;
   padding-left: 20px;
   padding-right: 20px;
+  padding-top: 10px;
+  padding-bottom: 10px;
   border-radius: 5px;
-  font-size: large;
-  color: #7c795d; 
-  font-family: 'Helvetica Neue', sans-serif; 
-  font-size: 45px; 
+  /* font-size: large; */
+  /* color: #7c795d;  */
+  /* font-family: 'Helvetica Neue', sans-serif;  */
+  font-size: 20px; 
   font-weight: normal; 
   line-height: 48px; 
 }
@@ -18,20 +20,20 @@
 .topbar .apply-button{
   display:inline-block;
   padding:0.20em 1em;
-  border:0.1em solid #000000;
-  margin:0.2em 0.1em 0.1em 0.5em;
-  border-radius:0.12em;
+  border: 2px solid darkgray;
+  margin: 0.2em 0.1em 0.1em 0.5em;
+  border-radius: 5px;
   box-sizing: border-box;
-  text-decoration:none;
+  text-decoration: none;
   align-self: stretch;
   text-align: start;
-  font-family: 'Helvetica Neue', sans-serif; 
-  font-size: 25px; 
+  /* font-family: 'Helvetica Neue', sans-serif;  */
+  font-size: 20px; 
   font-weight: normal;
-  color:#000000;
+  color: white;
   text-shadow: 0 0.04em 0.04em rgba(0,0,0,0.35);
-  background-color: #77C66E;
-  text-align:center;
+  background-color: blue;
+  /* text-align: center; */
   transition: all 0.15s;
 }
 
