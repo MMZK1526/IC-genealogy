@@ -158,9 +158,9 @@ class NameForm extends React.Component {
                 if (from !== '' && to !== '') {
                     return (birth == null) || (parseInt(birth.substring(0,4)) >= parseInt(from) && parseInt(birth.substring(0,4)) <= parseInt(to))
                 } else if (from !== '') {
-                    return parseInt(birth.substring(0,4)) >= parseInt(from);
+                    return (birth == null) || parseInt(birth.substring(0,4)) >= parseInt(from);
                 } else if (to !== '') {
-                    return parseInt(birth.substring(0,4)) <= parseInt(to);
+                    return (birth == null) || parseInt(birth.substring(0,4)) <= parseInt(to);
                 }
                 return true;   
             });
