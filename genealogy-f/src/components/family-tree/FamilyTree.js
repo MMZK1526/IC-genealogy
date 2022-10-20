@@ -8,7 +8,7 @@ import Philip from './images/princePhilip.jpg';
 const picMap = new Map();
 picMap.set("WD-Q9682", Elizabeth);
 picMap.set("WD-Q43274", Charles);
-picMap.set("WD-Q80976", Philip)
+picMap.set("WD-Q80976", Philip);
 // const img = new Image();
 // img.src = {Charles};
 
@@ -45,16 +45,15 @@ export class FamilyTree extends React.Component {
         this.state = {
             currNode: null,
             showNode: false
-        }
+        };
     }
 
     handleMouseOver(nodeData, evt) {
-        this.setState({showNode: true})
-        this.setState({currNode: nodeData})
+        this.setState({showNode: true});
+        this.setState({currNode: nodeData});
     }
 
     render() {
-        // const nodeSize = { x: 200, y: 200 };
         const foreignObjectProps = { width: 100, height: 200, x: 20 };
         const {innerWidth, innerHeight} = window;
         return (
@@ -62,7 +61,7 @@ export class FamilyTree extends React.Component {
                 data={this.transform(this.props.data)}
                 pathFunc='step'
                 orientation='vertical'
-                translate={{x: innerWidth / 2, y: innerWidth / 2}}
+                translate={{x: innerWidth / 2, y: innerHeight / 2}}
                 depthFactor={this.state.showChildren ? 100 : -100}
                 separation={{siblings: 3}}
                 onNodeMouseOver={this.handleMouseOver}
@@ -98,7 +97,7 @@ export class FamilyTree extends React.Component {
             let res2 = generateNodeHelper({id: id});
             let showChildrenExperimental = res1.max_depth >= res2.max_depth;
             let res = showChildrenExperimental ? res1 : res2;
-            this.state.showChildren = showChildrenExperimental;
+            // this.state.showChildren = showChildrenExperimental;
             return res;
 
             function generateNodeHelper({id, depth = 0}={}) {

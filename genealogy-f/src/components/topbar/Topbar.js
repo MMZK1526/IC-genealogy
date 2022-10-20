@@ -1,8 +1,6 @@
-import { useState } from 'react';
 import './Topbar.css'
 
 export function Topbar(props) {
-    // const [open, setOpen] = useState(false);
     return (
         <div className='topbar'>
             <form onSubmit={props.onSubmit}>

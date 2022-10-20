@@ -155,7 +155,7 @@ class NameForm extends React.Component {
             r = Object.values(r).filter(function (v) {
                 var birth = v.dateOfBirth
                 if (from !== '' && to !== '') {
-                    return (birth == null) || parseInt(birth.substring(0,4)) >= parseInt(from) && parseInt(birth.substring(0,4)) <= parseInt(to)
+                    return (birth == null) || (parseInt(birth.substring(0,4)) >= parseInt(from) && parseInt(birth.substring(0,4)) <= parseInt(to))
                 } else if (from !== '') {
                     return (birth == null) || parseInt(birth.substring(0,4)) >= parseInt(from)
                 } else if (to !== '') {
