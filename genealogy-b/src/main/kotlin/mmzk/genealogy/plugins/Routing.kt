@@ -52,9 +52,11 @@ fun Application.configureRouting() {
         }
 
         get("/relations") {
+            val depth = call.request.queryParameters["depth"]?.toIntOrNull() ?: 0
+
             call.request.queryParameters["id"]?.let { id ->
                 val typeFilter = call.request.queryParameters["types"]?.split(",")
-                val result = WikiData.findRelatedPeople(id, typeFilter, 2)
+                val result = WikiData.findRelatedPeople(id, typeFilter, depth)
                 call.respond(result)
             } ?: call.respond(
                 HttpStatusCode.BadRequest,
