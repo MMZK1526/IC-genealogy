@@ -170,6 +170,7 @@ object WikiData {
             null
         }
 
+        repo.shutDown()
         results?.let { parseIndividualSearchResults(it) } ?: listOf()
     }
 
@@ -203,12 +204,11 @@ object WikiData {
         """.trimIndent()
         val results = try {
             repo.connection.prepareTupleQuery(querySelect).evaluate()
-
         } catch (exception: Exception) {
             exception.printStackTrace()
             null
         }
-
+        repo.shutDown()
         results?.let { parseIndividualSearchResults(it) } ?: listOf()
     }
 
@@ -232,12 +232,12 @@ object WikiData {
         """.trimIndent()
         val results = try {
             repo.connection.prepareTupleQuery(querySelect).evaluate()
-
         } catch (exception: Exception) {
             exception.printStackTrace()
             null
         }
 
+        repo.shutDown()
         results?.let { parseRelationSearchResults(it) } ?: (setOf<RelationshipDTO>() to setOf<String>())
     }
 
