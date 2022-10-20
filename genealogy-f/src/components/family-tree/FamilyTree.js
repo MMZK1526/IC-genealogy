@@ -63,7 +63,8 @@ export class FamilyTree extends React.Component {
                 orientation='vertical'
                 translate={{x: innerWidth / 2, y: innerHeight / 2}}
                 depthFactor={this.state.showChildren ? 100 : -100}
-                separation={{siblings: 3}}
+                separation={{siblings: 3, nonSiblings: 3}}
+                transitionDuration = {1000}
                 onNodeMouseOver={this.handleMouseOver}
                 enableLegacyTransitions={true}
                 renderCustomNodeElement={(rd3tProps) =>
