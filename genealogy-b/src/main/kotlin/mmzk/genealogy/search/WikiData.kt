@@ -133,9 +133,9 @@ object WikiData {
               SELECT ?${SPARQL.item} ?${SPARQL.name} ?${SPARQL.givenName}Label ?${SPARQL.familyName}Label ?${SPARQL.ordinal} ?${SPARQL.familyNameType}Label ?${SPARQL.dateOfBirth} ?${SPARQL.dateOfDeath} ?${SPARQL.placeOfBirth}Label ?${SPARQL.placeOfBirthCountry}Label ?${SPARQL.placeOfDeath}Label ?${SPARQL.placeOfDeathCountry}Label ?${SPARQL.gender}Label WHERE {
                   ?${SPARQL.item} wdt:P31 wd:Q5.
 
-                  ?${SPARQL.item} p:P735 ?${SPARQL.givenName}_ .
-                  ?${SPARQL.givenName}_ ps:P735 ?${SPARQL.givenName} .
-                  OPTIONAL { ?${SPARQL.givenName}_ pq:P1545 ?${SPARQL.ordinal} . }
+                  OPTIONAL { ?${SPARQL.item} p:P735 ?${SPARQL.givenName}_ .
+                             ?${SPARQL.givenName}_ ps:P735 ?${SPARQL.givenName} .
+                             OPTIONAL { ?${SPARQL.givenName}_ pq:P1545 ?${SPARQL.ordinal} . } }
                   OPTIONAL { ?${SPARQL.item} p:P734 ?${SPARQL.familyName}_ .
                              ?${SPARQL.familyName}_ ps:P734 ?${SPARQL.familyName} .
                              OPTIONAL { ?${SPARQL.familyName}_ pq:P3831 ?${SPARQL.familyNameType} . } }
@@ -181,9 +181,9 @@ object WikiData {
               SELECT ?${SPARQL.item} ?${SPARQL.name} ?${SPARQL.givenName}Label ?${SPARQL.familyName}Label ?${SPARQL.ordinal} ?${SPARQL.familyNameType}Label ?${SPARQL.dateOfBirth} ?${SPARQL.dateOfDeath} ?${SPARQL.placeOfBirth}Label ?${SPARQL.placeOfBirthCountry}Label ?${SPARQL.placeOfDeath}Label ?${SPARQL.placeOfDeathCountry}Label ?${SPARQL.gender}Label WHERE {
                   VALUES ?${SPARQL.item} { ${ids.joinToString(" ") { "wd:$it" }} } .
 
-                  ?${SPARQL.item} p:P735 ?${SPARQL.givenName}_ .
-                  ?${SPARQL.givenName}_ ps:P735 ?${SPARQL.givenName} .
-                  OPTIONAL { ?${SPARQL.givenName}_ pq:P1545 ?${SPARQL.ordinal} . }
+                  OPTIONAL { ?${SPARQL.item} p:P735 ?${SPARQL.givenName}_ .
+                             ?${SPARQL.givenName}_ ps:P735 ?${SPARQL.givenName} .
+                             OPTIONAL { ?${SPARQL.givenName}_ pq:P1545 ?${SPARQL.ordinal} . } }
                   OPTIONAL { ?${SPARQL.item} p:P734 ?${SPARQL.familyName}_ .
                              ?${SPARQL.familyName}_ ps:P734 ?${SPARQL.familyName} .
                               OPTIONAL { ?${SPARQL.familyName}_ pq:P3831 ?${SPARQL.familyNameType} . } }
