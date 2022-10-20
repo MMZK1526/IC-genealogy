@@ -170,7 +170,7 @@ object WikiData {
             null
         }
 
-        repo.shutDown()
+//        repo.shutDown()
         results?.let { parseIndividualSearchResults(it) } ?: listOf()
     }
 
@@ -208,7 +208,7 @@ object WikiData {
             exception.printStackTrace()
             null
         }
-        repo.shutDown()
+//        repo.shutDown()
         results?.let { parseIndividualSearchResults(it) } ?: listOf()
     }
 
@@ -237,7 +237,7 @@ object WikiData {
             null
         }
 
-        repo.shutDown()
+//        repo.shutDown()
         results?.let { parseRelationSearchResults(it) } ?: (setOf<RelationshipDTO>() to setOf<String>())
     }
 
