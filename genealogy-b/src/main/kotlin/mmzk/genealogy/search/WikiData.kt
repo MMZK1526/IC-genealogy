@@ -125,7 +125,6 @@ object WikiData {
     suspend fun searchIndividualByName(partialName: String) = coroutineScope {
         val sparqlEndpoint = "https://query.wikidata.org/sparql"
         val repo = SPARQLRepository(sparqlEndpoint)
-//        repo.init()
 
         val userAgent = "WikiData Crawler for Genealogy Visualiser WebApp, Contact piopio555888@gmail.com"
         repo.additionalHttpHeaders = Collections.singletonMap("User-Agent", userAgent)
@@ -167,14 +166,14 @@ object WikiData {
             null
         }
 
-//        repo.shutDown()
-        results?.let { parseIndividualSearchResults(it) } ?: listOf()
+        val answer = results?.let { parseIndividualSearchResults(it) } ?: listOf()
+        repo.shutDown()
+        answer
     }
 
     suspend fun searchIndividualByIDs(ids: List<String>) = coroutineScope {
         val sparqlEndpoint = "https://query.wikidata.org/sparql"
         val repo = SPARQLRepository(sparqlEndpoint)
-//        repo.init()
 
         val userAgent = "WikiData Crawler for Genealogy Visualiser WebApp, Contact piopio555888@gmail.com"
         repo.additionalHttpHeaders = Collections.singletonMap("User-Agent", userAgent)
@@ -206,14 +205,15 @@ object WikiData {
             exception.printStackTrace()
             null
         }
-//        repo.shutDown()
-        results?.let { parseIndividualSearchResults(it) } ?: listOf()
+
+        val answer = results?.let { parseIndividualSearchResults(it) } ?: listOf()
+        repo.shutDown()
+        answer
     }
 
     private suspend fun searchRelationByIDs(ids: List<String>) = coroutineScope {
         val sparqlEndpoint = "https://query.wikidata.org/sparql"
         val repo = SPARQLRepository(sparqlEndpoint)
-//        repo.init()
 
         val userAgent = "WikiData Crawler for Genealogy Visualiser WebApp, Contact piopio555888@gmail.com"
         repo.additionalHttpHeaders = Collections.singletonMap("User-Agent", userAgent)
@@ -236,8 +236,9 @@ object WikiData {
             null
         }
 
-//        repo.shutDown()
-        results?.let { parseRelationSearchResults(it) } ?: (setOf<RelationshipDTO>() to setOf<String>())
+        val answer = results?.let { parseRelationSearchResults(it) } ?: (setOf<RelationshipDTO>() to setOf<String>())
+        repo.shutDown()
+        answer
     }
 
     suspend fun findRelatedPeople(id: String, typeFilter: List<String>?, depth: Int = 2) = coroutineScope {

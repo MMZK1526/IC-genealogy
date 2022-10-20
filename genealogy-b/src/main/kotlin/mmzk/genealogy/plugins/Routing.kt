@@ -56,7 +56,7 @@ fun Application.configureRouting() {
         get("/relations") {
             call.request.queryParameters["id"]?.let { id ->
                 val typeFilter = call.request.queryParameters["types"]?.split(",")
-                val result = WikiData.findRelatedPeople(id, typeFilter)
+                val result = WikiData.findRelatedPeople(id, typeFilter, 2)
                 call.respond(result)
             } ?: call.respond(
                 HttpStatusCode.BadRequest,
