@@ -1,3 +1,4 @@
+import { get } from 'lodash';
 import React from 'react';
 import Tree from 'react-d3-tree';
 import './FamilyTree.css';
@@ -11,18 +12,38 @@ picMap.set("WD-Q43274", Charles);
 picMap.set("WD-Q80976", Philip);
 // const img = new Image();
 // img.src = {Charles};
+function getNodeDatum(hierarchyPointNode) {
+    const source = hierarchyPointNode;
+    const join = 'M' + source.y + "," + source.x + 'L' + source.y + 20 + "," + source.x + 20;
+    // return (<h3>{join}</h3>);
+    return (<svg width="500" height="500">
+                <path fill="red" d = "M10 10"></path></svg>)
+        // return (
+        // <path
+        //     fill="none"
+        //     stroke="red"
+        //     d= {join}/>);
+}
+function test() {
+    return (<h3>someText</h3>);
+}
+
 
 const renderForeignObjectNode = ({
     nodeDatum,
+    hierarchyPointNode,
     toggleNode,
     foreignObjectProps
   }) => (
 
     <g>
       <circle r={15} className = {nodeDatum.className}></circle>
+      <svg width="500" height="500" xmlns="http://www.w3.org/2000/svg">
+                <path fill="red" d = "M -220 0 H 230"></path>
+      </svg>
+      <circle cx = "230" cy="0" r={15} className = {nodeDatum.className}></circle>
       {/* `foreignObject` requires width & height to be explicitly set. */}
       <foreignObject {...foreignObjectProps}>
-        {/* <div><img src={Charles} width={img.width} height={img.height} alt="contacts" /></div> */}
         <div x="30" y ="10">{nodeDatum.name}</div>
         <div><img src={nodeDatum.image} width="100" height="126" alt="N/A" /></div>
         {/* <div style={{ border: "1px solid black", backgroundColor: "#dedede" }}>
