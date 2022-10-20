@@ -8,20 +8,46 @@
   padding-right: 20px;
   border-radius: 5px;
   font-size: large;
+  color: #7c795d; 
+  font-family: 'Helvetica Neue', sans-serif; 
+  font-size: 45px; 
+  font-weight: normal; 
+  line-height: 48px; 
 }
 
 .topbar .apply-button{
-  display: inline-block;
+  display:inline-block;
+  padding:0.20em 1em;
+  border:0.1em solid #000000;
+  margin:0.2em 0.1em 0.1em 0.5em;
+  border-radius:0.12em;
+  box-sizing: border-box;
+  text-decoration:none;
   align-self: stretch;
   text-align: start;
-  margin: 20px;
-  font-size: large;
-  color: white;
-  background-color: mediumblue;
-  border-style: hidden;
-  padding: 5px;
-  border-radius: 5px;
+  font-family: 'Helvetica Neue', sans-serif; 
+  font-size: 25px; 
+  font-weight: normal;
+  color:#000000;
+  text-shadow: 0 0.04em 0.04em rgba(0,0,0,0.35);
+  background-color: #77C66E;
+  text-align:center;
+  transition: all 0.15s;
 }
+
+.topbar .apply-button:hover{
+  text-shadow: 0 0 2em rgba(255,255,255,1);
+  color:#FFFFFF;
+  border-color:#FFFFFF;
+}
+  
+@media all and (max-width:30em){
+  .topbar .apply-button{
+    display:block;
+    margin:0.4em auto;
+  }
+}
+
 
 .topbar .dropdown-menu{
   display: inline;
@@ -30,5 +56,6 @@
   background-color: transparent;
   border-style:dashed;
   width: 20vw;
+  height: 40px;
   margin-left: 20px;
 }
