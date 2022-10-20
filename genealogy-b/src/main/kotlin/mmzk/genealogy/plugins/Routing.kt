@@ -32,7 +32,7 @@ fun Application.configureRouting() {
         get("/search") {
             call.request.queryParameters["q"]?.let { name ->
                 val matchedNamesInDBAsync = async { Database.findPersonByName(name) }
-                val searchedNames =  WikiData.searchByName(name)
+                val searchedNames =  WikiData.searchIndividualByName(name)
                 println(searchedNames)
                 val matchedNamesInDB = matchedNamesInDBAsync.await()
                 val matchedIDsInDB = matchedNamesInDB.map { it.id }.toSet()
@@ -56,7 +56,7 @@ fun Application.configureRouting() {
         get("/relations") {
             call.request.queryParameters["id"]?.let { id ->
                 val typeFilter = call.request.queryParameters["types"]?.split(",")
-                val result = Database.findRelatedPeople(id, typeFilter)
+                val result = WikiData.findRelatedPeople(id, typeFilter)
                 call.respond(result)
             } ?: call.respond(
                 HttpStatusCode.BadRequest,
@@ -65,7 +65,7 @@ fun Application.configureRouting() {
         }
 
         get("test") {
-            call.respond(WikiData.searchByIDs(listOf("Q9682", "Q9685")))
+            call.respond(WikiData.searchIndividualByIDs(listOf("Q9682", "Q9685")))
         }
     }
 }

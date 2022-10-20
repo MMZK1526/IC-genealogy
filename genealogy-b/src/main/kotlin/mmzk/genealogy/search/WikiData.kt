@@ -1,56 +1,21 @@
 package mmzk.genealogy.search
 
-import com.google.gson.JsonElement
-import com.google.gson.JsonObject
-import com.google.gson.JsonParser
-import io.ktor.client.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.plugins.logging.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.server.util.*
 import java.util.*
 import kotlin.collections.*
 import kotlinx.coroutines.*
 import mmzk.genealogy.dto.IndividualDTO
 import mmzk.genealogy.dto.IndividualName
+import mmzk.genealogy.dto.RelationsResponse
+import mmzk.genealogy.dto.RelationshipDTO
 import mmzk.genealogy.tables.Fields
 import org.eclipse.rdf4j.query.TupleQueryResult
 import org.eclipse.rdf4j.queryrender.RenderUtils
 import org.eclipse.rdf4j.repository.sparql.SPARQLRepository
 
 object WikiData {
-    private val client = HttpClient(CIO) {
-        install(Logging) {
-            level = LogLevel.INFO
-        }
-    }
-
     // Translate a WikiData ID into a Database ID.
     private fun makeID(id: String): String = "WD-$id"
-
-    // Build the WikiData GET request URL with IDs.
-    private fun makeQueryURL(ids: List<String>, getClaims: Boolean) = ids.joinToString(separator = "|").let {
-        url {
-            host = "www.wikidata.org"
-            path("/w/api.php")
-            parameters.append("action", "wbgetentities")
-            parameters.append("format", "json")
-            parameters.append("ids", it)
-            parameters.append("languages", "en")
-            parameters.append(
-                "props", "labels${
-                    if (getClaims) {
-                        "|claims"
-                    } else {
-                        ""
-                    }
-                }"
-            )
-            parameters.append("formatversion", "2")
-        }
-    }
 
     private fun formatLocationWithCountry(location: String?, country: String?) =
         if (location != null && country != null) {
@@ -61,7 +26,53 @@ object WikiData {
             null
         }
 
-    private suspend fun parseSearchResults(results: TupleQueryResult) = coroutineScope {
+    private suspend fun parseRelationSearchResults(results: TupleQueryResult) = coroutineScope {
+        val relations = mutableSetOf<RelationshipDTO>()
+        val newIndividuals = mutableSetOf<String>()
+        for (result in results) {
+            val row = mutableMapOf<String, String>()
+            for (value in result) {
+                row[value.name] = value.value.stringValue()
+            }
+            val id = row[SPARQL.item]?.let(::Url)?.pathSegments?.lastOrNull() ?: continue
+            val father = row["father"]?.let(::Url)?.pathSegments?.lastOrNull()
+            val mother = row["mother"]?.let(::Url)?.pathSegments?.lastOrNull()
+            val spouse = row["spouse"]?.let(::Url)?.pathSegments?.lastOrNull()
+            val child = row["issues"]?.let(::Url)?.pathSegments?.lastOrNull()
+
+            relations.addAll(
+                listOfNotNull(
+                    father?.let { RelationshipDTO(makeID(id), makeID(it), "father", makeID(Fields.father)) },
+                    mother?.let { RelationshipDTO(makeID(id), makeID(it), "mother", makeID(Fields.mother)) },
+                    spouse?.let {
+                        val sorted = listOf(id, it).sorted()
+                        RelationshipDTO(makeID(sorted[0]), makeID(sorted[1]), "spouse", makeID(Fields.spouse))
+                    },
+                    child?.let {
+                        when (row["${SPARQL.gender}Label"]) {
+                            "male" -> RelationshipDTO(
+                                makeID(it),
+                                makeID(id),
+                                "father",
+                                makeID(Fields.father)
+                            )
+                            "female" ->RelationshipDTO(
+                                makeID(it),
+                                makeID(id),
+                                "mother",
+                                makeID(Fields.mother)
+                            )
+                            else -> null
+                        }
+                    })
+            )
+            newIndividuals.addAll(listOfNotNull(father, mother, spouse, child))
+        }
+
+        relations to newIndividuals
+    }
+
+    private suspend fun parseIndividualSearchResults(results: TupleQueryResult) = coroutineScope {
         val dtos = mutableMapOf<String, IndividualDTO>()
         val personalNames = mutableMapOf<String, IndividualName>()
         for (result in results) {
@@ -115,7 +126,7 @@ object WikiData {
         dtos.values.toList()
     }
 
-    suspend fun searchByName(partialName: String) = coroutineScope {
+    suspend fun searchIndividualByName(partialName: String) = coroutineScope {
         val sparqlEndpoint = "https://query.wikidata.org/sparql"
         val repo = SPARQLRepository(sparqlEndpoint)
 
@@ -159,11 +170,10 @@ object WikiData {
             null
         }
 
-        println("FINIED")
-        results?.let { parseSearchResults(it) } ?: listOf()
+        results?.let { parseIndividualSearchResults(it) } ?: listOf()
     }
 
-    suspend fun searchByIDs(ids: List<String>) = coroutineScope {
+    suspend fun searchIndividualByIDs(ids: List<String>) = coroutineScope {
         val sparqlEndpoint = "https://query.wikidata.org/sparql"
         val repo = SPARQLRepository(sparqlEndpoint)
 
@@ -199,282 +209,60 @@ object WikiData {
             null
         }
 
-        results?.let { parseSearchResults(it) } ?: listOf()
+        results?.let { parseIndividualSearchResults(it) } ?: listOf()
     }
 
-    // Get the values corresponding to the list of WikiData IDs.
-    private suspend fun getValues(ids: List<String>) = coroutineScope {
-        if (ids.isEmpty()) {
-            mapOf()
-        } else {
-            val response = client.get(makeQueryURL(ids, false))
+    private suspend fun searchRelationByIDs(ids: List<String>) = coroutineScope {
+        val sparqlEndpoint = "https://query.wikidata.org/sparql"
+        val repo = SPARQLRepository(sparqlEndpoint)
 
-            ids.map {
-                it to run {
-                    val entity =
-                        JsonParser.parseString(response.bodyAsText()).asObjectOrNull?.get("entities")
-                            ?.asObjectOrNull?.get(it)?.asObjectOrNull
-                    entity
-                        ?.get("labels")
-                        ?.asObjectOrNull?.get("en")
-                        ?.asObjectOrNull?.get("value")
-                        ?.asStringOrNull
+        val userAgent = "WikiData Crawler for Genealogy Visualiser WebApp, Contact piopio555888@gmail.com"
+        repo.additionalHttpHeaders = Collections.singletonMap("User-Agent", userAgent)
+        val querySelect = """
+              SELECT ?item ?father ?mother ?spouse ?issues ?${SPARQL.gender}Label WHERE {
+                  VALUES ?${SPARQL.item} { ${ids.joinToString(" ") { "wd:$it" }} } .
 
+                  OPTIONAL { ?item wdt:P22 ?father . }
+                  OPTIONAL { ?item wdt:P25 ?mother . }
+                  OPTIONAL { ?item wdt:P26 ?spouse . }
+                  OPTIONAL { ?item wdt:P40 ?issues . }
+                  OPTIONAL { ?${SPARQL.item} wdt:P21 ?${SPARQL.gender} . }
+                  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
                 }
-            }.associate { it }
+        """.trimIndent()
+        val results = try {
+            repo.connection.prepareTupleQuery(querySelect).evaluate()
+
+        } catch (exception: Exception) {
+            exception.printStackTrace()
+            null
         }
+
+        results?.let { parseRelationSearchResults(it) } ?: (setOf<RelationshipDTO>() to setOf<String>())
     }
 
-    // Get the values and claims corresponding to the list of WikiData IDs
-    private suspend fun getValuesAndClaims(ids: List<String>) = coroutineScope {
-        if (ids.isEmpty()) {
-            mapOf()
-        } else {
-            val response = client.get(makeQueryURL(ids, true))
+    suspend fun findRelatedPeople(id: String, typeFilter: List<String>?, depth: Int = 2) = coroutineScope {
+        val visited = mutableSetOf<String>()
+        var frontier = listOf(id)
+        var curDepth = 0
+        val targets = searchIndividualByIDs(frontier.mapNotNull { Fields.parseID(it)?.second })
+        val people = mutableSetOf<IndividualDTO>()
+        val relations = mutableSetOf<RelationshipDTO>()
 
-            ids.map {
-                it to run {
-                    val entity =
-                        JsonParser.parseString(response.bodyAsText()).asObjectOrNull?.get("entities")
-                            ?.asObjectOrNull?.get(it)?.asObjectOrNull
-                    entity
-                        ?.get("labels")
-                        ?.asObjectOrNull?.get("en")
-                        ?.asObjectOrNull?.get("value")
-                        ?.asStringOrNull to entity?.get("claims")
-
-                }
-            }.associate { it }
-        }
-    }
-
-    suspend fun query(ids: List<String>): List<IndividualDTO> {
-        suspend fun readProperties(claims: Map<String?, JsonObject>, queries: List<Pair<String?, String>>) =
-            coroutineScope {
-                val knownResults = mutableMapOf<Pair<String?, String>, String?>()
-                val indirections = mutableMapOf<Pair<String?, String>, String?>()
-
-                for (query in queries) {
-                    claims[query.first]?.asObjectOrNull?.get(query.second)?.asArrayOrNull?.get(0)?.asObjectOrNull?.let { data ->
-                        val dataValue =
-                            data.asObjectOrNull?.get("mainsnak")?.asObjectOrNull?.get("datavalue")?.asObjectOrNull
-
-                        when (dataValue?.get("type")?.asStringOrNull) {
-                            Fields.string -> knownResults[query] = dataValue["value"].asStringOrNull
-                            Fields.time -> knownResults[query] =
-                                dataValue.asObjectOrNull?.get("value")?.asObjectOrNull?.get("time")?.asStringOrNull
-                            Fields.wikiBaseEntityId -> indirections[query] =
-                                dataValue.asObjectOrNull?.get("value")?.asObjectOrNull?.get("id")?.asStringOrNull
-                        }
-                    }
-                }
-
-                val values = getValues(indirections.values.filterNotNull().toList())
-
-                for (i in indirections) {
-                    knownResults[i.key] = i.value?.let { values[it] }
-                }
-
-                knownResults
+        while (true) {
+            val newPeople = searchIndividualByIDs(frontier.mapNotNull { Fields.parseID(it)?.second })
+            people.addAll(newPeople)
+            visited.addAll(newPeople.map { it.id })
+            if (curDepth >= depth) {
+                break
             }
-
-        suspend fun readProperties(
-            claims: Map<String?, JsonObject>,
-            queries: Map<Pair<String?, String>, (suspend (List<Triple<String?, JsonElement?, JsonElement?>>) -> String?)?>
-        ) =
-            coroutineScope {
-                val knownResults =
-                    mutableMapOf<Pair<String?, String>, MutableList<Triple<String?, JsonElement?, JsonElement?>>>()
-                val deferrals = mutableMapOf<Pair<String?, String>, Deferred<String?>>()
-                val indirections = mutableMapOf<Pair<String?, String>, MutableList<Pair<String?, JsonElement?>>>()
-                val results = mutableMapOf<Pair<String?, String>, String?>()
-                for (query in queries) {
-                    knownResults[query.key] = mutableListOf()
-                    indirections[query.key] = mutableListOf()
-                    claims[query.key.first]?.asObjectOrNull?.get(query.key.second)?.asArrayOrNull?.map { data ->
-                        val qualifiers = data.asObjectOrNull?.get("qualifiers")
-                        val dataValue =
-                            data.asObjectOrNull?.get("mainsnak")?.asObjectOrNull?.get("datavalue")?.asObjectOrNull
-
-                        when (dataValue?.get("type")?.asStringOrNull) {
-                            Fields.string -> knownResults[query.key]?.add(
-                                Triple(dataValue["value"].asStringOrNull, null, qualifiers)
-                            )
-                            Fields.time -> knownResults[query.key]?.add(
-                                Triple(
-                                    dataValue.asObjectOrNull?.get("value")?.asObjectOrNull?.get("time")?.asStringOrNull,
-                                    null,
-                                    qualifiers
-                                )
-                            )
-                            Fields.wikiBaseEntityId -> indirections[query.key]?.add(
-                                dataValue.asObjectOrNull?.get("value")?.asObjectOrNull?.get("id")?.asStringOrNull to qualifiers
-                            )
-                            else -> null
-                        }
-                    }
-                }
-
-                val valueClaims = getValuesAndClaims(indirections.values.flatten().mapNotNull { it.first }.toList())
-                for (i in indirections) {
-                    knownResults[i.key]?.addAll(i.value.map { (id, qualifiers) ->
-                        Triple(
-                            valueClaims[id]?.first,
-                            valueClaims[id]?.second,
-                            qualifiers
-                        )
-                    })
-                    deferrals[i.key] = async {
-                        knownResults[i.key]?.let { queries[i.key]?.invoke(it) ?: it.firstOrNull()?.first }
-                    }
-                }
-
-                for (d in deferrals) {
-                    results[d.key] = d.value.await()
-                }
-
-                results
-            }
-
-        suspend fun countryOfPlace(pcqs: List<Triple<String?, JsonElement?, JsonElement?>>) = coroutineScope {
-            val pcq = pcqs.firstOrNull()
-            val country = pcq?.second?.asObjectOrNull?.let {
-                readProperties(
-                    mapOf(null to it),
-                    listOf(null to Fields.country)
-                ).values.first()
-            }
-            pcq?.first?.let { p -> country?.let { "$p, $it" } ?: p }
+            val (newRelations, nextPeople) = searchRelationByIDs(frontier.mapNotNull { Fields.parseID(it)?.second })
+            relations.addAll(newRelations)
+            frontier = nextPeople.map { "WD-$it" }.filter { !visited.contains(it) }
+            curDepth++
         }
 
-        suspend fun parseGivenName(pcqs: List<Triple<String?, JsonElement?, JsonElement?>>) = coroutineScope {
-            var hasOrdinal = false
-            val nameOrdList = mutableListOf<Pair<String, Int>>()
-
-            for (pcq in pcqs) {
-                val ordinal =
-                    pcq.third?.asObjectOrNull?.get(Fields.seriesOrdinal)?.asArrayOrNull?.firstOrNull()?.asObjectOrNull
-                        ?.get("datavalue")?.asObjectOrNull?.get("value")?.asStringOrNull?.toIntOrNull() ?: 0
-                if (ordinal != 0) {
-                    hasOrdinal = true
-                }
-
-                pcq.first?.let {
-                    nameOrdList.add(it to ordinal)
-                    if (ordinal != 0) {
-                        hasOrdinal = true
-                    }
-                }
-            }
-
-            if (hasOrdinal) {
-                nameOrdList.sortBy { it.second }
-                nameOrdList.filter { it.second != 0 }.map { it.first }.reduceOrNull { n1, n2 -> "$n1 $n2" }
-            } else {
-                nameOrdList.firstOrNull()?.first
-            }
-        }
-
-        suspend fun parseFamilyName(pcqs: List<Triple<String?, JsonElement?, JsonElement?>>) = coroutineScope {
-            var maidenName: String? = null
-            var familyName: String? = null
-
-            for (pcq in pcqs) {
-                if (pcq.third?.asObjectOrNull?.get(Fields.objectHasRole)?.asArrayOrNull?.firstOrNull()?.asObjectOrNull
-                        ?.get("datavalue")?.asObjectOrNull?.get("value")?.asObjectOrNull?.get("id")?.asStringOrNull == Fields.maidenName
-                ) {
-                    maidenName = pcq.first
-                } else {
-                    familyName = pcq.first
-                }
-
-                if (maidenName != null && familyName != null) {
-                    break
-                }
-            }
-
-            listOfNotNull(familyName, maidenName).joinToString(separator = "&").let {
-                it.ifBlank {
-                    null
-                }
-            }
-        }
-
-        return coroutineScope {
-            try {
-                val humanIds = mutableListOf<String>()
-                val genderMap = mutableMapOf<String, Char>()
-                val nameMap = mutableMapOf<String, String>()
-                val claimMap = mutableMapOf<String?, JsonObject>()
-                val queries =
-                    mutableMapOf<Pair<String?, String>, (suspend (List<Triple<String?, JsonElement?, JsonElement?>>) -> String?)?>()
-                val nameClaims = getValuesAndClaims(ids)
-
-                for (entry in nameClaims) {
-                    val id = entry.key
-                    val (name, claims) = entry.value
-                    if (claims?.asObjectOrNull?.get(Fields.instanceOf)?.asArrayOrNull?.map
-                        {
-                            it?.asObjectOrNull?.get("mainsnak")?.asObjectOrNull?.get("datavalue")?.asObjectOrNull
-                                ?.get("value")?.asObjectOrNull?.get("id")?.asStringOrNull
-                        }
-                            ?.contains(Fields.human) == true
-                    ) {
-                        humanIds.add(id)
-                    } else {
-                        continue
-                    }
-
-                    genderMap[id] = when (claims.asObjectOrNull?.get(Fields.gender)?.asArrayOrNull?.firstOrNull()
-                        ?.asObjectOrNull?.get("mainsnak")?.asObjectOrNull?.get("datavalue")
-                        ?.asObjectOrNull?.get("value")?.asObjectOrNull?.get("id")?.asStringOrNull) {
-                        Fields.female -> 'F'
-                        Fields.male -> 'M'
-                        else -> 'U'
-                    }
-                    name?.let { nameMap[id] = it }
-                    claims.asObjectOrNull?.let { claimMap[id] = it }
-                    queries[id to Fields.dateOfBirth] = null
-                    queries[id to Fields.dateOfDeath] = null
-                    queries[id to Fields.placeOfBirth] = ::countryOfPlace
-                    queries[id to Fields.placeOfDeath] = ::countryOfPlace
-                    queries[id to Fields.givenName] = ::parseGivenName
-                    queries[id to Fields.familyName] = ::parseFamilyName
-                }
-
-                val queryResults = readProperties(claimMap, queries)
-
-                humanIds.mapNotNull { id ->
-                    val givenName = queryResults[id to Fields.givenName]
-                    val personalName = queryResults[id to Fields.familyName]?.let { familyName ->
-                        val familyNameSplit = familyName.split("&", limit = 2)
-                        if (familyNameSplit.size == 1) {
-                            givenName?.let { "$familyName, $givenName" } ?: familyName
-                        } else {
-                            givenName?.let { "${familyNameSplit[0]}, $givenName, née ${familyNameSplit[1]}" }
-                                ?: "${familyNameSplit[0]}, née ${familyNameSplit[1]}"
-                        }
-                    } ?: givenName
-
-                    nameMap[id]?.let {
-                        IndividualDTO(
-                            makeID(id),
-                            it,
-                            personalName ?: it,
-                            queryResults[id to Fields.dateOfBirth],
-                            queryResults[id to Fields.dateOfDeath],
-                            queryResults[id to Fields.placeOfBirth],
-                            queryResults[id to Fields.placeOfDeath],
-                            genderMap[id] ?: 'U',
-                            false
-                        )
-                    }
-                }
-            } catch (e: Exception) {
-                println(e)
-                listOf()
-            }
-        }
+        RelationsResponse(targets, people.toList(), relations.toList())
     }
 
     private object SPARQL {
@@ -493,22 +281,3 @@ object WikiData {
         const val placeOfDeathCountry = "placeOfDeathCountry"
     }
 }
-
-val JsonElement.asObjectOrNull
-    get() = if (isJsonObject) {
-        asJsonObject
-    } else {
-        null
-    }
-val JsonElement.asArrayOrNull
-    get() = if (isJsonArray) {
-        asJsonArray
-    } else {
-        null
-    }
-val JsonElement.asStringOrNull
-    get() = if (isJsonPrimitive) {
-        asString
-    } else {
-        null
-    }
