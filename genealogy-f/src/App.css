@@ -21,10 +21,23 @@
 .tree-box #title{
   font-size: 40pt;
   margin: 20px;
+  position: relative;
+  font-family: "Avenir Next", sans-serif;
+  font-weight: 900;
+  font-size: 64px;
+  text-transform: uppercase;
+  font-style: italic;
+  letter-spacing: 0.05em;
+  display: inline-block;
+  color: #00308F;
 }
 
 .tree-box #desc{
-  font-size: 16pt;
+  font-size: 30pt;
+  position: relative;
+  text-transform: uppercase;
+  font-family: 'Helvetica Neue', sans-serif;
+  color: black;
 }
 
 table {

@@ -93,7 +93,10 @@ class NameForm extends React.Component {
                         : <div id='welcome'>
                             <label id='title'>Ancesta - Genealogy Project</label>
                             <br></br>
-                            <label id='desc'>Search a name to start</label>
+                            <br></br>
+                            <br></br>
+                            <br></br>
+                            <label id='desc'>Search a name to start...</label>
                         </div>
                     }
                 </div>
