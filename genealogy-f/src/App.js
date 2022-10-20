@@ -142,13 +142,13 @@ class NameForm extends React.Component {
         );
     }
 
-    handleSearchSubmit(event) {
+    async handleSearchSubmit(event) {
         if (this.state.initialName === '') {
             alert("Please enter a name!");
             return;
         }
         event.preventDefault();
-        this.requests.search(this.state.initialName).then(r => {
+        await this.requests.search(this.state.initialName).then(r => {
             var from = this.state.fromYear;
             var to = this.state.toYear;
 
