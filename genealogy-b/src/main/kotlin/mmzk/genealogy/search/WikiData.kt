@@ -129,6 +129,7 @@ object WikiData {
     suspend fun searchIndividualByName(partialName: String) = coroutineScope {
         val sparqlEndpoint = "https://query.wikidata.org/sparql"
         val repo = SPARQLRepository(sparqlEndpoint)
+//        repo.init()
 
         val userAgent = "WikiData Crawler for Genealogy Visualiser WebApp, Contact piopio555888@gmail.com"
         repo.additionalHttpHeaders = Collections.singletonMap("User-Agent", userAgent)
@@ -177,6 +178,7 @@ object WikiData {
     suspend fun searchIndividualByIDs(ids: List<String>) = coroutineScope {
         val sparqlEndpoint = "https://query.wikidata.org/sparql"
         val repo = SPARQLRepository(sparqlEndpoint)
+//        repo.init()
 
         val userAgent = "WikiData Crawler for Genealogy Visualiser WebApp, Contact piopio555888@gmail.com"
         repo.additionalHttpHeaders = Collections.singletonMap("User-Agent", userAgent)
@@ -215,6 +217,7 @@ object WikiData {
     private suspend fun searchRelationByIDs(ids: List<String>) = coroutineScope {
         val sparqlEndpoint = "https://query.wikidata.org/sparql"
         val repo = SPARQLRepository(sparqlEndpoint)
+//        repo.init()
 
         val userAgent = "WikiData Crawler for Genealogy Visualiser WebApp, Contact piopio555888@gmail.com"
         repo.additionalHttpHeaders = Collections.singletonMap("User-Agent", userAgent)
