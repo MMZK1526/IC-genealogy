@@ -54,7 +54,7 @@ export class FamilyTree extends React.Component {
     }
 
     render() {
-        const foreignObjectProps = { width: 100, height: 200, x: 20 };
+        const foreignObjectProps = { width: 200, height: 200, x: 0 };
         const {innerWidth, innerHeight} = window;
         return (
             <Tree
