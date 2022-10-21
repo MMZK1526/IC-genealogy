@@ -52,7 +52,7 @@ fun Application.configureRouting() {
         }
 
         get("/relations") {
-            val depth = call.request.queryParameters["depth"]?.toIntOrNull() ?: 0
+            val depth = call.request.queryParameters["depth"]?.toIntOrNull() ?: 3
 
             call.request.queryParameters["id"]?.let { id ->
                 val typeFilter = call.request.queryParameters["types"]?.split(",")
