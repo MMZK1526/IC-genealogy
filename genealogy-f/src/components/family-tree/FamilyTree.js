@@ -28,6 +28,17 @@ function test() {
     return (<h3>someText</h3>);
 }
 
+function addSpouse(nodeDatum) {
+    if (nodeDatum.spouse != null) {
+        return (<div><svg width="500" height="500" xmlns="http://www.w3.org/2000/svg">
+        <path fill="red" d = "M -220 0 H 230"></path></svg>
+    <circle cx = "230" cy="0" r={15} ></circle>
+    <text x="260" y ="10">{nodeDatum.spouse}</text></div>)
+    } else {
+        return (<></>)
+    }
+}
+
 
 const renderForeignObjectNode = ({
     nodeDatum,
@@ -39,21 +50,12 @@ const renderForeignObjectNode = ({
     <g>
       <circle r={15} className = {nodeDatum.className}></circle>
       <svg width="500" height="500" xmlns="http://www.w3.org/2000/svg">
-                <path fill="red" d = "M -220 0 H 230"></path>
-      </svg>
-      <circle cx = "230" cy="0" r={15} className = {nodeDatum.className}></circle>
-      {/* `foreignObject` requires width & height to be explicitly set. */}
+        <path stroke-dasharray="10,10" fill="red" d = "M -220 0 H 230"></path></svg>
+    <circle cx = "230" cy="0" r={15} ></circle>
+    <text x="260" y ="10">{nodeDatum.spouse}</text>
       <foreignObject {...foreignObjectProps}>
         <div x="30" y ="10">{nodeDatum.name}</div>
-        <div><img src={nodeDatum.image} width="100" height="126" alt="N/A" /></div>
-        {/* <div style={{ border: "1px solid black", backgroundColor: "#dedede" }}>
-          <h3 style={{ textAlign: "center" }}>hello</h3>
-          {nodeDatum.children && (
-            <button style={{ width: "100%" }} onClick={toggleNode}>
-              {nodeDatum.__rd3t.collapsed ? "Expand" : "Collapse"}
-            </button>
-          )}
-        </div> */}
+        {/* <div><img src={nodeDatum.image} width="100" height="126" alt="N/A" /></div> */}
       </foreignObject>
     </g>
   );
@@ -78,6 +80,7 @@ export class FamilyTree extends React.Component {
         const foreignObjectProps = { width: 200, height: 200, x: 0 };
         const {innerWidth, innerHeight} = window;
         return (
+<<<<<<< HEAD
             <Tree
                 data={this.transform(this.props.data)}
                 pathFunc='step'
@@ -95,10 +98,29 @@ export class FamilyTree extends React.Component {
                     renderForeignObjectNode({ ...rd3tProps, foreignObjectProps})
                   }
             />
+=======
+                    <Tree
+                        data={this.transform(this.props.data, this.props.parents)}
+                        pathFunc='step'
+                        orientation='vertical'
+                        translate={{x: innerWidth / 2, y: innerHeight / 2}}
+                        depthFactor={this.props.data ? 100 : -100}
+                        separation={{siblings: 2, nonSiblings: 2}}
+                        transitionDuration = {1000}
+                        nodeSize={{x:200, y:100}}
+                        enableLegacyTransitions={true}
+                        onNodeMouseOver={this.handleMouseOver}
+                        renderCustomNodeElement={(rd3tProps) =>
+                            renderForeignObjectNode({ ...rd3tProps, foreignObjectProps})
+                          }
+                    />
+            
+>>>>>>> 6689fe5 (gojs test)
         );
     }
 
-    transform(data) {
+    transform(data, parents) {
+        let showChildren = parents;
         let target = data.targets[0];
         let idName = new Map();
         let people = data.people;
@@ -109,19 +131,25 @@ export class FamilyTree extends React.Component {
             idName.set(x.id, x.name);
         }
         let relationsFiltered = data.relations.filter((x) => x.type === 'mother' || x.type === 'father');
-        let showChildren = true;
-        let res = generateNode.bind(this)(targetId);
-
+        let spouseFiltered = data.relations.filter((x) => x.type === 'spouse');
+        let spouseMap = new Map();
+        for (let x of spouseFiltered) {
+            console.log(x);
+            spouseMap.set(x['person1Id'], idName.get(x['person2Id']))
+            spouseMap.set(x['person2Id'], idName.get(x['person1Id']))
+        }
+        // create two trees one with parents and one with children.
+        let res = generateNode.bind(this)(targetId, parents);
         return res;
 
-        function generateNode(id) {
+        function generateNode(id, parents) {
             let targetMap = generateTargetMap();
             let res1 = generateNodeHelper({id: id});
             showChildren = false;
             targetMap = generateTargetMap();
             let res2 = generateNodeHelper({id: id});
             let showChildrenExperimental = res1.max_depth >= res2.max_depth;
-            let res = showChildrenExperimental ? res1 : res2;
+            let res = parents ? res1 : res2;
             // this.state.showChildren = showChildrenExperimental;
             return res;
 
@@ -131,10 +159,13 @@ export class FamilyTree extends React.Component {
                 let depths = targets.map((x) => x.max_depth);
                 let max_depth = depths.length > 0 ? Math.max(...depths) + 1 : depth;
                 let classname = depth ? "node__default" : "node__root";
+
+                let s = spouseMap.get(id) == null ? "hello" : spouseMap.get(id);
                 let res = {
                     name: idName.get(id),
                     children: targets,
                     image: picMap.get(id),
+                    spouse: s,
                     className: classname,
                     max_depth: max_depth,
                 };
