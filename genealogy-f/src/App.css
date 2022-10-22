@@ -6,6 +6,13 @@
   height: 100%;
 }
 
+.diagram-component {
+  width: 1400px;
+  height: 1400px;
+  border: solid 1px black;
+  background-color: white;
+}
+
 .tree-box {
   display: flex;
   align-self: flex-start;
