@@ -6,6 +6,7 @@ import {Requests} from './requests';
 import React from "react";
 
 import {Topbar} from './components/topbar/Topbar.js'
+import {NameSearch} from './components/name-search/NameSearch.js'
 
 class App extends React.Component {
     componentDidMount(){
@@ -65,31 +66,18 @@ class NameForm extends React.Component {
                     yearToChange={this.handleChangeTo}
                     onClick={this.handleSearchSubmit}
                 />
-                {/* <div>
-                    {this.state.relationsJson
-                        ? Object.entries(this.state.relationsJson).map((kv) => {
-                            let y = kv[1];
-                            if (!Array.isArray(y)) {
-                                y = [y];
-                            }
-                            console.assert(Array.isArray(y));
-                            return this.tableFromArray(kv[0], y);
-                        })
-                        : ''
-                    }
-                </div> */}
                 <div className='tree-box'>
-                    {
-                        !_.isEmpty(this.state.relationsJson)
-                        ? <FamilyTree
-                            data={this.state.relationsJson}
-                            showChildren={true}
-                        />
-                        : <div id='welcome'>
-                            <div id='title'>Ancesta - Genealogy Project</div>
-                            <div id='desc'>Search a name to start</div>
-                        </div>
-                    }
+                {
+                    !_.isEmpty(this.state.relationsJson)
+                    ? <FamilyTree
+                        data={this.state.relationsJson}
+                        showChildren={true}
+                    />
+                    : <NameSearch
+                        onChange={this.handleChangeInitialName}
+                        onClick={this.handleSearchSubmit}
+                    />
+                }
                 </div>
                 {
                     !_.isEmpty(this.state.searchJsons) && _.isEmpty(this.state.relationsJson)
