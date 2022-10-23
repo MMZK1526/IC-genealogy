@@ -9,43 +9,414 @@ import './App.css';
 import {Topbar} from './components/topbar/Topbar.js'
 import {NameSearch} from './components/name-search/NameSearch.js'
 
-function initDiagram() {
-    const $ = go.GraphObject.make;
-    // set your license key here before creating the diagram: go.Diagram.licenseKey = "...";
-    const diagram =
-      $(go.Diagram,
-        {
-          'undoManager.isEnabled': true,  // must be set to allow for model change listening
-          // 'undoManager.maxHistoryLength': 0,  // uncomment disable undo/redo functionality
-          'clickCreatingTool.archetypeNodeData': { text: 'new node', color: 'lightblue' },
-          model: new go.GraphLinksModel(
-            {
-              linkKeyProperty: 'key'  // IMPORTANT! must be defined for merges and data sync when using GraphLinksModel
-            })
-        });
+// { key: 0, n: "Aaron", s: "M", m: -10, f: -11, ux: 1, a: ["C", "F", "K"] },
+// { key: 1, n: "Alice", s: "F", m: -12, f: -13, a: ["B", "H", "K"] },
+// { key: 2, n: "Bob", s: "M", m: 1, f: 0, ux: 3, a: ["C", "H", "L"] },
+// { key: 3, n: "Barbara", s: "F", a: ["C"] },
+// { key: 4, n: "Bill", s: "M", m: 1, f: 0, ux: 5, a: ["E", "H"] },
+// { key: 5, n: "Brooke", s: "F", a: ["B", "H", "L"] },
+// { key: 6, n: "Claire", s: "F", m: 1, f: 0, a: ["C"] },
+// { key: 7, n: "Carol", s: "F", m: 1, f: 0, a: ["C", "I"] },
+// { key: 8, n: "Chloe", s: "F", m: 1, f: 0, vir: 9, a: ["E"] },
+// { key: 9, n: "Chris", s: "M", a: ["B", "H"] },
+// { key: 10, n: "Ellie", s: "F", m: 3, f: 2, a: ["E", "G"] },
+// { key: 11, n: "Dan", s: "M", m: 3, f: 2, a: ["B", "J"] },
+// { key: 12, n: "Elizabeth", s: "F", vir: 13, a: ["J"] },
+// { key: 13, n: "David", s: "M", m: 5, f: 4, a: ["B", "H"] },
+
+// takes data in JSON format and converts into array of format above ^^^
+
+
+// function initDiagram() {
+//     const $ = go.GraphObject.make;
+//     // set your license key here before creating the diagram: go.Diagram.licenseKey = "...";
+//     const diagram =
+//       $(go.Diagram,
+//         {
+//           'undoManager.isEnabled': true,  // must be set to allow for model change listening
+//           // 'undoManager.maxHistoryLength': 0,  // uncomment disable undo/redo functionality
+//           'clickCreatingTool.archetypeNodeData': { text: 'new node', color: 'lightblue' },
+//           model: new go.GraphLinksModel(
+//             {
+//               linkKeyProperty: 'key'  // IMPORTANT! must be defined for merges and data sync when using GraphLinksModel
+//             })
+//         });
   
-    // define a simple Node template
-    diagram.nodeTemplate =
-      $(go.Node, 'Auto',  // the Shape will go around the TextBlock
-        new go.Binding('location', 'loc', go.Point.parse).makeTwoWay(go.Point.stringify),
-        $(go.Shape, 'RoundedRectangle',
-          { name: 'SHAPE', fill: 'white', strokeWidth: 0 },
-          // Shape.fill is bound to Node.data.color
-          new go.Binding('fill', 'color')),
-        $(go.TextBlock,
-          { margin: 8, editable: true },  // some room around the text
-          new go.Binding('text').makeTwoWay()
-        )
-      );
+//     // define a simple Node template
+//     diagram.nodeTemplate =
+//       $(go.Node, 'Auto',  // the Shape will go around the TextBlock
+//         new go.Binding('location', 'loc', go.Point.parse).makeTwoWay(go.Point.stringify),
+//         $(go.Shape, 'RoundedRectangle',
+//           { name: 'SHAPE', fill: 'white', strokeWidth: 0 },
+//           // Shape.fill is bound to Node.data.color
+//           new go.Binding('fill', 'color')),
+//         $(go.TextBlock,
+//           { margin: 8, editable: true },  // some room around the text
+//           new go.Binding('text').makeTwoWay()
+//         )
+//       );
   
-    return diagram;
-  }
+//     return diagram;
+//   }
 
 function handleModelChange(changes) {
     alert('GoJS model changed!');
 }
 
-function init() {
+
+
+    class GenogramLayout extends go.LayeredDigraphLayout {
+        constructor() {
+          super();
+          this.initializeOption = go.LayeredDigraphLayout.InitDepthFirstIn;
+          this.spouseSpacing = 30;  // minimum space between spouses
+        }
+    
+        makeNetwork(coll) {
+          // generate LayoutEdges for each parent-child Link
+          const net = this.createNetwork();
+          if (coll instanceof go.Diagram) {
+            this.add(net, coll.nodes, true);
+            this.add(net, coll.links, true);
+          } else if (coll instanceof go.Group) {
+            this.add(net, coll.memberParts, false);
+          } else if (coll.iterator) {
+            this.add(net, coll.iterator, false);
+          }
+          return net;
+        }
+    
+        // internal method for creating LayeredDigraphNetwork where husband/wife pairs are represented
+        // by a single LayeredDigraphVertex corresponding to the label Node on the marriage Link
+        add(net, coll, nonmemberonly) {
+          const horiz = this.direction == 0.0 || this.direction == 180.0;
+          const multiSpousePeople = new go.Set();
+          // consider all Nodes in the given collection
+          const it = coll.iterator;
+          while (it.next()) {
+            const node = it.value;
+            if (!(node instanceof go.Node)) continue;
+            if (!node.isLayoutPositioned || !node.isVisible()) continue;
+            if (nonmemberonly && node.containingGroup !== null) continue;
+            // if it's an unmarried Node, or if it's a Link Label Node, create a LayoutVertex for it
+            if (node.isLinkLabel) {
+              // get marriage Link
+              const link = node.labeledLink;
+              const spouseA = link.fromNode;
+              const spouseB = link.toNode;
+              // create vertex representing both husband and wife
+              const vertex = net.addNode(node);
+              // now define the vertex size to be big enough to hold both spouses
+              if (horiz) {
+                vertex.height = spouseA.actualBounds.height + this.spouseSpacing + spouseB.actualBounds.height;
+                vertex.width = Math.max(spouseA.actualBounds.width, spouseB.actualBounds.width);
+                vertex.focus = new go.Point(vertex.width / 2, spouseA.actualBounds.height + this.spouseSpacing / 2);
+              } else {
+                vertex.width = spouseA.actualBounds.width + this.spouseSpacing + spouseB.actualBounds.width;
+                vertex.height = Math.max(spouseA.actualBounds.height, spouseB.actualBounds.height);
+                vertex.focus = new go.Point(spouseA.actualBounds.width + this.spouseSpacing / 2, vertex.height / 2);
+              }
+            } else {
+              // don't add a vertex for any married person!
+              // instead, code above adds label node for marriage link
+              // assume a marriage Link has a label Node
+              let marriages = 0;
+              node.linksConnected.each(l => {
+                if (l.isLabeledLink) marriages++;
+              });
+              if (marriages === 0) {
+                net.addNode(node);
+              } else if (marriages > 1) {
+                multiSpousePeople.add(node);
+              }
+            }
+          }
+          // now do all Links
+          it.reset();
+          while (it.next()) {
+            const link = it.value;
+            if (!(link instanceof go.Link)) continue;
+            if (!link.isLayoutPositioned || !link.isVisible()) continue;
+            if (nonmemberonly && link.containingGroup !== null) continue;
+            // if it's a parent-child link, add a LayoutEdge for it
+            if (!link.isLabeledLink) {
+              const parent = net.findVertex(link.fromNode);  // should be a label node
+              const child = net.findVertex(link.toNode);
+              if (child !== null) {  // an unmarried child
+                net.linkVertexes(parent, child, link);
+              } else {  // a married child
+                link.toNode.linksConnected.each(l => {
+                  if (!l.isLabeledLink) return;  // if it has no label node, it's a parent-child link
+                  // found the Marriage Link, now get its label Node
+                  const mlab = l.labelNodes.first();
+                  // parent-child link should connect with the label node,
+                  // so the LayoutEdge should connect with the LayoutVertex representing the label node
+                  const mlabvert = net.findVertex(mlab);
+                  if (mlabvert !== null) {
+                    net.linkVertexes(parent, mlabvert, link);
+                  }
+                });
+              }
+            }
+          }
+    
+          while (multiSpousePeople.count > 0) {
+            // find all collections of people that are indirectly married to each other
+            const node = multiSpousePeople.first();
+            const cohort = new go.Set();
+            this.extendCohort(cohort, node);
+            // then encourage them all to be the same generation by connecting them all with a common vertex
+            const dummyvert = net.createVertex();
+            net.addVertex(dummyvert);
+            const marriages = new go.Set();
+            cohort.each(n => {
+              n.linksConnected.each(l => {
+                marriages.add(l);
+              })
+            });
+            marriages.each(link => {
+              // find the vertex for the marriage link (i.e. for the label node)
+              const mlab = link.labelNodes.first()
+              const v = net.findVertex(mlab);
+              if (v !== null) {
+                net.linkVertexes(dummyvert, v, null);
+              }
+            });
+            // done with these people, now see if there are any other multiple-married people
+            multiSpousePeople.removeAll(cohort);
+          }
+        }
+    
+        // collect all of the people indirectly married with a person
+        extendCohort(coll, node) {
+          if (coll.has(node)) return;
+          coll.add(node);
+          node.linksConnected.each(l => {
+            if (l.isLabeledLink) {  // if it's a marriage link, continue with both spouses
+              this.extendCohort(coll, l.fromNode);
+              this.extendCohort(coll, l.toNode);
+            }
+          });
+        }
+    
+        assignLayers() {
+          super.assignLayers();
+          const horiz = this.direction == 0.0 || this.direction == 180.0;
+          // for every vertex, record the maximum vertex width or height for the vertex's layer
+          const maxsizes = [];
+          this.network.vertexes.each(v => {
+            const lay = v.layer;
+            let max = maxsizes[lay];
+            if (max === undefined) max = 0;
+            const sz = (horiz ? v.width : v.height);
+            if (sz > max) maxsizes[lay] = sz;
+          });
+          // now make sure every vertex has the maximum width or height according to which layer it is in,
+          // and aligned on the left (if horizontal) or the top (if vertical)
+          this.network.vertexes.each(v => {
+            const lay = v.layer;
+            const max = maxsizes[lay];
+            if (horiz) {
+              v.focus = new go.Point(0, v.height / 2);
+              v.width = max;
+            } else {
+              v.focus = new go.Point(v.width / 2, 0);
+              v.height = max;
+            }
+          });
+          // from now on, the LayeredDigraphLayout will think that the Node is bigger than it really is
+          // (other than the ones that are the widest or tallest in their respective layer).
+        }
+    
+        commitNodes() {
+          super.commitNodes();
+          const horiz = this.direction == 0.0 || this.direction == 180.0;
+          console.log(horiz);
+          // position regular nodes
+          this.network.vertexes.each(v => {
+            if (v.node !== null && !v.node.isLinkLabel) {
+              v.node.moveTo(v.x, v.y);
+            }
+          });
+          // position the spouses of each marriage vertex
+          this.network.vertexes.each(v => {
+            if (v.node === null) return;
+            if (!v.node.isLinkLabel) return;
+            const labnode = v.node;
+            const lablink = labnode.labeledLink;
+            // In case the spouses are not actually moved, we need to have the marriage link
+            // position the label node, because LayoutVertex.commit() was called above on these vertexes.
+            // Alternatively we could override LayoutVetex.commit to be a no-op for label node vertexes.
+            lablink.invalidateRoute();
+            let spouseA = lablink.fromNode;
+            let spouseB = lablink.toNode;
+            if (spouseA.opacity > 0 && spouseB.opacity > 0) {
+              // prefer fathers on the left, mothers on the right
+              if (spouseA.data.s === "F") {  // sex is female
+                const temp = spouseA;
+                spouseA = spouseB;
+                spouseB = temp;
+              }
+              // see if the parents are on the desired sides, to avoid a link crossing
+              const aParentsNode = this.findParentsMarriageLabelNode(spouseA);
+              const bParentsNode = this.findParentsMarriageLabelNode(spouseB);
+              if (aParentsNode !== null && bParentsNode !== null &&
+                  (horiz
+                    ? aParentsNode.position.y > bParentsNode.position.y
+                    : aParentsNode.position.x > bParentsNode.position.x)) {
+                // swap the spouses
+                const temp = spouseA;
+                spouseA = spouseB;
+                spouseB = temp;
+              }
+              spouseA.moveTo(v.x, v.y);
+              if (horiz) {
+                spouseB.moveTo(v.x, v.y + spouseA.actualBounds.height + this.spouseSpacing);
+              } else {
+                spouseB.moveTo(v.x + spouseA.actualBounds.width + this.spouseSpacing, v.y);
+              }
+            } else if (spouseA.opacity === 0) {
+              const pos = horiz
+                ? new go.Point(v.x, v.centerY - spouseB.actualBounds.height / 2)
+                : new go.Point(v.centerX - spouseB.actualBounds.width / 2, v.y);
+              spouseB.move(pos);
+              if (horiz) pos.y++; else pos.x++;
+              spouseA.move(pos);
+            } else if (spouseB.opacity === 0) {
+              const pos = horiz
+                ? new go.Point(v.x, v.centerY - spouseA.actualBounds.height / 2)
+                : new go.Point(v.centerX - spouseA.actualBounds.width / 2, v.y);
+              spouseA.move(pos);
+              if (horiz) pos.y++; else pos.x++;
+              spouseB.move(pos);
+            }
+            lablink.ensureBounds();
+          });
+          // position only-child nodes to be under the marriage label node
+          this.network.vertexes.each(v => {
+            if (v.node === null || v.node.linksConnected.count > 1) return;
+            const mnode = this.findParentsMarriageLabelNode(v.node);
+            if (mnode !== null && mnode.linksConnected.count === 1) {  // if only one child
+              const mvert = this.network.findVertex(mnode);
+              const newbnds = v.node.actualBounds.copy();
+              if (horiz) {
+                newbnds.y = mvert.centerY - v.node.actualBounds.height / 2;
+              } else {
+                newbnds.x = mvert.centerX - v.node.actualBounds.width / 2;
+              }
+              // see if there's any empty space at the horizontal mid-point in that layer
+              const overlaps = this.diagram.findObjectsIn(newbnds, x => x.part, p => p !== v.node, true);
+              if (overlaps.count === 0) {
+                v.node.move(newbnds.position);
+              }
+            }
+          });
+        }
+    
+        findParentsMarriageLabelNode(node) {
+          const it = node.findNodesInto();
+          while (it.next()) {
+            const n = it.value;
+            if (n.isLinkLabel) return n;
+          }
+          return null;
+        }
+      }
+
+
+// function App() {
+//   return (
+//     <div>
+//       <ReactDiagram
+//       // generates family-tree
+//         initDiagram={init}
+//         divClassName='diagram-component'
+//         onModelChange={handleModelChange}
+//       />
+//     </div>
+//   );
+// }
+
+// previous app start code
+class App extends React.Component {
+    componentDidMount(){
+        document.title = "Ancesta - Genealogy Project"
+    }
+
+    render() {
+        return (
+            <NameForm />
+        );
+    }
+}
+//converts string keys into number keys for search e.g. "WQ-145123" -> 145123
+function toInt(str) {
+  return Number(str.substring(4));
+}
+
+// helper function to transfrom JSON into goJS nodeFormat as a record {}
+function transform(data) {
+  // data.people to be replaced with data.items in Mulang version
+  let target = data.targets[0];
+  let idPerson = new Map();
+  let people = data.people;
+  people.push(target);
+  let targetId = target.id;
+  idPerson.set(targetId, target);
+  for (let x of data.people) {
+      idPerson.set(x.id, x);
+  }
+  // let relationsFiltered = data.relations.filter((x) => x.type == 'mother' || x.type == 'father');
+  const relMap = new Map();
+  // create a map from personId to (relation array of their mother, father and spouse )
+  console.log(data.relations);
+  for (let relation of data.relations) {
+      var key = relation['person1Id'];
+      var target2 = idPerson.get(key);
+      var mfs = {};
+      if (relMap.has(key)) {
+          mfs = relMap.get(key);
+      } else {
+          mfs = {key: toInt(target2.id), n: target2.name, s: target2.gender};
+      }
+      // console.log(target2)
+      // console.log(relation)
+      if (relation.type == 'mother') {
+          mfs.m = toInt(relation.person2Id);
+      }
+      if (relation.type == 'father') {
+          mfs.f = toInt(relation.person2Id);
+      }
+      if (relation.type == 'spouse') {
+              if (target2.gender == 'M') {
+                  mfs.ux = toInt(relation.person2Id);
+              } else {
+                  mfs.vir = toInt(relation.person2Id);
+              }
+      }
+      relMap.set(relation['person1Id'], mfs)
+  }
+  const output = [];
+  // loop through keys (bug of 3 targets in people, otherwise can loop through them)
+  for (let key of idPerson.keys()) {
+      if (relMap.has(key)) {
+          output.push(relMap.get(key));
+      } else {
+          var person = idPerson.get(key);
+          // top layer
+          output.push({key : toInt(person.id), n: person.name, s: person.gender})
+      }
+  }
+  console.log(output);
+  return (output);
+}
+
+class GenogramTree extends React.Component {
+  constructor(props) {
+    super(props)
+  }
+
+  init() {
     const $ = go.GraphObject.make;
 
       const myDiagram =
@@ -215,54 +586,439 @@ function init() {
 
 
       // n: name, s: sex, m: mother, f: father, ux: wife, vir: husband, a: attributes/markers
+      // if (this.state?.relationsJson) {
+        // console.log("we got here");
+        // setupDiagram(myDiagram, transform(this.state.relationsJson), toInt(this.state.chosenId); /* focus on this person */);
+      // }
       setupDiagram(myDiagram, [
-        { key: 0, n: "Aaron", s: "M", m: -10, f: -11, ux: 1, a: ["C", "F", "K"] },
-        { key: 1, n: "Alice", s: "F", m: -12, f: -13, a: ["B", "H", "K"] },
-        { key: 2, n: "Bob", s: "M", m: 1, f: 0, ux: 3, a: ["C", "H", "L"] },
-        { key: 3, n: "Barbara", s: "F", a: ["C"] },
-        { key: 4, n: "Bill", s: "M", m: 1, f: 0, ux: 5, a: ["E", "H"] },
-        { key: 5, n: "Brooke", s: "F", a: ["B", "H", "L"] },
-        { key: 6, n: "Claire", s: "F", m: 1, f: 0, a: ["C"] },
-        { key: 7, n: "Carol", s: "F", m: 1, f: 0, a: ["C", "I"] },
-        { key: 8, n: "Chloe", s: "F", m: 1, f: 0, vir: 9, a: ["E"] },
-        { key: 9, n: "Chris", s: "M", a: ["B", "H"] },
-        { key: 10, n: "Ellie", s: "F", m: 3, f: 2, a: ["E", "G"] },
-        { key: 11, n: "Dan", s: "M", m: 3, f: 2, a: ["B", "J"] },
-        { key: 12, n: "Elizabeth", s: "F", vir: 13, a: ["J"] },
-        { key: 13, n: "David", s: "M", m: 5, f: 4, a: ["B", "H"] },
-        { key: 14, n: "Emma", s: "F", m: 5, f: 4, a: ["E", "G"] },
-        { key: 15, n: "Evan", s: "M", m: 8, f: 9, a: ["F", "H"] },
-        { key: 16, n: "Ethan", s: "M", m: 8, f: 9, a: ["D", "K"] },
-        { key: 17, n: "Eve", s: "F", vir: 16, a: ["B", "F", "L"] },
-        { key: 18, n: "Emily", s: "F", m: 8, f: 9 },
-        { key: 19, n: "Fred", s: "M", m: 17, f: 16, a: ["B"] },
-        { key: 20, n: "Faith", s: "F", m: 17, f: 16, a: ["L"] },
-        { key: 21, n: "Felicia", s: "F", m: 12, f: 13, a: ["H"] },
-        { key: 22, n: "Frank", s: "M", m: 12, f: 13, a: ["B", "H"] },
-
-        // "Aaron"'s ancestors
-        { key: -10, n: "Paternal Grandfather", s: "M", m: -33, f: -32, ux: -11, a: ["A", "S"] },
-        { key: -11, n: "Paternal Grandmother", s: "F", a: ["E", "S"] },
-        { key: -32, n: "Paternal Great", s: "M", ux: -33, a: ["F", "H", "S"] },
-        { key: -33, n: "Paternal Great", s: "F", a: ["S"] },
-        { key: -40, n: "Great Uncle", s: "M", m: -33, f: -32, a: ["F", "H", "S"] },
-        { key: -41, n: "Great Aunt", s: "F", m: -33, f: -32, a: ["B", "I", "S"] },
-        { key: -20, n: "Uncle", s: "M", m: -11, f: -10, a: ["A", "S"] },
-
-        // "Alice"'s ancestors
-        { key: -12, n: "Maternal Grandfather", s: "M", ux: -13, a: ["D", "L", "S"] },
-        { key: -13, n: "Maternal Grandmother", s: "F", m: -31, f: -30, a: ["H", "S"] },
-        { key: -21, n: "Aunt", s: "F", m: -13, f: -12, a: ["C", "I"] },
-        { key: -22, n: "Uncle", s: "M", ux: -21 },
-        { key: -23, n: "Cousin", s: "M", m: -21, f: -22 },
-        { key: -30, n: "Maternal Great", s: "M", ux: -31, a: ["D", "J", "S"] },
-        { key: -31, n: "Maternal Great", s: "F", m: -50, f: -51, a: ["B", "H", "L", "S"] },
-        { key: -42, n: "Great Uncle", s: "M", m: -30, f: -31, a: ["C", "J", "S"] },
-        { key: -43, n: "Great Aunt", s: "F", m: -30, f: -31, a: ["E", "G", "S"] },
-        { key: -50, n: "Maternal Great Great", s: "F", vir: -51, a: ["D", "I", "S"] },
-        { key: -51, n: "Maternal Great Great", s: "M", a: ["B", "H", "S"] }
-      ],
-        4 /* focus on this person */);
+        {
+            "key": 43274,
+            "n": "Charles III",
+            "s": "M",
+            "f": 80976,
+            "m": 9682,
+            "ux": 9685
+        },
+        {
+            "key": 9682,
+            "n": "Elizabeth II",
+            "s": "F",
+            "f": 280856,
+            "m": 10633,
+            "vir": 80976,
+        },
+        {
+            "key": 80976,
+            "n": "Prince Philip, Duke of Edinburgh",
+            "s": "M",
+            "ux": 9682,
+            "f": 156531,
+            "m": 116062
+        },
+        {
+            "key": 36812,
+            "n": "William, Prince of Wales",
+            "s": "M",
+            "f": 43274,
+            "m": 9685
+        },
+        {
+            "key": 152239,
+            "n": "Queen Camilla",
+            "s": "F",
+            "vir": 43274,
+            "f": 327457,
+            "m": 17363684
+        },
+        {
+            "key": 152316,
+            "n": "Prince Harry, Duke of Sussex",
+            "s": "M",
+            "f": 43274,
+            "m": 9685,
+            "ux": 3304418
+        },
+        {
+            "key": 9685,
+            "n": "Diana, Princess of Wales",
+            "s": "F",
+            "f": 593671,
+            "m": 256893,
+            "vir": 43274,
+        },
+        {
+            "key": 10633,
+            "n": "Queen Elizabeth, The Queen Mother",
+            "s": "F",
+            "f": 335159,
+            "m": 238820,
+            "vir": 280856
+        },
+        {
+            "key": 116062,
+            "n": "Princess Alice of Battenberg",
+            "s": "F",
+            "f": 57468,
+            "m": 57658,
+            "vir": 156531
+        },
+        {
+            "key": 156531,
+            "n": "Prince Andrew of Greece and Denmark",
+            "s": "M",
+            "f": 17142,
+            "m": 155178
+        },
+        {
+            "key": 280856,
+            "n": "George VI",
+            "s": "M",
+            "f": 269412,
+            "m": 76927
+        },
+        {
+            "key": 327457,
+            "n": "Bruce Shand",
+            "s": "M",
+            "f": 7184109,
+            "m": 17308990
+        },
+        {
+            "key": 17363684,
+            "n": "Rosalind Cubitt",
+            "s": "F",
+            "vir": 327457,
+            "f": 7360200,
+            "m": 7561697
+        },
+        {
+            "key": 10479,
+            "n": "Catherine, Princess of Wales",
+            "s": "F",
+            "vir": 36812,
+            "f": 14244505,
+            "m": 14244952
+        },
+        {
+            "key": 151754,
+            "n": "Anne, Princess Royal",
+            "s": "F",
+            "m": 9682,
+            "f": 80976,
+            "vir": 2063224
+        },
+        {
+            "key": 153330,
+            "n": "Prince Andrew, Duke of York",
+            "s": "M",
+            "m": 9682,
+            "f": 80976,
+            "ux": 55720
+        },
+        {
+            "key": 154920,
+            "n": "Prince Edward, Earl of Wessex and Forfar",
+            "s": "M",
+            "m": 9682,
+            "f": 80976,
+            "ux": 155203
+        },
+        {
+            "key": 3304418,
+            "n": "Meghan, Duchess of Sussex",
+            "s": "F",
+            "f": 43918214,
+            "m": 43918160
+        },
+        {
+            "key": 3736070,
+            "n": "Tom Parker Bowles",
+            "s": "M",
+            "m": 152239,
+            "f": 2221868,
+            "ux": 75587832
+        },
+        {
+            "key": 3743314,
+            "n": "Laura Lopes",
+            "s": "F",
+            "m": 152239,
+            "f": 2221868,
+            "vir": 75587834
+        },
+        {
+            "key": 13590412,
+            "n": "Prince George of Wales",
+            "s": "M",
+            "f": 36812,
+            "m": 10479
+        },
+        {
+            "key": 18002970,
+            "n": "Princess Charlotte of Wales",
+            "s": "F",
+            "f": 36812,
+            "m": 10479
+        },
+        {
+            "key": 38668629,
+            "n": "Prince Louis of Wales",
+            "s": "M",
+            "f": 36812,
+            "m": 10479
+        },
+        {
+            "key": 62938826,
+            "n": "Archie Mountbatten-Windsor",
+            "s": "M",
+            "f": 152316,
+            "m": 3304418
+        },
+        {
+            "key": 107125551,
+            "n": "Lilibet Mountbatten-Windsor",
+            "s": "F",
+            "f": 152316,
+            "m": 3304418
+        },
+        {
+            "key": 55720,
+            "n": "Sarah, Duchess of York",
+            "s": "F"
+        },
+        {
+            "key": 147663,
+            "n": "Zara Tindall",
+            "s": "F",
+            "m": 151754
+        },
+        {
+            "key": 155203,
+            "n": "Sophie, Countess of Wessex and Forfar",
+            "s": "F"
+        },
+        {
+            "key": 165657,
+            "n": "Princess Beatrice",
+            "s": "F",
+            "f": 153330
+        },
+        {
+            "key": 165709,
+            "n": "Princess Eugenie of York",
+            "s": "F",
+            "f": 153330
+        },
+        {
+            "key": 344908,
+            "n": "Peter Phillips",
+            "s": "M",
+            "m": 151754
+        },
+        {
+            "key": 550183,
+            "n": "James, Viscount Severn",
+            "s": "M",
+            "f": 154920
+        },
+        {
+            "key": 680304,
+            "n": "Lady Louise Windsor",
+            "s": "F",
+            "f": 154920
+        },
+        {
+            "key": 2063224,
+            "n": "Timothy Laurence",
+            "s": "M"
+        },
+        {
+            "key": 2221868,
+            "n": "Andrew Parker Bowles",
+            "s": "M"
+        },
+        {
+            "key": 7184109,
+            "n": "Philip Morton Shand",
+            "s": "M"
+        },
+        {
+            "key": 7360200,
+            "n": "Roland Cubitt, 3rd Baron Ashcombe",
+            "s": "M"
+        },
+        {
+            "key": 7561697,
+            "n": "Sonia Cubitt, Baroness Ashcombe",
+            "s": "F"
+        },
+        {
+            "key": 14244505,
+            "n": "Michael Middleton",
+            "s": "M"
+        },
+        {
+            "key": 14244952,
+            "n": "Carole Middleton",
+            "s": "F"
+        },
+        {
+            "key": 16142673,
+            "n": "Annabel Elliot",
+            "s": "F",
+            "f": 327457,
+            "m": 17363684
+        },
+        {
+            "key": 17308990,
+            "n": "Edith Marguerite Harrington",
+            "s": "F"
+        },
+        {
+            "key": 43918160,
+            "n": "Doria Ragland",
+            "s": "F"
+        },
+        {
+            "key": 43918214,
+            "n": "Thomas Markle",
+            "s": "M"
+        },
+        {
+            "key": 75587832,
+            "n": "Sara Buys",
+            "s": "F"
+        },
+        {
+            "key": 75587834,
+            "n": "Harry Lopes",
+            "s": "M"
+        },
+        {
+            "key": 75723263,
+            "n": "Lola Parker Bowles",
+            "s": "F",
+            "f": 3736070
+        },
+        {
+            "key": 75723264,
+            "n": "Eliza Lopes",
+            "s": "F",
+            "m": 3743314
+        },
+        {
+            "key": 75982135,
+            "n": "Gus Lopes",
+            "s": "M",
+            "m": 3743314
+        },
+        {
+            "key": 75982642,
+            "n": "Louis Lopes",
+            "s": "M",
+            "m": 3743314
+        },
+        {
+            "key": 76022497,
+            "n": "Freddy Parker Bowles",
+            "s": "M",
+            "f": 3736070
+        },
+        {
+            "key": 17142,
+            "n": "George I of Greece",
+            "s": "M"
+        },
+        {
+            "key": 57468,
+            "n": "Prince Louis of Battenberg",
+            "s": "M"
+        },
+        {
+            "key": 57658,
+            "n": "Princess Victoria, Marchioness of Milford Haven",
+            "s": "F"
+        },
+        {
+            "key": 76927,
+            "n": "Mary of Teck",
+            "s": "F"
+        },
+        {
+            "key": 153815,
+            "n": "Princess Margaret, Countess of Snowdon",
+            "s": "F",
+            "m": 10633,
+            "f": 280856
+        },
+        {
+            "key": 155178,
+            "n": "Olga Constantinovna of Russia",
+            "s": "F"
+        },
+        {
+            "key": 236196,
+            "n": "Princess Cecilie of Greece and Denmark",
+            "s": "F",
+            "m": 116062,
+            "f": 156531
+        },
+        {
+            "key": 238820,
+            "n": "Cecilia Bowes-Lyon, Countess of Strathmore and Kinghorne",
+            "s": "F"
+        },
+        {
+            "key": 240317,
+            "n": "Princess Margarita of Greece and Denmark",
+            "s": "F",
+            "m": 116062,
+            "f": 156531
+        },
+        {
+            "key": 255382,
+            "n": "Princess Theodora, Margravine of Baden",
+            "s": "F",
+            "m": 116062,
+            "f": 156531
+        },
+        {
+            "key": 256893,
+            "n": "Frances Shand Kydd",
+            "s": "F"
+        },
+        {
+            "key": 269412,
+            "n": "George V",
+            "s": "M"
+        },
+        {
+            "key": 335159,
+            "n": "Claude Bowes-Lyon, 14th Earl of Strathmore and Kinghorne",
+            "s": "M"
+        },
+        {
+            "key": 593671,
+            "n": "John Spencer, 8th Earl Spencer",
+            "s": "M"
+        },
+        {
+            "key": 630371,
+            "n": "Princess Sophie of Greece and Denmark",
+            "s": "F",
+            "m": 116062,
+            "f": 156531
+        },
+        {
+            "key": 15488831,
+            "n": "Mark Shand",
+            "s": "M",
+            "f": 327457,
+            "m": 17363684
+        }
+    ]
+        , 43274);
+    
 
     // create and initialize the Diagram.model given an array of node data representing people
     function setupDiagram(diagram, array, focusId) {
@@ -314,9 +1070,17 @@ function init() {
           for (let j = 0; j < uxs.length; j++) {
             const wife = uxs[j];
             const wdata = model.findNodeDataForKey(wife);
-            if (key === wife || !wdata || wdata.s !== "F") {
-              console.log("cannot create Marriage relationship with self or unknown person " + wife);
+            if (key == wife) {
+              console.log("cannot create Marriage relationship with self" + wife);
               continue;
+            }
+            if (!wdata) {
+                console.log("cannot create Marriage relationship with unknown person " + wife);
+                continue;
+            }
+            if (wdata.s !== "F") {
+                console.log("cannot create Marriage relationship with wrong gender person " + wife);
+                continue;
             }
             const link = findMarriage(diagram, key, wife);
             if (link === null) {
@@ -380,303 +1144,13 @@ function init() {
     }
     return myDiagram;}
 
-
-    class GenogramLayout extends go.LayeredDigraphLayout {
-        constructor() {
-          super();
-          this.initializeOption = go.LayeredDigraphLayout.InitDepthFirstIn;
-          this.spouseSpacing = 30;  // minimum space between spouses
-        }
-    
-        makeNetwork(coll) {
-          // generate LayoutEdges for each parent-child Link
-          const net = this.createNetwork();
-          if (coll instanceof go.Diagram) {
-            this.add(net, coll.nodes, true);
-            this.add(net, coll.links, true);
-          } else if (coll instanceof go.Group) {
-            this.add(net, coll.memberParts, false);
-          } else if (coll.iterator) {
-            this.add(net, coll.iterator, false);
-          }
-          return net;
-        }
-    
-        // internal method for creating LayeredDigraphNetwork where husband/wife pairs are represented
-        // by a single LayeredDigraphVertex corresponding to the label Node on the marriage Link
-        add(net, coll, nonmemberonly) {
-          const horiz = this.direction == 0.0 || this.direction == 180.0;
-          const multiSpousePeople = new go.Set();
-          // consider all Nodes in the given collection
-          const it = coll.iterator;
-          while (it.next()) {
-            const node = it.value;
-            if (!(node instanceof go.Node)) continue;
-            if (!node.isLayoutPositioned || !node.isVisible()) continue;
-            if (nonmemberonly && node.containingGroup !== null) continue;
-            // if it's an unmarried Node, or if it's a Link Label Node, create a LayoutVertex for it
-            if (node.isLinkLabel) {
-              // get marriage Link
-              const link = node.labeledLink;
-              const spouseA = link.fromNode;
-              const spouseB = link.toNode;
-              // create vertex representing both husband and wife
-              const vertex = net.addNode(node);
-              // now define the vertex size to be big enough to hold both spouses
-              if (horiz) {
-                vertex.height = spouseA.actualBounds.height + this.spouseSpacing + spouseB.actualBounds.height;
-                vertex.width = Math.max(spouseA.actualBounds.width, spouseB.actualBounds.width);
-                vertex.focus = new go.Point(vertex.width / 2, spouseA.actualBounds.height + this.spouseSpacing / 2);
-              } else {
-                vertex.width = spouseA.actualBounds.width + this.spouseSpacing + spouseB.actualBounds.width;
-                vertex.height = Math.max(spouseA.actualBounds.height, spouseB.actualBounds.height);
-                vertex.focus = new go.Point(spouseA.actualBounds.width + this.spouseSpacing / 2, vertex.height / 2);
-              }
-            } else {
-              // don't add a vertex for any married person!
-              // instead, code above adds label node for marriage link
-              // assume a marriage Link has a label Node
-              let marriages = 0;
-              node.linksConnected.each(l => {
-                if (l.isLabeledLink) marriages++;
-              });
-              if (marriages === 0) {
-                net.addNode(node);
-              } else if (marriages > 1) {
-                multiSpousePeople.add(node);
-              }
-            }
-          }
-          // now do all Links
-          it.reset();
-          while (it.next()) {
-            const link = it.value;
-            if (!(link instanceof go.Link)) continue;
-            if (!link.isLayoutPositioned || !link.isVisible()) continue;
-            if (nonmemberonly && link.containingGroup !== null) continue;
-            // if it's a parent-child link, add a LayoutEdge for it
-            if (!link.isLabeledLink) {
-              const parent = net.findVertex(link.fromNode);  // should be a label node
-              const child = net.findVertex(link.toNode);
-              if (child !== null) {  // an unmarried child
-                net.linkVertexes(parent, child, link);
-              } else {  // a married child
-                link.toNode.linksConnected.each(l => {
-                  if (!l.isLabeledLink) return;  // if it has no label node, it's a parent-child link
-                  // found the Marriage Link, now get its label Node
-                  const mlab = l.labelNodes.first();
-                  // parent-child link should connect with the label node,
-                  // so the LayoutEdge should connect with the LayoutVertex representing the label node
-                  const mlabvert = net.findVertex(mlab);
-                  if (mlabvert !== null) {
-                    net.linkVertexes(parent, mlabvert, link);
-                  }
-                });
-              }
-            }
-          }
-    
-          while (multiSpousePeople.count > 0) {
-            // find all collections of people that are indirectly married to each other
-            const node = multiSpousePeople.first();
-            const cohort = new go.Set();
-            this.extendCohort(cohort, node);
-            // then encourage them all to be the same generation by connecting them all with a common vertex
-            const dummyvert = net.createVertex();
-            net.addVertex(dummyvert);
-            const marriages = new go.Set();
-            cohort.each(n => {
-              n.linksConnected.each(l => {
-                marriages.add(l);
-              })
-            });
-            marriages.each(link => {
-              // find the vertex for the marriage link (i.e. for the label node)
-              const mlab = link.labelNodes.first()
-              const v = net.findVertex(mlab);
-              if (v !== null) {
-                net.linkVertexes(dummyvert, v, null);
-              }
-            });
-            // done with these people, now see if there are any other multiple-married people
-            multiSpousePeople.removeAll(cohort);
-          }
-        }
-    
-        // collect all of the people indirectly married with a person
-        extendCohort(coll, node) {
-          if (coll.has(node)) return;
-          coll.add(node);
-          node.linksConnected.each(l => {
-            if (l.isLabeledLink) {  // if it's a marriage link, continue with both spouses
-              this.extendCohort(coll, l.fromNode);
-              this.extendCohort(coll, l.toNode);
-            }
-          });
-        }
-    
-        assignLayers() {
-          super.assignLayers();
-          const horiz = this.direction == 0.0 || this.direction == 180.0;
-          // for every vertex, record the maximum vertex width or height for the vertex's layer
-          const maxsizes = [];
-          this.network.vertexes.each(v => {
-            const lay = v.layer;
-            let max = maxsizes[lay];
-            if (max === undefined) max = 0;
-            const sz = (horiz ? v.width : v.height);
-            if (sz > max) maxsizes[lay] = sz;
-          });
-          // now make sure every vertex has the maximum width or height according to which layer it is in,
-          // and aligned on the left (if horizontal) or the top (if vertical)
-          this.network.vertexes.each(v => {
-            const lay = v.layer;
-            const max = maxsizes[lay];
-            if (horiz) {
-              v.focus = new go.Point(0, v.height / 2);
-              v.width = max;
-            } else {
-              v.focus = new go.Point(v.width / 2, 0);
-              v.height = max;
-            }
-          });
-          // from now on, the LayeredDigraphLayout will think that the Node is bigger than it really is
-          // (other than the ones that are the widest or tallest in their respective layer).
-        }
-    
-        commitNodes() {
-          super.commitNodes();
-          const horiz = this.direction == 0.0 || this.direction == 180.0;
-          // position regular nodes
-          this.network.vertexes.each(v => {
-            if (v.node !== null && !v.node.isLinkLabel) {
-              v.node.moveTo(v.x, v.y);
-            }
-          });
-          // position the spouses of each marriage vertex
-          this.network.vertexes.each(v => {
-            if (v.node === null) return;
-            if (!v.node.isLinkLabel) return;
-            const labnode = v.node;
-            const lablink = labnode.labeledLink;
-            // In case the spouses are not actually moved, we need to have the marriage link
-            // position the label node, because LayoutVertex.commit() was called above on these vertexes.
-            // Alternatively we could override LayoutVetex.commit to be a no-op for label node vertexes.
-            lablink.invalidateRoute();
-            let spouseA = lablink.fromNode;
-            let spouseB = lablink.toNode;
-            if (spouseA.opacity > 0 && spouseB.opacity > 0) {
-              // prefer fathers on the left, mothers on the right
-              if (spouseA.data.s === "F") {  // sex is female
-                const temp = spouseA;
-                spouseA = spouseB;
-                spouseB = temp;
-              }
-              // see if the parents are on the desired sides, to avoid a link crossing
-              const aParentsNode = this.findParentsMarriageLabelNode(spouseA);
-              const bParentsNode = this.findParentsMarriageLabelNode(spouseB);
-              if (aParentsNode !== null && bParentsNode !== null &&
-                  (horiz
-                    ? aParentsNode.position.x > bParentsNode.position.x
-                    : aParentsNode.position.y > bParentsNode.position.y)) {
-                // swap the spouses
-                const temp = spouseA;
-                spouseA = spouseB;
-                spouseB = temp;
-              }
-              spouseA.moveTo(v.x, v.y);
-              if (horiz) {
-                spouseB.moveTo(v.x, v.y + spouseA.actualBounds.height + this.spouseSpacing);
-              } else {
-                spouseB.moveTo(v.x + spouseA.actualBounds.width + this.spouseSpacing, v.y);
-              }
-            } else if (spouseA.opacity === 0) {
-              const pos = horiz
-                ? new go.Point(v.x, v.centerY - spouseB.actualBounds.height / 2)
-                : new go.Point(v.centerX - spouseB.actualBounds.width / 2, v.y);
-              spouseB.move(pos);
-              if (horiz) pos.y++; else pos.x++;
-              spouseA.move(pos);
-            } else if (spouseB.opacity === 0) {
-              const pos = horiz
-                ? new go.Point(v.x, v.centerY - spouseA.actualBounds.height / 2)
-                : new go.Point(v.centerX - spouseA.actualBounds.width / 2, v.y);
-              spouseA.move(pos);
-              if (horiz) pos.y++; else pos.x++;
-              spouseB.move(pos);
-            }
-            lablink.ensureBounds();
-          });
-          // position only-child nodes to be under the marriage label node
-          this.network.vertexes.each(v => {
-            if (v.node === null || v.node.linksConnected.count > 1) return;
-            const mnode = this.findParentsMarriageLabelNode(v.node);
-            if (mnode !== null && mnode.linksConnected.count === 1) {  // if only one child
-              const mvert = this.network.findVertex(mnode);
-              const newbnds = v.node.actualBounds.copy();
-              if (horiz) {
-                newbnds.y = mvert.centerY - v.node.actualBounds.height / 2;
-              } else {
-                newbnds.x = mvert.centerX - v.node.actualBounds.width / 2;
-              }
-              // see if there's any empty space at the horizontal mid-point in that layer
-              const overlaps = this.diagram.findObjectsIn(newbnds, x => x.part, p => p !== v.node, true);
-              if (overlaps.count === 0) {
-                v.node.move(newbnds.position);
-              }
-            }
-          });
-        }
-    
-        findParentsMarriageLabelNode(node) {
-          const it = node.findNodesInto();
-          while (it.next()) {
-            const n = it.value;
-            if (n.isLinkLabel) return n;
-          }
-          return null;
-        }
-      }
-
-
-function App() {
-  return (
-    <div>
-      <ReactDiagram
-      // generates family-tree
-        initDiagram={init}
+  render() {return (<ReactDiagram
+    // generates family-tree
+        initDiagram={this.init}
         divClassName='diagram-component'
-        // nodeDataArray={[
-        //   { key: 0, text: 'Alpha', color: 'lightblue', loc: '0 0' },
-        //   { key: 1, text: 'Beta', color: 'orange', loc: '150 0' },
-        //   { key: 2, text: 'Gamma', color: 'lightgreen', loc: '0 150' },
-        //   { key: 3, text: 'Delta', color: 'pink', loc: '150 150' }
-        // ]}
-        // linkDataArray={[
-        //   { key: -1, from: 0, to: 1 },
-        //   { key: -2, from: 0, to: 2 },
-        //   { key: -3, from: 1, to: 1 },
-        //   { key: -4, from: 2, to: 3 },
-        //   { key: -5, from: 3, to: 0 }
-        // ]}
         onModelChange={handleModelChange}
-      />
-    </div>
-  );
+    />)}
 }
-
-// previous app start code
-// class App extends React.Component {
-//     componentDidMount(){
-//         document.title = "Ancesta - Genealogy Project"
-//     }
-
-//     render() {
-//         return (
-//             <NameForm />
-//         );
-//     }
-// }
 
 class NameForm extends React.Component {
     constructor(props) {
@@ -687,7 +1161,8 @@ class NameForm extends React.Component {
             chosenId: '',
             relationsJson: {},
             fromYear: '',
-            toYear: ''
+            toYear: '',
+            transformedArr: [],
         };
         this.requests = new Requests();
 
@@ -715,6 +1190,7 @@ class NameForm extends React.Component {
     handleChangeTo(event) {
         this.setState({toYear: event.target.value});
     }
+
     render() {
         return ( 
             <div className='App'>                
@@ -752,43 +1228,6 @@ class NameForm extends React.Component {
                     : ''
                 }
                 
-            </div>
-        );
-    }
-
-
-    tableFromArray(title, arr) {
-        let keys = arr.length > 0 ? Object.keys(arr[0]) : [];
-        return (
-            <div>
-                <h3>
-                    {title}
-                </h3>
-                <table key={title}>
-                    <thead>
-                        <tr>
-                            {
-                                keys.map((k) => (
-                                    <th key={k}>{k}</th>
-                                ))
-                            }
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {
-                        arr.map((x, ix) => (
-                            <tr key={ix}>
-                                {
-                                    Object.entries(x).map((kv) => (
-                                        <td key={kv[0]}>{kv[1]}</td>
-                                    ))
-                                }
-                            </tr>
-                        ))
-                    }
-                    </tbody>
-
-                </table>
             </div>
         );
     }
@@ -841,6 +1280,7 @@ class NameForm extends React.Component {
             }
             this.setState({
                 relationsJson: r,
+                transformedArr: transform(r),
             });
         });
     }
