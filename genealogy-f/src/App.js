@@ -324,31 +324,24 @@ function handleModelChange(changes) {
       }
 
 
-// function App() {
-//   return (
-//     <div>
-//       <ReactDiagram
-//       // generates family-tree
-//         initDiagram={init}
-//         divClassName='diagram-component'
-//         onModelChange={handleModelChange}
-//       />
-//     </div>
-//   );
-// }
+function App() {
+  return (
+      <GenogramTree />
+  );
+}
 
 // previous app start code
-class App extends React.Component {
-    componentDidMount(){
-        document.title = "Ancesta - Genealogy Project"
-    }
+// class App extends React.Component {
+//     componentDidMount(){
+//         document.title = "Ancesta - Genealogy Project"
+//     }
 
-    render() {
-        return (
-            <NameForm />
-        );
-    }
-}
+//     render() {
+//         return (
+//             <NameForm />
+//         );
+//     }
+// }
 //converts string keys into number keys for search e.g. "WQ-145123" -> 145123
 function toInt(str) {
   return Number(str.substring(4));
@@ -423,7 +416,7 @@ class GenogramTree extends React.Component {
         $(go.Diagram,
           {
             initialAutoScale: go.Diagram.Uniform,
-            "undoManager.isEnabled": true,
+            "undoManager.isEnabled": false,
             // when a node is selected, draw a big yellow circle behind it
             nodeSelectionAdornmentTemplate:
               $(go.Adornment, "Auto",
@@ -434,6 +427,7 @@ class GenogramTree extends React.Component {
             layout:  // use a custom layout, defined below
               $(GenogramLayout, { direction: 90, layerSpacing: 30, columnSpacing: 10 })
           });
+      // this.myDiagram.toolManager.panningTool.isEnabled = false;
 
       // determine the color for each attribute shape
       function attrFill(a) {
@@ -510,7 +504,7 @@ class GenogramTree extends React.Component {
       // named by the category value in the node data object
       myDiagram.nodeTemplateMap.add("M",  // male
         $(go.Node, "Vertical",
-          { locationSpot: go.Spot.Center, locationObjectName: "ICON", selectionObjectName: "ICON" },
+          { selectable: false, locationSpot: go.Spot.Center, locationObjectName: "ICON", selectionObjectName: "ICON" },
           new go.Binding("opacity", "hide", h => h ? 0 : 1),
           new go.Binding("pickable", "hide", h => !h),
           $(go.Panel,
@@ -538,7 +532,7 @@ class GenogramTree extends React.Component {
 
       myDiagram.nodeTemplateMap.add("F",  // female
         $(go.Node, "Vertical",
-          { locationSpot: go.Spot.Center, locationObjectName: "ICON", selectionObjectName: "ICON" },
+          { selectable: false, locationSpot: go.Spot.Center, locationObjectName: "ICON", selectionObjectName: "ICON" },
           new go.Binding("opacity", "hide", h => h ? 0 : 1),
           new go.Binding("pickable", "hide", h => !h),
           $(go.Panel,
