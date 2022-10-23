@@ -55,9 +55,11 @@
   display: inline;
   font-size: large;
   color: rgb(50, 50, 50);
-  background-color: transparent;
-  border-style:dashed;
-  width: 20vw;
+  width: 30vw;
   height: 40px;
   margin-left: 20px;
+  border: 1px solid #999;
+  font-size: 18px;
+  background-color: transparent;
+  border-radius: 1px;
 }
