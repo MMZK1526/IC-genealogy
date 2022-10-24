@@ -5,7 +5,7 @@ import './NameSearch.css'
 
 export function NameSearch(props) {
     return (
-        <div class='welcome' onSubmit={props.onClick}>
+        <div className='welcome' onSubmit={props.onClick}>
             <div id='title'>Ancesta - Genealogy Project</div>
             <div id='search'>
                 <MdOutlinePersonSearch size={50} color='darkslategray'/> 
