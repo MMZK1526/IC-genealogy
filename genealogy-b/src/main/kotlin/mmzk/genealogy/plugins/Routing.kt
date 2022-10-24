@@ -4,7 +4,6 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.coroutines.async
 import mmzk.genealogy.dao.Individual
 import mmzk.genealogy.dto.IndividualDTO
 import mmzk.genealogy.search.Database
@@ -31,22 +30,21 @@ fun Application.configureRouting() {
 
         get("/search") {
             call.request.queryParameters["q"]?.let { name ->
-                val matchedNamesInDBAsync = async { Database.findPersonByName(name) }
+//                val matchedNamesInDBAsync = async { Database.findPersonByName(name) }
                 val searchedNames =  WikiData.searchIndividualByName(name)
                 println(searchedNames)
-                val matchedNamesInDB = matchedNamesInDBAsync.await()
-                val matchedIDsInDB = matchedNamesInDB.map { it.id }.toSet()
-                val newNames = mutableListOf<IndividualDTO>()
+//                val matchedNamesInDB = matchedNamesInDBAsync.await()
+//                val matchedIDsInDB = matchedNamesInDB.map { it.id }.toSet()
+//                val newNames = mutableListOf<IndividualDTO>()
+//
+//                for (n in searchedNames) {
+//                    if (!matchedIDsInDB.contains(n.id)) {
+//                        newNames.add(n)
+//                    }
+//                }
 
-                for (n in searchedNames) {
-                    if (!matchedIDsInDB.contains(n.id)) {
-                        newNames.add(n)
-                    }
-                }
-
-                newNames.addAll(matchedNamesInDB)
-                println("REALLY DONE!")
-                call.respond(newNames)
+//                newNames.addAll(matchedNamesInDB)
+                call.respond(searchedNames)
             } ?: call.respond(
                 HttpStatusCode.BadRequest,
                 mapOf("error" to "Missing query parameter \"q\"!")
@@ -54,9 +52,11 @@ fun Application.configureRouting() {
         }
 
         get("/relations") {
+            val depth = call.request.queryParameters["depth"]?.toIntOrNull() ?: 3
+
             call.request.queryParameters["id"]?.let { id ->
                 val typeFilter = call.request.queryParameters["types"]?.split(",")
-                val result = WikiData.findRelatedPeople(id, typeFilter)
+                val result = WikiData.findRelatedPeople(id, typeFilter, depth)
                 call.respond(result)
             } ?: call.respond(
                 HttpStatusCode.BadRequest,

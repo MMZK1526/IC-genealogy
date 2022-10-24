@@ -20,11 +20,7 @@ object WikiData {
     private fun formatLocationWithCountry(location: String?, country: String?) =
         if (location != null && country != null) {
             "$location, $country"
-        } else location ?: if (country != null) {
-            country
-        } else {
-            null
-        }
+        } else location ?: country
 
     private suspend fun parseRelationSearchResults(results: TupleQueryResult) = coroutineScope {
         val relations = mutableSetOf<RelationshipDTO>()
@@ -137,9 +133,9 @@ object WikiData {
               SELECT ?${SPARQL.item} ?${SPARQL.name} ?${SPARQL.givenName}Label ?${SPARQL.familyName}Label ?${SPARQL.ordinal} ?${SPARQL.familyNameType}Label ?${SPARQL.dateOfBirth} ?${SPARQL.dateOfDeath} ?${SPARQL.placeOfBirth}Label ?${SPARQL.placeOfBirthCountry}Label ?${SPARQL.placeOfDeath}Label ?${SPARQL.placeOfDeathCountry}Label ?${SPARQL.gender}Label WHERE {
                   ?${SPARQL.item} wdt:P31 wd:Q5.
 
-                  ?${SPARQL.item} p:P735 ?${SPARQL.givenName}_ .
-                  ?${SPARQL.givenName}_ ps:P735 ?${SPARQL.givenName} .
-                  OPTIONAL { ?${SPARQL.givenName}_ pq:P1545 ?${SPARQL.ordinal} . }
+                  OPTIONAL { ?${SPARQL.item} p:P735 ?${SPARQL.givenName}_ .
+                             ?${SPARQL.givenName}_ ps:P735 ?${SPARQL.givenName} .
+                             OPTIONAL { ?${SPARQL.givenName}_ pq:P1545 ?${SPARQL.ordinal} . } }
                   OPTIONAL { ?${SPARQL.item} p:P734 ?${SPARQL.familyName}_ .
                              ?${SPARQL.familyName}_ ps:P734 ?${SPARQL.familyName} .
                              OPTIONAL { ?${SPARQL.familyName}_ pq:P3831 ?${SPARQL.familyNameType} . } }
@@ -170,8 +166,9 @@ object WikiData {
             null
         }
 
+        val answer = results?.let { parseIndividualSearchResults(it) } ?: listOf()
         repo.shutDown()
-        results?.let { parseIndividualSearchResults(it) } ?: listOf()
+        answer
     }
 
     suspend fun searchIndividualByIDs(ids: List<String>) = coroutineScope {
@@ -184,9 +181,9 @@ object WikiData {
               SELECT ?${SPARQL.item} ?${SPARQL.name} ?${SPARQL.givenName}Label ?${SPARQL.familyName}Label ?${SPARQL.ordinal} ?${SPARQL.familyNameType}Label ?${SPARQL.dateOfBirth} ?${SPARQL.dateOfDeath} ?${SPARQL.placeOfBirth}Label ?${SPARQL.placeOfBirthCountry}Label ?${SPARQL.placeOfDeath}Label ?${SPARQL.placeOfDeathCountry}Label ?${SPARQL.gender}Label WHERE {
                   VALUES ?${SPARQL.item} { ${ids.joinToString(" ") { "wd:$it" }} } .
 
-                  ?${SPARQL.item} p:P735 ?${SPARQL.givenName}_ .
-                  ?${SPARQL.givenName}_ ps:P735 ?${SPARQL.givenName} .
-                  OPTIONAL { ?${SPARQL.givenName}_ pq:P1545 ?${SPARQL.ordinal} . }
+                  OPTIONAL { ?${SPARQL.item} p:P735 ?${SPARQL.givenName}_ .
+                             ?${SPARQL.givenName}_ ps:P735 ?${SPARQL.givenName} .
+                             OPTIONAL { ?${SPARQL.givenName}_ pq:P1545 ?${SPARQL.ordinal} . } }
                   OPTIONAL { ?${SPARQL.item} p:P734 ?${SPARQL.familyName}_ .
                              ?${SPARQL.familyName}_ ps:P734 ?${SPARQL.familyName} .
                               OPTIONAL { ?${SPARQL.familyName}_ pq:P3831 ?${SPARQL.familyNameType} . } }
@@ -208,8 +205,10 @@ object WikiData {
             exception.printStackTrace()
             null
         }
+
+        val answer = results?.let { parseIndividualSearchResults(it) } ?: listOf()
         repo.shutDown()
-        results?.let { parseIndividualSearchResults(it) } ?: listOf()
+        answer
     }
 
     private suspend fun searchRelationByIDs(ids: List<String>) = coroutineScope {
@@ -237,8 +236,9 @@ object WikiData {
             null
         }
 
+        val answer = results?.let { parseRelationSearchResults(it) } ?: (setOf<RelationshipDTO>() to setOf<String>())
         repo.shutDown()
-        results?.let { parseRelationSearchResults(it) } ?: (setOf<RelationshipDTO>() to setOf<String>())
+        answer
     }
 
     suspend fun findRelatedPeople(id: String, typeFilter: List<String>?, depth: Int = 2) = coroutineScope {
