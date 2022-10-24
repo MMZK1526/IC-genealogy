@@ -10,7 +10,7 @@ export function FilterForm(props) {
           <Form.Label className="label">{props.title}</Form.Label>
         </Row>
         <Row>
-          <Form.Control className="control" type={props.type} placeholder={props.placeholder} onChange={props.onChange}/>
+          <Form.Control className="control" plaintext={props.name} type={props.type} placeholder={props.placeholder} onChange={props.onChange}/>
         </Row>  
       </Form.Group>
     </Form>

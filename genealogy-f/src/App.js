@@ -60,12 +60,17 @@ class NameForm extends React.Component {
     render() {
         return ( 
             <div className='App'>                
-                <Sidebar
-                    nameChange={this.handleChangeInitialName}
-                    yearFromChange={this.handleChangeFrom}
-                    yearToChange={this.handleChangeTo}
-                    onClick={this.handleSearchSubmit}
-                />
+                {
+                    !_.isEmpty(this.state.searchJsons)
+                    ? <Sidebar
+                        name={this.state.initialName}
+                        nameChange={this.handleChangeInitialName}
+                        yearFromChange={this.handleChangeFrom}
+                        yearToChange={this.handleChangeTo}
+                        onClick={this.handleSearchSubmit}
+                    />
+                    : ''
+                }
                 <div className='tree-box'>
                 {
                     !_.isEmpty(this.state.relationsJson)
