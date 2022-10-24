@@ -1,19 +1,21 @@
-package mmzk.genealogy.search
+package mmzk.genealogy
 
 import io.ktor.http.*
 import java.util.*
 import kotlin.collections.*
 import kotlinx.coroutines.*
-import mmzk.genealogy.dto.IndividualDTO
-import mmzk.genealogy.dto.IndividualName
-import mmzk.genealogy.dto.RelationsResponse
-import mmzk.genealogy.dto.RelationshipDTO
-import mmzk.genealogy.tables.Fields
+import mmzk.genealogy.common.dto.AdditionalProperty
+import mmzk.genealogy.common.dto.ItemDTO
+import mmzk.genealogy.common.dto.RelationsResponse
+import mmzk.genealogy.common.dto.RelationshipDTO
 import org.eclipse.rdf4j.query.TupleQueryResult
 import org.eclipse.rdf4j.queryrender.RenderUtils
 import org.eclipse.rdf4j.repository.sparql.SPARQLRepository
 
-object WikiData {
+class WikiDataDataSource(
+    // TODO: make this functional, so that WikiDataCrawler can be moved into the common package
+    val relationshipTypeFilters: List<String>
+) {
     // Translate a WikiData ID into a Database ID.
     private fun makeID(id: String): String = "WD-$id"
 
@@ -22,55 +24,38 @@ object WikiData {
             "$location, $country"
         } else location ?: country
 
-    private suspend fun parseRelationSearchResults(results: TupleQueryResult) = coroutineScope {
-        val relations = mutableSetOf<RelationshipDTO>()
-        val newIndividuals = mutableSetOf<String>()
-        for (result in results) {
-            val row = mutableMapOf<String, String>()
-            for (value in result) {
-                row[value.name] = value.value.stringValue()
-            }
-            val id = row[SPARQL.item]?.let(::Url)?.pathSegments?.lastOrNull() ?: continue
-            val father = row["father"]?.let(::Url)?.pathSegments?.lastOrNull()
-            val mother = row["mother"]?.let(::Url)?.pathSegments?.lastOrNull()
-            val spouse = row["spouse"]?.let(::Url)?.pathSegments?.lastOrNull()
-            val child = row["issues"]?.let(::Url)?.pathSegments?.lastOrNull()
+    private suspend fun parseRelationSearchResults(results: TupleQueryResult, typeMap: Map<String, String>) =
+        coroutineScope {
+            val relations = mutableSetOf<RelationshipDTO>()
+            val newIndividuals = mutableSetOf<String>()
+            for (result in results) {
+                val row = mutableMapOf<String, String>()
+                for (value in result) {
+                    row[value.name] = value.value.stringValue()
+                }
+                val id = row[SPARQL.item]?.let(::Url)?.pathSegments?.lastOrNull() ?: continue
+                val father = row["father"]?.let(::Url)?.pathSegments?.lastOrNull()
+                val mother = row["mother"]?.let(::Url)?.pathSegments?.lastOrNull()
+                val spouse = row["spouse"]?.let(::Url)?.pathSegments?.lastOrNull()
+                val child = row["issues"]?.let(::Url)?.pathSegments?.lastOrNull()
 
-            relations.addAll(
-                listOfNotNull(
-                    father?.let { RelationshipDTO(makeID(id), makeID(it), "father", makeID(Fields.father)) },
-                    mother?.let { RelationshipDTO(makeID(id), makeID(it), "mother", makeID(Fields.mother)) },
-                    spouse?.let {
-                        val sorted = listOf(id, it).sorted()
-                        RelationshipDTO(makeID(sorted[0]), makeID(sorted[1]), "spouse", makeID(Fields.spouse))
-                    },
-                    child?.let {
-                        when (row["${SPARQL.gender}Label"]) {
-                            "male" -> RelationshipDTO(
-                                makeID(it),
-                                makeID(id),
-                                "father",
-                                makeID(Fields.father)
-                            )
-                            "female" ->RelationshipDTO(
-                                makeID(it),
-                                makeID(id),
-                                "mother",
-                                makeID(Fields.mother)
-                            )
-                            else -> null
-                        }
-                    })
-            )
-            newIndividuals.addAll(listOfNotNull(father, mother, spouse, child))
+                relations.addAll(
+                    listOfNotNull(
+                        father?.let { RelationshipDTO(makeID(id), makeID(it), "father", makeID(Fields.father)) },
+                        mother?.let { RelationshipDTO(makeID(id), makeID(it), "mother", makeID(Fields.mother)) },
+                        spouse?.let { RelationshipDTO(makeID(id), makeID(it), "spouse", makeID(Fields.spouse)) },
+                        child?.let { RelationshipDTO(makeID(id), makeID(it), "child", makeID(Fields.child)) }
+                    )
+                )
+                newIndividuals.addAll(listOfNotNull(father, mother, spouse, child))
+            }
+
+            relations to newIndividuals
         }
 
-        relations to newIndividuals
-    }
-
     private suspend fun parseIndividualSearchResults(results: TupleQueryResult) = coroutineScope {
-        val dtos = mutableMapOf<String, IndividualDTO>()
-        val personalNames = mutableMapOf<String, IndividualName>()
+        val dtos = mutableMapOf<String, ItemDTO>()
+        val personalNames = mutableMapOf<String, NameFormatter>()
         for (result in results) {
             val row = mutableMapOf<String, String>()
             for (value in result) {
@@ -80,27 +65,49 @@ object WikiData {
             if (!dtos.contains(id)) {
                 val name = row[SPARQL.name]
                 if (name != null) {
-                    dtos[id] = IndividualDTO(
-                        id,
-                        name,
-                        "",
-                        row[SPARQL.dateOfBirth],
-                        row[SPARQL.dateOfDeath],
+                    val dateOfBirth = AdditionalProperty(
+                        makeID(Fields.dateOfBirth),
+                        SPARQL.dateOfBirth,
+                        row[SPARQL.dateOfBirth]
+                    )
+                    val dateOfDeath = AdditionalProperty(
+                        makeID(Fields.dateOfDeath),
+                        SPARQL.dateOfDeath,
+                        row[SPARQL.dateOfDeath]
+                    )
+                    val placeOfBirth = AdditionalProperty(
+                        makeID(Fields.placeOfBirth),
+                        SPARQL.placeOfBirth,
                         formatLocationWithCountry(
                             row["${SPARQL.placeOfBirth}Label"],
                             row["${SPARQL.placeOfBirthCountry}Label"]
-                        ),
+                        )
+                    )
+                    val placeOfDeath = AdditionalProperty(
+                        makeID(Fields.placeOfDeath),
+                        SPARQL.placeOfDeath,
                         formatLocationWithCountry(
                             row["${SPARQL.placeOfDeath}Label"],
                             row["${SPARQL.placeOfDeathCountry}Label"]
-                        ),
+                        )
+                    )
+                    val gender = AdditionalProperty(
+                        makeID(Fields.gender),
+                        SPARQL.gender,
                         when (row["${SPARQL.gender}Label"]) {
-                            "male" -> 'M'
-                            "female" -> 'F'
-                            else -> 'U'
+                            "male" -> "M"
+                            "female" -> "F"
+                            else -> null
                         }
                     )
-                    personalNames[id] = IndividualName()
+
+                    dtos[id] = ItemDTO(
+                        id,
+                        name,
+                        null, // TODO: description
+                        listOf(dateOfBirth, dateOfDeath, placeOfBirth, placeOfDeath, gender)
+                    )
+                    personalNames[id] = NameFormatter()
                 }
             }
             row["${SPARQL.givenName}Label"]?.let { n ->
@@ -117,14 +124,17 @@ object WikiData {
             }
         }
         for ((id, dto) in dtos) {
-            dto.personalName = personalNames[id]?.fullName ?: dto.name
+            dto.additionalProperties += AdditionalProperty(
+                "SW-P1",
+                "personalName",
+                personalNames[id]?.formattedName ?: dto.name
+            )
         }
         dtos.values.toList()
     }
 
     suspend fun searchIndividualByName(partialName: String) = coroutineScope {
-        val sparqlEndpoint = "https://query.wikidata.org/sparql"
-        val repo = SPARQLRepository(sparqlEndpoint)
+        val repo = SPARQLRepository(SPARQL.sparqlEndpoint)
 
         val userAgent = "WikiData Crawler for Genealogy Visualiser WebApp, Contact piopio555888@gmail.com"
         repo.additionalHttpHeaders = Collections.singletonMap("User-Agent", userAgent)
@@ -171,9 +181,37 @@ object WikiData {
         answer
     }
 
+    suspend fun searchPropertyByIDs(ids: List<String>) = coroutineScope {
+        val repo = SPARQLRepository(SPARQL.sparqlEndpoint)
+
+        // TODO: Handle compound IDs
+        val idMap = ids.mapNotNull { Fields.parseID(it)?.second?.let { value -> it to value } }.toMap()
+        val queryLabels = idMap.values.joinToString(" ") { "?${it}Label" }
+        val queryStrCore = idMap.values.joinToString("\n") { "OPTIONAL { ?$it wikibase:directClaim wdt:$it . }" }
+        val queryStr = """
+            SELECT $queryLabels WHERE {
+              $queryStrCore
+              SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+            }
+        """.trimIndent()
+        val results = try {
+            repo.connection.prepareTupleQuery(queryStr).evaluate()
+        } catch (exception: Exception) {
+            exception.printStackTrace()
+            null
+        }
+
+        val answer = results?.let {
+            val labelMap = it.next()
+                .mapNotNull { row -> row.value?.let { value -> row.name!! to value.stringValue()!! } }.toMap()
+            idMap.mapValues { entry -> labelMap["${entry.value}Label"] ?: "" }
+        } ?: mapOf()
+        repo.shutDown()
+        answer
+    }
+
     suspend fun searchIndividualByIDs(ids: List<String>) = coroutineScope {
-        val sparqlEndpoint = "https://query.wikidata.org/sparql"
-        val repo = SPARQLRepository(sparqlEndpoint)
+        val repo = SPARQLRepository(SPARQL.sparqlEndpoint)
 
         val userAgent = "WikiData Crawler for Genealogy Visualiser WebApp, Contact piopio555888@gmail.com"
         repo.additionalHttpHeaders = Collections.singletonMap("User-Agent", userAgent)
@@ -211,21 +249,19 @@ object WikiData {
         answer
     }
 
-    private suspend fun searchRelationByIDs(ids: List<String>) = coroutineScope {
-        val sparqlEndpoint = "https://query.wikidata.org/sparql"
-        val repo = SPARQLRepository(sparqlEndpoint)
+    private suspend fun searchRelationByIDs(ids: List<String>, typeMap: Map<String, String>) = coroutineScope {
+        val repo = SPARQLRepository(SPARQL.sparqlEndpoint)
 
         val userAgent = "WikiData Crawler for Genealogy Visualiser WebApp, Contact piopio555888@gmail.com"
         repo.additionalHttpHeaders = Collections.singletonMap("User-Agent", userAgent)
         val querySelect = """
-              SELECT ?item ?father ?mother ?spouse ?issues ?${SPARQL.gender}Label WHERE {
+              SELECT ?item ?father ?mother ?spouse ?issues WHERE {
                   VALUES ?${SPARQL.item} { ${ids.joinToString(" ") { "wd:$it" }} } .
 
                   OPTIONAL { ?item wdt:P22 ?father . }
                   OPTIONAL { ?item wdt:P25 ?mother . }
                   OPTIONAL { ?item wdt:P26 ?spouse . }
                   OPTIONAL { ?item wdt:P40 ?issues . }
-                  OPTIONAL { ?${SPARQL.item} wdt:P21 ?${SPARQL.gender} . }
                   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
                 }
         """.trimIndent()
@@ -236,17 +272,19 @@ object WikiData {
             null
         }
 
-        val answer = results?.let { parseRelationSearchResults(it) } ?: (setOf<RelationshipDTO>() to setOf<String>())
+        val answer =
+            results?.let { parseRelationSearchResults(it, typeMap) } ?: (setOf<RelationshipDTO>() to setOf<String>())
         repo.shutDown()
         answer
     }
 
-    suspend fun findRelatedPeople(id: String, typeFilter: List<String>?, depth: Int = 2) = coroutineScope {
+    suspend fun findRelatedPeople(id: String, typeFilter: List<String>, depth: Int = 2) = coroutineScope {
         val visited = mutableSetOf<String>()
         var frontier = listOf(id)
         var curDepth = 0
+        val typeMap = searchPropertyByIDs(typeFilter)
         val targets = searchIndividualByIDs(frontier.mapNotNull { Fields.parseID(it)?.second })
-        val people = mutableSetOf<IndividualDTO>()
+        val people = mutableSetOf<ItemDTO>()
         val relations = mutableSetOf<RelationshipDTO>()
 
         while (true) {
@@ -256,7 +294,10 @@ object WikiData {
             if (curDepth >= depth) {
                 break
             }
-            val (newRelations, nextPeople) = searchRelationByIDs(frontier.mapNotNull { Fields.parseID(it)?.second })
+            val (newRelations, nextPeople) = searchRelationByIDs(
+                frontier.mapNotNull { Fields.parseID(it)?.second },
+                typeMap
+            )
             relations.addAll(newRelations)
             frontier = nextPeople.map { "WD-$it" }.filter { !visited.contains(it) }
             curDepth++
@@ -266,6 +307,7 @@ object WikiData {
     }
 
     private object SPARQL {
+        const val sparqlEndpoint = "https://query.wikidata.org/sparql"
         const val item = "item"
         const val name = "itemLabel"
         const val gender = "gender"

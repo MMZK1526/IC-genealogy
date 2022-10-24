@@ -80,7 +80,6 @@ export class FamilyTree extends React.Component {
         const foreignObjectProps = { width: 200, height: 200, x: 0 };
         const {innerWidth, innerHeight} = window;
         return (
-<<<<<<< HEAD
             <Tree
                 data={this.transform(this.props.data)}
                 pathFunc='step'
@@ -90,32 +89,12 @@ export class FamilyTree extends React.Component {
                 separation={{siblings: 3, nonSiblings: 3}}
                 transitionDuration = {1000}
                 onNodeMouseOver={this.handleMouseOver}
-                separation={{siblings: 3, nonSiblings: 3}}
-                transitionDuration = {1000}
                 nodeSize={{x:200, y:250}}
                 enableLegacyTransitions={true}
                 renderCustomNodeElement={(rd3tProps) =>
                     renderForeignObjectNode({ ...rd3tProps, foreignObjectProps})
                   }
             />
-=======
-                    <Tree
-                        data={this.transform(this.props.data, this.props.parents)}
-                        pathFunc='step'
-                        orientation='vertical'
-                        translate={{x: innerWidth / 2, y: innerHeight / 2}}
-                        depthFactor={this.props.data ? 100 : -100}
-                        separation={{siblings: 2, nonSiblings: 2}}
-                        transitionDuration = {1000}
-                        nodeSize={{x:200, y:100}}
-                        enableLegacyTransitions={true}
-                        onNodeMouseOver={this.handleMouseOver}
-                        renderCustomNodeElement={(rd3tProps) =>
-                            renderForeignObjectNode({ ...rd3tProps, foreignObjectProps})
-                          }
-                    />
-            
->>>>>>> 6689fe5 (gojs test)
         );
     }
 
