@@ -9,17 +9,6 @@ import mmzk.genealogy.plugins.configureRouting
 
 class ApplicationTest {
     @Test
-    fun testRoot() = testApplication {
-        application {
-            configureRouting()
-        }
-        client.get("/").apply {
-            assertEquals(HttpStatusCode.OK, status)
-            assertEquals("Hello World!", bodyAsText())
-        }
-    }
-
-    @Test
     fun `can parse WikiData ID`() {
         val wdID = "WD-Q12"
         val parsed = Fields.parseID(wdID)
