@@ -6,8 +6,6 @@ import io.ktor.client.statement.*
 import kotlin.test.*
 import io.ktor.server.testing.*
 import mmzk.genealogy.plugins.configureRouting
-import mmzk.genealogy.tables.Fields
-import mmzk.genealogy.tables.IDType
 
 class ApplicationTest {
     @Test

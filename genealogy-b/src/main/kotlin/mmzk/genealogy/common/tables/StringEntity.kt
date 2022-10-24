@@ -1,4 +1,4 @@
-package mmzk.genealogy.tables
+package mmzk.genealogy.common.tables
 
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
