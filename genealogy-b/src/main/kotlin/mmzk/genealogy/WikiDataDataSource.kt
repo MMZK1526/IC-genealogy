@@ -65,6 +65,7 @@ class WikiDataDataSource(
             if (!dtos.contains(id)) {
                 val name = row[SPARQL.name]
                 if (name != null) {
+                    val description = row[SPARQL.description] ?: ""
                     val dateOfBirth = AdditionalProperty(
                         makeID(Fields.dateOfBirth),
                         "date of birth",
@@ -104,7 +105,7 @@ class WikiDataDataSource(
                     dtos[id] = ItemDTO(
                         id,
                         name,
-                        null, // TODO: description
+                        description,
                         listOf(dateOfBirth, dateOfDeath, placeOfBirth, placeOfDeath, gender)
                     )
                     personalNames[id] = NameFormatter()
@@ -140,9 +141,10 @@ class WikiDataDataSource(
         repo.additionalHttpHeaders = Collections.singletonMap("User-Agent", userAgent)
 
         val querySelect = """
-              SELECT ?${SPARQL.item} ?${SPARQL.name} ?${SPARQL.givenName}Label ?${SPARQL.familyName}Label ?${SPARQL.ordinal} ?${SPARQL.familyNameType}Label ?${SPARQL.dateOfBirth} ?${SPARQL.dateOfDeath} ?${SPARQL.placeOfBirth}Label ?${SPARQL.placeOfBirthCountry}Label ?${SPARQL.placeOfDeath}Label ?${SPARQL.placeOfDeathCountry}Label ?${SPARQL.gender}Label WHERE {
-                  ?${SPARQL.item} wdt:P31 wd:Q5.
-
+              SELECT ?${SPARQL.item} ?${SPARQL.name} ?${SPARQL.description} ?${SPARQL.givenName}Label ?${SPARQL.familyName}Label ?${SPARQL.ordinal} ?${SPARQL.familyNameType}Label ?${SPARQL.dateOfBirth} ?${SPARQL.dateOfDeath} ?${SPARQL.placeOfBirth}Label ?${SPARQL.placeOfBirthCountry}Label ?${SPARQL.placeOfDeath}Label ?${SPARQL.placeOfDeathCountry}Label ?${SPARQL.gender}Label WHERE {
+                  ?${SPARQL.item} wdt:P31 wd:Q5 .
+                  OPTIONAL { ?${SPARQL.item} schema:description ?${SPARQL.description} .
+                             FILTER ( lang(?${SPARQL.description}) = "en" ). }
                   OPTIONAL { ?${SPARQL.item} p:P735 ?${SPARQL.givenName}_ .
                              ?${SPARQL.givenName}_ ps:P735 ?${SPARQL.givenName} .
                              OPTIONAL { ?${SPARQL.givenName}_ pq:P1545 ?${SPARQL.ordinal} . } }
@@ -216,9 +218,11 @@ class WikiDataDataSource(
         val userAgent = "WikiData Crawler for Genealogy Visualiser WebApp, Contact piopio555888@gmail.com"
         repo.additionalHttpHeaders = Collections.singletonMap("User-Agent", userAgent)
         val querySelect = """
-              SELECT ?${SPARQL.item} ?${SPARQL.name} ?${SPARQL.givenName}Label ?${SPARQL.familyName}Label ?${SPARQL.ordinal} ?${SPARQL.familyNameType}Label ?${SPARQL.dateOfBirth} ?${SPARQL.dateOfDeath} ?${SPARQL.placeOfBirth}Label ?${SPARQL.placeOfBirthCountry}Label ?${SPARQL.placeOfDeath}Label ?${SPARQL.placeOfDeathCountry}Label ?${SPARQL.gender}Label WHERE {
+              SELECT ?${SPARQL.item} ?${SPARQL.name} ?${SPARQL.description} ?${SPARQL.givenName}Label ?${SPARQL.familyName}Label ?${SPARQL.ordinal} ?${SPARQL.familyNameType}Label ?${SPARQL.dateOfBirth} ?${SPARQL.dateOfDeath} ?${SPARQL.placeOfBirth}Label ?${SPARQL.placeOfBirthCountry}Label ?${SPARQL.placeOfDeath}Label ?${SPARQL.placeOfDeathCountry}Label ?${SPARQL.gender}Label WHERE {                  
                   VALUES ?${SPARQL.item} { ${ids.joinToString(" ") { "wd:$it" }} } .
-
+                  ?${SPARQL.item} wdt:P31 wd:Q5 .
+                  OPTIONAL { ?${SPARQL.item} schema:description ?${SPARQL.description} .
+                             FILTER ( lang(?${SPARQL.description}) = "en" ). }
                   OPTIONAL { ?${SPARQL.item} p:P735 ?${SPARQL.givenName}_ .
                              ?${SPARQL.givenName}_ ps:P735 ?${SPARQL.givenName} .
                              OPTIONAL { ?${SPARQL.givenName}_ pq:P1545 ?${SPARQL.ordinal} . } }
@@ -309,6 +313,7 @@ class WikiDataDataSource(
     private object SPARQL {
         const val sparqlEndpoint = "https://query.wikidata.org/sparql"
         const val item = "item"
+        const val description = "description"
         const val name = "itemLabel"
         const val gender = "gender"
         const val givenName = "fname"
