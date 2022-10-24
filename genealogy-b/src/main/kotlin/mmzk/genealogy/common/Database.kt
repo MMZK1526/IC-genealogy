@@ -2,8 +2,6 @@ package mmzk.genealogy.common
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import kotlinx.coroutines.selects.select
-import mmzk.genealogy.Fields
 import java.net.URI
 import mmzk.genealogy.common.dao.Item
 import mmzk.genealogy.common.dao.Relationship
@@ -11,10 +9,7 @@ import mmzk.genealogy.common.dto.AdditionalProperty
 import mmzk.genealogy.common.dto.ItemDTO
 import mmzk.genealogy.common.dto.RelationsResponse
 import mmzk.genealogy.common.dto.RelationshipDTO
-import mmzk.genealogy.common.tables.AdditionalPropertiesTable
-import mmzk.genealogy.common.tables.ItemTable
-import mmzk.genealogy.common.tables.PropertyTypeTable
-import mmzk.genealogy.common.tables.RelationshipTable
+import mmzk.genealogy.common.tables.*
 import mmzk.genealogy.common.tables.RelationshipTable.type
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.sql.*
@@ -50,9 +45,10 @@ object Database {
 
     fun insertItems(items: List<ItemDTO>) = transaction {
         for (item in items) {
-            Item.new(id = item.id) {
-                name = item.name
-                description = item.description
+            ItemTable.insertIgnore {
+                it[id] = EntityID(item.id, ItemTable)
+                it[name] = item.name
+                it[description] = item.description
             }
 
             for (property in item.additionalProperties) {

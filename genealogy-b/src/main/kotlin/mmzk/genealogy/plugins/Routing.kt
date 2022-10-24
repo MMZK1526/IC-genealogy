@@ -4,34 +4,29 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.coroutines.async
-import mmzk.genealogy.common.dao.Item
-import mmzk.genealogy.common.dto.ItemDTO
 import mmzk.genealogy.common.Database
 import mmzk.genealogy.WikiDataDataSource
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.transactions.transaction
 
 fun Application.configureRouting() {
     Database.init()
     routing {
 
+        // The API endpoint for searching a name fragment. It will return results from both the database and WikiData,
+        // using an order of relevance.
+        //
+        // Params:
+        // q: Finds items whose name contains q
+        // Response:
+        // id: The ID of the item in the database
+        // name: The name of the item, usually from WikiData
+        // description: A one-liner description of the item, usually from WikiData
+        // additionalProperties: A list of JSON objects representing the properties of this item
         get("/search") {
             call.request.queryParameters["q"]?.let { name ->
-//                val matchedNamesInDBAsync = async { Database.findItemByName(name) }
-                val searchedNames = WikiDataDataSource(listOf()).searchIndividualByName(name)
-//                val matchedNamesInDB = matchedNamesInDBAsync.await()
-//                val matchedIDsInDB = matchedNamesInDB.map { it.id }.toSet()
-//                val newNames = mutableListOf<ItemDTO>()
-//
-//                for (n in searchedNames) {
-//                    if (!matchedIDsInDB.contains(n.id)) {
-//                        newNames.add(n)
-//                    }
-//                }
-//
-//                newNames.addAll(matchedNamesInDB)
-                call.respond(searchedNames)
+                val searchedItems = WikiDataDataSource(listOf()).searchIndividualByName(name) // Search in WikiData
+                Database.insertItems(searchedItems) // Put new results in database (pre-existing ones are ignored)
+                val matchedItemsInDB = Database.findItemByName(name) // Fetch items with matching names
+                call.respond(matchedItemsInDB)
             } ?: call.respond(
                 HttpStatusCode.BadRequest,
                 mapOf("error" to "Missing query parameter \"q\"!")
@@ -42,7 +37,8 @@ fun Application.configureRouting() {
             val depth = call.request.queryParameters["depth"]?.toIntOrNull() ?: 0
 
             call.request.queryParameters["id"]?.let { id ->
-                val typeFilter = call.request.queryParameters["types"]?.split(",") ?: listOf("WD-P22", "WD-P25", "WD-P26", "WD-P40")
+                val typeFilter =
+                    call.request.queryParameters["types"]?.split(",") ?: listOf("WD-P22", "WD-P25", "WD-P26", "WD-P40")
                 val result = WikiDataDataSource(listOf()).findRelatedPeople(id, typeFilter, depth)
                 call.respond(result)
             } ?: call.respond(
@@ -55,7 +51,8 @@ fun Application.configureRouting() {
             val depth = call.request.queryParameters["depth"]?.toIntOrNull() ?: 0
 
             call.request.queryParameters["id"]?.let { id ->
-                val typeFilter = call.request.queryParameters["types"]?.split(",") ?: listOf("WD-P22", "WD-P25", "WD-P26", "WD-P40")
+                val typeFilter =
+                    call.request.queryParameters["types"]?.split(",") ?: listOf("WD-P22", "WD-P25", "WD-P26", "WD-P40")
                 val result = Database.findRelatedItems(id, typeFilter, depth)
                 call.respond(result)
             } ?: call.respond(
