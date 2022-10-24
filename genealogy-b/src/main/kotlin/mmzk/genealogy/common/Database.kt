@@ -3,6 +3,7 @@ package mmzk.genealogy.common
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import kotlinx.coroutines.selects.select
+import mmzk.genealogy.Fields
 import java.net.URI
 import mmzk.genealogy.common.dao.Item
 import mmzk.genealogy.common.dao.Relationship
@@ -64,37 +65,55 @@ object Database {
         }
     }
 
-    private fun findRelatedItems(ids: Set<String>, typeFilter: List<String>) =
-        transaction TRANS@{
-            val targets = Item.find {
-                ItemTable.id.asStringColumn.inList(ids)
+    private fun findRelatedItems(ids: Set<String>, typeFilter: List<String>): Pair<Set<RelationshipDTO>, Set<String>> {
+        val relationships = Relationship.find {
+            RelationshipTable.item1.asStringColumn.inList(ids) and
+                    type.asStringColumn.inList(typeFilter)
+        }
+        val items = relationships.mapNotNull {
+            if (it.item1.id.value in ids && it.item2.id.value in ids) {
+                null
+            } else if (it.item1.id.value in ids) {
+                it.item2
+            } else {
+                it.item1
             }
-            if (targets.empty()) {
-                return@TRANS RelationsResponse.empty
-            }
-            val relationships = Relationship.find {
-                RelationshipTable.item1.asStringColumn.inList(ids) and
-                        type.asStringColumn.inList(typeFilter)
-            }
-            val items = relationships.mapNotNull {
-                if (it.item1.id.value in ids && it.item2.id.value in ids) {
-                    null
-                } else if (it.item1.id.value in ids) {
-                    it.item2
-                } else {
-                    it.item1
-                }
-            }
-
-            RelationsResponse(
-                targets = targets.toDTOWithAdditionalProperties(),
-                items = items.toDTOWithAdditionalProperties(),
-                relations = relationships.map(::RelationshipDTO)
-            )
         }
 
-    fun findRelatedItems(id: String, typeFilter: List<String>) =
-        findRelatedItems(setOf(id), typeFilter)
+        return relationships.mapTo(mutableSetOf(), ::RelationshipDTO) to items.mapTo(mutableSetOf()) { it.id.value }
+    }
+
+    fun findRelatedItems(id: String, typeFilter: List<String>, depth: Int = 1) =
+        transaction {
+            val visited = mutableSetOf<String>()
+            var frontier = setOf(id)
+            var curDepth = 0
+            val targets = Item.find {
+                ItemTable.id.asStringColumn.inList(frontier)
+            }.toDTOWithAdditionalProperties()
+            val people = mutableSetOf<ItemDTO>()
+            val relations = mutableSetOf<RelationshipDTO>()
+
+            while (true) {
+                val newPeople = Item.find {
+                    ItemTable.id.asStringColumn.inList(frontier)
+                }.toDTOWithAdditionalProperties()
+                people.addAll(newPeople)
+                visited.addAll(newPeople.map { it.id })
+                if (curDepth >= depth) {
+                    break
+                }
+                val (newRelations, nextPeople) = findRelatedItems(
+                    frontier,
+                    typeFilter
+                )
+                relations.addAll(newRelations)
+                frontier = nextPeople.filterTo(mutableSetOf()) { !visited.contains(it) }
+                curDepth++
+            }
+
+            RelationsResponse(targets, people.toList(), relations.toList())
+        }
 
     private fun Iterable<Item>.toDTOWithAdditionalProperties(): List<ItemDTO> {
         val additionalPropertiesByItem = AdditionalPropertiesTable.innerJoin(PropertyTypeTable).select {
