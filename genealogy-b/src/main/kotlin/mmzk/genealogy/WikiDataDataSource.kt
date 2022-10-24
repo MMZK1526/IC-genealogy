@@ -67,17 +67,17 @@ class WikiDataDataSource(
                 if (name != null) {
                     val dateOfBirth = AdditionalProperty(
                         makeID(Fields.dateOfBirth),
-                        SPARQL.dateOfBirth,
+                        "date of birth",
                         row[SPARQL.dateOfBirth]
                     )
                     val dateOfDeath = AdditionalProperty(
                         makeID(Fields.dateOfDeath),
-                        SPARQL.dateOfDeath,
+                        "date of death",
                         row[SPARQL.dateOfDeath]
                     )
                     val placeOfBirth = AdditionalProperty(
                         makeID(Fields.placeOfBirth),
-                        SPARQL.placeOfBirth,
+                        "place of birth",
                         formatLocationWithCountry(
                             row["${SPARQL.placeOfBirth}Label"],
                             row["${SPARQL.placeOfBirthCountry}Label"]
@@ -85,7 +85,7 @@ class WikiDataDataSource(
                     )
                     val placeOfDeath = AdditionalProperty(
                         makeID(Fields.placeOfDeath),
-                        SPARQL.placeOfDeath,
+                        "place of death",
                         formatLocationWithCountry(
                             row["${SPARQL.placeOfDeath}Label"],
                             row["${SPARQL.placeOfDeathCountry}Label"]
@@ -93,7 +93,7 @@ class WikiDataDataSource(
                     )
                     val gender = AdditionalProperty(
                         makeID(Fields.gender),
-                        SPARQL.gender,
+                        "gender",
                         when (row["${SPARQL.gender}Label"]) {
                             "male" -> "M"
                             "female" -> "F"
@@ -126,7 +126,7 @@ class WikiDataDataSource(
         for ((id, dto) in dtos) {
             dto.additionalProperties += AdditionalProperty(
                 "SW-P1",
-                "personalName",
+                "personal name",
                 personalNames[id]?.formattedName ?: dto.name
             )
         }

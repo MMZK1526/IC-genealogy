@@ -15,34 +15,22 @@ import org.jetbrains.exposed.sql.transactions.transaction
 fun Application.configureRouting() {
     Database.init()
     routing {
-        get("/") {
-            call.respondText("Hello World!")
-        }
-
-        get("/everything") {
-            val allPeople = transaction {
-                addLogger(StdOutSqlLogger)
-                Item.all().map(::ItemDTO)
-            }
-            call.respond(allPeople)
-        }
 
         get("/search") {
             call.request.queryParameters["q"]?.let { name ->
-                val matchedNamesInDBAsync = async { Database.findItemByName(name) }
+//                val matchedNamesInDBAsync = async { Database.findItemByName(name) }
                 val searchedNames = WikiDataDataSource(listOf()).searchIndividualByName(name)
-                println(searchedNames)
-                val matchedNamesInDB = matchedNamesInDBAsync.await()
-                val matchedIDsInDB = matchedNamesInDB.map { it.id }.toSet()
-                val newNames = mutableListOf<ItemDTO>()
-
-                for (n in searchedNames) {
-                    if (!matchedIDsInDB.contains(n.id)) {
-                        newNames.add(n)
-                    }
-                }
-
-                newNames.addAll(matchedNamesInDB)
+//                val matchedNamesInDB = matchedNamesInDBAsync.await()
+//                val matchedIDsInDB = matchedNamesInDB.map { it.id }.toSet()
+//                val newNames = mutableListOf<ItemDTO>()
+//
+//                for (n in searchedNames) {
+//                    if (!matchedIDsInDB.contains(n.id)) {
+//                        newNames.add(n)
+//                    }
+//                }
+//
+//                newNames.addAll(matchedNamesInDB)
                 call.respond(searchedNames)
             } ?: call.respond(
                 HttpStatusCode.BadRequest,
@@ -50,7 +38,7 @@ fun Application.configureRouting() {
             )
         }
 
-        get("/relations") {
+        get("/relations_wk") {
             val depth = call.request.queryParameters["depth"]?.toIntOrNull() ?: 0
 
             call.request.queryParameters["id"]?.let { id ->
@@ -63,8 +51,18 @@ fun Application.configureRouting() {
             )
         }
 
-        get("test") {
-            call.respond(WikiDataDataSource(listOf()).searchIndividualByIDs(listOf("Q9682", "Q9685")))
+        get("/relations_db") {
+            // TODO: depth
+//            val depth = call.request.queryParameters["depth"]?.toIntOrNull() ?: 0
+
+            call.request.queryParameters["id"]?.let { id ->
+                val typeFilter = call.request.queryParameters["types"]?.split(",") ?: listOf("WD-P22", "WD-P25", "WD-P26", "WD-P40")
+                val result = Database.findRelatedItems(id, typeFilter)
+                call.respond(result)
+            } ?: call.respond(
+                HttpStatusCode.BadRequest,
+                mapOf("error" to "Missing query parameter \"q\"!")
+            )
         }
     }
 }

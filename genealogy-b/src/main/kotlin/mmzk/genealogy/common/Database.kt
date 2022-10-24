@@ -64,7 +64,7 @@ object Database {
         }
     }
 
-    private fun findRelatedItems(ids: Set<String>, typeFilter: List<String>?, itemsFilter: List<String> = listOf()) =
+    private fun findRelatedItems(ids: Set<String>, typeFilter: List<String>) =
         transaction TRANS@{
             val targets = Item.find {
                 ItemTable.id.asStringColumn.inList(ids)
@@ -73,14 +73,8 @@ object Database {
                 return@TRANS RelationsResponse.empty
             }
             val relationships = Relationship.find {
-                var exp = RelationshipTable.item1.asStringColumn.inList(ids) or
-                        RelationshipTable.item2.asStringColumn.inList(ids) and
-                        RelationshipTable.item1.asStringColumn.notInList(itemsFilter) and
-                        RelationshipTable.item2.asStringColumn.notInList(itemsFilter)
-                if (typeFilter != null && typeFilter != listOf("all")) {
-                    exp = exp and RelationshipTable.type.asStringColumn.inList(typeFilter)
-                }
-                exp
+                RelationshipTable.item1.asStringColumn.inList(ids) and
+                        type.asStringColumn.inList(typeFilter)
             }
             val items = relationships.mapNotNull {
                 if (it.item1.id.value in ids && it.item2.id.value in ids) {
@@ -99,7 +93,7 @@ object Database {
             )
         }
 
-    fun findRelatedItems(id: String, typeFilter: List<String>?) =
+    fun findRelatedItems(id: String, typeFilter: List<String>) =
         findRelatedItems(setOf(id), typeFilter)
 
     private fun Iterable<Item>.toDTOWithAdditionalProperties(): List<ItemDTO> {
