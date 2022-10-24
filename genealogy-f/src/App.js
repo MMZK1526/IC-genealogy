@@ -13,7 +13,7 @@ import { GenogramTree } from "./GenogramTree";
 // COMMENT THIS BACK IN FOR QUICK TESTING
 function App() {
   return (
-      <GenogramTree />
+      <NameForm />
   );
 }
 
@@ -81,8 +81,7 @@ class NameForm extends React.Component {
                 <div className='tree-box'>
                     {
                         !_.isEmpty(this.state.relationsJson)
-                        // TODO - entry point for genogram tree
-                        ? <GenogramTree />
+                        ? <GenogramTree data={this.state.relationsJson} />
                     
                         : <div id='welcome'>
                             <div id='title'>Ancesta - Genealogy Project</div>
@@ -99,7 +98,6 @@ class NameForm extends React.Component {
                     />
                     : ''
                 }
-                
             </div>
         );
     }
