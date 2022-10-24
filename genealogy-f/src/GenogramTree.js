@@ -16,6 +16,7 @@ function toInt(str) {
 
 // ^^^^^^ SEE ABOVE transformed format helper function to transfrom JSON into goJS nodeDataArray format.
 function transform(data) {
+    return sampleData;
     // data.people to be replaced with data.items in Mulang version
     let target = data.targets[0];
     let idPerson = new Map();
@@ -81,9 +82,6 @@ function handleModelChange(changes) {
 export class GenogramTree extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {
-            vertices: transform(props.data),
-        };
     }
 
     // renders ReactDiagram
@@ -323,7 +321,7 @@ export class GenogramTree extends React.Component {
 
         // hardcoded input after applying transform(data), copide in from console TODO - needs to see updated state without crashing and being undefined.
 
-        setupDiagram(myDiagram, this.state.vertices
+        setupDiagram(myDiagram, transform(this.props.data)
             , 43274);
 
 
