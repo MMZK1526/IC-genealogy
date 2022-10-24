@@ -7,8 +7,8 @@
 }
 
 .diagram-component {
-  width: 1400px;
-  height: 1400px;
+  width: 2000px;
+  height: 1000px;
   border: solid 1px black;
   background-color: white;
 }
