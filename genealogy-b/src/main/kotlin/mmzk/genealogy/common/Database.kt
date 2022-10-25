@@ -14,7 +14,10 @@ import mmzk.genealogy.common.tables.RelationshipTable.type
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.statements.fillParameters
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.sql.PreparedStatement
 
 object Database {
     private val dbUrl = System.getenv("DATABASE_URL")
@@ -39,8 +42,22 @@ object Database {
     }
 
     fun findItemByName(name: String): List<ItemDTO> = transaction {
-        Item.find { ItemTable.name.regexp("(?i).*$name.*") }
-            .limit(20).toDTOWithAdditionalProperties()
+        val statement = TransactionManager.current().connection.prepareStatement("""
+            SELECT indexed_item.*, ts_rank_cd(indexed_aliases, query) AS rank
+            FROM indexed_item, websearch_to_tsquery(?) as query
+            WHERE name @@ query
+            ORDER BY rank DESC
+            LIMIT 20;
+        """.trimIndent())
+        statement.fillParameters(listOf(TextColumnType() to name))
+        val resultSet = statement.executeQuery()
+        val list = mutableListOf<Item>()
+        val fields: List<Expression<*>> = listOf(ItemTable.name, ItemTable.id, ItemTable.description, ItemTable.aliases)
+        while (resultSet.next()) {
+            val resultRow = ResultRow.create(resultSet, fields)
+            list.add(Item.wrapRow(resultRow))
+        }
+        list.toDTOWithAdditionalProperties()
     }
 
     fun insertItems(items: List<ItemDTO>) = transaction {
