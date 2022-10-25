@@ -45,7 +45,7 @@ object Database {
         val statement = TransactionManager.current().connection.prepareStatement("""
             SELECT indexed_item.*, ts_rank_cd(indexed_aliases, query) AS rank
             FROM indexed_item, websearch_to_tsquery(?) as query
-            WHERE name @@ query
+            WHERE indexed_aliases @@ query
             ORDER BY rank DESC
             LIMIT 20;
         """.trimIndent())
