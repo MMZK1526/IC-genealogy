@@ -10,4 +10,5 @@ class Item(id: EntityID<String>): StringEntity(id) {
 
     var name by ItemTable.name
     var description by ItemTable.description
+    var aliases by ItemTable.aliases
 }

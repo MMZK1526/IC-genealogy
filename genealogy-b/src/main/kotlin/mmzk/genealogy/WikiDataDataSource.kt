@@ -106,6 +106,7 @@ class WikiDataDataSource(
                         id,
                         name,
                         description,
+                        null, // TODO: aliases
                         listOf(dateOfBirth, dateOfDeath, placeOfBirth, placeOfDeath, gender)
                     )
                     personalNames[id] = NameFormatter()

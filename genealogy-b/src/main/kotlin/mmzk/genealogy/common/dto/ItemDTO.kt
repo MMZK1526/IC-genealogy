@@ -11,12 +11,14 @@ data class ItemDTO(
     var id: String,
     var name: String,
     var description: String?,
+    var aliases: String?,
     var additionalProperties: List<AdditionalProperty> = listOf()
 ) {
     constructor(dao: Item, additionalProperties: List<AdditionalProperty> = listOf()) : this(
         dao.id.value,
         dao.name,
         dao.description,
+        dao.aliases,
         additionalProperties
     )
 }
