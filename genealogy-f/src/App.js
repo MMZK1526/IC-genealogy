@@ -8,7 +8,7 @@ import {ReactDiagram} from 'gojs-react';
 import './App.css';
 import {Topbar} from './components/topbar/Topbar.js'
 import { GenogramTree } from "./GenogramTree";
-import {App2} from './components/visualisation-adapter/App2';
+import {Adapter} from './components/visualisation-adapter/Adapter';
 
 
 // COMMENT THIS BACK IN FOR QUICK TESTING
@@ -82,9 +82,9 @@ class NameForm extends React.Component {
                 <div className='tree-box'>
                     {
                         !_.isEmpty(this.state.relationsJson)
-                        ? <App2 data={this.state.relationsJson} />
+                        ? <Adapter data={this.state.relationsJson} />
                     
-                        : <App2 data={this.state.relationsJson} />
+                        : null
                     }
                 </div>
                 {
@@ -146,6 +146,7 @@ class NameForm extends React.Component {
                 alert("No relationship found!")
                 return;
             }
+            console.log(r);
             this.setState({
                 relationsJson: r,
                 // transformedArr: transform(r),
