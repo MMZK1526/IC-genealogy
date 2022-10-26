@@ -84,10 +84,7 @@ class NameForm extends React.Component {
                         !_.isEmpty(this.state.relationsJson)
                         ? <App2 data={this.state.relationsJson} />
                     
-                        : <div id='welcome'>
-                            <div id='title'>Ancesta - Genealogy Project</div>
-                            <div id='desc'>Search a name to start</div>
-                        </div>
+                        : <App2 data={this.state.relationsJson} />
                     }
                 </div>
                 {

@@ -2,6 +2,7 @@ import React from 'react';
 import App from './components/App/App';
 import averageTree from 'relatives-tree/samples/average-tree.json';
 import baz from './relations.json';
+import './Adapter.css';
 
 export class Adapter extends React.Component {
     transform(data) {
@@ -10,7 +11,9 @@ export class Adapter extends React.Component {
 
     render() {
         return (
-            <App nodes={this.transform(this.props.data)} />
+            <div className='foo'>
+                <App nodes={this.transform(this.props.data)} />
+            </div>
         );
     }
 }
