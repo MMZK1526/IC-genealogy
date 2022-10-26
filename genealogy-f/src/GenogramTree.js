@@ -74,754 +74,803 @@ function transform(data) {
   return (output);
 }
 
+export class DiagramWrappper extends React.Component {
+  constructor(props) {
+    super(props);
+    this.diagramRef = React.createRef();
+  }
+
+  componentDidMount() {
+    if (!this.diagramRef.current) return;
+    const diagram = this.diagramRef.current.getDiagram();
+    if (diagram instanceof go.Diagram) {
+      diagram.addDiagramListener('ChangedSelection', this.props.onDiagramEvent);
+    }
+  }
+
+  componentWillUnmount() {
+    if (!this.diagramRef.current) return;
+    const diagram = this.diagramRef.current.getDiagram();
+    if (diagram instanceof go.Diagram) {
+      diagram.removeDiagramListener('ChangedSelection', this.props.onDiagramEvent);
+    }
+  }
+
+  
+  init() {
+    const $ = go.GraphObject.make;
+
+      const myDiagram =
+        $(go.Diagram,
+          {
+            initialAutoScale: go.Diagram.Uniform,
+            "undoManager.isEnabled": false,
+            // when a node is selected, draw a big yellow circle behind it
+            nodeSelectionAdornmentTemplate:
+              $(go.Adornment, "Auto",
+                { layerName: "Grid" },  // the predefined layer that is behind everything else
+                $(go.Shape, "Circle", {fill: "#c1cee3", stroke: null }),
+                $(go.Placeholder, { margin: 2 })
+              ),
+            layout:  // use a custom layout, defined below
+              $(GenogramLayout, { direction: 90, layerSpacing: 30, columnSpacing: 10 })
+          });
+      // this.myDiagram.toolManager.panningTool.isEnabled = false;
+
+      // determine the color for each attribute shape
+      function attrFill(a) {
+        switch (a) {
+          case "A": return "#00af54"; // green
+          case "B": return "#f27935"; // orange
+          case "C": return "#d4071c"; // red
+          case "D": return "#70bdc2"; // cyan
+          case "E": return "#fcf384"; // gold
+          case "F": return "#e69aaf"; // pink
+          case "G": return "#08488f"; // blue
+          case "H": return "#866310"; // brown
+          case "I": return "#9270c2"; // purple
+          case "J": return "#a3cf62"; // chartreuse
+          case "K": return "#91a4c2"; // lightgray bluish
+          case "L": return "#af70c2"; // magenta
+          case "S": return "#d4071c"; // red
+          default: return "transparent";
+        }
+      }
+      // determine the geometry for each attribute shape in a male;
+      // except for the slash these are all squares at each of the four corners of the overall square
+      const tlsq = go.Geometry.parse("F M1 1 l19 0 0 19 -19 0z");
+      const trsq = go.Geometry.parse("F M20 1 l19 0 0 19 -19 0z");
+      const brsq = go.Geometry.parse("F M20 20 l19 0 0 19 -19 0z");
+      const blsq = go.Geometry.parse("F M1 20 l19 0 0 19 -19 0z");
+      const slash = go.Geometry.parse("F M38 0 L40 0 40 2 2 40 0 40 0 38z");
+      function maleGeometry(a) {
+        switch (a) {
+          case "A": return tlsq;
+          case "B": return tlsq;
+          case "C": return tlsq;
+          case "D": return trsq;
+          case "E": return trsq;
+          case "F": return trsq;
+          case "G": return brsq;
+          case "H": return brsq;
+          case "I": return brsq;
+          case "J": return blsq;
+          case "K": return blsq;
+          case "L": return blsq;
+          case "S": return slash;
+          default: return tlsq;
+        }
+      }
+
+      // determine the geometry for each attribute shape in a female;
+      // except for the slash these are all pie shapes at each of the four quadrants of the overall circle
+      const tlarc = go.Geometry.parse("F M20 20 B 180 90 20 20 19 19 z");
+      const trarc = go.Geometry.parse("F M20 20 B 270 90 20 20 19 19 z");
+      const brarc = go.Geometry.parse("F M20 20 B 0 90 20 20 19 19 z");
+      const blarc = go.Geometry.parse("F M20 20 B 90 90 20 20 19 19 z");
+      function femaleGeometry(a) {
+        switch (a) {
+          case "A": return tlarc;
+          case "B": return tlarc;
+          case "C": return tlarc;
+          case "D": return trarc;
+          case "E": return trarc;
+          case "F": return trarc;
+          case "G": return brarc;
+          case "H": return brarc;
+          case "I": return brarc;
+          case "J": return blarc;
+          case "K": return blarc;
+          case "L": return blarc;
+          case "S": return slash;
+          default: return tlarc;
+        }
+      }
+
+
+      // two different node templates, one for each sex,
+      // named by the category value in the node data object
+      myDiagram.nodeTemplateMap.add("M",  // male
+        $(go.Node, "Vertical",
+        // TODO can make this non-selectable with selectable: false, but we want clickable but not movable?
+        // see this for how to do stuff on click? - https://gojs.net/latest/extensions/Robot.html
+          {  movable: false, locationSpot: go.Spot.Center, locationObjectName: "ICON", selectionObjectName: "ICON"},
+          new go.Binding("opacity", "hide", h => h ? 0 : 1),
+          new go.Binding("pickable", "hide", h => !h),
+          $(go.Panel,
+            { name: "ICON" },
+            $(go.Shape, "Square",
+              {width: 40, height: 40, strokeWidth: 2, fill: "#ADD8E6", stroke: "#919191", portId: "" }),
+            $(go.Panel,
+              { // for each attribute show a Shape at a particular place in the overall square
+                itemTemplate:
+                  $(go.Panel,
+                    $(go.Shape,
+                      { stroke: null, strokeWidth: 0 },
+                      new go.Binding("fill", "", attrFill),
+                      new go.Binding("geometry", "", maleGeometry))
+                  ),
+                margin: 1
+              },
+              new go.Binding("itemArray", "a")
+            )
+          ),
+          $(go.TextBlock,
+            { textAlign: "center", maxSize: new go.Size(80, NaN), background: "rgba(255,255,255,0.5)" },
+            new go.Binding("text", "n"))
+        ));
+
+      myDiagram.nodeTemplateMap.add("F",  // female
+        $(go.Node, "Vertical",
+          { movable: false, locationSpot: go.Spot.Center, locationObjectName: "ICON", selectionObjectName: "ICON" },
+          new go.Binding("opacity", "hide", h => h ? 0 : 1),
+          new go.Binding("pickable", "hide", h => !h),
+          $(go.Panel,
+            { name: "ICON" },
+            $(go.Shape, "Circle",
+              { width: 40, height: 40, strokeWidth: 2, fill: "#FFB6C1", stroke: "#a1a1a1", portId: "" }),
+            $(go.Panel,
+              { // for each attribute show a Shape at a particular place in the overall circle
+                itemTemplate:
+                  $(go.Panel,
+                    $(go.Shape,
+                      { stroke: null, strokeWidth: 0 },
+                      new go.Binding("fill", "", attrFill),
+                      new go.Binding("geometry", "", femaleGeometry))
+                  ),
+                margin: 1
+              },
+              new go.Binding("itemArray", "a")
+            )
+          ),
+          $(go.TextBlock,
+            { textAlign: "center", maxSize: new go.Size(80, NaN), background: "rgba(255,255,255,0.5)" },
+            new go.Binding("text", "n"))
+        ));
+
+      // the representation of each label node -- nothing shows on a Marriage Link
+      myDiagram.nodeTemplateMap.add("LinkLabel",
+        $(go.Node, { selectable: false, width: 1, height: 1, fromEndSegmentLength: 20 }));
+
+
+      myDiagram.linkTemplate =  // for parent-child relationships
+        $(go.Link,
+          {
+            routing: go.Link.Orthogonal, corner: 5,
+            layerName: "Background", selectable: false,
+          },
+          $(go.Shape, { stroke: "#424242", strokeWidth: 2 })
+        );
+
+      myDiagram.linkTemplateMap.add("Marriage",  // for marriage relationships
+        $(go.Link,
+          { selectable: false, layerName: "Background" },
+          $(go.Shape, { strokeWidth: 2.5, stroke: "#5d8cc1" /* blue */ })
+        ));
+
+          // hardcoded input after applying transform(data), copide in from console TODO - needs to see updated state without crashing and being undefined.
+      setupDiagram(myDiagram, [
+        {
+            "key": 43274,
+            "n": "Charles III",
+            "s": "M",
+            "f": 80976,
+            "m": 9682,
+            "ux": 9685
+        },
+        {
+            "key": 9682,
+            "n": "Elizabeth II",
+            "s": "F",
+            "f": 280856,
+            "m": 10633,
+            "vir": 80976,
+        },
+        {
+            "key": 80976,
+            "n": "Prince Philip, Duke of Edinburgh",
+            "s": "M",
+            "ux": 9682,
+            "f": 156531,
+            "m": 116062
+        },
+        {
+            "key": 36812,
+            "n": "William, Prince of Wales",
+            "s": "M",
+            "f": 43274,
+            "m": 9685
+        },
+        {
+            "key": 152239,
+            "n": "Queen Camilla",
+            "s": "F",
+            "vir": 43274,
+            "f": 327457,
+            "m": 17363684
+        },
+        {
+            "key": 152316,
+            "n": "Prince Harry, Duke of Sussex",
+            "s": "M",
+            "f": 43274,
+            "m": 9685,
+            "ux": 3304418
+        },
+        {
+            "key": 9685,
+            "n": "Diana, Princess of Wales",
+            "s": "F",
+            "f": 593671,
+            "m": 256893,
+            "vir": 43274,
+        },
+        {
+            "key": 10633,
+            "n": "Queen Elizabeth, The Queen Mother",
+            "s": "F",
+            "f": 335159,
+            "m": 238820,
+            "vir": 280856
+        },
+        {
+            "key": 116062,
+            "n": "Princess Alice of Battenberg",
+            "s": "F",
+            "f": 57468,
+            "m": 57658,
+            "vir": 156531
+        },
+        {
+            "key": 156531,
+            "n": "Prince Andrew of Greece and Denmark",
+            "s": "M",
+            "f": 17142,
+            "m": 155178
+        },
+        {
+            "key": 280856,
+            "n": "George VI",
+            "s": "M",
+            "f": 269412,
+            "m": 76927
+        },
+        {
+            "key": 327457,
+            "n": "Bruce Shand",
+            "s": "M",
+            "f": 7184109,
+            "m": 17308990
+        },
+        {
+            "key": 17363684,
+            "n": "Rosalind Cubitt",
+            "s": "F",
+            "vir": 327457,
+            "f": 7360200,
+            "m": 7561697
+        },
+        {
+            "key": 10479,
+            "n": "Catherine, Princess of Wales",
+            "s": "F",
+            "vir": 36812,
+            "f": 14244505,
+            "m": 14244952
+        },
+        {
+            "key": 151754,
+            "n": "Anne, Princess Royal",
+            "s": "F",
+            "m": 9682,
+            "f": 80976,
+            "vir": 2063224
+        },
+        {
+            "key": 153330,
+            "n": "Prince Andrew, Duke of York",
+            "s": "M",
+            "m": 9682,
+            "f": 80976,
+            "ux": 55720
+        },
+        {
+            "key": 154920,
+            "n": "Prince Edward, Earl of Wessex and Forfar",
+            "s": "M",
+            "m": 9682,
+            "f": 80976,
+            "ux": 155203
+        },
+        {
+            "key": 3304418,
+            "n": "Meghan, Duchess of Sussex",
+            "s": "F",
+            "f": 43918214,
+            "m": 43918160
+        },
+        {
+            "key": 3736070,
+            "n": "Tom Parker Bowles",
+            "s": "M",
+            "m": 152239,
+            "f": 2221868,
+            "ux": 75587832
+        },
+        {
+            "key": 3743314,
+            "n": "Laura Lopes",
+            "s": "F",
+            "m": 152239,
+            "f": 2221868,
+            "vir": 75587834
+        },
+        {
+            "key": 13590412,
+            "n": "Prince George of Wales",
+            "s": "M",
+            "f": 36812,
+            "m": 10479
+        },
+        {
+            "key": 18002970,
+            "n": "Princess Charlotte of Wales",
+            "s": "F",
+            "f": 36812,
+            "m": 10479
+        },
+        {
+            "key": 38668629,
+            "n": "Prince Louis of Wales",
+            "s": "M",
+            "f": 36812,
+            "m": 10479
+        },
+        {
+            "key": 62938826,
+            "n": "Archie Mountbatten-Windsor",
+            "s": "M",
+            "f": 152316,
+            "m": 3304418
+        },
+        {
+            "key": 107125551,
+            "n": "Lilibet Mountbatten-Windsor",
+            "s": "F",
+            "f": 152316,
+            "m": 3304418
+        },
+        {
+            "key": 55720,
+            "n": "Sarah, Duchess of York",
+            "s": "F"
+        },
+        {
+            "key": 147663,
+            "n": "Zara Tindall",
+            "s": "F",
+            "m": 151754
+        },
+        {
+            "key": 155203,
+            "n": "Sophie, Countess of Wessex and Forfar",
+            "s": "F"
+        },
+        {
+            "key": 165657,
+            "n": "Princess Beatrice",
+            "s": "F",
+            "f": 153330
+        },
+        {
+            "key": 165709,
+            "n": "Princess Eugenie of York",
+            "s": "F",
+            "f": 153330
+        },
+        {
+            "key": 344908,
+            "n": "Peter Phillips",
+            "s": "M",
+            "m": 151754
+        },
+        {
+            "key": 550183,
+            "n": "James, Viscount Severn",
+            "s": "M",
+            "f": 154920
+        },
+        {
+            "key": 680304,
+            "n": "Lady Louise Windsor",
+            "s": "F",
+            "f": 154920
+        },
+        {
+            "key": 2063224,
+            "n": "Timothy Laurence",
+            "s": "M"
+        },
+        {
+            "key": 2221868,
+            "n": "Andrew Parker Bowles",
+            "s": "M"
+        },
+        {
+            "key": 7184109,
+            "n": "Philip Morton Shand",
+            "s": "M"
+        },
+        {
+            "key": 7360200,
+            "n": "Roland Cubitt, 3rd Baron Ashcombe",
+            "s": "M"
+        },
+        {
+            "key": 7561697,
+            "n": "Sonia Cubitt, Baroness Ashcombe",
+            "s": "F"
+        },
+        {
+            "key": 14244505,
+            "n": "Michael Middleton",
+            "s": "M"
+        },
+        {
+            "key": 14244952,
+            "n": "Carole Middleton",
+            "s": "F"
+        },
+        {
+            "key": 16142673,
+            "n": "Annabel Elliot",
+            "s": "F",
+            "f": 327457,
+            "m": 17363684
+        },
+        {
+            "key": 17308990,
+            "n": "Edith Marguerite Harrington",
+            "s": "F"
+        },
+        {
+            "key": 43918160,
+            "n": "Doria Ragland",
+            "s": "F"
+        },
+        {
+            "key": 43918214,
+            "n": "Thomas Markle",
+            "s": "M"
+        },
+        {
+            "key": 75587832,
+            "n": "Sara Buys",
+            "s": "F"
+        },
+        {
+            "key": 75587834,
+            "n": "Harry Lopes",
+            "s": "M"
+        },
+        {
+            "key": 75723263,
+            "n": "Lola Parker Bowles",
+            "s": "F",
+            "f": 3736070
+        },
+        {
+            "key": 75723264,
+            "n": "Eliza Lopes",
+            "s": "F",
+            "m": 3743314
+        },
+        {
+            "key": 75982135,
+            "n": "Gus Lopes",
+            "s": "M",
+            "m": 3743314
+        },
+        {
+            "key": 75982642,
+            "n": "Louis Lopes",
+            "s": "M",
+            "m": 3743314
+        },
+        {
+            "key": 76022497,
+            "n": "Freddy Parker Bowles",
+            "s": "M",
+            "f": 3736070
+        },
+        {
+            "key": 17142,
+            "n": "George I of Greece",
+            "s": "M"
+        },
+        {
+            "key": 57468,
+            "n": "Prince Louis of Battenberg",
+            "s": "M"
+        },
+        {
+            "key": 57658,
+            "n": "Princess Victoria, Marchioness of Milford Haven",
+            "s": "F"
+        },
+        {
+            "key": 76927,
+            "n": "Mary of Teck",
+            "s": "F"
+        },
+        {
+            "key": 153815,
+            "n": "Princess Margaret, Countess of Snowdon",
+            "s": "F",
+            "m": 10633,
+            "f": 280856
+        },
+        {
+            "key": 155178,
+            "n": "Olga Constantinovna of Russia",
+            "s": "F"
+        },
+        {
+            "key": 236196,
+            "n": "Princess Cecilie of Greece and Denmark",
+            "s": "F",
+            "m": 116062,
+            "f": 156531
+        },
+        {
+            "key": 238820,
+            "n": "Cecilia Bowes-Lyon, Countess of Strathmore and Kinghorne",
+            "s": "F"
+        },
+        {
+            "key": 240317,
+            "n": "Princess Margarita of Greece and Denmark",
+            "s": "F",
+            "m": 116062,
+            "f": 156531
+        },
+        {
+            "key": 255382,
+            "n": "Princess Theodora, Margravine of Baden",
+            "s": "F",
+            "m": 116062,
+            "f": 156531
+        },
+        {
+            "key": 256893,
+            "n": "Frances Shand Kydd",
+            "s": "F"
+        },
+        {
+            "key": 269412,
+            "n": "George V",
+            "s": "M"
+        },
+        {
+            "key": 335159,
+            "n": "Claude Bowes-Lyon, 14th Earl of Strathmore and Kinghorne",
+            "s": "M"
+        },
+        {
+            "key": 593671,
+            "n": "John Spencer, 8th Earl Spencer",
+            "s": "M"
+        },
+        {
+            "key": 630371,
+            "n": "Princess Sophie of Greece and Denmark",
+            "s": "F",
+            "m": 116062,
+            "f": 156531
+        },
+        {
+            "key": 15488831,
+            "n": "Mark Shand",
+            "s": "M",
+            "f": 327457,
+            "m": 17363684
+        }
+    ]
+        , 43274);
+    
+
+    // create and initialize the Diagram.model given an array of node data representing people
+    function setupDiagram(diagram, array, focusId) {
+      diagram.model =
+        new go.GraphLinksModel(
+          { // declare support for link label nodes
+            linkLabelKeysProperty: "labelKeys",
+            // this property determines which template is used
+            nodeCategoryProperty: "s",
+            // if a node data object is copied, copy its data.a Array
+            copiesArrays: true,
+            // create all of the nodes for people
+            //TODO this should be got from this.state.relationsJson from App.js
+            nodeDataArray: array
+          });
+      setupMarriages(diagram);
+      setupParents(diagram);
+
+      const node = diagram.findNodeForKey(focusId);
+      if (node !== null) {
+        diagram.select(node);
+      }
+    }
+
+
+    function findMarriage(diagram, a, b) {  // A and B are node keys
+      const nodeA = diagram.findNodeForKey(a);
+      const nodeB = diagram.findNodeForKey(b);
+      if (nodeA !== null && nodeB !== null) {
+        const it = nodeA.findLinksBetween(nodeB);  // in either direction
+        while (it.next()) {
+          const link = it.value;
+          // Link.data.category === "Marriage" means it's a marriage relationship
+          if (link.data !== null && link.data.category === "Marriage") return link;
+        }
+      }
+      return null;
+    }
+
+    // now process the node data to determine marriages
+    function setupMarriages(diagram) {
+      const model = diagram.model;
+      const nodeDataArray = model.nodeDataArray;
+      for (let i = 0; i < nodeDataArray.length; i++) {
+        const data = nodeDataArray[i];
+        const key = data.key;
+        let uxs = data.ux;
+        if (uxs !== undefined) {
+          if (typeof uxs === "number") uxs = [uxs];
+          for (let j = 0; j < uxs.length; j++) {
+            const wife = uxs[j];
+            const wdata = model.findNodeDataForKey(wife);
+            if (key == wife) {
+              console.log("cannot create Marriage relationship with self" + wife);
+              continue;
+            }
+            if (!wdata) {
+                console.log("cannot create Marriage relationship with unknown person " + wife);
+                continue;
+            }
+            if (wdata.s !== "F") {
+                console.log("cannot create Marriage relationship with wrong gender person " + wife);
+                continue;
+            }
+            const link = findMarriage(diagram, key, wife);
+            if (link === null) {
+              // add a label node for the marriage link
+              const mlab = { s: "LinkLabel" };
+              model.addNodeData(mlab);
+              // add the marriage link itself, also referring to the label node
+              const mdata = { from: key, to: wife, labelKeys: [mlab.key], category: "Marriage" };
+              model.addLinkData(mdata);
+            }
+          }
+        }
+        let virs = data.vir;
+        if (virs !== undefined) {
+          if (typeof virs === "number") virs = [virs];
+          for (let j = 0; j < virs.length; j++) {
+            const husband = virs[j];
+            const hdata = model.findNodeDataForKey(husband);
+            if (key === husband || !hdata || hdata.s !== "M") {
+              console.log("cannot create Marriage relationship with self or unknown person " + husband);
+              continue;
+            }
+            const link = findMarriage(diagram, key, husband);
+            if (link === null) {
+              // add a label node for the marriage link
+              const mlab = { s: "LinkLabel" };
+              model.addNodeData(mlab);
+              // add the marriage link itself, also referring to the label node
+              const mdata = { from: key, to: husband, labelKeys: [mlab.key], category: "Marriage" };
+              model.addLinkData(mdata);
+            }
+          }
+        }
+      }
+    }
+
+
+    // process parent-child relationships once all marriages are known
+    function setupParents(diagram) {
+      const model = diagram.model;
+      const nodeDataArray = model.nodeDataArray;
+      for (let i = 0; i < nodeDataArray.length; i++) {
+        const data = nodeDataArray[i];
+        const key = data.key;
+        const mother = data.m;
+        const father = data.f;
+        if (mother !== undefined && father !== undefined) {
+          const link = findMarriage(diagram, mother, father);
+          if (link === null) {
+            // or warn no known mother or no known father or no known marriage between them
+            console.log("unknown marriage: " + mother + " & " + father);
+            continue;
+          }
+          const mdata = link.data;
+          if (mdata.labelKeys === undefined || mdata.labelKeys[0] === undefined) continue;
+          const mlabkey = mdata.labelKeys[0];
+          const cdata = { from: mlabkey, to: key };
+          myDiagram.model.addLinkData(cdata);
+        }
+      }
+    }
+    return myDiagram;}
+
+  render() {
+    return (
+      <ReactDiagram
+        ref={this.diagramRef}
+        divClassName='diagram-component'
+        initDiagram={this.init}
+        nodeDataArray={this.props.nodeDataArray}
+        linkDataArray={this.props.linkDataArray}
+        modelData={this.props.modelData}
+        onModelChange={this.props.onModelChange}
+        skipsDiagramUpdate={this.props.skipsDiagramUpdate}
+      />
+    );
+  }
+}
+
 // optional parameter passed to <ReactDiagram onModelChange = {handleModelChange}>
 // called whenever model is changed
-function handleModelChange(changes) {
-    alert('GoJS model changed!');
-}
 
 // class encapsulating the tree initialisation and rendering
 export class GenogramTree extends React.Component {
     constructor(props) {
-      super(props)
+      super(props);
+      this.state = {
+        node: null
+      };
+      this.handleModelChange = this.handleModelChange.bind(this);
+      this.handleDiagramEvent = this.handleDiagramEvent.bind(this);
     }
+
+    handleModelChange(changes) {
+        console.log('GoJS model changed!');
+    }
+
+    handleDiagramEvent (e) {
+        alert("Diagram change");
+      }
+
     // renders ReactDiagram
-    render() {return (<ReactDiagram
-        // generates family-tree
-            initDiagram={this.init}
-            divClassName='diagram-component'
-            onModelChange={handleModelChange}
-        />)}
+    render() {return (<DiagramWrappper
+            onModelChange={this.handleModelChange}
+            onDiagramEvent={this.handleDiagramEvent}
+        />);}
     // initialises tree (in theory should only be called once, diagram should be .clear() and then data updated for re-initialisation)
     // see https://gojs.net/latest/intro/react.html
 
     // majority of code below is from https://gojs.net/latest/samples/genogram.html
-    init() {
-      const $ = go.GraphObject.make;
-  
-        const myDiagram =
-          $(go.Diagram,
-            {
-              initialAutoScale: go.Diagram.Uniform,
-              "undoManager.isEnabled": false,
-              // when a node is selected, draw a big yellow circle behind it
-              nodeSelectionAdornmentTemplate:
-                $(go.Adornment, "Auto",
-                  { layerName: "Grid" },  // the predefined layer that is behind everything else
-                  $(go.Shape, "Circle", {fill: "#c1cee3", stroke: null }),
-                  $(go.Placeholder, { margin: 2 })
-                ),
-              layout:  // use a custom layout, defined below
-                $(GenogramLayout, { direction: 90, layerSpacing: 30, columnSpacing: 10 })
-            });
-        // this.myDiagram.toolManager.panningTool.isEnabled = false;
-  
-        // determine the color for each attribute shape
-        function attrFill(a) {
-          switch (a) {
-            case "A": return "#00af54"; // green
-            case "B": return "#f27935"; // orange
-            case "C": return "#d4071c"; // red
-            case "D": return "#70bdc2"; // cyan
-            case "E": return "#fcf384"; // gold
-            case "F": return "#e69aaf"; // pink
-            case "G": return "#08488f"; // blue
-            case "H": return "#866310"; // brown
-            case "I": return "#9270c2"; // purple
-            case "J": return "#a3cf62"; // chartreuse
-            case "K": return "#91a4c2"; // lightgray bluish
-            case "L": return "#af70c2"; // magenta
-            case "S": return "#d4071c"; // red
-            default: return "transparent";
-          }
-        }
-        // determine the geometry for each attribute shape in a male;
-        // except for the slash these are all squares at each of the four corners of the overall square
-        const tlsq = go.Geometry.parse("F M1 1 l19 0 0 19 -19 0z");
-        const trsq = go.Geometry.parse("F M20 1 l19 0 0 19 -19 0z");
-        const brsq = go.Geometry.parse("F M20 20 l19 0 0 19 -19 0z");
-        const blsq = go.Geometry.parse("F M1 20 l19 0 0 19 -19 0z");
-        const slash = go.Geometry.parse("F M38 0 L40 0 40 2 2 40 0 40 0 38z");
-        function maleGeometry(a) {
-          switch (a) {
-            case "A": return tlsq;
-            case "B": return tlsq;
-            case "C": return tlsq;
-            case "D": return trsq;
-            case "E": return trsq;
-            case "F": return trsq;
-            case "G": return brsq;
-            case "H": return brsq;
-            case "I": return brsq;
-            case "J": return blsq;
-            case "K": return blsq;
-            case "L": return blsq;
-            case "S": return slash;
-            default: return tlsq;
-          }
-        }
-  
-        // determine the geometry for each attribute shape in a female;
-        // except for the slash these are all pie shapes at each of the four quadrants of the overall circle
-        const tlarc = go.Geometry.parse("F M20 20 B 180 90 20 20 19 19 z");
-        const trarc = go.Geometry.parse("F M20 20 B 270 90 20 20 19 19 z");
-        const brarc = go.Geometry.parse("F M20 20 B 0 90 20 20 19 19 z");
-        const blarc = go.Geometry.parse("F M20 20 B 90 90 20 20 19 19 z");
-        function femaleGeometry(a) {
-          switch (a) {
-            case "A": return tlarc;
-            case "B": return tlarc;
-            case "C": return tlarc;
-            case "D": return trarc;
-            case "E": return trarc;
-            case "F": return trarc;
-            case "G": return brarc;
-            case "H": return brarc;
-            case "I": return brarc;
-            case "J": return blarc;
-            case "K": return blarc;
-            case "L": return blarc;
-            case "S": return slash;
-            default: return tlarc;
-          }
-        }
-  
-  
-        // two different node templates, one for each sex,
-        // named by the category value in the node data object
-        myDiagram.nodeTemplateMap.add("M",  // male
-          $(go.Node, "Vertical",
-          // TODO can make this non-selectable with selectable: false, but we want clickable but not movable?
-          // see this for how to do stuff on click? - https://gojs.net/latest/extensions/Robot.html
-            {  selectable: false, locationSpot: go.Spot.Center, locationObjectName: "ICON", selectionObjectName: "ICON" },
-            new go.Binding("opacity", "hide", h => h ? 0 : 1),
-            new go.Binding("pickable", "hide", h => !h),
-            $(go.Panel,
-              { name: "ICON" },
-              $(go.Shape, "Square",
-                {width: 40, height: 40, strokeWidth: 2, fill: "#ADD8E6", stroke: "#919191", portId: "" }),
-              $(go.Panel,
-                { // for each attribute show a Shape at a particular place in the overall square
-                  itemTemplate:
-                    $(go.Panel,
-                      $(go.Shape,
-                        { stroke: null, strokeWidth: 0 },
-                        new go.Binding("fill", "", attrFill),
-                        new go.Binding("geometry", "", maleGeometry))
-                    ),
-                  margin: 1
-                },
-                new go.Binding("itemArray", "a")
-              )
-            ),
-            $(go.TextBlock,
-              { textAlign: "center", maxSize: new go.Size(80, NaN), background: "rgba(255,255,255,0.5)" },
-              new go.Binding("text", "n"))
-          ));
-  
-        myDiagram.nodeTemplateMap.add("F",  // female
-          $(go.Node, "Vertical",
-            {locationSpot: go.Spot.Center, locationObjectName: "ICON", selectionObjectName: "ICON" },
-            new go.Binding("opacity", "hide", h => h ? 0 : 1),
-            new go.Binding("pickable", "hide", h => !h),
-            $(go.Panel,
-              { name: "ICON" },
-              $(go.Shape, "Circle",
-                { width: 40, height: 40, strokeWidth: 2, fill: "#FFB6C1", stroke: "#a1a1a1", portId: "" }),
-              $(go.Panel,
-                { // for each attribute show a Shape at a particular place in the overall circle
-                  itemTemplate:
-                    $(go.Panel,
-                      $(go.Shape,
-                        { stroke: null, strokeWidth: 0 },
-                        new go.Binding("fill", "", attrFill),
-                        new go.Binding("geometry", "", femaleGeometry))
-                    ),
-                  margin: 1
-                },
-                new go.Binding("itemArray", "a")
-              )
-            ),
-            $(go.TextBlock,
-              { textAlign: "center", maxSize: new go.Size(80, NaN), background: "rgba(255,255,255,0.5)" },
-              new go.Binding("text", "n"))
-          ));
-  
-        // the representation of each label node -- nothing shows on a Marriage Link
-        myDiagram.nodeTemplateMap.add("LinkLabel",
-          $(go.Node, { selectable: false, width: 1, height: 1, fromEndSegmentLength: 20 }));
-  
-  
-        myDiagram.linkTemplate =  // for parent-child relationships
-          $(go.Link,
-            {
-              routing: go.Link.Orthogonal, corner: 5,
-              layerName: "Background", selectable: false,
-            },
-            $(go.Shape, { stroke: "#424242", strokeWidth: 2 })
-          );
-  
-        myDiagram.linkTemplateMap.add("Marriage",  // for marriage relationships
-          $(go.Link,
-            { selectable: false, layerName: "Background" },
-            $(go.Shape, { strokeWidth: 2.5, stroke: "#5d8cc1" /* blue */ })
-          ));
-  
-            // hardcoded input after applying transform(data), copide in from console TODO - needs to see updated state without crashing and being undefined.
-        setupDiagram(myDiagram, [
-          {
-              "key": 43274,
-              "n": "Charles III",
-              "s": "M",
-              "f": 80976,
-              "m": 9682,
-              "ux": 9685
-          },
-          {
-              "key": 9682,
-              "n": "Elizabeth II",
-              "s": "F",
-              "f": 280856,
-              "m": 10633,
-              "vir": 80976,
-          },
-          {
-              "key": 80976,
-              "n": "Prince Philip, Duke of Edinburgh",
-              "s": "M",
-              "ux": 9682,
-              "f": 156531,
-              "m": 116062
-          },
-          {
-              "key": 36812,
-              "n": "William, Prince of Wales",
-              "s": "M",
-              "f": 43274,
-              "m": 9685
-          },
-          {
-              "key": 152239,
-              "n": "Queen Camilla",
-              "s": "F",
-              "vir": 43274,
-              "f": 327457,
-              "m": 17363684
-          },
-          {
-              "key": 152316,
-              "n": "Prince Harry, Duke of Sussex",
-              "s": "M",
-              "f": 43274,
-              "m": 9685,
-              "ux": 3304418
-          },
-          {
-              "key": 9685,
-              "n": "Diana, Princess of Wales",
-              "s": "F",
-              "f": 593671,
-              "m": 256893,
-              "vir": 43274,
-          },
-          {
-              "key": 10633,
-              "n": "Queen Elizabeth, The Queen Mother",
-              "s": "F",
-              "f": 335159,
-              "m": 238820,
-              "vir": 280856
-          },
-          {
-              "key": 116062,
-              "n": "Princess Alice of Battenberg",
-              "s": "F",
-              "f": 57468,
-              "m": 57658,
-              "vir": 156531
-          },
-          {
-              "key": 156531,
-              "n": "Prince Andrew of Greece and Denmark",
-              "s": "M",
-              "f": 17142,
-              "m": 155178
-          },
-          {
-              "key": 280856,
-              "n": "George VI",
-              "s": "M",
-              "f": 269412,
-              "m": 76927
-          },
-          {
-              "key": 327457,
-              "n": "Bruce Shand",
-              "s": "M",
-              "f": 7184109,
-              "m": 17308990
-          },
-          {
-              "key": 17363684,
-              "n": "Rosalind Cubitt",
-              "s": "F",
-              "vir": 327457,
-              "f": 7360200,
-              "m": 7561697
-          },
-          {
-              "key": 10479,
-              "n": "Catherine, Princess of Wales",
-              "s": "F",
-              "vir": 36812,
-              "f": 14244505,
-              "m": 14244952
-          },
-          {
-              "key": 151754,
-              "n": "Anne, Princess Royal",
-              "s": "F",
-              "m": 9682,
-              "f": 80976,
-              "vir": 2063224
-          },
-          {
-              "key": 153330,
-              "n": "Prince Andrew, Duke of York",
-              "s": "M",
-              "m": 9682,
-              "f": 80976,
-              "ux": 55720
-          },
-          {
-              "key": 154920,
-              "n": "Prince Edward, Earl of Wessex and Forfar",
-              "s": "M",
-              "m": 9682,
-              "f": 80976,
-              "ux": 155203
-          },
-          {
-              "key": 3304418,
-              "n": "Meghan, Duchess of Sussex",
-              "s": "F",
-              "f": 43918214,
-              "m": 43918160
-          },
-          {
-              "key": 3736070,
-              "n": "Tom Parker Bowles",
-              "s": "M",
-              "m": 152239,
-              "f": 2221868,
-              "ux": 75587832
-          },
-          {
-              "key": 3743314,
-              "n": "Laura Lopes",
-              "s": "F",
-              "m": 152239,
-              "f": 2221868,
-              "vir": 75587834
-          },
-          {
-              "key": 13590412,
-              "n": "Prince George of Wales",
-              "s": "M",
-              "f": 36812,
-              "m": 10479
-          },
-          {
-              "key": 18002970,
-              "n": "Princess Charlotte of Wales",
-              "s": "F",
-              "f": 36812,
-              "m": 10479
-          },
-          {
-              "key": 38668629,
-              "n": "Prince Louis of Wales",
-              "s": "M",
-              "f": 36812,
-              "m": 10479
-          },
-          {
-              "key": 62938826,
-              "n": "Archie Mountbatten-Windsor",
-              "s": "M",
-              "f": 152316,
-              "m": 3304418
-          },
-          {
-              "key": 107125551,
-              "n": "Lilibet Mountbatten-Windsor",
-              "s": "F",
-              "f": 152316,
-              "m": 3304418
-          },
-          {
-              "key": 55720,
-              "n": "Sarah, Duchess of York",
-              "s": "F"
-          },
-          {
-              "key": 147663,
-              "n": "Zara Tindall",
-              "s": "F",
-              "m": 151754
-          },
-          {
-              "key": 155203,
-              "n": "Sophie, Countess of Wessex and Forfar",
-              "s": "F"
-          },
-          {
-              "key": 165657,
-              "n": "Princess Beatrice",
-              "s": "F",
-              "f": 153330
-          },
-          {
-              "key": 165709,
-              "n": "Princess Eugenie of York",
-              "s": "F",
-              "f": 153330
-          },
-          {
-              "key": 344908,
-              "n": "Peter Phillips",
-              "s": "M",
-              "m": 151754
-          },
-          {
-              "key": 550183,
-              "n": "James, Viscount Severn",
-              "s": "M",
-              "f": 154920
-          },
-          {
-              "key": 680304,
-              "n": "Lady Louise Windsor",
-              "s": "F",
-              "f": 154920
-          },
-          {
-              "key": 2063224,
-              "n": "Timothy Laurence",
-              "s": "M"
-          },
-          {
-              "key": 2221868,
-              "n": "Andrew Parker Bowles",
-              "s": "M"
-          },
-          {
-              "key": 7184109,
-              "n": "Philip Morton Shand",
-              "s": "M"
-          },
-          {
-              "key": 7360200,
-              "n": "Roland Cubitt, 3rd Baron Ashcombe",
-              "s": "M"
-          },
-          {
-              "key": 7561697,
-              "n": "Sonia Cubitt, Baroness Ashcombe",
-              "s": "F"
-          },
-          {
-              "key": 14244505,
-              "n": "Michael Middleton",
-              "s": "M"
-          },
-          {
-              "key": 14244952,
-              "n": "Carole Middleton",
-              "s": "F"
-          },
-          {
-              "key": 16142673,
-              "n": "Annabel Elliot",
-              "s": "F",
-              "f": 327457,
-              "m": 17363684
-          },
-          {
-              "key": 17308990,
-              "n": "Edith Marguerite Harrington",
-              "s": "F"
-          },
-          {
-              "key": 43918160,
-              "n": "Doria Ragland",
-              "s": "F"
-          },
-          {
-              "key": 43918214,
-              "n": "Thomas Markle",
-              "s": "M"
-          },
-          {
-              "key": 75587832,
-              "n": "Sara Buys",
-              "s": "F"
-          },
-          {
-              "key": 75587834,
-              "n": "Harry Lopes",
-              "s": "M"
-          },
-          {
-              "key": 75723263,
-              "n": "Lola Parker Bowles",
-              "s": "F",
-              "f": 3736070
-          },
-          {
-              "key": 75723264,
-              "n": "Eliza Lopes",
-              "s": "F",
-              "m": 3743314
-          },
-          {
-              "key": 75982135,
-              "n": "Gus Lopes",
-              "s": "M",
-              "m": 3743314
-          },
-          {
-              "key": 75982642,
-              "n": "Louis Lopes",
-              "s": "M",
-              "m": 3743314
-          },
-          {
-              "key": 76022497,
-              "n": "Freddy Parker Bowles",
-              "s": "M",
-              "f": 3736070
-          },
-          {
-              "key": 17142,
-              "n": "George I of Greece",
-              "s": "M"
-          },
-          {
-              "key": 57468,
-              "n": "Prince Louis of Battenberg",
-              "s": "M"
-          },
-          {
-              "key": 57658,
-              "n": "Princess Victoria, Marchioness of Milford Haven",
-              "s": "F"
-          },
-          {
-              "key": 76927,
-              "n": "Mary of Teck",
-              "s": "F"
-          },
-          {
-              "key": 153815,
-              "n": "Princess Margaret, Countess of Snowdon",
-              "s": "F",
-              "m": 10633,
-              "f": 280856
-          },
-          {
-              "key": 155178,
-              "n": "Olga Constantinovna of Russia",
-              "s": "F"
-          },
-          {
-              "key": 236196,
-              "n": "Princess Cecilie of Greece and Denmark",
-              "s": "F",
-              "m": 116062,
-              "f": 156531
-          },
-          {
-              "key": 238820,
-              "n": "Cecilia Bowes-Lyon, Countess of Strathmore and Kinghorne",
-              "s": "F"
-          },
-          {
-              "key": 240317,
-              "n": "Princess Margarita of Greece and Denmark",
-              "s": "F",
-              "m": 116062,
-              "f": 156531
-          },
-          {
-              "key": 255382,
-              "n": "Princess Theodora, Margravine of Baden",
-              "s": "F",
-              "m": 116062,
-              "f": 156531
-          },
-          {
-              "key": 256893,
-              "n": "Frances Shand Kydd",
-              "s": "F"
-          },
-          {
-              "key": 269412,
-              "n": "George V",
-              "s": "M"
-          },
-          {
-              "key": 335159,
-              "n": "Claude Bowes-Lyon, 14th Earl of Strathmore and Kinghorne",
-              "s": "M"
-          },
-          {
-              "key": 593671,
-              "n": "John Spencer, 8th Earl Spencer",
-              "s": "M"
-          },
-          {
-              "key": 630371,
-              "n": "Princess Sophie of Greece and Denmark",
-              "s": "F",
-              "m": 116062,
-              "f": 156531
-          },
-          {
-              "key": 15488831,
-              "n": "Mark Shand",
-              "s": "M",
-              "f": 327457,
-              "m": 17363684
-          }
-      ]
-          , 43274);
-      
-  
-      // create and initialize the Diagram.model given an array of node data representing people
-      function setupDiagram(diagram, array, focusId) {
-        diagram.model =
-          new go.GraphLinksModel(
-            { // declare support for link label nodes
-              linkLabelKeysProperty: "labelKeys",
-              // this property determines which template is used
-              nodeCategoryProperty: "s",
-              // if a node data object is copied, copy its data.a Array
-              copiesArrays: true,
-              // create all of the nodes for people
-              //TODO this should be got from this.state.relationsJson from App.js
-              nodeDataArray: array
-            });
-        setupMarriages(diagram);
-        setupParents(diagram);
-  
-        const node = diagram.findNodeForKey(focusId);
-        if (node !== null) {
-          diagram.select(node);
-        }
-      }
-  
-  
-      function findMarriage(diagram, a, b) {  // A and B are node keys
-        const nodeA = diagram.findNodeForKey(a);
-        const nodeB = diagram.findNodeForKey(b);
-        if (nodeA !== null && nodeB !== null) {
-          const it = nodeA.findLinksBetween(nodeB);  // in either direction
-          while (it.next()) {
-            const link = it.value;
-            // Link.data.category === "Marriage" means it's a marriage relationship
-            if (link.data !== null && link.data.category === "Marriage") return link;
-          }
-        }
-        return null;
-      }
-  
-      // now process the node data to determine marriages
-      function setupMarriages(diagram) {
-        const model = diagram.model;
-        const nodeDataArray = model.nodeDataArray;
-        for (let i = 0; i < nodeDataArray.length; i++) {
-          const data = nodeDataArray[i];
-          const key = data.key;
-          let uxs = data.ux;
-          if (uxs !== undefined) {
-            if (typeof uxs === "number") uxs = [uxs];
-            for (let j = 0; j < uxs.length; j++) {
-              const wife = uxs[j];
-              const wdata = model.findNodeDataForKey(wife);
-              if (key == wife) {
-                console.log("cannot create Marriage relationship with self" + wife);
-                continue;
-              }
-              if (!wdata) {
-                  console.log("cannot create Marriage relationship with unknown person " + wife);
-                  continue;
-              }
-              if (wdata.s !== "F") {
-                  console.log("cannot create Marriage relationship with wrong gender person " + wife);
-                  continue;
-              }
-              const link = findMarriage(diagram, key, wife);
-              if (link === null) {
-                // add a label node for the marriage link
-                const mlab = { s: "LinkLabel" };
-                model.addNodeData(mlab);
-                // add the marriage link itself, also referring to the label node
-                const mdata = { from: key, to: wife, labelKeys: [mlab.key], category: "Marriage" };
-                model.addLinkData(mdata);
-              }
-            }
-          }
-          let virs = data.vir;
-          if (virs !== undefined) {
-            if (typeof virs === "number") virs = [virs];
-            for (let j = 0; j < virs.length; j++) {
-              const husband = virs[j];
-              const hdata = model.findNodeDataForKey(husband);
-              if (key === husband || !hdata || hdata.s !== "M") {
-                console.log("cannot create Marriage relationship with self or unknown person " + husband);
-                continue;
-              }
-              const link = findMarriage(diagram, key, husband);
-              if (link === null) {
-                // add a label node for the marriage link
-                const mlab = { s: "LinkLabel" };
-                model.addNodeData(mlab);
-                // add the marriage link itself, also referring to the label node
-                const mdata = { from: key, to: husband, labelKeys: [mlab.key], category: "Marriage" };
-                model.addLinkData(mdata);
-              }
-            }
-          }
-        }
-      }
-  
-  
-      // process parent-child relationships once all marriages are known
-      function setupParents(diagram) {
-        const model = diagram.model;
-        const nodeDataArray = model.nodeDataArray;
-        for (let i = 0; i < nodeDataArray.length; i++) {
-          const data = nodeDataArray[i];
-          const key = data.key;
-          const mother = data.m;
-          const father = data.f;
-          if (mother !== undefined && father !== undefined) {
-            const link = findMarriage(diagram, mother, father);
-            if (link === null) {
-              // or warn no known mother or no known father or no known marriage between them
-              console.log("unknown marriage: " + mother + " & " + father);
-              continue;
-            }
-            const mdata = link.data;
-            if (mdata.labelKeys === undefined || mdata.labelKeys[0] === undefined) continue;
-            const mlabkey = mdata.labelKeys[0];
-            const cdata = { from: mlabkey, to: key };
-            myDiagram.model.addLinkData(cdata);
-          }
-        }
-      }
-      return myDiagram;}
   
 
   }
