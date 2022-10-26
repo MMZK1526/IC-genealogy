@@ -6,15 +6,28 @@ import './Adapter.css';
 
 export class Adapter extends React.Component {
     transform(data) {
-        const foo = data.items.map((x) => (
-            {
+        const foo = data.items.map((x) => {
+            let res = {
                 id: x.id,
+                name: x.name,
                 gender: this.getGender(x),
                 parents: new Map(),
                 siblings: new Map(),
                 spouses: new Map(),
-                children: new Map()
-            }));
+                children: new Map(),
+                additionalProperties: {
+                    description: x.description,
+                    aliases: x.aliases
+                }
+            };
+            let additionalProperties = x.additionalProperties;
+            const resProperties = res.additionalProperties;
+            for (const p of additionalProperties) {
+                resProperties[p.name] = p.value;
+            }
+            res.additionalProperties = resProperties;
+            return res;
+        });
         const bar = new Map();
         for (const x of foo) {
             bar.set(x.id, x);
@@ -39,7 +52,6 @@ export class Adapter extends React.Component {
             y.children = Array.from(y.children.values());
             return y;
         });
-        console.log(arr);
         return arr;
     }
 

@@ -28,7 +28,10 @@ export const FamilyNode = React.memo(
           )}
           onClick={clickHandler}
         >
-          <div className={css.id}>{node.id}</div>
+          <div className={css.id}>{
+              // @ts-ignore
+              node.name
+          }</div>
         </div>
         {node.hasSubTree && (
           <div

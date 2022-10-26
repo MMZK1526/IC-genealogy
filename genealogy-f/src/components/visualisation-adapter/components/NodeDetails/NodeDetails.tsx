@@ -26,7 +26,22 @@ export const NodeDetails = memo(
         <Relations {...props} title="Children" items={node.children} />
         <Relations {...props} title="Siblings" items={node.siblings} />
         <Relations {...props} title="Spouses" items={node.spouses} />
+          {
+              getAdditionalProperties(node)
+          }
       </section>
     );
   },
 );
+
+// @ts-ignore
+function getAdditionalProperties(node) {
+    const ps = node.additionalProperties;
+    // @ts-ignore
+    return Object.keys(ps).map((k) => (
+        <div key={k}>
+            <div key='k'><b>{k}</b></div>
+            <div key='v'>{ps[k]}</div>
+        </div>
+    ));
+}
