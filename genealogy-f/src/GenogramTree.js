@@ -6,6 +6,7 @@ import React from "react";
 import * as go from 'gojs';
 import {ReactDiagram} from 'gojs-react';
 import './App.css';
+import PopupInfo from './components/popup-info/PopupInfo.js'
 
 
 // helper function to convert "WD-Q13423" -> 13423
@@ -44,14 +45,14 @@ function transform(data) {
       // console.log(target2)
       // console.log(relation)
       // check each relationship if so update record accordingly
-      if (relation.type == 'mother') {
+      if (relation.type === 'mother') {
           mfs.m = toInt(relation.person2Id);
       }
-      if (relation.type == 'father') {
+      if (relation.type === 'father') {
           mfs.f = toInt(relation.person2Id);
       }
-      if (relation.type == 'spouse') {
-              if (target2.gender == 'M') {
+      if (relation.type === 'spouse') {
+              if (target2.gender === 'M') {
                   mfs.ux = toInt(relation.person2Id);
               } else {
                   mfs.vir = toInt(relation.person2Id);
@@ -79,7 +80,6 @@ export class DiagramWrappper extends React.Component {
     super(props);
     this.diagramRef = React.createRef();
     this.nodeDataArray = props.nodeDataArray;
-
   }
 
   componentDidMount() {
@@ -325,7 +325,7 @@ export class DiagramWrappper extends React.Component {
           for (let j = 0; j < uxs.length; j++) {
             const wife = uxs[j];
             const wdata = model.findNodeDataForKey(wife);
-            if (key == wife) {
+            if (key === wife) {
               console.log("cannot create Marriage relationship with self" + wife);
               continue;
             }
@@ -401,16 +401,16 @@ export class DiagramWrappper extends React.Component {
 
   render() {
     return (
-      <ReactDiagram
-        ref={this.diagramRef}
-        divClassName='diagram-component'
-        initDiagram={this.init}
-        nodeDataArray={this.props.nodeDataArray}
-        linkDataArray={this.props.linkDataArray}
-        modelData={this.props.modelData}
-        onModelChange={this.props.onModelChange}
-        skipsDiagramUpdate={this.props.skipsDiagramUpdate}
-      />
+          <ReactDiagram
+            ref={this.diagramRef}
+            divClassName='diagram-component'
+            initDiagram={this.init}
+            nodeDataArray={this.props.nodeDataArray}
+            linkDataArray={this.props.linkDataArray}
+            modelData={this.props.modelData}
+            onModelChange={this.props.onModelChange}
+            skipsDiagramUpdate={this.props.skipsDiagramUpdate}
+          />
     );
   }
 }
@@ -851,7 +851,15 @@ export class GenogramTree extends React.Component {
       super(props);
       this.handleModelChange = this.handleModelChange.bind(this);
       this.handleDiagramEvent = this.handleDiagramEvent.bind(this);
-      this.relations = props.relations
+      this.relations = props.relations;
+      this.isPopped = true;
+      this.closePopUp = this.closePopUp.bind(this);
+    }
+
+    closePopUp() {
+      this.setState({
+        isPopped: false
+      })
     }
 
     handleModelChange(changes) {
@@ -868,11 +876,23 @@ export class GenogramTree extends React.Component {
         console.log(this.relations);
         console.log("Finish")
         return(
-            <DiagramWrappper
+          <div className="treeGraph">
+            {this.isPopped ? <PopupInfo closePopUp={this.closePopUp}>
+                <h2>Info popup</h2>
+                <h4>name</h4>
+                <h4>birth</h4>
+                <h4>death</h4>
+            </PopupInfo>
+            : ""}
+            
+          
+            {/* <DiagramWrappper
                 nodeDataArray={this.nodeList}
                 onModelChange={this.handleModelChange}
                 onDiagramEvent={this.handleDiagramEvent}
-            />
+            /> */}
+            
+            </div>
         );
     }
     // initialises tree (in theory should only be called once, diagram should be .clear() and then data updated for re-initialisation)
@@ -908,7 +928,7 @@ export class GenogramTree extends React.Component {
     // internal method for creating LayeredDigraphNetwork where husband/wife pairs are represented
     // by a single LayeredDigraphVertex corresponding to the label Node on the marriage Link
     add(net, coll, nonmemberonly) {
-      const horiz = this.direction == 0.0 || this.direction == 180.0;
+      const horiz = this.direction === 0.0 || this.direction === 180.0;
       const multiSpousePeople = new go.Set();
       // consider all Nodes in the given collection
       const it = coll.iterator;
@@ -1020,7 +1040,7 @@ export class GenogramTree extends React.Component {
 
     assignLayers() {
       super.assignLayers();
-      const horiz = this.direction == 0.0 || this.direction == 180.0;
+      const horiz = this.direction === 0.0 || this.direction === 180.0;
       // for every vertex, record the maximum vertex width or height for the vertex's layer
       const maxsizes = [];
       this.network.vertexes.each(v => {
@@ -1049,7 +1069,7 @@ export class GenogramTree extends React.Component {
 
     commitNodes() {
       super.commitNodes();
-      const horiz = this.direction == 0.0 || this.direction == 180.0;
+      const horiz = this.direction === 0.0 || this.direction === 180.0;
       console.log(horiz);
       // position regular nodes
       this.network.vertexes.each(v => {
