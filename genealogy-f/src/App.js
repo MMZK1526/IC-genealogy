@@ -8,6 +8,7 @@ import {ReactDiagram} from 'gojs-react';
 import './App.css';
 import {Topbar} from './components/topbar/Topbar.js'
 import {NameSearch} from './components/name-search/NameSearch.js'
+import {Adapter} from './components/visualisation-adapter/Adapter';
 
 import { GenogramTree } from "./GenogramTree";
 
@@ -91,9 +92,9 @@ class NameForm extends React.Component {
                     {
                         !_.isEmpty(this.state.relationsJson)
                             // TODO - entry point for genogram tree
-                            ? <GenogramTree
-                                relations={this.state.relationsJson}
-                            />
+                            ?
+                            <GenogramTree relations={this.state.relationsJson} />
+                            // <Adapter data={this.state.relationsJson} />
 
                             : <NameSearch
                                 onChange={this.handleChangeInitialName}
