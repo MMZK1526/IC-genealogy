@@ -4,4 +4,4 @@ build/
 node_modules/
 */.gradle
 genealogy-f/playground
-genealogy-f/package-lock.json
+**/package-lock.json
