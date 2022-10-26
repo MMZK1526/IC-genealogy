@@ -7,29 +7,32 @@ import * as go from 'gojs';
 import {ReactDiagram} from 'gojs-react';
 import './App.css';
 import {Topbar} from './components/topbar/Topbar.js'
+import {NameSearch} from './components/name-search/NameSearch.js'
+
 import { GenogramTree } from "./GenogramTree";
-import {Adapter} from './components/visualisation-adapter/Adapter';
 
 
 // COMMENT THIS BACK IN FOR QUICK TESTING
-function App() {
-  return (
-      <NameForm />
-  );
-}
+// function App() {
+//   return (
+//     <GenogramTree
+//         relations={this.state.relationsJson}
+//     />
+//   );
+// }
 
 // COMMENT THIS IN FOR FULL FLOW TEST
-// class App extends React.Component {
-//     componentDidMount(){
-//         document.title = "Ancesta - Genealogy Project"
-//     }
+class App extends React.Component {
+    componentDidMount(){
+        document.title = "Ancesta - Genealogy Project"
+    }
 
-//     render() {
-//         return (
-//             <NameForm />
-//         );
-//     }
-// }
+    render() {
+        return (
+            <NameForm />
+        );
+    }
+}
 
 class NameForm extends React.Component {
     constructor(props) {
@@ -71,30 +74,41 @@ class NameForm extends React.Component {
     }
 
     render() {
-        return ( 
-            <div className='App'>                
-                <Sidebar
-                    nameChange={this.handleChangeInitialName}
-                    yearFromChange={this.handleChangeFrom}
-                    yearToChange={this.handleChangeTo}
-                    onClick={this.handleSearchSubmit}
-                />
+        return (
+            <div className='App'>
+                {
+                    !_.isEmpty(this.state.searchJsons)
+                        ? <Sidebar
+                            name={this.state.initialName}
+                            nameChange={this.handleChangeInitialName}
+                            yearFromChange={this.handleChangeFrom}
+                            yearToChange={this.handleChangeTo}
+                            onClick={this.handleSearchSubmit}
+                        />
+                        : ''
+                }
                 <div className='tree-box'>
                     {
                         !_.isEmpty(this.state.relationsJson)
-                        ? <Adapter data={this.state.relationsJson} />
-                    
-                        : null
+                            // TODO - entry point for genogram tree
+                            ? <GenogramTree
+                                relations={this.state.relationsJson}
+                            />
+
+                            : <NameSearch
+                                onChange={this.handleChangeInitialName}
+                                onClick={this.handleSearchSubmit}
+                            />
                     }
                 </div>
                 {
                     !_.isEmpty(this.state.searchJsons) && _.isEmpty(this.state.relationsJson)
-                    ? <Topbar
-                        state={this.state}
-                        onChange={this.handleChangeChosenId}
-                        onSubmit={this.handleRelationsSubmit}
-                    />
-                    : ''
+                        ? <Topbar
+                            state={this.state}
+                            onChange={this.handleChangeChosenId}
+                            onSubmit={this.handleRelationsSubmit}
+                        />
+                        : ''
                 }
             </div>
         );
@@ -120,9 +134,9 @@ class NameForm extends React.Component {
                 } else if (to !== '') {
                     return (birth == null) || parseInt(birth.substring(0,4)) <= parseInt(to);
                 }
-                return true;   
+                return true;
             });
-            
+
             this.setState({
                 searchJsons: r,
                 chosenId: r[0].id,
@@ -146,7 +160,6 @@ class NameForm extends React.Component {
                 alert("No relationship found!")
                 return;
             }
-            console.log(r);
             this.setState({
                 relationsJson: r,
                 // transformedArr: transform(r),
