@@ -23,20 +23,6 @@
   /* border: 2px dashed gray; */
 }
 
-.tree-box #welcome{
-  text-align: start;
-}
-
-.tree-box #title{
-  font-size: 40pt;
-  padding-bottom: 10px;
-}
-
-.tree-box #desc{
-  font-size: 20pt;
-  color: darkslategray;
-}
-
 table {
   border-collapse: collapse;
   border: 1px solid #000000;

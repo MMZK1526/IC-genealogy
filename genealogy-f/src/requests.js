@@ -11,7 +11,7 @@ export class Requests {
     }
 
     relations({id = 'WD-Q9682', depth = 3, types = 'all'} = {}) {
-        const url = `https://intense-anchorage-84008.herokuapp.com/https://db-de-genealogie.herokuapp.com/relations?id=${id}&depth=${depth}&types=${types}`
+        const url = `https://intense-anchorage-84008.herokuapp.com/https://db-de-genealogie.herokuapp.com/relations_wk?id=${id}&depth=${depth}&types=${types}`
         return fetch(url)
             .then(response => {
                 return response.json();

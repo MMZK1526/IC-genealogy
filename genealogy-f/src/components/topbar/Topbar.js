@@ -10,11 +10,9 @@ export function Topbar(props) {
                 <select className='dropdown-menu' value={props.state.chosenId} onChange={props.onChange}>
                     {
                         props.state.searchJsons.map((x) => {
-                            var birth_year = x.dateOfBirth ? x.dateOfBirth.substring(0,4) : "????";
-                            var death_year = x.dateOfDeath ? x.dateOfDeath.substring(0,4) : "????";
-                            var birth_place = x.placeOfBirth ? " @ " + x.placeOfBirth.split(',')[1] : "";
+                            const des = x.description ? " - " + x.description : ""
                             
-                            return <option value={x.id} key={x.id}> {x.name} {"(" + birth_year + "~" + death_year + ")" + birth_place}</option>
+                            return <option value={x.id} key={x.id}> {x.name} {des}</option>
                     }
                             
                         )

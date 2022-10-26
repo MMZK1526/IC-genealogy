@@ -1,4 +1,4 @@
-package mmzk.genealogy.tables
+package mmzk.genealogy
 
 enum class IDType {
     WIKI_DATA
@@ -29,6 +29,7 @@ class Fields {
         const val spouse = "P26"
         const val father = "P22"
         const val mother = "P23"
+        const val child = "P40"
         const val female = "Q6581072"
         const val male = "Q6581097"
         const val seriesOrdinal = "P1545"
