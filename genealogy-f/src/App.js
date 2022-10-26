@@ -8,6 +8,7 @@ import {ReactDiagram} from 'gojs-react';
 import './App.css';
 import {Topbar} from './components/topbar/Topbar.js'
 import { GenogramTree } from "./GenogramTree";
+import {App2} from './components/visualisation-adapter/App2';
 
 
 // COMMENT THIS BACK IN FOR QUICK TESTING
@@ -81,7 +82,7 @@ class NameForm extends React.Component {
                 <div className='tree-box'>
                     {
                         !_.isEmpty(this.state.relationsJson)
-                        ? <GenogramTree data={this.state.relationsJson} />
+                        ? <App2 data={this.state.relationsJson} />
                     
                         : <div id='welcome'>
                             <div id='title'>Ancesta - Genealogy Project</div>
