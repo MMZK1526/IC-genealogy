@@ -10,11 +10,10 @@ export class Adapter extends React.Component {
             {
                 id: x.id,
                 gender: this.getGender(x),
-                parents: [],
-                siblings: [],
-                spouses: [],
-                children: []
-
+                parents: new Map(),
+                siblings: new Map(),
+                spouses: new Map(),
+                children: new Map()
             }));
         const bar = new Map();
         for (const x of foo) {
@@ -31,8 +30,17 @@ export class Adapter extends React.Component {
             bar.set(id1, this.addRelation(x1, id2, type));
             bar.set(id2, this.addRelation(x2, id1, reverseType));
         }
-        const res = Array.from(bar.values());
-        return res;
+        const arr = Array.from(bar.values());
+        const res = arr.map((x) => {
+            const y = x;
+            y.parents = Array.from(y.parents.values());
+            y.siblings = Array.from(y.siblings.values());
+            y.spouses = Array.from(y.spouses.values());
+            y.children = Array.from(y.children.values());
+            return y;
+        });
+        console.log(arr);
+        return arr;
     }
 
     getGender(x) {
@@ -40,9 +48,9 @@ export class Adapter extends React.Component {
         console.assert(filteredProperties.length > 0);
         const gender = filteredProperties[0].value;
         return (
-            gender.value === 'F'
+            gender === 'F'
             ? 'female'
-                : gender.value === 'M'
+                : gender === 'M'
                     ? 'male'
                         : 'non-binary'
         );
@@ -74,13 +82,18 @@ export class Adapter extends React.Component {
     }
 
     addRelation(target, id, r) {
-        let x = target;
-        let arr = x[this.getFieldNameFromRelation(r)];
-        arr.push({
+        const x = target;
+        const fieldName = this.getFieldNameFromRelation(r);
+        const foo = x[fieldName];
+        foo.set(id, {
             id: id,
             type: r === 'spouse' ? 'married' : 'blood'
         });
-        x[r] = arr;
+        console.assert(fieldName === 'parents' && foo.size <= 2 || fieldName !== 'parents');
+        if (!(fieldName === 'parents' && foo.size <= 2 || fieldName !== 'parents')) {
+            console.log(foo);
+        }
+        x[fieldName] = foo;
         return x;
     }
 
