@@ -13,24 +13,26 @@ import { GenogramTree } from "./GenogramTree";
 
 
 // COMMENT THIS BACK IN FOR QUICK TESTING
-function App() {
-  return (
-      <GenogramTree />
-  );
-}
+// function App() {
+//   return (
+//     <GenogramTree
+//         relations={this.state.relationsJson}
+//     />
+//   );
+// }
 
 // COMMENT THIS IN FOR FULL FLOW TEST
-// class App extends React.Component {
-//     componentDidMount(){
-//         document.title = "Ancesta - Genealogy Project"
-//     }
+class App extends React.Component {
+    componentDidMount(){
+        document.title = "Ancesta - Genealogy Project"
+    }
 
-//     render() {
-//         return (
-//             <NameForm />
-//         );
-//     }
-// }
+    render() {
+        return (
+            <NameForm />
+        );
+    }
+}
 
 class NameForm extends React.Component {
     constructor(props) {
@@ -89,7 +91,9 @@ class NameForm extends React.Component {
                     {
                         !_.isEmpty(this.state.relationsJson)
                         // TODO - entry point for genogram tree
-                        ? <GenogramTree />
+                        ? <GenogramTree
+                            relations={this.state.relationsJson}
+                        />
                     
                         : <NameSearch
                             onChange={this.handleChangeInitialName}

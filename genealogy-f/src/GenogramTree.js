@@ -78,13 +78,15 @@ export class DiagramWrappper extends React.Component {
   constructor(props) {
     super(props);
     this.diagramRef = React.createRef();
+    this.nodeDataArray = props.nodeDataArray;
+
   }
 
   componentDidMount() {
     if (!this.diagramRef.current) return;
     const diagram = this.diagramRef.current.getDiagram();
     if (diagram instanceof go.Diagram) {
-      diagram.addDiagramListener('ChangedSelection', this.props.onDiagramEvent);
+      diagram.addDiagramListener('ObjectSingleClicked', this.props.onDiagramEvent);
     }
   }
 
@@ -92,7 +94,7 @@ export class DiagramWrappper extends React.Component {
     if (!this.diagramRef.current) return;
     const diagram = this.diagramRef.current.getDiagram();
     if (diagram instanceof go.Diagram) {
-      diagram.removeDiagramListener('ChangedSelection', this.props.onDiagramEvent);
+      diagram.removeDiagramListener('ObjectSingleClicked', this.props.onDiagramEvent);
     }
   }
 
@@ -269,7 +271,156 @@ export class DiagramWrappper extends React.Component {
         ));
 
           // hardcoded input after applying transform(data), copide in from console TODO - needs to see updated state without crashing and being undefined.
-      setupDiagram(myDiagram, [
+      setupDiagram(myDiagram, this.nodeDataArray, 43274);
+    
+
+    // create and initialize the Diagram.model given an array of node data representing people
+    function setupDiagram(diagram, array, focusId) {
+      diagram.model =
+        new go.GraphLinksModel(
+          { // declare support for link label nodes
+            linkLabelKeysProperty: "labelKeys",
+            // this property determines which template is used
+            nodeCategoryProperty: "s",
+            // if a node data object is copied, copy its data.a Array
+            copiesArrays: true,
+            // create all of the nodes for people
+            //TODO this should be got from this.state.relationsJson from App.js
+            nodeDataArray: array
+          });
+      setupMarriages(diagram);
+      setupParents(diagram);
+
+      const node = diagram.findNodeForKey(focusId);
+      if (node !== null) {
+        diagram.select(node);
+      }
+    }
+
+
+    function findMarriage(diagram, a, b) {  // A and B are node keys
+      const nodeA = diagram.findNodeForKey(a);
+      const nodeB = diagram.findNodeForKey(b);
+      if (nodeA !== null && nodeB !== null) {
+        const it = nodeA.findLinksBetween(nodeB);  // in either direction
+        while (it.next()) {
+          const link = it.value;
+          // Link.data.category === "Marriage" means it's a marriage relationship
+          if (link.data !== null && link.data.category === "Marriage") return link;
+        }
+      }
+      return null;
+    }
+
+    // now process the node data to determine marriages
+    function setupMarriages(diagram) {
+      const model = diagram.model;
+      const nodeDataArray = model.nodeDataArray;
+      for (let i = 0; i < nodeDataArray.length; i++) {
+        const data = nodeDataArray[i];
+        const key = data.key;
+        let uxs = data.ux;
+        if (uxs !== undefined) {
+          if (typeof uxs === "number") uxs = [uxs];
+          for (let j = 0; j < uxs.length; j++) {
+            const wife = uxs[j];
+            const wdata = model.findNodeDataForKey(wife);
+            if (key == wife) {
+              console.log("cannot create Marriage relationship with self" + wife);
+              continue;
+            }
+            if (!wdata) {
+                console.log("cannot create Marriage relationship with unknown person " + wife);
+                continue;
+            }
+            if (wdata.s !== "F") {
+                console.log("cannot create Marriage relationship with wrong gender person " + wife);
+                continue;
+            }
+            const link = findMarriage(diagram, key, wife);
+            if (link === null) {
+              // add a label node for the marriage link
+              const mlab = { s: "LinkLabel" };
+              model.addNodeData(mlab);
+              // add the marriage link itself, also referring to the label node
+              const mdata = { from: key, to: wife, labelKeys: [mlab.key], category: "Marriage" };
+              model.addLinkData(mdata);
+            }
+          }
+        }
+        let virs = data.vir;
+        if (virs !== undefined) {
+          if (typeof virs === "number") virs = [virs];
+          for (let j = 0; j < virs.length; j++) {
+            const husband = virs[j];
+            const hdata = model.findNodeDataForKey(husband);
+            if (key === husband || !hdata || hdata.s !== "M") {
+              console.log("cannot create Marriage relationship with self or unknown person " + husband);
+              continue;
+            }
+            const link = findMarriage(diagram, key, husband);
+            if (link === null) {
+              // add a label node for the marriage link
+              const mlab = { s: "LinkLabel" };
+              model.addNodeData(mlab);
+              // add the marriage link itself, also referring to the label node
+              const mdata = { from: key, to: husband, labelKeys: [mlab.key], category: "Marriage" };
+              model.addLinkData(mdata);
+            }
+          }
+        }
+      }
+    }
+
+
+    // process parent-child relationships once all marriages are known
+    function setupParents(diagram) {
+      const model = diagram.model;
+      const nodeDataArray = model.nodeDataArray;
+      for (let i = 0; i < nodeDataArray.length; i++) {
+        const data = nodeDataArray[i];
+        const key = data.key;
+        const mother = data.m;
+        const father = data.f;
+        if (mother !== undefined && father !== undefined) {
+          const link = findMarriage(diagram, mother, father);
+          if (link === null) {
+            // or warn no known mother or no known father or no known marriage between them
+            console.log("unknown marriage: " + mother + " & " + father);
+            continue;
+          }
+          const mdata = link.data;
+          if (mdata.labelKeys === undefined || mdata.labelKeys[0] === undefined) continue;
+          const mlabkey = mdata.labelKeys[0];
+          const cdata = { from: mlabkey, to: key };
+          myDiagram.model.addLinkData(cdata);
+        }
+      }
+    }
+    return myDiagram;}
+
+  render() {
+    return (
+      <ReactDiagram
+        ref={this.diagramRef}
+        divClassName='diagram-component'
+        initDiagram={this.init}
+        nodeDataArray={this.props.nodeDataArray}
+        linkDataArray={this.props.linkDataArray}
+        modelData={this.props.modelData}
+        onModelChange={this.props.onModelChange}
+        skipsDiagramUpdate={this.props.skipsDiagramUpdate}
+      />
+    );
+  }
+}
+
+// optional parameter passed to <ReactDiagram onModelChange = {handleModelChange}>
+// called whenever model is changed
+
+// class encapsulating the tree initialisation and rendering
+export class GenogramTree extends React.Component {
+    nodeList = [
         {
             "key": 43274,
             "n": "Charles III",
@@ -695,178 +846,35 @@ export class DiagramWrappper extends React.Component {
             "f": 327457,
             "m": 17363684
         }
-    ]
-        , 43274);
-    
-
-    // create and initialize the Diagram.model given an array of node data representing people
-    function setupDiagram(diagram, array, focusId) {
-      diagram.model =
-        new go.GraphLinksModel(
-          { // declare support for link label nodes
-            linkLabelKeysProperty: "labelKeys",
-            // this property determines which template is used
-            nodeCategoryProperty: "s",
-            // if a node data object is copied, copy its data.a Array
-            copiesArrays: true,
-            // create all of the nodes for people
-            //TODO this should be got from this.state.relationsJson from App.js
-            nodeDataArray: array
-          });
-      setupMarriages(diagram);
-      setupParents(diagram);
-
-      const node = diagram.findNodeForKey(focusId);
-      if (node !== null) {
-        diagram.select(node);
-      }
-    }
-
-
-    function findMarriage(diagram, a, b) {  // A and B are node keys
-      const nodeA = diagram.findNodeForKey(a);
-      const nodeB = diagram.findNodeForKey(b);
-      if (nodeA !== null && nodeB !== null) {
-        const it = nodeA.findLinksBetween(nodeB);  // in either direction
-        while (it.next()) {
-          const link = it.value;
-          // Link.data.category === "Marriage" means it's a marriage relationship
-          if (link.data !== null && link.data.category === "Marriage") return link;
-        }
-      }
-      return null;
-    }
-
-    // now process the node data to determine marriages
-    function setupMarriages(diagram) {
-      const model = diagram.model;
-      const nodeDataArray = model.nodeDataArray;
-      for (let i = 0; i < nodeDataArray.length; i++) {
-        const data = nodeDataArray[i];
-        const key = data.key;
-        let uxs = data.ux;
-        if (uxs !== undefined) {
-          if (typeof uxs === "number") uxs = [uxs];
-          for (let j = 0; j < uxs.length; j++) {
-            const wife = uxs[j];
-            const wdata = model.findNodeDataForKey(wife);
-            if (key == wife) {
-              console.log("cannot create Marriage relationship with self" + wife);
-              continue;
-            }
-            if (!wdata) {
-                console.log("cannot create Marriage relationship with unknown person " + wife);
-                continue;
-            }
-            if (wdata.s !== "F") {
-                console.log("cannot create Marriage relationship with wrong gender person " + wife);
-                continue;
-            }
-            const link = findMarriage(diagram, key, wife);
-            if (link === null) {
-              // add a label node for the marriage link
-              const mlab = { s: "LinkLabel" };
-              model.addNodeData(mlab);
-              // add the marriage link itself, also referring to the label node
-              const mdata = { from: key, to: wife, labelKeys: [mlab.key], category: "Marriage" };
-              model.addLinkData(mdata);
-            }
-          }
-        }
-        let virs = data.vir;
-        if (virs !== undefined) {
-          if (typeof virs === "number") virs = [virs];
-          for (let j = 0; j < virs.length; j++) {
-            const husband = virs[j];
-            const hdata = model.findNodeDataForKey(husband);
-            if (key === husband || !hdata || hdata.s !== "M") {
-              console.log("cannot create Marriage relationship with self or unknown person " + husband);
-              continue;
-            }
-            const link = findMarriage(diagram, key, husband);
-            if (link === null) {
-              // add a label node for the marriage link
-              const mlab = { s: "LinkLabel" };
-              model.addNodeData(mlab);
-              // add the marriage link itself, also referring to the label node
-              const mdata = { from: key, to: husband, labelKeys: [mlab.key], category: "Marriage" };
-              model.addLinkData(mdata);
-            }
-          }
-        }
-      }
-    }
-
-
-    // process parent-child relationships once all marriages are known
-    function setupParents(diagram) {
-      const model = diagram.model;
-      const nodeDataArray = model.nodeDataArray;
-      for (let i = 0; i < nodeDataArray.length; i++) {
-        const data = nodeDataArray[i];
-        const key = data.key;
-        const mother = data.m;
-        const father = data.f;
-        if (mother !== undefined && father !== undefined) {
-          const link = findMarriage(diagram, mother, father);
-          if (link === null) {
-            // or warn no known mother or no known father or no known marriage between them
-            console.log("unknown marriage: " + mother + " & " + father);
-            continue;
-          }
-          const mdata = link.data;
-          if (mdata.labelKeys === undefined || mdata.labelKeys[0] === undefined) continue;
-          const mlabkey = mdata.labelKeys[0];
-          const cdata = { from: mlabkey, to: key };
-          myDiagram.model.addLinkData(cdata);
-        }
-      }
-    }
-    return myDiagram;}
-
-  render() {
-    return (
-      <ReactDiagram
-        ref={this.diagramRef}
-        divClassName='diagram-component'
-        initDiagram={this.init}
-        nodeDataArray={this.props.nodeDataArray}
-        linkDataArray={this.props.linkDataArray}
-        modelData={this.props.modelData}
-        onModelChange={this.props.onModelChange}
-        skipsDiagramUpdate={this.props.skipsDiagramUpdate}
-      />
-    );
-  }
-}
-
-// optional parameter passed to <ReactDiagram onModelChange = {handleModelChange}>
-// called whenever model is changed
-
-// class encapsulating the tree initialisation and rendering
-export class GenogramTree extends React.Component {
+    ];
     constructor(props) {
       super(props);
-      this.state = {
-        node: null
-      };
       this.handleModelChange = this.handleModelChange.bind(this);
       this.handleDiagramEvent = this.handleDiagramEvent.bind(this);
+      this.relations = props.relations
     }
 
     handleModelChange(changes) {
         console.log('GoJS model changed!');
     }
 
-    handleDiagramEvent (e) {
-        alert("Diagram change");
+    handleDiagramEvent (event) {
+        console.log(event.subject.part.key);
       }
 
     // renders ReactDiagram
-    render() {return (<DiagramWrappper
-            onModelChange={this.handleModelChange}
-            onDiagramEvent={this.handleDiagramEvent}
-        />);}
+    render() {
+        console.log("Start")
+        console.log(this.relations);
+        console.log("Finish")
+        return(
+            <DiagramWrappper
+                nodeDataArray={this.nodeList}
+                onModelChange={this.handleModelChange}
+                onDiagramEvent={this.handleDiagramEvent}
+            />
+        );
+    }
     // initialises tree (in theory should only be called once, diagram should be .clear() and then data updated for re-initialisation)
     // see https://gojs.net/latest/intro/react.html
 
