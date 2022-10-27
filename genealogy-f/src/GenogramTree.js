@@ -18,7 +18,7 @@ function toInt(str) {
 // n: name, s: sex, m: mother, f: father, ux: wife, vir: husband, a: attributes/markers
 
 // ^^^^^^ SEE ABOVE transformed format helper function to transfrom JSON into goJS nodeDataArray format.
-function transform(data) {
+export function transform(data) {
   // data.people to be replaced with data.items in Mulang version
   let target = data.targets[0];
   let idPerson = new Map();

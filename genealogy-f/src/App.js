@@ -8,27 +8,28 @@ import {ReactDiagram} from 'gojs-react';
 import './App.css';
 import {Topbar} from './components/topbar/Topbar.js'
 import { GenogramTree } from "./GenogramTree";
+import {transform} from "./GenogramTree";
 
 
 // COMMENT THIS BACK IN FOR QUICK TESTING
-function App() {
-  return (
-      <GenogramTree />
-  );
-}
+// function App() {
+//   return (
+//       <GenogramTree />
+//   );
+// }
 
 // COMMENT THIS IN FOR FULL FLOW TEST
-// class App extends React.Component {
-//     componentDidMount(){
-//         document.title = "Ancesta - Genealogy Project"
-//     }
+class App extends React.Component {
+    componentDidMount(){
+        document.title = "Ancesta - Genealogy Project"
+    }
 
-//     render() {
-//         return (
-//             <NameForm />
-//         );
-//     }
-// }
+    render() {
+        return (
+            <NameForm />
+        );
+    }
+}
 
 class NameForm extends React.Component {
     constructor(props) {
@@ -152,7 +153,7 @@ class NameForm extends React.Component {
             }
             this.setState({
                 relationsJson: r,
-                // transformedArr: transform(r),
+                transformedArr: transform(r),
             });
         });
     }

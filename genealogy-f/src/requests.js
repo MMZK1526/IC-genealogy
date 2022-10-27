@@ -10,7 +10,7 @@ export class Requests {
             });
     }
 
-    relations({id = 'WD-Q9682', depth = 3, types = 'all'} = {}) {
+    relations({id = 'WD-Q9682', depth = 6, types = 'all'} = {}) {
         const url = `https://intense-anchorage-84008.herokuapp.com/https://db-de-genealogie.herokuapp.com/relations?id=${id}&depth=${depth}&types=${types}`
         return fetch(url)
             .then(response => {
