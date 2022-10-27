@@ -7,7 +7,7 @@ export function Sidebar(props) {
   return (
     <div className='sidebar' onSubmit={props.onClick}>
       <div className='name-field'>
-        <FilterForm title="Name :" placeholder="Name" type="text" onChange={props.nameChange}/>
+        <FilterForm title="Name :" placeholder="Name" name={props.name} type="text" onChange={props.nameChange}/>
       </div>
       <div className='date-from-field'>
         <FilterForm title="From :" placeholder="Year" type="text" onChange={props.yearFromChange}/>

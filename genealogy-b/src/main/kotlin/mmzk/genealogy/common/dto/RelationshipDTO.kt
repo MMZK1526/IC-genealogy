@@ -1,18 +1,18 @@
-package mmzk.genealogy.dto
+package mmzk.genealogy.common.dto
 
 import kotlinx.serialization.Serializable
-import mmzk.genealogy.dao.Relationship
+import mmzk.genealogy.common.dao.Relationship
 
 @Serializable
 data class RelationshipDTO(
-    val person1Id: String,
-    val person2Id: String,
+    val item1Id: String,
+    val item2Id: String,
     val type: String,
     val typeId: String,
 ) {
     constructor(dao: Relationship): this(
-        dao.person1.id.value,
-        dao.person2.id.value,
+        dao.item1.id.value,
+        dao.item2.id.value,
         dao.type.name,
         dao.type.id.value
     )
@@ -20,8 +20,8 @@ data class RelationshipDTO(
 
 @Serializable
 data class RelationsResponse(
-    val targets: List<IndividualDTO>,
-    val people: List<IndividualDTO>,
+    val targets: List<ItemDTO>,
+    val items: List<ItemDTO>,
     val relations: List<RelationshipDTO>
 ) {
     companion object {

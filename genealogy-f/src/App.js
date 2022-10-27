@@ -7,6 +7,9 @@ import * as go from 'gojs';
 import {ReactDiagram} from 'gojs-react';
 import './App.css';
 import {Topbar} from './components/topbar/Topbar.js'
+import {NameSearch} from './components/name-search/NameSearch.js'
+import {Adapter} from './components/visualisation-adapter/Adapter';
+
 import { GenogramTree } from "./GenogramTree";
 import {transform} from "./GenogramTree";
 
@@ -14,7 +17,9 @@ import {transform} from "./GenogramTree";
 // COMMENT THIS BACK IN FOR QUICK TESTING
 // function App() {
 //   return (
-//       <GenogramTree />
+//     <GenogramTree
+//         relations={this.state.relationsJson}
+//     />
 //   );
 // }
 
@@ -71,36 +76,42 @@ class NameForm extends React.Component {
     }
 
     render() {
-        return ( 
-            <div className='App'>                
-                <Sidebar
-                    nameChange={this.handleChangeInitialName}
-                    yearFromChange={this.handleChangeFrom}
-                    yearToChange={this.handleChangeTo}
-                    onClick={this.handleSearchSubmit}
-                />
+        return (
+            <div className='App'>
+                {
+                    !_.isEmpty(this.state.searchJsons)
+                        ? <Sidebar
+                            name={this.state.initialName}
+                            nameChange={this.handleChangeInitialName}
+                            yearFromChange={this.handleChangeFrom}
+                            yearToChange={this.handleChangeTo}
+                            onClick={this.handleSearchSubmit}
+                        />
+                        : ''
+                }
                 <div className='tree-box'>
                     {
                         !_.isEmpty(this.state.relationsJson)
-                        // TODO - entry point for genogram tree
-                        ? <GenogramTree />
-                    
-                        : <div id='welcome'>
-                            <div id='title'>Ancesta - Genealogy Project</div>
-                            <div id='desc'>Search a name to start</div>
-                        </div>
+                            // TODO - entry point for genogram tree
+                            ?
+                            <GenogramTree relations={this.state.relationsJson} />
+                            // <Adapter data={this.state.relationsJson} />
+
+                            : <NameSearch
+                                onChange={this.handleChangeInitialName}
+                                onClick={this.handleSearchSubmit}
+                            />
                     }
                 </div>
                 {
                     !_.isEmpty(this.state.searchJsons) && _.isEmpty(this.state.relationsJson)
-                    ? <Topbar
-                        state={this.state}
-                        onChange={this.handleChangeChosenId}
-                        onSubmit={this.handleRelationsSubmit}
-                    />
-                    : ''
+                        ? <Topbar
+                            state={this.state}
+                            onChange={this.handleChangeChosenId}
+                            onSubmit={this.handleRelationsSubmit}
+                        />
+                        : ''
                 }
-                
             </div>
         );
     }
@@ -125,9 +136,9 @@ class NameForm extends React.Component {
                 } else if (to !== '') {
                     return (birth == null) || parseInt(birth.substring(0,4)) <= parseInt(to);
                 }
-                return true;   
+                return true;
             });
-            
+
             this.setState({
                 searchJsons: r,
                 chosenId: r[0].id,
@@ -153,7 +164,6 @@ class NameForm extends React.Component {
             }
             this.setState({
                 relationsJson: r,
-                transformedArr: transform(r),
             });
         });
     }

@@ -1,7 +1,11 @@
+* {
+  box-sizing: border-box;
+}
+
 .App {
   display: flex;
   flex-direction: column;
-  text-align: center;
+  /*text-align: center;*/
   width: 100%;
   height: 100%;
 }
@@ -21,20 +25,6 @@
   width: 85vw;
   height: 99vh;
   /* border: 2px dashed gray; */
-}
-
-.tree-box #welcome{
-  text-align: start;
-}
-
-.tree-box #title{
-  font-size: 40pt;
-  padding-bottom: 10px;
-}
-
-.tree-box #desc{
-  font-size: 20pt;
-  color: darkslategray;
 }
 
 table {
