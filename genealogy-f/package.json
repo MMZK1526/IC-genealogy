@@ -19,6 +19,7 @@
     "react-bootstrap": "^2.5.0",
     "react-d3-tree": "^3.3.4",
     "react-dom": "^18.2.0",
+    "react-family-tree": "^3.2.0",
     "react-icons": "^4.6.0",
     "react-pro-sidebar": "^1.0.0-alpha.6",
     "react-scripts": "^5.0.1",
@@ -50,7 +51,5 @@
       "last 1 safari version"
     ]
   },
-  "devDependencies": {
-    "react-family-tree": "^3.2.0"
-  }
+  "devDependencies": {}
 }
