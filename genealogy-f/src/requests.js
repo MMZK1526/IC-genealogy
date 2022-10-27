@@ -1,5 +1,5 @@
 export class Requests {
-    search(name='charles') {
+    search(name='silvia') {
         const url = `https://intense-anchorage-84008.herokuapp.com/https://db-de-genealogie.herokuapp.com/search?q=${name}`;
         return fetch(url)
             .then(response => {
@@ -10,7 +10,7 @@ export class Requests {
             });
     }
 
-    relations({id = 'WD-Q43274', depth = 4, types = 'all'} = {}) {
+    relations({id = 'WD-Q152308', depth = 3, types = 'all'} = {}) {
         const url = `https://intense-anchorage-84008.herokuapp.com/https://db-de-genealogie.herokuapp.com/relations_wk?id=${id}&depth=${depth}&types=${types}`
         return fetch(url)
             .then(response => {

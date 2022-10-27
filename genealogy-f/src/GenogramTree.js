@@ -13,6 +13,11 @@ function toInt(str) {
     return Number(str.substring(4));
   }
 
+function getRootId(data) {
+  let target = data.targets[0];
+  return target.id;
+}
+
 // { key: 0, n: "Aaron", s: "M", m: -10, f: -11, ux: 1, a: ["C", "F", "K"] },
 // { key: 1, n: "Alice", s: "F", m: -12, f: -13, a: ["B", "H", "K"] },
 // n: name, s: sex, m: mother, f: father, ux: wife, vir: husband, a: attributes/markers
@@ -281,7 +286,7 @@ export class DiagramWrappper extends React.Component {
         ));
 
           // hardcoded input after applying transform(data), copide in from console TODO - needs to see updated state without crashing and being undefined.
-      setupDiagram(myDiagram, this.nodeDataArray, 43274);
+      setupDiagram(myDiagram, this.nodeDataArray, this.nodeDataArray[0].key);
     
 
     // create and initialize the Diagram.model given an array of node data representing people
