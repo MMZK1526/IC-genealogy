@@ -34,20 +34,18 @@ class WikiDataDataSource(
                     row[value.name] = value.value.stringValue()
                 }
                 val id = row[SPARQL.item]?.let(::Url)?.pathSegments?.lastOrNull() ?: continue
-                val father = row["father"]?.let(::Url)?.pathSegments?.lastOrNull()
-                val mother = row["mother"]?.let(::Url)?.pathSegments?.lastOrNull()
-                val spouse = row["spouse"]?.let(::Url)?.pathSegments?.lastOrNull()
-                val child = row["issues"]?.let(::Url)?.pathSegments?.lastOrNull()
-
-                relations.addAll(
-                    listOfNotNull(
-                        father?.let { RelationshipDTO(makeID(id), makeID(it), "father", makeID(Fields.father)) },
-                        mother?.let { RelationshipDTO(makeID(id), makeID(it), "mother", makeID(Fields.mother)) },
-                        spouse?.let { RelationshipDTO(makeID(id), makeID(it), "spouse", makeID(Fields.spouse)) },
-                        child?.let { RelationshipDTO(makeID(id), makeID(it), "child", makeID(Fields.child)) }
-                    )
-                )
-                newIndividuals.addAll(listOfNotNull(father, mother, spouse, child))
+                relations.addAll(typeMap.entries.mapNotNull {
+                    Fields.parseID(it.key)?.second?.let { key ->
+                        row[key]?.let(::Url)?.pathSegments?.lastOrNull()?.let { otherID ->
+                            RelationshipDTO(makeID(id), makeID(otherID), it.value, makeID(key))
+                        }
+                    }
+                })
+                newIndividuals.addAll(typeMap.entries.mapNotNull {
+                    Fields.parseID(it.key)?.second?.let { key ->
+                        row[key]?.let(::Url)?.pathSegments?.lastOrNull()
+                    }
+                })
             }
 
             relations to newIndividuals
@@ -61,7 +59,6 @@ class WikiDataDataSource(
             for (value in result) {
                 row[value.name] = value.value.stringValue()
             }
-            println(row)
             val id = row[SPARQL.item]?.let(::Url)?.pathSegments?.lastOrNull()?.let { makeID(it) } ?: continue
             if (!dtos.contains(id)) {
                 val name = row[SPARQL.name]
@@ -259,15 +256,18 @@ class WikiDataDataSource(
 
         val userAgent = "WikiData Crawler for Genealogy Visualiser WebApp, Contact piopio555888@gmail.com"
         repo.additionalHttpHeaders = Collections.singletonMap("User-Agent", userAgent)
+        // TODO: Handle compound types
+        val queryLabels = typeMap.keys.joinToString(" ") { "?${Fields.parseID(it)?.second}" }
+        val queryStrCore = typeMap.keys.joinToString("\n") {
+            "OPTIONAL { ?item p:${Fields.parseID(it)?.second}/ps:${Fields.parseID(it)?.second} ?${
+                Fields.parseID(it)?.second
+            } . }"
+        }
         val querySelect = """
-              SELECT ?item ?father ?mother ?spouse ?issues WHERE {
+              SELECT ?${SPARQL.item} $queryLabels WHERE {
                   VALUES ?${SPARQL.item} { ${ids.joinToString(" ") { "wd:$it" }} } .
 
-                  OPTIONAL { ?item p:P22/ps:P22 ?father . }
-                  OPTIONAL { ?item p:P25/ps:P25 ?mother . }
-                  OPTIONAL { ?item p:P26/ps:P26 ?spouse . }
-                  OPTIONAL { ?item p:P40/ps:P40 ?issues . }
-                  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+                  $queryStrCore
               }
         """.trimIndent()
         val results = try {
@@ -276,7 +276,6 @@ class WikiDataDataSource(
             exception.printStackTrace()
             null
         }
-
         val answer =
             results?.let { parseRelationSearchResults(it, typeMap) } ?: (setOf<RelationshipDTO>() to setOf<String>())
         repo.shutDown()
