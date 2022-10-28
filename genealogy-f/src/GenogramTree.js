@@ -43,7 +43,7 @@ export function transform(data) {
       console.log(key);
       var target2 = idPerson.get(key);
       // check if relation ID exist in data.item, if not then discard (edge of search?)
-      if (target2 == undefined) {
+      if (target2 === undefined) {
         console.log(key);
         console.log(key + "was not found in data.items");
       }
@@ -60,14 +60,14 @@ export function transform(data) {
       // console.log(target2)
       // console.log(relation)
       // check each relationship if so update record accordingly
-      if (relation.type == 'mother') {
+      if (relation.type === 'mother') {
           mfs.m = toInt(relation.item2Id);
       }
-      if (relation.type == 'father') {
+      if (relation.type === 'father') {
           mfs.f = toInt(relation.item2Id);
       }
-      if (relation.type == 'spouse') {
-              if (addProps[4].value == 'M') {
+      if (relation.type === 'spouse') {
+              if (addProps[4].value === 'M') {
                   mfs.ux = toInt(relation.item2Id);
               } else {
                   mfs.vir = toInt(relation.item2Id);
@@ -369,7 +369,7 @@ export class DiagramWrappper extends React.Component {
           for (let j = 0; j < virs.length; j++) {
             const husband = virs[j];
             const hdata = model.findNodeDataForKey(husband);
-            if (key == husband) {
+            if (key === husband) {
               console.log("cannot create Marriage relationship with self" + husband);
               continue;
             }
@@ -420,7 +420,8 @@ export class DiagramWrappper extends React.Component {
         }
       }
     }
-    return myDiagram;}
+    return myDiagram;
+  }
 
   render() {
     return (
@@ -874,14 +875,24 @@ export class GenogramTree extends React.Component {
       super(props);
       this.handleModelChange = this.handleModelChange.bind(this);
       this.handleDiagramEvent = this.handleDiagramEvent.bind(this);
+      this.closePopUp = this.closePopUp.bind(this);
       this.relations = props.relations;
       this.isPopped = true;
-      this.closePopUp = this.closePopUp.bind(this);
+      this.personInfo = {};
     }
 
     closePopUp() {
       this.setState({
         isPopped: false
+      })
+      console.log("---close-before")
+      console.log(this.closePopUp)
+      console.log("---close-after")
+    }
+
+    openPopUp() {
+      this.setState({
+        isPopped: true
       })
     }
 
@@ -890,17 +901,22 @@ export class GenogramTree extends React.Component {
     }
 
     handleDiagramEvent (event) {
-        console.log(event.subject.part.key);
+        this.setState({
+          personInfo: event.subject.part.key
+        })
+        console.log(event.subject.part);
       }
 
     // renders ReactDiagram
     render() {
-        console.log("Start")
-        console.log(this.relations);
-        console.log("Finish")
+        // console.log("Start")
+        // console.log(this.relations);
+        // console.log("Finish")
         return(
-          <div className="treeGraph">
-            {this.isPopped ? <PopupInfo closePopUp={this.closePopUp}>
+          <div className="tree-box">
+            {this.isPopped ? <PopupInfo 
+              closePopUp={this.closePopUp}
+              info={this.personInfo}>
                 <h2>Info popup</h2>
                 <h4>name</h4>
                 <h4>birth</h4>
@@ -909,11 +925,11 @@ export class GenogramTree extends React.Component {
             : ""}
             
           
-            {/* <DiagramWrappper
-                nodeDataArray={this.nodeList}
+            <DiagramWrappper
+                nodeDataArray={transform(this.relations)}
                 onModelChange={this.handleModelChange}
                 onDiagramEvent={this.handleDiagramEvent}
-            /> */}
+            />
             
             </div>
         );

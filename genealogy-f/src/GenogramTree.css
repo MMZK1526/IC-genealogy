@@ -6,3 +6,12 @@
     width: 20vw;
     height: 50vh;
 }
+
+.tree-box {
+    display: flex;
+    align-self: flex-start;
+    align-items: center;
+    justify-content: center;
+    width: 10%;
+    height: 100vh;
+  }
