@@ -9,7 +9,7 @@ function PopupInfo(props) {
             <div className='popup-inner'>
                 <button className='close-btn' onClick={props.closePopUp}
                 >close</button>
-                key: {props.personInfo}
+                key: {props.info}
                 {props.children}
             </div>
         </div>

@@ -450,8 +450,11 @@ export class GenogramTree extends React.Component {
       this.handleDiagramEvent = this.handleDiagramEvent.bind(this);
       this.closePopUp = this.closePopUp.bind(this);
       this.relations = transform(props.relations);
-      this.isPopped = false;
-      this.personInfo = {};
+
+      this.state = {
+        personInfo: null,
+        isPopped: false
+      }
     }
 
     closePopUp() {
@@ -472,24 +475,27 @@ export class GenogramTree extends React.Component {
           personInfo: event.subject.part.key,
           isPopped: true
         })
-        console.log(this.isPopped)
-        console.log(event.subject.part.key);
+        console.log(this.state.isPopped)
+        console.log(this.state.personInfo);
       }
 
     // renders ReactDiagram
     render() {
         return(
-          <div className="tree-box">
-            {this.isPopped ? <PopupInfo 
-              closePopUp={this.closePopUp}
-              info={this.personInfo}>
-                <h2>Info popup</h2>
-                <h4>name</h4>
-                <h4>birth</h4>
-                <h4>death</h4>
-            </PopupInfo>
-            : ""}
-            
+			<div className="tree-box">
+			{
+				this.state.isPopped
+				? <div className="popup">
+				<PopupInfo 
+					closePopUp={this.closePopUp}
+					info={this.state.personInfo}>
+					<h2>Info popup</h2>
+					<h4>name</h4>
+					<h4>birth</h4>
+					<h4>death</h4>
+				</PopupInfo></div>
+				: ""
+			}
           
             <DiagramWrappper
                 nodeDataArray={this.relations}
