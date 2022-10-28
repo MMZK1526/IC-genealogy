@@ -486,14 +486,11 @@ export class GenogramTree extends React.Component {
 			{
 				this.state.isPopped
 				? <div className="popup">
-				<PopupInfo 
-					closePopUp={this.closePopUp}
-					info={this.state.personInfo}>
-					<h2>Info popup</h2>
-					<h4>name</h4>
-					<h4>birth</h4>
-					<h4>death</h4>
-				</PopupInfo></div>
+					<PopupInfo 
+						closePopUp={this.closePopUp}
+						info={this.state.personInfo}>
+					</PopupInfo>
+				</div>
 				: ""
 			}
           
