@@ -876,7 +876,7 @@ export class GenogramTree extends React.Component {
       this.handleModelChange = this.handleModelChange.bind(this);
       this.handleDiagramEvent = this.handleDiagramEvent.bind(this);
       this.closePopUp = this.closePopUp.bind(this);
-      this.relations = props.relations;
+      this.relations = transform(props.relations);
       this.isPopped = true;
       this.personInfo = {};
     }
@@ -890,28 +890,20 @@ export class GenogramTree extends React.Component {
       console.log("---close-after")
     }
 
-    openPopUp() {
-      this.setState({
-        isPopped: true
-      })
-    }
-
     handleModelChange(changes) {
         console.log('GoJS model changed!');
     }
 
     handleDiagramEvent (event) {
         this.setState({
-          personInfo: event.subject.part.key
+          personInfo: event.subject.part.key,
+          isPopped: true
         })
-        console.log(event.subject.part);
+        console.log(event.subject.part.key);
       }
 
     // renders ReactDiagram
     render() {
-        // console.log("Start")
-        // console.log(this.relations);
-        // console.log("Finish")
         return(
           <div className="tree-box">
             {this.isPopped ? <PopupInfo 
@@ -926,7 +918,7 @@ export class GenogramTree extends React.Component {
             
           
             <DiagramWrappper
-                nodeDataArray={transform(this.relations)}
+                nodeDataArray={this.relations}
                 onModelChange={this.handleModelChange}
                 onDiagramEvent={this.handleDiagramEvent}
             />
