@@ -17,7 +17,6 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.statements.fillParameters
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.sql.PreparedStatement
 
 object Database {
     private val dbUrl = System.getenv("DATABASE_URL")
