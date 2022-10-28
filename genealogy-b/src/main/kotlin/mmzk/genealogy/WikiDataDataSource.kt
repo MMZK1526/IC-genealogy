@@ -61,6 +61,7 @@ class WikiDataDataSource(
             for (value in result) {
                 row[value.name] = value.value.stringValue()
             }
+            println(row)
             val id = row[SPARQL.item]?.let(::Url)?.pathSegments?.lastOrNull()?.let { makeID(it) } ?: continue
             if (!dtos.contains(id)) {
                 val name = row[SPARQL.name]
@@ -213,7 +214,7 @@ class WikiDataDataSource(
         answer
     }
 
-    suspend fun searchIndividualByIDs(ids: List<String>) = coroutineScope {
+    private suspend fun searchIndividualByIDs(ids: List<String>) = coroutineScope {
         val repo = SPARQLRepository(SPARQL.sparqlEndpoint)
 
         val userAgent = "WikiData Crawler for Genealogy Visualiser WebApp, Contact piopio555888@gmail.com"
@@ -221,7 +222,6 @@ class WikiDataDataSource(
         val querySelect = """
               SELECT ?${SPARQL.item} ?${SPARQL.name} ?${SPARQL.description} ?${SPARQL.givenName}Label ?${SPARQL.familyName}Label ?${SPARQL.ordinal} ?${SPARQL.familyNameType}Label ?${SPARQL.dateOfBirth} ?${SPARQL.dateOfDeath} ?${SPARQL.placeOfBirth}Label ?${SPARQL.placeOfBirthCountry}Label ?${SPARQL.placeOfDeath}Label ?${SPARQL.placeOfDeathCountry}Label ?${SPARQL.gender}Label WHERE {                  
                   VALUES ?${SPARQL.item} { ${ids.joinToString(" ") { "wd:$it" }} } .
-                  ?${SPARQL.item} wdt:P31 wd:Q5 .
                   OPTIONAL { ?${SPARQL.item} schema:description ?${SPARQL.description} .
                              FILTER ( lang(?${SPARQL.description}) = "en" ). }
                   OPTIONAL { ?${SPARQL.item} p:P735 ?${SPARQL.givenName}_ .
@@ -263,12 +263,12 @@ class WikiDataDataSource(
               SELECT ?item ?father ?mother ?spouse ?issues WHERE {
                   VALUES ?${SPARQL.item} { ${ids.joinToString(" ") { "wd:$it" }} } .
 
-                  OPTIONAL { ?item wdt:P22 ?father . }
-                  OPTIONAL { ?item wdt:P25 ?mother . }
-                  OPTIONAL { ?item wdt:P26 ?spouse . }
-                  OPTIONAL { ?item wdt:P40 ?issues . }
+                  OPTIONAL { ?item p:P22/ps:P22 ?father . }
+                  OPTIONAL { ?item p:P25/ps:P25 ?mother . }
+                  OPTIONAL { ?item p:P26/ps:P26 ?spouse . }
+                  OPTIONAL { ?item p:P40/ps:P40 ?issues . }
                   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
-                }
+              }
         """.trimIndent()
         val results = try {
             repo.connection.prepareTupleQuery(querySelect).evaluate()

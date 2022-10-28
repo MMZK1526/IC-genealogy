@@ -14,51 +14,66 @@ function toInt(str) {
     return Number(str.substring(4));
   }
 
+function getRootId(data) {
+  let target = data.targets[0];
+  return target.id;
+}
+
 // { key: 0, n: "Aaron", s: "M", m: -10, f: -11, ux: 1, a: ["C", "F", "K"] },
 // { key: 1, n: "Alice", s: "F", m: -12, f: -13, a: ["B", "H", "K"] },
 // n: name, s: sex, m: mother, f: father, ux: wife, vir: husband, a: attributes/markers
 
 // ^^^^^^ SEE ABOVE transformed format helper function to transfrom JSON into goJS nodeDataArray format.
-function transform(data) {
+export function transform(data) {
   // data.people to be replaced with data.items in Mulang version
   let target = data.targets[0];
   let idPerson = new Map();
-  let people = data.people;
+  let people = data.items;
   people.push(target);
   let targetId = target.id;
   idPerson.set(targetId, target);
-  for (let x of data.people) {
+  for (let x of data.items) {
       idPerson.set(x.id, x);
   }
   const relMap = new Map();
   // create a map from personId to (relation array of their mother, father and spouse )
-  console.log(data.relations);
+  // console.log(data.relations);
   for (let relation of data.relations) {
-      var key = relation['person1Id'];
+      var key = relation['item1Id'];
+      console.log(key);
       var target2 = idPerson.get(key);
+      // check if relation ID exist in data.item, if not then discard (edge of search?)
+      if (target2 == undefined) {
+        console.log(key);
+        console.log(key + "was not found in data.items");
+      }
+      // console.log(target2);
+      // split select target into their additional properties (general, not predetermined)
+      // need a filter here depending on which type of tree we are using.
+      var addProps = target2.additionalProperties;
       var mfs = {};
       if (relMap.has(key)) {
           mfs = relMap.get(key);
       } else {
-          mfs = {key: toInt(target2.id), n: target2.name, s: target2.gender};
+          mfs = {key: toInt(target2.id), n: target2.name, s: addProps[4].value};
       }
       // console.log(target2)
       // console.log(relation)
       // check each relationship if so update record accordingly
-      if (relation.type === 'mother') {
-          mfs.m = toInt(relation.person2Id);
+      if (relation.type == 'mother') {
+          mfs.m = toInt(relation.item2Id);
       }
-      if (relation.type === 'father') {
-          mfs.f = toInt(relation.person2Id);
+      if (relation.type == 'father') {
+          mfs.f = toInt(relation.item2Id);
       }
-      if (relation.type === 'spouse') {
-              if (target2.gender === 'M') {
-                  mfs.ux = toInt(relation.person2Id);
+      if (relation.type == 'spouse') {
+              if (addProps[4].value == 'M') {
+                  mfs.ux = toInt(relation.item2Id);
               } else {
-                  mfs.vir = toInt(relation.person2Id);
+                  mfs.vir = toInt(relation.item2Id);
               }
       }
-      relMap.set(relation['person1Id'], mfs)
+      relMap.set(relation['item1Id'], mfs)
   }
   const output = [];
   // loop through keys (bug of 3 targets in people, otherwise can loop through them)
@@ -68,7 +83,7 @@ function transform(data) {
       } else {
           var person = idPerson.get(key);
           // top layer
-          output.push({key : toInt(person.id), n: person.name, s: person.gender})
+          output.push({key : toInt(person.id), n: person.name, s: (person.additionalProperties)[4].value})
       }
   }
   console.log(output);
@@ -196,7 +211,7 @@ export class DiagramWrappper extends React.Component {
         $(go.Node, "Vertical",
         // TODO can make this non-selectable with selectable: false, but we want clickable but not movable?
         // see this for how to do stuff on click? - https://gojs.net/latest/extensions/Robot.html
-          {  movable: false, locationSpot: go.Spot.Center, locationObjectName: "ICON", selectionObjectName: "ICON"},
+          {movable: true, locationSpot: go.Spot.Center, locationObjectName: "ICON", selectionObjectName: "ICON"},
           new go.Binding("opacity", "hide", h => h ? 0 : 1),
           new go.Binding("pickable", "hide", h => !h),
           $(go.Panel,
@@ -224,7 +239,7 @@ export class DiagramWrappper extends React.Component {
 
       myDiagram.nodeTemplateMap.add("F",  // female
         $(go.Node, "Vertical",
-          { movable: false, locationSpot: go.Spot.Center, locationObjectName: "ICON", selectionObjectName: "ICON" },
+          { movable: true, locationSpot: go.Spot.Center, locationObjectName: "ICON", selectionObjectName: "ICON" },
           new go.Binding("opacity", "hide", h => h ? 0 : 1),
           new go.Binding("pickable", "hide", h => !h),
           $(go.Panel,
@@ -271,7 +286,7 @@ export class DiagramWrappper extends React.Component {
         ));
 
           // hardcoded input after applying transform(data), copide in from console TODO - needs to see updated state without crashing and being undefined.
-      setupDiagram(myDiagram, this.nodeDataArray, 43274);
+      setupDiagram(myDiagram, this.nodeDataArray, this.nodeDataArray[0].key);
     
 
     // create and initialize the Diagram.model given an array of node data representing people
@@ -354,9 +369,17 @@ export class DiagramWrappper extends React.Component {
           for (let j = 0; j < virs.length; j++) {
             const husband = virs[j];
             const hdata = model.findNodeDataForKey(husband);
-            if (key === husband || !hdata || hdata.s !== "M") {
-              console.log("cannot create Marriage relationship with self or unknown person " + husband);
+            if (key == husband) {
+              console.log("cannot create Marriage relationship with self" + husband);
               continue;
+            }
+            if (!hdata) {
+                console.log("cannot create Marriage relationship with unknown person " + husband);
+                continue;
+            }
+            if (hdata.s !== "M") {
+                console.log("cannot create Marriage relationship with wrong gender person " + husband);
+                continue;
             }
             const link = findMarriage(diagram, key, husband);
             if (link === null) {
@@ -779,7 +802,7 @@ export class GenogramTree extends React.Component {
             "n": "Princess Margaret, Countess of Snowdon",
             "s": "F",
             "m": 10633,
-            "f": 280856
+            "f": 280856,
         },
         {
             "key": 155178,

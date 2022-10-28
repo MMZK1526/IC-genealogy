@@ -11,6 +11,7 @@ import {NameSearch} from './components/name-search/NameSearch.js'
 import {Adapter} from './components/visualisation-adapter/Adapter';
 
 import { GenogramTree } from "./GenogramTree";
+import {transform} from "./GenogramTree";
 
 
 // COMMENT THIS BACK IN FOR QUICK TESTING
@@ -163,7 +164,6 @@ class NameForm extends React.Component {
             }
             this.setState({
                 relationsJson: r,
-                // transformedArr: transform(r),
             });
         });
     }
