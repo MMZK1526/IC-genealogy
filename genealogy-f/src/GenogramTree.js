@@ -877,7 +877,7 @@ export class GenogramTree extends React.Component {
       this.handleDiagramEvent = this.handleDiagramEvent.bind(this);
       this.closePopUp = this.closePopUp.bind(this);
       this.relations = transform(props.relations);
-      this.isPopped = true;
+      this.isPopped = false;
       this.personInfo = {};
     }
 
@@ -899,6 +899,7 @@ export class GenogramTree extends React.Component {
           personInfo: event.subject.part.key,
           isPopped: true
         })
+        console.log(this.isPopped)
         console.log(event.subject.part.key);
       }
 
