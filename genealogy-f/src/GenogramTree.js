@@ -44,7 +44,7 @@ export function transform(data) {
       // check if relation ID exist in data.item, if not then discard (edge of search?)
       if (target2 == undefined) {
         console.log(key);
-        console.log(key + "was not found in data.items");
+        console.log("------- ERROR -------- " + "key :" + key + "not found in data.items");
       }
       // console.log(target2);
       // split select target into their additional properties (general, not predetermined)
