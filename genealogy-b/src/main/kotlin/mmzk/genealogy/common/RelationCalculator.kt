@@ -9,7 +9,7 @@ data class RelationCalculatorRequest(
     val relations: List<RelationshipDTO>,
 )
 
-fun calculateRelations(input: RelationCalculatorRequest): MutableMap<String, MutableSet<Set<RelationshipDTO>>> {
+fun calculateRelations(input: RelationCalculatorRequest): Map<String, List<List<String>>> {
     val relationsMap = input.relations.groupBy { it.item2Id }
     val result = mutableMapOf<String, MutableSet<Set<RelationshipDTO>>>()
     val queue = ArrayDeque(relationsMap[input.start] ?: listOf())
@@ -28,6 +28,14 @@ fun calculateRelations(input: RelationCalculatorRequest): MutableMap<String, Mut
 
                     }
                 }
+
+                if (currentRelation.type == "child") {
+                    println("PATHS TO PREVIOUS ITEM")
+                    println(pathsToPreviousItem)
+                    println("PATHS TO PREVIOUS ITEM FILTERED")
+                    println(pathsToPreviousItemWithoutTarget)
+                }
+
                 result.getOrPut(currentRelation.item1Id) { mutableSetOf() }.addAll(
                     pathsToPreviousItemWithoutTarget.map {
                         it + currentRelation
@@ -40,5 +48,7 @@ fun calculateRelations(input: RelationCalculatorRequest): MutableMap<String, Mut
             visitedItems.add(currentRelation.item1Id)
         }
     }
-    return result
+    return result.mapValues { (_, paths) ->
+        paths.map { path -> path.map { it.typeId } }
+    }
 }
