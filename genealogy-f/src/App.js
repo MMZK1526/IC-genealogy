@@ -13,10 +13,14 @@ import {Adapter} from './components/visualisation-adapter/Adapter';
 import { GenogramTree } from "./GenogramTree";
 import {transform} from "./GenogramTree";
 <<<<<<< HEAD
+<<<<<<< HEAD
 // import ClipLoader from 'react-spinners/ClipLoader';
 =======
 import ClipLoader from 'react-spinners/ClipLoader';
 >>>>>>> 41752a1 ([psb120] (feat) Implemented loading icon to let the user know that data is being fetched)
+=======
+// import ClipLoader from 'react-spinners/ClipLoader';
+>>>>>>> e762548 ([jas320] (minor) merge o file)
 
 
 // COMMENT THIS BACK IN FOR QUICK TESTIN
@@ -127,6 +131,9 @@ class NameForm extends React.Component {
                 {
                     this.state.isLoading
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> e762548 ([jas320] (minor) merge o file)
                         // && <ClipLoader
                         //     color='#0000ff'
                         //     cssOverride={{
@@ -135,6 +142,7 @@ class NameForm extends React.Component {
                         //     }}
                         //     size={75}
                         // />
+<<<<<<< HEAD
 =======
                         && <ClipLoader
                             color='#0000ff'
@@ -145,6 +153,8 @@ class NameForm extends React.Component {
                             size={75}
                         />
 >>>>>>> 41752a1 ([psb120] (feat) Implemented loading icon to let the user know that data is being fetched)
+=======
+>>>>>>> e762548 ([jas320] (minor) merge o file)
                 }
             </div>
         );
