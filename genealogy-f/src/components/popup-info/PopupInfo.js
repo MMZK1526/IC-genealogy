@@ -8,14 +8,23 @@ function PopupInfo(props) {
         <div className='popup-inner'>
             <button className='close-btn' onClick={props.closePopUp}
             >close</button>
-            key: {props.info}
-            <h2>Info popup</h2>
-            <h4>name</h4>
-            <h4>birth</h4>
-            <h4>death</h4>
-            {props.children}
+            <div>
+                {getAdditionalProperties(props.info)}
+            </div>
+             
         </div>
     )
+}
+
+function getAdditionalProperties(data) {
+    Object.keys(Object.fromEntries(data)).map((k) => {
+        console.log(k);
+    })
+    return Object.keys(Object.fromEntries(data)).map((k) => (
+        <div key={k}>
+            <div key='k'><h4>{k}:  {data.get(k)}</h4></div>
+        </div>
+    ))
 }
 
 export default PopupInfo

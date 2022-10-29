@@ -97,9 +97,9 @@ function getPersonMap(data) {
     for (let attr of person.additionalProperties) {
       attributes.set(attr.name, attr.value);
     }
-    personMap.set(person, attributes)
+    personMap.set(personId, attributes)
   }
-  return data;
+  return personMap;
 }
 
 export class DiagramWrappper extends React.Component {
@@ -495,7 +495,7 @@ export class GenogramTree extends React.Component {
 				? <div className="popup">
 					<PopupInfo 
 						closePopUp={this.closePopUp}
-						info={this.state.personInfo}>
+						info={this.personMap.get("WD-Q"+this.state.personInfo)}>
 					</PopupInfo>
 				</div>
 				: ""
