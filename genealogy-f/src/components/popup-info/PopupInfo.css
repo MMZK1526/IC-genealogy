@@ -1,0 +1,27 @@
+.popupInfo {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background-color: rgba(0,0,0,0.2);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+.popup-inner {
+    position: relative;
+    padding: 20px;
+    width: 70%;
+    max-width: 500px;
+    background-color: #FFF;
+}
+
+.popup-inner .close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+}

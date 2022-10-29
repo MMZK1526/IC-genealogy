@@ -7,6 +7,7 @@
   align-items: flex-start;
   height: 100vh;
   width: 15vw;
+  z-index: 100;
   background-color: rgba(201, 220, 236, 1);
 }
 
