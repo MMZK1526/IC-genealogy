@@ -8,6 +8,7 @@ import {ReactDiagram} from 'gojs-react';
 import './App.css';
 import PopupInfo from './components/popup-info/PopupInfo.js'
 import './GenogramTree.css';
+import { MdPadding } from "react-icons/md";
 
 // helper function to convert "WD-Q13423" -> 13423
 function toInt(str) {
@@ -44,6 +45,8 @@ export function applyDateOfBirthFilter(id, idPerson) {
   return d1 <= d3 && d3 <= d2;
 }
 
+// global map from id of person to their attributes, used to change opacity for filtering in the goJs diagram.
+var relMap = new Map();
 
 // ^^^^^^ SEE ABOVE transformed format helper function to transfrom JSON into goJS nodeDataArray format.
 export function transform(data) {
@@ -58,7 +61,6 @@ export function transform(data) {
   for (let x of data.items) {
       idPerson.set(x.id, x);
   }
-  var relMap = new Map();
   // create a map from personId to (relation array of their mother, father and spouse )
   // console.log(data.relations);
   for (let relation of data.relations) {
@@ -133,7 +135,7 @@ export function transform(data) {
     } else {
       let r = relMap.get(key);
       // r.fill = "#000000";
-      r.opacity = "0.3";
+      r.opacity = "0.2";
       newOutput.push(r);
       console.log((relMap.get(key)).n + " was outside date range");
     }
@@ -251,6 +253,7 @@ function createRelation(key, idPerson, relMap) {
 }
 
 export class DiagramWrappper extends React.Component {
+  static relMap = relMap;
   constructor(props) {
     super(props);
     this.diagramRef = React.createRef();
@@ -377,7 +380,7 @@ export class DiagramWrappper extends React.Component {
           $(go.Panel,
             { name: "ICON" },
             $(go.Shape, "Square",
-              {width: 40, height: 40, strokeWidth: 2, fill: "#ADD8E6", stroke: "#919191", portId: "" },
+              {width: 40, height: 40, strokeWidth: 2, fill: "#7ec2d7", stroke: "#919191", portId: "" },
               new go.Binding("fill", "fill"),
               new go.Binding("opacity", "opacity")),
             $(go.Panel,
@@ -407,7 +410,7 @@ export class DiagramWrappper extends React.Component {
           $(go.Panel,
             { name: "ICON" },
             $(go.Shape, "Circle",
-              { width: 40, height: 40, strokeWidth: 2, fill: "#FFB6C1", stroke: "#a1a1a1", portId: "" },
+              { width: 40, height: 40, strokeWidth: 2, fill: "#ff99a8", stroke: "#a1a1a1", portId: "" },
               new go.Binding("opacity", "opacity")),
             $(go.Panel,
               { // for each attribute show a Shape at a particular place in the overall circle
@@ -439,13 +442,13 @@ export class DiagramWrappper extends React.Component {
             routing: go.Link.Orthogonal, corner: 5,
             layerName: "Background", selectable: false,
           },
-          $(go.Shape, { stroke: "#424242", strokeWidth: 2 })
+          $(go.Shape, { stroke: "#424242", strokeWidth: 2}, new go.Binding("opacity", "opacity"))
         );
 
       myDiagram.linkTemplateMap.add("Marriage",  // for marriage relationships
         $(go.Link,
           { selectable: false, layerName: "Background" },
-          $(go.Shape, { strokeWidth: 2.5, stroke: "#5d8cc1" /* blue */ })
+          $(go.Shape, { strokeWidth: 2.5, stroke: "#5d8cc1" /* blue */}, new go.Binding("opacity", "opacity"))
         ));
 
           // hardcoded input after applying transform(data), copide in from console TODO - needs to see updated state without crashing and being undefined.
@@ -497,7 +500,9 @@ export class DiagramWrappper extends React.Component {
       for (let i = 0; i < nodeDataArray.length; i++) {
         const data = nodeDataArray[i];
         const key = data.key;
+        // filtering
         let uxs = data.ux;
+        let opacity = data.opacity;
         if (uxs !== undefined) {
           if (typeof uxs === "number") uxs = [uxs];
           for (let j = 0; j < uxs.length; j++) {
@@ -521,12 +526,13 @@ export class DiagramWrappper extends React.Component {
               const mlab = { s: "LinkLabel" };
               model.addNodeData(mlab);
               // add the marriage link itself, also referring to the label node
-              const mdata = { from: key, to: wife, labelKeys: [mlab.key], category: "Marriage" };
+              const mdata = { from: key, to: wife, labelKeys: [mlab.key], category: "Marriage" , opacity: opacity};
               model.addLinkData(mdata);
             }
           }
         }
         let virs = data.vir;
+        opacity = data.opacity;
         if (virs !== undefined) {
           if (typeof virs === "number") virs = [virs];
           for (let j = 0; j < virs.length; j++) {
@@ -550,7 +556,7 @@ export class DiagramWrappper extends React.Component {
               const mlab = { s: "LinkLabel" };
               model.addNodeData(mlab);
               // add the marriage link itself, also referring to the label node
-              const mdata = { from: key, to: husband, labelKeys: [mlab.key], category: "Marriage" };
+              const mdata = { from: key, to: husband, labelKeys: [mlab.key], category: "Marriage" , opacity: opacity};
               model.addLinkData(mdata);
             }
           }
@@ -568,8 +574,15 @@ export class DiagramWrappper extends React.Component {
         const key = data.key;
         const mother = data.m;
         const father = data.f;
+        // filter
+
+        // for filtering
         if (mother !== undefined && father !== undefined) {
           const link = findMarriage(diagram, mother, father);
+          let opacity = "1.0";
+          if ((relMap.get(unConvert(data.m))).opacity != null && (relMap.get(unConvert(data.f))).opacity != null) {
+            opacity = "0.2";
+          }
           if (link === null) {
             // or warn no known mother or no known father or no known marriage between them
             console.log("unknown marriage: " + mother + " & " + father);
@@ -578,7 +591,8 @@ export class DiagramWrappper extends React.Component {
           const mdata = link.data;
           if (mdata.labelKeys === undefined || mdata.labelKeys[0] === undefined) continue;
           const mlabkey = mdata.labelKeys[0];
-          const cdata = { from: mlabkey, to: key };
+          console.log("MLAB KEY: " + mlabkey);
+          const cdata = { from: mlabkey, to: key, opacity: opacity};
           myDiagram.model.addLinkData(cdata);
         }
       }
