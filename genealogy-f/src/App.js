@@ -12,10 +12,10 @@ import {Adapter} from './components/visualisation-adapter/Adapter';
 
 import { GenogramTree } from "./GenogramTree";
 import {transform} from "./GenogramTree";
-import ClipLoader from 'react-spinners/ClipLoader';
+// import ClipLoader from 'react-spinners/ClipLoader';
 
 
-// COMMENT THIS BACK IN FOR QUICK TESTING
+// COMMENT THIS BACK IN FOR QUICK TESTIN
 // function App() {
 //   return (
 //     <GenogramTree
@@ -116,14 +116,14 @@ class NameForm extends React.Component {
                 }
                 {
                     this.state.isLoading
-                        && <ClipLoader
-                            color='#0000ff'
-                            cssOverride={{
-                                display: 'block',
-                                margin: '0 auto',
-                            }}
-                            size={75}
-                        />
+                        // && <ClipLoader
+                        //     color='#0000ff'
+                        //     cssOverride={{
+                        //         display: 'block',
+                        //         margin: '0 auto',
+                        //     }}
+                        //     size={75}
+                        // />
                 }
             </div>
         );
