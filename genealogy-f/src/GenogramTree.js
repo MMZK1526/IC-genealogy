@@ -34,23 +34,24 @@ export function transform(data) {
   for (let x of data.items) {
       idPerson.set(x.id, x);
   }
-  const relMap = new Map();
+  var relMap = new Map();
   // create a map from personId to (relation array of their mother, father and spouse )
   // console.log(data.relations);
   for (let relation of data.relations) {
       var key = relation['item1Id'];
-      console.log(key);
       var target2 = idPerson.get(key);
       // check if relation ID exist in data.item, if not then discard (edge of search?)
       if (target2 == undefined) {
         console.log(key);
-        console.log("------- ERROR -------- " + "key :" + key + "not found in data.items");
+        console.log("------- ERROR -------- key :" + key + "not found in data.items");
       }
       // console.log(target2);
       // split select target into their additional properties (general, not predetermined)
       // need a filter here depending on which type of tree we are using.
       var addProps = target2.additionalProperties;
       var mfs = {};
+
+      // create node for item1 key ("from" key)
       if (relMap.has(key)) {
           mfs = relMap.get(key);
       } else {
@@ -59,20 +60,32 @@ export function transform(data) {
       // console.log(target2)
       // console.log(relation)
       // check each relationship if so update record accordingly
+      if (relation.type == 'child') {
+        continue;
+      }
       if (relation.type == 'mother') {
           mfs.m = toInt(relation.item2Id);
+
       }
       if (relation.type == 'father') {
           mfs.f = toInt(relation.item2Id);
       }
       if (relation.type == 'spouse') {
+        console.log(relation['item1Id'] + "has spouse " + relation['item2Id']);
+        // if you already have a spouse listed, then prioritise lisitng a spouse who isnt already married to you. i.e conver to a -> b -> c -> d rather than a <-> b, c <-> d
               if (addProps[4].value == 'M') {
-                  mfs.ux = toInt(relation.item2Id);
+                relMap = updatePrevWife(mfs, relMap, idPerson);
+                mfs.ux = toInt(relation.item2Id);
               } else {
-                  mfs.vir = toInt(relation.item2Id);
+                relMap = updatePrevHusband(mfs, relMap, idPerson);
+                mfs.vir = toInt(relation.item2Id);
+                console.log("updating vir" + mfs.vir);
               }
+        console.log(JSON.stringify(mfs));
+
       }
-      relMap.set(relation['item1Id'], mfs)
+      relMap = createRelation(relation['item2Id'], idPerson, relMap);
+      relMap.set(key, mfs)
   }
   const output = [];
   // loop through keys (bug of 3 targets in people, otherwise can loop through them)
@@ -80,13 +93,114 @@ export function transform(data) {
       if (relMap.has(key)) {
           output.push(relMap.get(key));
       } else {
-          var person = idPerson.get(key);
-          // top layer
-          output.push({key : toInt(person.id), n: person.name, s: (person.additionalProperties)[4].value})
+        console.log("key not found");
+          // var person = idPerson.get(key);
+          // // top layer
+          // output.push({key : toInt(person.id), n: person.name, s: (person.additionalProperties)[4].value})
       }
   }
   console.log(output);
-  return (output);
+  // remove dangling nodes, i.e non-confirmed marriages, or people on edge without mother or father.
+  var newOutput = [];
+  for (let r of output) {
+    if ((r.m == null && r.f == null) && (r.ux == null && r.vir == null)) {
+      continue;
+    } else {
+      newOutput.push(r);
+    }
+  }
+  console.log(newOutput);
+  return (newOutput);
+}
+
+function updatePrevWife(mfs, relMap, idPerson) {
+  // this was your partner before
+  let key = mfs.ux;
+  // base case end recursion.
+  if (key == undefined) {
+    return relMap;
+  }
+  var prev = {};
+  if (relMap.has(unConvert(key))) {
+    prev = relMap.get(unConvert(key));
+  } else {
+    let person = idPerson.get(unConvert(key));
+    let addProps = person.additionalProperties;
+    prev = {key: toInt(person.id), n: person.name, s: addProps[4].value, vir: mfs.key};
+    console.log("updated here");
+    console.log(JSON.stringify(prev));
+    relMap.set(unConvert(prev.key), prev);
+    return relMap;
+  }
+  // set prev husband to your id, apply recursively.
+  if (prev.vir == undefined) {
+    prev.vir = mfs.key;
+    relMap = relMap.set(unConvert(prev.key), prev);
+    return relMap;
+  } else if (prev.vir == mfs.key) {
+    return relMap;
+  } else {
+    // must be case that previously pointed to someone else
+    console.log("previous partner was " + prev.vir);
+    let temp = prev;
+    prev.vir = mfs.key;
+    relMap = relMap.set(unConvert(prev.key), prev);
+    return updatePrevHusband(temp, relMap, idPerson);
+  }
+}
+
+function updatePrevHusband(mfs, relMap, idPerson) {
+  let key = mfs.vir;
+  // base case end recursion.
+  if (key == undefined) {
+    return relMap;
+  }
+  var prev = {};
+  if (relMap.has(unConvert(key))) {
+    prev = relMap.get(unConvert(key));
+  } else {
+    let person = idPerson.get(unConvert(key));
+    let addProps = person.additionalProperties;
+    prev = {key: toInt(person.id), n: person.name, s: addProps[4].value, ux: mfs.key};
+    console.log("updated here");
+    console.log(JSON.stringify(prev));
+    relMap.set(unConvert(prev.key), prev);
+    return relMap;
+  }
+  // set prev husband to your id, apply recursively.
+  if (prev.ux == undefined) {
+    console.log("previous partner was " + prev.ux);
+    prev.ux = mfs.key;
+    relMap = relMap.set(unConvert(prev.key), prev);
+    return relMap;
+  } else if (prev.ux == mfs.key) {
+    return relMap;
+  } else {
+    // must be case that previously pointed to someone else
+    console.log("previous partner was " + prev.ux);
+    let temp = prev;
+    prev.ux = mfs.key;
+    relMap = relMap.set(unConvert(prev.key), prev);
+    return updatePrevWife(temp, relMap, idPerson);
+  }
+}
+
+function unConvert(numKey) {
+  return "WD-Q" + numKey.toString();
+}
+
+// creates base node for the item2 in a relation between item1 -> item2 (item1 node is created earlier in the code)
+function createRelation(key, idPerson, relMap) {
+  if (relMap.has(key)) {
+    return relMap;
+  } else {
+      let target2 = idPerson.get(key);
+      let addProps = target2.additionalProperties;
+      let mfs = {key: toInt(target2.id), n: target2.name, s: addProps[4].value};
+      relMap.set(key, mfs);
+      return relMap;
+  }
+
 }
 
 export class DiagramWrappper extends React.Component {
@@ -882,7 +996,7 @@ export class GenogramTree extends React.Component {
     }
 
     handleDiagramEvent (event) {
-        console.log(event.subject.part.key);
+        // console.log(event.subject.part.key);
       }
 
     // renders ReactDiagram
