@@ -2,10 +2,13 @@ package mmzk.genealogy.plugins
 
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.request.receive
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import mmzk.genealogy.common.Database
 import mmzk.genealogy.WikiDataDataSource
+import mmzk.genealogy.common.RelationCalculatorRequest
+import mmzk.genealogy.common.calculateRelations
 
 fun Application.configureRouting() {
     Database.init()
@@ -59,6 +62,11 @@ fun Application.configureRouting() {
                 HttpStatusCode.BadRequest,
                 mapOf("error" to "Missing query parameter \"q\"!")
             )
+        }
+
+        get("/relation_calc") {
+            val request = call.receive<RelationCalculatorRequest>()
+            call.respond(calculateRelations(request))
         }
     }
 }
