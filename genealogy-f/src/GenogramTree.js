@@ -19,12 +19,35 @@ function getRootId(data) {
   return target.id;
 }
 
+
+export function getImageId(id) {
+
+}
 // { key: 0, n: "Aaron", s: "M", m: -10, f: -11, ux: 1, a: ["C", "F", "K"] },
 // { key: 1, n: "Alice", s: "F", m: -12, f: -13, a: ["B", "H", "K"] },
 // n: name, s: sex, m: mother, f: father, ux: wife, vir: husband, a: attributes/markers
 
+// should we apply filter before or after (or in between) tree generation
+export function applyDateOfBirthFilter(id, idPerson) {
+  const d1 = new Date("1900-01-01");
+  const d2 = new Date("1950-03-11");
+  // console.log(id);
+  const target = idPerson.get(id);
+  const addProps = target.additionalProperties;
+  // can we make this generic in the future
+  const f = addProps.filter(p => p.name == "date of birth");
+  // console.log(f);
+  const date = (f[0].value).split("T");
+  // console.log(date[0]);
+  const d3 = new Date(date[0]);
+  // console.log("comparing " + d1 + "with " + d2 + "and " + d3);
+  return d1 <= d3 && d3 <= d2;
+}
+
+
 // ^^^^^^ SEE ABOVE transformed format helper function to transfrom JSON into goJS nodeDataArray format.
 export function transform(data) {
+  console.log(data);
   // data.people to be replaced with data.items in Mulang version
   let target = data.targets[0];
   let idPerson = new Map();
@@ -62,6 +85,9 @@ export function transform(data) {
       // console.log(relation)
       // check each relationship if so update record accordingly
       if (relation.type == 'child') {
+        if (addProps[4].value == 'M') {
+
+        }
         continue;
       }
       if (relation.type == 'mother') {
@@ -85,33 +111,50 @@ export function transform(data) {
         console.log(JSON.stringify(mfs));
 
       }
-      relMap = createRelation(relation['item2Id'], idPerson, relMap);
       relMap.set(key, mfs)
+      relMap = createRelation(relation['item2Id'], idPerson, relMap);
   }
   const output = [];
   // loop through keys (bug of 3 targets in people, otherwise can loop through them)
-  for (let key of idPerson.keys()) {
-      if (relMap.has(key)) {
-          output.push(relMap.get(key));
-      } else {
-        console.log("key not found");
-          // var person = idPerson.get(key);
-          // // top layer
-          // output.push({key : toInt(person.id), n: person.name, s: (person.additionalProperties)[4].value})
-      }
+  // assumes both mother and father have to exist, (makes more sense)
+  for (let key of relMap.keys()) {
+    relMap = marryParents(relMap.get(key), relMap);
   }
-  console.log(output);
+  // console.log();
   // remove dangling nodes, i.e non-confirmed marriages, or people on edge without mother or father.
   var newOutput = [];
-  for (let r of output) {
-    if ((r.m == null && r.f == null) && (r.ux == null && r.vir == null)) {
-      continue;
-    } else {
-      newOutput.push(r);
-    }
-  }
+  // apply filters
+  // move map to 
+  console.log(relMap.values());
+
+  // prev filter method
+  // for (let key of relMap.keys()) {
+  //   if (applyDateOfBirthFilter(key, idPerson, 4)) {
+  //     newOutput.push(relMap.get(key));
+  //   } else {
+  //     console.log((relMap.get(key)).n + " was outside date range");
+  //   }
+  // }
+
+
   console.log(newOutput);
   return (newOutput);
+}
+
+function marryParents(mfs, relMap) {
+  console.log(mfs);
+  if (mfs.m != null && mfs.f != null) {
+    let x = relMap.get(unConvert(mfs.f));
+    let y = relMap.get(unConvert(mfs.m));
+    console.log(x);
+    console.log(y);
+    if (x.ux == null && x.vir == null && y.ux == null && y.vir == null) {
+      console.log("changed");
+      x.ux = y.key;
+      relMap.set(unConvert(x.key), x);
+    }
+  }
+  return relMap;
 }
 
 function updatePrevWife(mfs, relMap, idPerson) {
