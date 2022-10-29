@@ -12,6 +12,7 @@ import {Adapter} from './components/visualisation-adapter/Adapter';
 
 import { GenogramTree } from "./GenogramTree";
 import {transform} from "./GenogramTree";
+import ClipLoader from 'react-spinners/ClipLoader';
 
 
 // COMMENT THIS BACK IN FOR QUICK TESTING
@@ -47,6 +48,7 @@ class NameForm extends React.Component {
             fromYear: '',
             toYear: '',
             transformedArr: [],
+            isLoading: false,
         };
         this.requests = new Requests();
 
@@ -89,19 +91,21 @@ class NameForm extends React.Component {
                         />
                         : ''
                 }
-                <div className='tree-box'>
-                    {
-                        !_.isEmpty(this.state.relationsJson)
-                            // TODO - entry point for genogram tree
-                            ?
-                            <GenogramTree relations={this.state.relationsJson} />
-                            // <Adapter data={this.state.relationsJson} />
+                {
+                    !_.isEmpty(this.state.relationsJson)
+                        // TODO - entry point for genogram tree
+                        ?
+                        <GenogramTree relations={this.state.relationsJson} />
+                        // <Adapter data={this.state.relationsJson} />
 
-                            : <NameSearch
-                                onChange={this.handleChangeInitialName}
-                                onClick={this.handleSearchSubmit}
-                            />
-                    }
+                        :
+                        <NameSearch
+                            onChange={this.handleChangeInitialName}
+                            onClick={this.handleSearchSubmit}
+                        />
+
+                }
+                <div className='tree-box'>
                 </div>
                 {
                     !_.isEmpty(this.state.searchJsons) && _.isEmpty(this.state.relationsJson)
@@ -111,6 +115,17 @@ class NameForm extends React.Component {
                             onSubmit={this.handleRelationsSubmit}
                         />
                         : ''
+                }
+                {
+                    this.state.isLoading
+                        && <ClipLoader
+                            color='#0000ff'
+                            cssOverride={{
+                                display: 'block',
+                                margin: '0 auto',
+                            }}
+                            size={75}
+                        />
                 }
             </div>
         );
@@ -122,19 +137,22 @@ class NameForm extends React.Component {
             return;
         }
         event.preventDefault();
+        this.setState({
+            isLoading: true,
+        });
         await this.requests.search(this.state.initialName).then(r => {
-            var from = this.state.fromYear;
-            var to = this.state.toYear;
+            let from = this.state.fromYear;
+            let to = this.state.toYear;
 
             r = Object.values(r).filter(function (v) {
-                var birth = v.dateOfBirth
+                let birth = v.dateOfBirth;
                 if (birth == null) return true;
                 if (from !== '' && to !== '') {
-                    return (birth == null) || (parseInt(birth.substring(0,4)) >= parseInt(from) && parseInt(birth.substring(0,4)) <= parseInt(to))
+                    return (parseInt(birth.substring(0, 4)) >= parseInt(from) && parseInt(birth.substring(0, 4)) <= parseInt(to))
                 } else if (from !== '') {
-                    return (birth == null) || parseInt(birth.substring(0,4)) >= parseInt(from);
+                    return parseInt(birth.substring(0, 4)) >= parseInt(from);
                 } else if (to !== '') {
-                    return (birth == null) || parseInt(birth.substring(0,4)) <= parseInt(to);
+                    return parseInt(birth.substring(0, 4)) <= parseInt(to);
                 }
                 return true;
             });
@@ -143,6 +161,7 @@ class NameForm extends React.Component {
                 searchJsons: r,
                 chosenId: r[0].id,
                 relationsJson: {},
+                isLoading: false,
             });
         });
 
@@ -154,6 +173,9 @@ class NameForm extends React.Component {
             return;
         }
         event.preventDefault();
+        this.setState({
+            isLoading: true,
+        });
         this.requests.relations({id: this.state.chosenId}).then(r => {
             if (Object.values(r)[1].length === 0) {
                 this.setState({
@@ -164,6 +186,7 @@ class NameForm extends React.Component {
             }
             this.setState({
                 relationsJson: r,
+                isLoading: false,
             });
         });
     }
