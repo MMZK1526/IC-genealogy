@@ -30,7 +30,7 @@ export function getImageId(id) {
 // should we apply filter before or after (or in between) tree generation
 export function applyDateOfBirthFilter(id, idPerson) {
   const d1 = new Date("1900-01-01");
-  const d2 = new Date("1950-03-11");
+  const d2 = new Date("2022-03-11");
   // console.log(id);
   const target = idPerson.get(id);
   const addProps = target.additionalProperties;
@@ -127,14 +127,17 @@ export function transform(data) {
   // move map to 
   console.log(relMap.values());
 
-  // prev filter method
-  // for (let key of relMap.keys()) {
-  //   if (applyDateOfBirthFilter(key, idPerson, 4)) {
-  //     newOutput.push(relMap.get(key));
-  //   } else {
-  //     console.log((relMap.get(key)).n + " was outside date range");
-  //   }
-  // }
+  for (let key of relMap.keys()) {
+    if (applyDateOfBirthFilter(key, idPerson, 4)) {
+      newOutput.push(relMap.get(key));
+    } else {
+      let r = relMap.get(key);
+      // r.fill = "#000000";
+      r.opacity = "0.3";
+      newOutput.push(r);
+      console.log((relMap.get(key)).n + " was outside date range");
+    }
+  }
 
 
   console.log(newOutput);
@@ -374,7 +377,9 @@ export class DiagramWrappper extends React.Component {
           $(go.Panel,
             { name: "ICON" },
             $(go.Shape, "Square",
-              {width: 40, height: 40, strokeWidth: 2, fill: "#ADD8E6", stroke: "#919191", portId: "" }),
+              {width: 40, height: 40, strokeWidth: 2, fill: "#ADD8E6", stroke: "#919191", portId: "" },
+              new go.Binding("fill", "fill"),
+              new go.Binding("opacity", "opacity")),
             $(go.Panel,
               { // for each attribute show a Shape at a particular place in the overall square
                 itemTemplate:
@@ -391,7 +396,7 @@ export class DiagramWrappper extends React.Component {
           ),
           $(go.TextBlock,
             { textAlign: "center", maxSize: new go.Size(80, NaN), background: "rgba(255,255,255,0.5)" },
-            new go.Binding("text", "n"))
+            new go.Binding("text", "n"), new go.Binding("opacity", "opacity"))
         ));
 
       myDiagram.nodeTemplateMap.add("F",  // female
@@ -402,7 +407,8 @@ export class DiagramWrappper extends React.Component {
           $(go.Panel,
             { name: "ICON" },
             $(go.Shape, "Circle",
-              { width: 40, height: 40, strokeWidth: 2, fill: "#FFB6C1", stroke: "#a1a1a1", portId: "" }),
+              { width: 40, height: 40, strokeWidth: 2, fill: "#FFB6C1", stroke: "#a1a1a1", portId: "" },
+              new go.Binding("opacity", "opacity")),
             $(go.Panel,
               { // for each attribute show a Shape at a particular place in the overall circle
                 itemTemplate:
@@ -419,7 +425,7 @@ export class DiagramWrappper extends React.Component {
           ),
           $(go.TextBlock,
             { textAlign: "center", maxSize: new go.Size(80, NaN), background: "rgba(255,255,255,0.5)" },
-            new go.Binding("text", "n"))
+            new go.Binding("text", "n"), new go.Binding("opacity", "opacity"))
         ));
 
       // the representation of each label node -- nothing shows on a Marriage Link
