@@ -40,14 +40,11 @@ export function transform(data) {
   // console.log(data.relations);
   for (let relation of data.relations) {
       var key = relation['item1Id'];
-      console.log(key);
       var target2 = idPerson.get(key);
       // check if relation ID exist in data.item, if not then discard (edge of search?)
       if (target2 === undefined) {
-        console.log(key);
         console.log(key + "was not found in data.items");
       }
-      // console.log(target2);
       // split select target into their additional properties (general, not predetermined)
       // need a filter here depending on which type of tree we are using.
       var addProps = target2.additionalProperties;
@@ -57,8 +54,6 @@ export function transform(data) {
       } else {
           mfs = {key: toInt(target2.id), n: target2.name, s: addProps[4].value};
       }
-      // console.log(target2)
-      // console.log(relation)
       // check each relationship if so update record accordingly
       if (relation.type === 'mother') {
           mfs.m = toInt(relation.item2Id);
@@ -86,8 +81,25 @@ export function transform(data) {
           output.push({key : toInt(person.id), n: person.name, s: (person.additionalProperties)[4].value})
       }
   }
-  console.log(output);
   return (output);
+}
+
+// Create a map of maps
+// Outer map: personId -> inner map
+// Inner map: property -> value
+function getPersonMap(data) {
+  let personMap = new Map;
+  for (let person of data) {
+    const personId = person.id;
+    let attributes = new Map;
+    attributes.set("name", person.name);
+    attributes.set("description", person.description);
+    for (let attr of person.additionalProperties) {
+      attributes.set(attr.name, attr.value);
+    }
+    personMap.set(person, attributes)
+  }
+  return data;
 }
 
 export class DiagramWrappper extends React.Component {
@@ -449,8 +461,8 @@ export class GenogramTree extends React.Component {
       this.handleModelChange = this.handleModelChange.bind(this);
       this.handleDiagramEvent = this.handleDiagramEvent.bind(this);
       this.closePopUp = this.closePopUp.bind(this);
-      this.relations = transform(props.relations);
-
+      this.relations = transform(props.rawJson);
+      this.personMap = getPersonMap(props.rawJson.items);
       this.state = {
         personInfo: null,
         isPopped: false
@@ -461,9 +473,6 @@ export class GenogramTree extends React.Component {
       this.setState({
         isPopped: false
       })
-      console.log("---close-before")
-      console.log(this.closePopUp)
-      console.log("---close-after")
     }
 
     handleModelChange(changes) {
@@ -475,8 +484,6 @@ export class GenogramTree extends React.Component {
           personInfo: event.subject.part.key,
           isPopped: true
         })
-        console.log(this.state.isPopped)
-        console.log(this.state.personInfo);
       }
 
     // renders ReactDiagram

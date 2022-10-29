@@ -94,7 +94,7 @@ class NameForm extends React.Component {
                         !_.isEmpty(this.state.relationsJson)
                             // TODO - entry point for genogram tree
                             ?
-                            <GenogramTree relations={this.state.relationsJson} />
+                            <GenogramTree rawJson={this.state.relationsJson} />
                             // <Adapter data={this.state.relationsJson} />
 
                             : <NameSearch
