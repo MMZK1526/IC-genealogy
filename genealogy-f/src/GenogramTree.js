@@ -33,6 +33,19 @@ export function applyDateOfBirthFilter(id, dateFrom, dateTo, idPerson) {
   // can we make this generic in the future
   const f = addProps.filter(p => p.name == "date of birth");
   // console.log(f);
+  console.log(f);
+  let dob = f[0].value;
+  // could be improved for large chain of unknown date of birth people.
+  if (dob == null) {
+    const r = relMap.get(id);
+    if (r.m == null || r.f == null) {
+      return false;
+    }
+    const m = applyDateOfBirthFilter(unConvert(r.m), dateFrom, dateTo, idPerson)
+    const f = applyDateOfBirthFilter(unConvert(r.f), dateFrom, dateTo, idPerson)
+    // check if both parents are out of the date range, if so then assume unknown also outside, otherwise leave in.
+    return m && f;
+  }
   const date = (f[0].value).split("T");
   // console.log(date[0]);
   const d3 = new Date(date[0]);
@@ -605,7 +618,8 @@ export class DiagramWrappper extends React.Component {
         if (mother !== undefined && father !== undefined) {
           const link = findMarriage(diagram, mother, father);
           let opacity = "1.0";
-          if ((relMap.get(unConvert(data.m))).opacity != "1.0" && (relMap.get(unConvert(data.f))).opacity != "1.0") {
+          if (((relMap.get(unConvert(data.m))).opacity != "1.0" && (relMap.get(unConvert(data.f))).opacity != "1.0")
+           || data.opacity != "1.0") {
             opacity = "0.2";
           }
           if (link === null) {
