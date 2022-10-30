@@ -28,7 +28,7 @@ class Fields {
         const val country = "P17"
         const val spouse = "P26"
         const val father = "P22"
-        const val mother = "P23"
+        const val mother = "P25"
         const val child = "P40"
         const val female = "Q6581072"
         const val male = "Q6581097"

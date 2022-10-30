@@ -37,7 +37,7 @@ class WikiDataDataSource(
                 relations.addAll(typeMap.entries.mapNotNull {
                     Fields.parseID(it.key)?.second?.let { key ->
                         row[key]?.let(::Url)?.pathSegments?.lastOrNull()?.let { otherID ->
-                            RelationshipDTO(makeID(id), makeID(otherID), it.value, makeID(key))
+                            RelationshipDTO(makeID(otherID), makeID(id), it.value, makeID(key))
                         }
                     }
                 })
