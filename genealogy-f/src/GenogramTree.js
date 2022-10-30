@@ -15,23 +15,15 @@ function toInt(str) {
     return Number(str.substring(4));
   }
 
-function getRootId(data) {
-  let target = data.targets[0];
-  return target.id;
-}
-
-
-export function getImageId(id) {
-
-}
 // { key: 0, n: "Aaron", s: "M", m: -10, f: -11, ux: 1, a: ["C", "F", "K"] },
 // { key: 1, n: "Alice", s: "F", m: -12, f: -13, a: ["B", "H", "K"] },
 // n: name, s: sex, m: mother, f: father, ux: wife, vir: husband, a: attributes/markers
 
 // should we apply filter before or after (or in between) tree generation
-export function applyDateOfBirthFilter(id, idPerson) {
-  const d1 = new Date("1900-01-01");
-  const d2 = new Date("2022-03-11");
+// yearFrom and yearTo passed in at start.
+export function applyDateOfBirthFilter(id, dateFrom, dateTo, idPerson) {
+  const d1 = new Date(dateFrom);
+  const d2 = new Date(dateTo);
   // console.log(id);
   const target = idPerson.get(id);
   const addProps = target.additionalProperties;
@@ -130,7 +122,9 @@ export function transform(data) {
   console.log(relMap.values());
 
   for (let key of relMap.keys()) {
-    if (applyDateOfBirthFilter(key, idPerson, 4)) {
+    console.log(this.yearFrom);
+    console.log(this.yearTo);
+    if (applyDateOfBirthFilter(key, "1900", "2022", idPerson)) {
       newOutput.push(relMap.get(key));
     } else {
       let r = relMap.get(key);
@@ -258,6 +252,8 @@ export class DiagramWrappper extends React.Component {
     super(props);
     this.diagramRef = React.createRef();
     this.nodeDataArray = props.nodeDataArray;
+    this.yearFrom = props.yearFrom;
+    this.yearTo = props.yearTo;
   }
 
   componentDidMount() {
@@ -627,6 +623,8 @@ export class GenogramTree extends React.Component {
       this.handleDiagramEvent = this.handleDiagramEvent.bind(this);
       this.closePopUp = this.closePopUp.bind(this);
       this.relations = transform(props.relations);
+      this.yearFrom = props.yearFrom;
+      this.yearTo = props.yearTo;
       this.isPopped = false;
       this.personInfo = {};
     }
@@ -672,6 +670,8 @@ export class GenogramTree extends React.Component {
                 nodeDataArray={this.relations}
                 onModelChange={this.handleModelChange}
                 onDiagramEvent={this.handleDiagramEvent}
+                yearFrom = {this.yearFrom}
+                yearTo = {this.yearTo}
             />
             
             </div>

@@ -12,6 +12,7 @@ import {Adapter} from './components/visualisation-adapter/Adapter';
 
 import { GenogramTree } from "./GenogramTree";
 import {transform} from "./GenogramTree";
+import { Form } from "react-bootstrap";
 // import ClipLoader from 'react-spinners/ClipLoader';
 
 
@@ -95,7 +96,7 @@ class NameForm extends React.Component {
                     !_.isEmpty(this.state.relationsJson)
                         // TODO - entry point for genogram tree
                         ?
-                        <GenogramTree relations={this.state.relationsJson} />
+                        <GenogramTree relations={this.state.relationsJson} yearFrom={this.state.fromYear} yearTo = {this.state.toYear} />
                         // <Adapter data={this.state.relationsJson} />
 
                         :
@@ -143,6 +144,7 @@ class NameForm extends React.Component {
         await this.requests.search(this.state.initialName).then(r => {
             let from = this.state.fromYear;
             let to = this.state.toYear;
+            console.log(this.state.fromYear);
 
             r = Object.values(r).filter(function (v) {
                 let birth = v.dateOfBirth;
@@ -160,6 +162,8 @@ class NameForm extends React.Component {
             this.setState({
                 searchJsons: r,
                 chosenId: r[0].id,
+                fromYear : from,
+                toYear: to,
                 relationsJson: {},
                 isLoading: false,
             });
