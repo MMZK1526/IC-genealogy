@@ -16,6 +16,28 @@ data class RelationshipDTO(
         dao.type.name,
         dao.type.id.value
     )
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as RelationshipDTO
+
+        if (item1Id != other.item1Id) return false
+        if (item2Id != other.item2Id) return false
+        if (typeId != other.typeId) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = item1Id.hashCode()
+        result = 31 * result + item2Id.hashCode()
+        result = 31 * result + typeId.hashCode()
+        return result
+    }
+
+
 }
 
 @Serializable

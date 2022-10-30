@@ -5,6 +5,7 @@ import io.ktor.server.application.*
 import io.ktor.server.request.receive
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import mmzk.genealogy.Fields
 import mmzk.genealogy.common.Database
 import mmzk.genealogy.WikiDataDataSource
 import mmzk.genealogy.common.RelationCalculatorRequest
@@ -68,7 +69,7 @@ fun Application.configureRouting() {
 //            val request = call.receive<RelationCalculatorRequest>()
 //            call.respond(calculateRelations(request))
             val result = WikiDataDataSource(listOf()).findRelatedPeople("WD-Q9682", listOf("WD-P22", "WD-P25", "WD-P26", "WD-P40"), 3)
-            call.respond(calculateRelations(RelationCalculatorRequest("WD-Q9682", result.relations)))
+            call.respond(calculateRelations(RelationCalculatorRequest("WD-Q9682", result.relations.toSet()), Fields.prunableTriangles))
         }
     }
 }

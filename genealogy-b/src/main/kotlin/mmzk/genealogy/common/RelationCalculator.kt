@@ -6,10 +6,13 @@ import mmzk.genealogy.common.dto.RelationshipDTO
 @Serializable
 data class RelationCalculatorRequest(
     val start: String,
-    val relations: List<RelationshipDTO>,
+    val relations: Set<RelationshipDTO>
 )
 
-fun calculateRelations(input: RelationCalculatorRequest): Map<String, List<List<String>>> {
+fun calculateRelations(
+    input: RelationCalculatorRequest,
+    trianglesToPrune: List<Triple<String, String, String>>
+): Map<String, List<List<String>>> {
     val relationsMap = input.relations.groupBy { it.item2Id }
     val result = mutableMapOf<String, MutableSet<List<RelationshipDTO>>>()
     val queue = ArrayDeque(relationsMap[input.start] ?: listOf())
@@ -23,62 +26,11 @@ fun calculateRelations(input: RelationCalculatorRequest): Map<String, List<List<
             val pathsToPreviousItem = result[currentRelation.item2Id]
             if (pathsToPreviousItem != null) {
                 val pathsToPreviousItemWithoutTarget = pathsToPreviousItem.filter { path ->
-                    val duplicateCheck = path.all { edge ->
+                    path.all { edge ->
                         edge.item1Id != currentRelation.item1Id &&
                                 edge.item2Id != currentRelation.item1Id
 
-                    }
-
-                    if (!duplicateCheck) {
-                        false
-                    } else {
-                        when (currentRelation.typeId) {
-                            "WD-P22", "WD-P25" -> run {
-                                path.lastOrNull()?.let {
-                                    it.typeId != "WD-P40" || !input.relations.contains(
-                                        RelationshipDTO(
-                                            currentRelation.item1Id,
-                                            it.item2Id,
-                                            "spouse",
-                                            "WD-P26"
-                                        )
-                                    )
-                                }
-                            } ?: true
-                            "WD-P26" -> run {
-                                path.lastOrNull()?.let {
-                                    ((it.typeId != "WD-P25" || !input.relations.contains(
-                                        RelationshipDTO(
-                                            currentRelation.item1Id,
-                                            it.item2Id,
-                                            "father",
-                                            "WD-P22"
-                                        )
-                                    )) && (it.typeId != "WD-P22" || !input.relations.contains(
-                                        RelationshipDTO(
-                                            currentRelation.item1Id,
-                                            it.item2Id,
-                                            "mother",
-                                            "WD-P25"
-                                        )
-                                    )))
-                                }
-                            } ?: true
-                            "WD-P40" -> run {
-                                path.lastOrNull()?.let {
-                                    it.typeId != "WD-P26" || !input.relations.contains(
-                                        RelationshipDTO(
-                                            currentRelation.item1Id,
-                                            it.item2Id,
-                                            "child",
-                                            "WD-P40"
-                                        )
-                                    )
-                                }
-                            } ?: true
-                            else -> true
-                        }
-                    }
+                    } || isPartOfPrunableTriangle(currentRelation, path, input.relations, trianglesToPrune)
                 }
 
                 result.getOrPut(currentRelation.item1Id) { mutableSetOf() }.addAll(
@@ -98,4 +50,22 @@ fun calculateRelations(input: RelationCalculatorRequest): Map<String, List<List<
     return result.mapValues { (_, paths) ->
         paths.map { path -> path.map { it.typeId } }
     }
+}
+
+private fun isPartOfPrunableTriangle(
+    currentRelation: RelationshipDTO,
+    path: List<RelationshipDTO>,
+    relations: Set<RelationshipDTO>,
+    trianglesToPrune: List<Triple<String, String, String>>,
+) = trianglesToPrune.any { (side1, side2, side3) ->
+    val lastPathComponent = path.lastOrNull()
+    currentRelation.typeId == side1 &&
+            lastPathComponent != null &&
+            lastPathComponent.typeId == side2 &&
+            relations.contains(RelationshipDTO(
+                currentRelation.item1Id,
+                lastPathComponent.item2Id,
+                "",
+                side3
+            ))
 }
