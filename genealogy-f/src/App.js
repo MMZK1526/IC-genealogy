@@ -12,15 +12,7 @@ import {Adapter} from './components/visualisation-adapter/Adapter';
 
 import { GenogramTree } from "./GenogramTree";
 import {transform} from "./GenogramTree";
-<<<<<<< HEAD
-<<<<<<< HEAD
 // import ClipLoader from 'react-spinners/ClipLoader';
-=======
-import ClipLoader from 'react-spinners/ClipLoader';
->>>>>>> 41752a1 ([psb120] (feat) Implemented loading icon to let the user know that data is being fetched)
-=======
-// import ClipLoader from 'react-spinners/ClipLoader';
->>>>>>> e762548 ([jas320] (minor) merge o file)
 
 
 // COMMENT THIS BACK IN FOR QUICK TESTIN
@@ -102,11 +94,6 @@ class NameForm extends React.Component {
                         : ''
                 }
                 <div className='tree-box'>
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
->>>>>>> b448471 ([yj1920] (fix) pass in from/to in filters to GenogramTree)
                     {
                         !_.isEmpty(this.state.relationsJson)
                             // TODO - entry point for genogram tree
@@ -123,10 +110,6 @@ class NameForm extends React.Component {
                                 onClick={this.handleSearchSubmit}
                             />
                     }
-<<<<<<< HEAD
-=======
->>>>>>> 78f81a9 ([yj1920] (fix) pass in from/to in filters to GenogramTree)
->>>>>>> b448471 ([yj1920] (fix) pass in from/to in filters to GenogramTree)
                 </div>
                 {
                     !_.isEmpty(this.state.searchJsons) && _.isEmpty(this.state.relationsJson)
@@ -139,10 +122,6 @@ class NameForm extends React.Component {
                 }
                 {
                     this.state.isLoading
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> e762548 ([jas320] (minor) merge o file)
                         // && <ClipLoader
                         //     color='#0000ff'
                         //     cssOverride={{
@@ -151,19 +130,6 @@ class NameForm extends React.Component {
                         //     }}
                         //     size={75}
                         // />
-<<<<<<< HEAD
-=======
-                        && <ClipLoader
-                            color='#0000ff'
-                            cssOverride={{
-                                display: 'block',
-                                margin: '0 auto',
-                            }}
-                            size={75}
-                        />
->>>>>>> 41752a1 ([psb120] (feat) Implemented loading icon to let the user know that data is being fetched)
-=======
->>>>>>> e762548 ([jas320] (minor) merge o file)
                 }
             </div>
         );
