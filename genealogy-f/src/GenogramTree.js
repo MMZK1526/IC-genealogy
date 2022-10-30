@@ -39,7 +39,7 @@ export function transform(data) {
   // create a map from personId to (relation array of their mother, father and spouse )
   // console.log(data.relations);
   for (let relation of data.relations) {
-      var key = relation['item1Id'];
+      var key = relation['item2Id'];
       var target2 = idPerson.get(key);
       // check if relation ID exist in data.item, if not then discard (edge of search?)
       if (target2 === undefined) {
@@ -61,27 +61,27 @@ export function transform(data) {
         continue;
       }
       if (relation.type === 'mother') {
-          mfs.m = toInt(relation.item2Id);
+          mfs.m = toInt(relation.item1Id);
 
       }
       if (relation.type === 'father') {
-          mfs.f = toInt(relation.item2Id);
+          mfs.f = toInt(relation.item1Id);
       }
       if (relation.type === 'spouse') {
-        console.log(relation['item1Id'] + "has spouse " + relation['item2Id']);
+        console.log(relation['item2Id'] + "has spouse " + relation['item1Id']);
         // if you already have a spouse listed, then prioritise lisitng a spouse who isnt already married to you. i.e conver to a -> b -> c -> d rather than a <-> b, c <-> d
               if (addProps[4].value == 'M') {
                 relMap = updatePrevWife(mfs, relMap, idPerson);
-                mfs.ux = toInt(relation.item2Id);
+                mfs.ux = toInt(relation.item1Id);
               } else {
                 relMap = updatePrevHusband(mfs, relMap, idPerson);
-                mfs.vir = toInt(relation.item2Id);
+                mfs.vir = toInt(relation.item1Id);
                 console.log("updating vir" + mfs.vir);
               }
         console.log(JSON.stringify(mfs));
 
       }
-      relMap = createRelation(relation['item2Id'], idPerson, relMap);
+      relMap = createRelation(relation['item1Id'], idPerson, relMap);
       relMap.set(key, mfs)
   }
   const output = [];
