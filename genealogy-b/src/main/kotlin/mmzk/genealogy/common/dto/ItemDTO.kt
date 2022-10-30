@@ -10,7 +10,7 @@ import org.jetbrains.exposed.sql.ResultRow
 data class ItemDTO(
     var id: String,
     var name: String,
-    var description: String?,
+    var description: String,
     var aliases: String?,
     var additionalProperties: List<AdditionalProperty> = listOf()
 ) {
