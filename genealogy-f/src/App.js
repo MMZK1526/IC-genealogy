@@ -149,6 +149,7 @@ class NameForm extends React.Component {
             let from = this.state.fromYear;
             let to = this.state.toYear;
             console.log(this.state.fromYear);
+            console.log(this.state.relationsJson);
 
             r = Object.values(r).filter(function (v) {
                 let birth = v.dateOfBirth;

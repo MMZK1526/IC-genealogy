@@ -22,8 +22,11 @@ function toInt(str) {
 // should we apply filter before or after (or in between) tree generation
 // yearFrom and yearTo passed in at start.
 export function applyDateOfBirthFilter(id, dateFrom, dateTo, idPerson) {
-  const d1 = new Date(dateFrom);
-  const d2 = new Date(dateTo);
+  if (dateFrom == '' && dateTo == '') {
+    return true;
+  }
+  const d1 = dateFrom == '' ? new Date("1000-01-01") : new Date(dateFrom);
+  const d2 = dateTo == '' ? new Date("3000-01-01") : new Date(dateTo);
   // console.log(id);
   const target = idPerson.get(id);
   const addProps = target.additionalProperties;
@@ -41,7 +44,10 @@ export function applyDateOfBirthFilter(id, dateFrom, dateTo, idPerson) {
 var relMap = new Map();
 
 // ^^^^^^ SEE ABOVE transformed format helper function to transfrom JSON into goJS nodeDataArray format.
-export function transform(data) {
+export function transform(data, yearFrom, yearTo) {
+  // check if already generated
+  // tree still being regenrated can we improve on this.
+
   console.log(data);
   // data.people to be replaced with data.items in Mulang version
   let target = data.targets[0];
@@ -53,6 +59,18 @@ export function transform(data) {
   for (let x of data.items) {
       idPerson.set(x.id, x);
   }
+  // if (relMap.size > 1) {
+  //   for (let key of relMap.keys()) {
+  //     let r = relMap.get(key);
+  //     if (applyDateOfBirthFilter(key, yearFrom, yearTo, idPerson)) {
+  //       r.opacity = "1.0";
+  //     } else {
+  //       r.opacity = "0.2";
+  //     }
+  //   }
+  //   console.log(newOutput);
+  //   return newOutput;
+  // }
   // create a map from personId to (relation array of their mother, father and spouse )
   // console.log(data.relations);
   for (let relation of data.relations) {
@@ -99,9 +117,8 @@ export function transform(data) {
 
       }
       relMap.set(key, mfs)
-      relMap = createRelation(relation['item2Id'], idPerson, relMap);
+      relMap = createRelation(relation['item1Id'], idPerson, relMap);
   }
-  const output = [];
   // loop through keys (bug of 3 targets in people, otherwise can loop through them)
   // assumes both mother and father have to exist, (makes more sense)
   for (let key of relMap.keys()) {
@@ -113,24 +130,25 @@ export function transform(data) {
   // apply filters
   // move map to 
   console.log(relMap.values());
+  console.log(yearFrom);
+  console.log(yearTo);
 
+  // push to array
   for (let key of relMap.keys()) {
-    console.log(this.yearFrom);
-    console.log(this.yearTo);
-    if (applyDateOfBirthFilter(key, "1900", "2022", idPerson)) {
-      newOutput.push(relMap.get(key));
-    } else {
-      let r = relMap.get(key);
-      // r.fill = "#000000";
-      r.opacity = "0.2";
-      newOutput.push(r);
-      console.log((relMap.get(key)).n + " was outside date range");
-    }
+    newOutput.push(relMap.get(key));
   }
 
-
+  // apply filters (add opacity to non-filtered)
+  for (let r of newOutput) {
+    if (applyDateOfBirthFilter(unConvert(r.key), yearFrom, yearTo, idPerson)) {
+      r.opacity = "1.0";
+    } else {
+      r.opacity = "0.2";
+    }
+  }
   console.log(newOutput);
-  return (newOutput);
+  return newOutput;
+
 }
 
 function marryParents(mfs, relMap) {
@@ -587,7 +605,7 @@ export class DiagramWrappper extends React.Component {
         if (mother !== undefined && father !== undefined) {
           const link = findMarriage(diagram, mother, father);
           let opacity = "1.0";
-          if ((relMap.get(unConvert(data.m))).opacity != null && (relMap.get(unConvert(data.f))).opacity != null) {
+          if ((relMap.get(unConvert(data.m))).opacity != "1.0" && (relMap.get(unConvert(data.f))).opacity != "1.0") {
             opacity = "0.2";
           }
           if (link === null) {
@@ -633,7 +651,7 @@ export class GenogramTree extends React.Component {
       this.handleModelChange = this.handleModelChange.bind(this);
       this.handleDiagramEvent = this.handleDiagramEvent.bind(this);
       this.closePopUp = this.closePopUp.bind(this);
-      this.relations = transform(props.rawJson);
+      this.relations = transform(props.rawJson, props.from, props.to);
       this.personMap = getPersonMap(props.rawJson.items);
       this.from = props.from;
       this.to = props.to;
@@ -682,8 +700,8 @@ export class GenogramTree extends React.Component {
                 nodeDataArray={this.relations}
                 onModelChange={this.handleModelChange}
                 onDiagramEvent={this.handleDiagramEvent}
-                yearFrom = {this.yearFrom}
-                yearTo = {this.yearTo}
+                yearFrom = {this.from}
+                yearTo = {this.to}
             />
             
             </div>
