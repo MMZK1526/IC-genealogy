@@ -102,6 +102,11 @@ class NameForm extends React.Component {
                         : ''
                 }
                 <div className='tree-box'>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> b448471 ([yj1920] (fix) pass in from/to in filters to GenogramTree)
                     {
                         !_.isEmpty(this.state.relationsJson)
                             // TODO - entry point for genogram tree
@@ -118,6 +123,10 @@ class NameForm extends React.Component {
                                 onClick={this.handleSearchSubmit}
                             />
                     }
+<<<<<<< HEAD
+=======
+>>>>>>> 78f81a9 ([yj1920] (fix) pass in from/to in filters to GenogramTree)
+>>>>>>> b448471 ([yj1920] (fix) pass in from/to in filters to GenogramTree)
                 </div>
                 {
                     !_.isEmpty(this.state.searchJsons) && _.isEmpty(this.state.relationsJson)
