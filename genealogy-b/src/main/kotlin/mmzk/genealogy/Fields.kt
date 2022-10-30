@@ -41,8 +41,6 @@ object Fields {
     const val string = "string"
     const val time = "time"
 
-
-
     val prunableTriangles = listOf(
         Triple(father.wikidataId, child.wikidataId, spouse.wikidataId),
         Triple(mother.wikidataId, child.wikidataId, spouse.wikidataId),

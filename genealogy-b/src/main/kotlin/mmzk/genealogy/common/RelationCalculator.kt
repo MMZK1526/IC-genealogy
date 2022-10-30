@@ -1,6 +1,7 @@
 package mmzk.genealogy.common
 
 import kotlinx.serialization.Serializable
+import mmzk.genealogy.Fields
 import mmzk.genealogy.common.dto.RelationshipDTO
 
 @Serializable
@@ -9,10 +10,7 @@ data class RelationCalculatorRequest(
     val relations: Set<RelationshipDTO>
 )
 
-fun calculateRelations(
-    input: RelationCalculatorRequest,
-    trianglesToPrune: List<Triple<String, String, String>>
-): Map<String, List<List<String>>> {
+fun calculateRelations(input: RelationCalculatorRequest): Map<String, List<List<String>>> {
     val relationsMap = input.relations.groupBy { it.item2Id }
     val result = mutableMapOf<String, MutableSet<List<RelationshipDTO>>>()
     val queue = ArrayDeque(relationsMap[input.start] ?: listOf())
@@ -29,14 +27,11 @@ fun calculateRelations(
                     path.all { edge ->
                         edge.item1Id != currentRelation.item1Id &&
                                 edge.item2Id != currentRelation.item1Id
-
-                    } && !isPartOfPrunableTriangle(currentRelation, path, input.relations, trianglesToPrune)
+                    } && !isPartOfPrunableTriangle(currentRelation, path, input.relations)
                 }
 
                 result.getOrPut(currentRelation.item1Id) { mutableSetOf() }.addAll(
-                    pathsToPreviousItemWithoutTarget.map {
-                        it + currentRelation
-                    }
+                    pathsToPreviousItemWithoutTarget.map { it + currentRelation }
                 )
             }
         }
@@ -56,16 +51,10 @@ private fun isPartOfPrunableTriangle(
     currentRelation: RelationshipDTO,
     path: List<RelationshipDTO>,
     relations: Set<RelationshipDTO>,
-    trianglesToPrune: List<Triple<String, String, String>>,
-) = trianglesToPrune.any { (side1, side2, side3) ->
+) = Fields.prunableTriangles.any { (side1, side2, side3) ->
     val lastPathComponent = path.lastOrNull()
     currentRelation.typeId == side1 &&
             lastPathComponent != null &&
             lastPathComponent.typeId == side2 &&
-            relations.contains(RelationshipDTO(
-                currentRelation.item1Id,
-                lastPathComponent.item2Id,
-                "",
-                side3
-            ))
+            relations.contains(RelationshipDTO(currentRelation.item1Id, lastPathComponent.item2Id, "", side3))
 }
