@@ -577,6 +577,8 @@ export class GenogramTree extends React.Component {
       this.closePopUp = this.closePopUp.bind(this);
       this.relations = transform(props.rawJson);
       this.personMap = getPersonMap(props.rawJson.items);
+      this.from = props.from;
+      this.to = props.to;
       this.state = {
         personInfo: null,
         isPopped: false
@@ -602,6 +604,9 @@ export class GenogramTree extends React.Component {
 
     // renders ReactDiagram
     render() {
+      console.log("inside genogramtree");
+      console.log("From: " + this.from);
+      console.log("To: " + this.to);
         return(
 			<div className="tree-box">
 			{

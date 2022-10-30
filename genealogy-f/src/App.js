@@ -70,11 +70,13 @@ class NameForm extends React.Component {
     }
 
     handleChangeFrom(event) {
-        this.setState({fromYear: event.target.value});
+        const val = event.target.value;
+        this.setState({fromYear: val});
     }
 
     handleChangeTo(event) {
-        this.setState({toYear: event.target.value});
+        const val = event.target.value;
+        this.setState({toYear: val});
     }
 
     render() {
@@ -96,7 +98,11 @@ class NameForm extends React.Component {
                         !_.isEmpty(this.state.relationsJson)
                             // TODO - entry point for genogram tree
                             ?
-                            <GenogramTree rawJson={this.state.relationsJson} />
+                            <GenogramTree 
+                                rawJson={this.state.relationsJson} 
+                                from={this.state.fromYear}
+                                to={this.state.toYear}
+                            />
                             // <Adapter data={this.state.relationsJson} />
 
                             : <NameSearch
