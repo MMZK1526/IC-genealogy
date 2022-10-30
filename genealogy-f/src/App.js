@@ -71,11 +71,13 @@ class NameForm extends React.Component {
     }
 
     handleChangeFrom(event) {
-        this.setState({fromYear: event.target.value});
+        const val = event.target.value;
+        this.setState({fromYear: val});
     }
 
     handleChangeTo(event) {
-        this.setState({toYear: event.target.value});
+        const val = event.target.value;
+        this.setState({toYear: val});
     }
 
     render() {
@@ -92,21 +94,23 @@ class NameForm extends React.Component {
                         />
                         : ''
                 }
-                {
-                    !_.isEmpty(this.state.relationsJson)
-                        // TODO - entry point for genogram tree
-                        ?
-                        <GenogramTree relations={this.state.relationsJson} yearFrom={this.state.fromYear} yearTo = {this.state.toYear} />
-                        // <Adapter data={this.state.relationsJson} />
-
-                        :
-                        <NameSearch
-                            onChange={this.handleChangeInitialName}
-                            onClick={this.handleSearchSubmit}
-                        />
-
-                }
                 <div className='tree-box'>
+                    {
+                        !_.isEmpty(this.state.relationsJson)
+                            // TODO - entry point for genogram tree
+                            ?
+                            <GenogramTree 
+                                rawJson={this.state.relationsJson} 
+                                from={this.state.fromYear}
+                                to={this.state.toYear}
+                            />
+                            // <Adapter data={this.state.relationsJson} />
+
+                            : <NameSearch
+                                onChange={this.handleChangeInitialName}
+                                onClick={this.handleSearchSubmit}
+                            />
+                    }
                 </div>
                 {
                     !_.isEmpty(this.state.searchJsons) && _.isEmpty(this.state.relationsJson)
