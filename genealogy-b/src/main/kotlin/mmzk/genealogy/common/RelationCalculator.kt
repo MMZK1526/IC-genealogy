@@ -30,7 +30,7 @@ fun calculateRelations(
                         edge.item1Id != currentRelation.item1Id &&
                                 edge.item2Id != currentRelation.item1Id
 
-                    } || !isPartOfPrunableTriangle(currentRelation, path, input.relations, trianglesToPrune)
+                    } && !isPartOfPrunableTriangle(currentRelation, path, input.relations, trianglesToPrune)
                 }
 
                 result.getOrPut(currentRelation.item1Id) { mutableSetOf() }.addAll(
