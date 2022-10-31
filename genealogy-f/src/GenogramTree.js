@@ -9,6 +9,7 @@ import './App.css';
 import PopupInfo from './components/popup-info/PopupInfo.js'
 import './GenogramTree.css';
 import { MdPadding } from "react-icons/md";
+import {exportComponentAsPNG} from "react-component-export-image";
 
 // helper function to convert "WD-Q13423" -> 13423
 function toInt(str) {
@@ -673,6 +674,7 @@ export class GenogramTree extends React.Component {
         personInfo: null,
         isPopped: false
       }
+      this.componentRef = React.createRef();
     }
 
     closePopUp() {
@@ -716,8 +718,13 @@ export class GenogramTree extends React.Component {
                 onDiagramEvent={this.handleDiagramEvent}
                 yearFrom = {this.from}
                 yearTo = {this.to}
+                ref={this.componentRef}
             />
-            
+
+            <button className='export-button' onClick={() => exportComponentAsPNG(this.componentRef)}>
+              Export as PNG
+            </button>
+
             </div>
         );
     }
