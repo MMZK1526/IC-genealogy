@@ -14,9 +14,10 @@ import { GenogramTree } from "./GenogramTree";
 import {transform} from "./GenogramTree";
 import { Form } from "react-bootstrap";
 // import ClipLoader from 'react-spinners/ClipLoader';
+import {exportComponentAsPNG} from 'react-component-export-image';
 
 
-// COMMENT THIS BACK IN FOR QUICK TESTIN
+// COMMENT THIS BACK IN FOR QUICK TESTING
 // function App() {
 //   return (
 //     <GenogramTree
@@ -83,24 +84,24 @@ class NameForm extends React.Component {
     render() {
         return (
             <div className='App'>
-                {
-                    !_.isEmpty(this.state.searchJsons)
-                        ? <Sidebar
-                            name={this.state.initialName}
-                            nameChange={this.handleChangeInitialName}
-                            yearFromChange={this.handleChangeFrom}
-                            yearToChange={this.handleChangeTo}
-                            onClick={this.handleSearchSubmit}
-                        />
-                        : ''
-                }
+                {/*{*/}
+                {/*    !_.isEmpty(this.state.searchJsons)*/}
+                {/*        ? <Sidebar*/}
+                {/*            name={this.state.initialName}*/}
+                {/*            nameChange={this.handleChangeInitialName}*/}
+                {/*            yearFromChange={this.handleChangeFrom}*/}
+                {/*            yearToChange={this.handleChangeTo}*/}
+                {/*            onClick={this.handleSearchSubmit}*/}
+                {/*        />*/}
+                {/*        : null*/}
+                {/*}*/}
                 <div className='tree-box'>
                     {
                         !_.isEmpty(this.state.relationsJson)
                             // TODO - entry point for genogram tree
                             ?
-                            <GenogramTree 
-                                rawJson={this.state.relationsJson} 
+                            <GenogramTree
+                                rawJson={this.state.relationsJson}
                                 from={this.state.fromYear}
                                 to={this.state.toYear}
                             />
