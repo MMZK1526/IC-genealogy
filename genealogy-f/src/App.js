@@ -19,7 +19,6 @@ import {CustomUpload} from "./components/custom-upload/CustomUpload";
 
 import {ResultPage} from "./components/result-page/ResultPage.js"
 // import ClipLoader from 'react-spinners/ClipLoader';
-import {exportComponentAsPNG} from 'react-component-export-image';
 
 // COMMENT THIS IN FOR FULL FLOW TEST
 class App extends React.Component {
@@ -80,6 +79,13 @@ class NameForm extends React.Component {
     render() {
         return (
             <div className='App'>
+                {
+                    _.isEmpty(this.state.searchJsons)
+                    && <NameSearch
+                        onChange={this.handleChangeInitialName}
+                        onClick={this.handleSearchSubmit}
+                    />
+                }
                 {
                     (
                         !_.isEmpty(this.state.searchJsons) ||
