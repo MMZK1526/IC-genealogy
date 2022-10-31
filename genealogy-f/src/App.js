@@ -21,6 +21,8 @@ import {ResultPage} from "./components/result-page/ResultPage.js"
 // import ClipLoader from 'react-spinners/ClipLoader';
 
 import {ResultPage} from "./components/result-page/ResultPage.js"
+// import ClipLoader from 'react-spinners/ClipLoader';
+import {exportComponentAsPNG} from 'react-component-export-image';
 
 // COMMENT THIS IN FOR FULL FLOW TEST
 class App extends React.Component {
