@@ -15,6 +15,8 @@ import {transform} from "./GenogramTree";
 import { Form } from "react-bootstrap";
 // import ClipLoader from 'react-spinners/ClipLoader';
 
+import {ResultPage} from "./components/result-page/ResultPage.js"
+
 // COMMENT THIS IN FOR FULL FLOW TEST
 class App extends React.Component {
     componentDidMount(){
@@ -104,7 +106,7 @@ class NameForm extends React.Component {
                 </div>
                 {
                     !_.isEmpty(this.state.searchJsons) && _.isEmpty(this.state.relationsJson)
-                        ? <Topbar
+                        ? <ResultPage
                             state={this.state}
                             onChange={this.handleChangeChosenId}
                             onSubmit={this.handleRelationsSubmit}
