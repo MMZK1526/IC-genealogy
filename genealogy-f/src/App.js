@@ -137,11 +137,20 @@ class NameForm extends React.Component {
         this.setState({
             isLoading: true,
         });
+        if (Object.keys(this.state.relationsJson).length !== 0) {
+            console.log("Handle Filter: "+ Object.values(this.state.relationsJson));
+            let from = this.state.fromYear;
+            let to = this.state.toYear;
+            this.setState({
+                fromYear: from,
+                toYear: to,
+            });
+            this.render();
+            return;
+        }
         await this.requests.search(this.state.initialName).then(r => {
             let from = this.state.fromYear;
             let to = this.state.toYear;
-            console.log(this.state.fromYear);
-            console.log(this.state.relationsJson);
 
             r = Object.values(r).filter(function (v) {
                 let birth = v.dateOfBirth;
