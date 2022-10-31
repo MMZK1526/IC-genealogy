@@ -58,8 +58,8 @@ class NameForm extends React.Component {
         this.setState({initialName: event.target.value});
     }
 
-    handleChangeChosenId(event) {
-        this.setState({chosenId: event.target.value});
+    handleChangeChosenId(id) {
+        this.setState({chosenId: id});
     }
 
     handleChangeFrom(event) {
