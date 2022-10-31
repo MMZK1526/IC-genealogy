@@ -6,6 +6,9 @@ import "./Sidebar.css"
 export function Sidebar(props) {
   return (
     <div className='sidebar'>
+      <div className='name-field'>
+        <FilterForm title="Name :" placeholder="Name" name={props.name} type="text" onChange={props.nameChange}/>
+      </div>
       <div className='date-from-field'>
         <FilterForm title="Year From :" placeholder="Year of Birth" type="text" onChange={props.yearFromChange}/>
       </div>
