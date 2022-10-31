@@ -15,16 +15,6 @@ import {transform} from "./GenogramTree";
 import { Form } from "react-bootstrap";
 // import ClipLoader from 'react-spinners/ClipLoader';
 
-
-// COMMENT THIS BACK IN FOR QUICK TESTIN
-// function App() {
-//   return (
-//     <GenogramTree
-//         relations={this.state.relationsJson}
-//     />
-//   );
-// }
-
 // COMMENT THIS IN FOR FULL FLOW TEST
 class App extends React.Component {
     componentDidMount(){
@@ -92,7 +82,10 @@ class NameForm extends React.Component {
                             yearToChange={this.handleChangeTo}
                             onClick={this.handleSearchSubmit}
                         />
-                        : ''
+                        : <NameSearch
+                            onChange={this.handleChangeInitialName}
+                            onClick={this.handleSearchSubmit}
+                        />
                 }
                 <div className='tree-box'>
                     {
@@ -106,10 +99,7 @@ class NameForm extends React.Component {
                             />
                             // <Adapter data={this.state.relationsJson} />
 
-                            : <NameSearch
-                                onChange={this.handleChangeInitialName}
-                                onClick={this.handleSearchSubmit}
-                            />
+                            : ''
                     }
                 </div>
                 {
