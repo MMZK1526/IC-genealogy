@@ -28,6 +28,7 @@ jobs:
       - name: Build
         run: |
           cd genealogy-f
+          npm update
           npm run build
   build-b:
     # The type of runner that the job will run on
