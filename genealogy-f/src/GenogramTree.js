@@ -705,6 +705,9 @@ export class GenogramTree extends React.Component {
     }
 
     handleDiagramEvent (event) {
+      if (!this.personMap.has("WD-Q" + event.subject.part.key)) {
+          return;
+      }
         this.setState({
           personInfo: event.subject.part.key,
           isPopped: true
