@@ -681,6 +681,7 @@ export class GenogramTree extends React.Component {
       this.handleModelChange = this.handleModelChange.bind(this);
       this.handleDiagramEvent = this.handleDiagramEvent.bind(this);
       this.closePopUp = this.closePopUp.bind(this);
+      this.handleStatsClick = this.handleStatsClick.bind(this);
       this.relations = transform(props.rawJson, props.from, props.to);
       this.personMap = getPersonMap(props.rawJson.items);
       this.from = props.from;
@@ -708,7 +709,13 @@ export class GenogramTree extends React.Component {
           personInfo: event.subject.part.key,
           isPopped: true
         })
-      }
+    }
+
+    handleStatsClick() {
+      this.setState((state) => ({
+        showStats: !state.showStats,
+      }));
+    }
 
     // renders ReactDiagram
     render() {
@@ -752,7 +759,7 @@ export class GenogramTree extends React.Component {
 
               {
                 this.state.showStats &&
-                  <StatsPanel data={this.relations} />
+                  <StatsPanel data={this.props.rawJson} onClick={this.handleStatsClick} />
               }
 
             </div>
