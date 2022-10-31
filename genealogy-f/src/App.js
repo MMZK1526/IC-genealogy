@@ -14,6 +14,7 @@ import { GenogramTree } from "./GenogramTree";
 import {transform} from "./GenogramTree";
 import { Form } from "react-bootstrap";
 // import ClipLoader from 'react-spinners/ClipLoader';
+import {exportComponentAsPNG} from 'react-component-export-image';
 
 import {ResultPage} from "./components/result-page/ResultPage.js"
 
@@ -94,8 +95,8 @@ class NameForm extends React.Component {
                         !_.isEmpty(this.state.relationsJson)
                             // TODO - entry point for genogram tree
                             ?
-                            <GenogramTree 
-                                rawJson={this.state.relationsJson} 
+                            <GenogramTree
+                                rawJson={this.state.relationsJson}
                                 from={this.state.fromYear}
                                 to={this.state.toYear}
                             />
