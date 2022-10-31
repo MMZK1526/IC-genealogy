@@ -81,16 +81,15 @@ class NameForm extends React.Component {
         return (
             <div className='App'>
                 {
-                    !_.isEmpty(this.state.searchJsons)
-                        ? <Sidebar
+                    (
+                        !_.isEmpty(this.state.searchJsons) ||
+                            !_.isEmpty(this.state.relationsJson)
+                    ) &&
+                         <Sidebar
                             name={this.state.initialName}
                             nameChange={this.handleChangeInitialName}
                             yearFromChange={this.handleChangeFrom}
                             yearToChange={this.handleChangeTo}
-                            onClick={this.handleSearchSubmit}
-                        />
-                        : <NameSearch
-                            onChange={this.handleChangeInitialName}
                             onClick={this.handleSearchSubmit}
                         />
                 }
