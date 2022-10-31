@@ -33,21 +33,19 @@ export function ResultPage(props) {
             <div id='title'>
                 {'Are you looking for... '}
             </div>
-            <div>
-                <ScrollMenu>
-                    {props.state.searchJsons.map((x) => {
-                        // const desc = x.description ? " - " + x.description : ""
-                        return <Card
-                            itemId={x.id}
-                            title={x.name}
-                            key={x.id}
-                            desc={x.description}
-                            onClick={handleClick(x.id)}
-                            // selected={isItemSelected(id)}
-                        />
-                    })}
-                </ScrollMenu>
-            </div>
+            <ScrollMenu>
+                {props.state.searchJsons.map((x) => {
+                    // const desc = x.description ? " - " + x.description : ""
+                    return <Card
+                        itemId={x.id}
+                        title={x.name}
+                        key={x.id}
+                        desc={x.description}
+                        onClick={handleClick(x.id)}
+                        // selected={isItemSelected(id)}
+                    />
+                })}
+            </ScrollMenu>
             <input className='apply-button' type="submit" value="Show tree" />
         </form>
     );
