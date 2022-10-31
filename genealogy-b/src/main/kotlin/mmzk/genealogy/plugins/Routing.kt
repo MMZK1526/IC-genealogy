@@ -43,7 +43,7 @@ fun Application.configureRouting() {
             call.request.queryParameters["id"]?.let { id ->
                 val typeFilter =
                     call.request.queryParameters["types"]?.split(",") ?: listOf("WD-P22", "WD-P25", "WD-P26", "WD-P40")
-                val result = WikiDataDataSource(listOf()).findRelatedPeople(id, typeFilter, depth)
+                val result = WikiDataDataSource(typeFilter).findRelatedPeople(id, depth)
                 call.respond(result)
             } ?: call.respond(
                 HttpStatusCode.BadRequest,
