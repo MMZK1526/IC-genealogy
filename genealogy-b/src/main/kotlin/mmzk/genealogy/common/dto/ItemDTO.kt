@@ -26,8 +26,8 @@ data class ItemDTO(
 @Serializable
 data class AdditionalProperty(
     var propertyId: String,
-    var name: String?,
-    var value: String?
+    var name: String,
+    var value: String
 ) {
     constructor(row: ResultRow) : this(
         row[AdditionalPropertiesTable.propertyId],
