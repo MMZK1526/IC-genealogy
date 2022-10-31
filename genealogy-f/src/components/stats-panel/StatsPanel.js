@@ -30,7 +30,7 @@ export class StatsPanel extends React.Component {
         return (
             <div>
                 <b>Avg children per person:</b><br/>
-                {avgChildren}
+                {avgChildren.toFixed(2)}
             </div>
         );
     }
