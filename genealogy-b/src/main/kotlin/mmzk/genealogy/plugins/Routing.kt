@@ -64,7 +64,7 @@ fun Application.configureRouting() {
             )
         }
 
-        get("/relation_calc") {
+        post("/relation_calc") {
             val request = call.receive<RelationCalculatorRequest>()
             call.respond(calculateRelations(request))
 //            val result = WikiDataDataSource(listOf("WD-P22", "WD-P25", "WD-P26", "WD-P40")).findRelatedPeople(

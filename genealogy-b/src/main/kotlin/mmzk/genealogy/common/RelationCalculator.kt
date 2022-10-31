@@ -84,7 +84,7 @@ private fun kinshipCalculator(primitives: List<String>): List<String> {
                     1 -> "sibling"
                     else -> "${"great ".repeat(risingLvl - 2)}auncle"
                 }
-                risingLvl == 0 -> "${"great ".repeat(fallingLvl - 2)}grandson"
+                risingLvl == 0 -> "${"great ".repeat(fallingLvl - 2)}grandchild"
                 risingLvl == 1 -> "${"great ".repeat(fallingLvl - 2)}nibling"
                 else -> if (risingLvl == fallingLvl) {
                     "${makeOrdinal(min(risingLvl, fallingLvl) - 1)} cousin"
