@@ -102,7 +102,7 @@ export function transform(data, yearFrom, yearTo) {
       if (relMap.has(key)) {
           mfs = relMap.get(key);
       } else {
-          mfs = {key: toInt(target2.id), n: target2.name, s: addProps[4].value};
+          mfs = {key: toInt(target2.id), n: target2.name, s: (addProps.filter(p => p.name == "gender"))[0].value};
       }
       // check each relationship if so update record accordingly
       if (relation.type === 'child') {
@@ -118,7 +118,7 @@ export function transform(data, yearFrom, yearTo) {
       if (relation.type === 'spouse') {
         console.log(relation['item2Id'] + "has spouse " + relation['item1Id']);
         // if you already have a spouse listed, then prioritise lisitng a spouse who isnt already married to you. i.e conver to a -> b -> c -> d rather than a <-> b, c <-> d
-              if (addProps[4].value == 'M') {
+              if ((addProps.filter(p => p.name == "gender"))[0].value == 'M') {
                 relMap = updatePrevWife(mfs, relMap, idPerson);
                 mfs.ux = toInt(relation.item1Id);
               } else {
@@ -193,7 +193,7 @@ function updatePrevWife(mfs, relMap, idPerson) {
   } else {
     let person = idPerson.get(unConvert(key));
     let addProps = person.additionalProperties;
-    prev = {key: toInt(person.id), n: person.name, s: addProps[4].value, vir: mfs.key};
+    prev = {key: toInt(person.id), n: person.name, s: (addProps.filter(p => p.name == "gender"))[0].value, vir: mfs.key};
     console.log("updated here");
     console.log(JSON.stringify(prev));
     relMap.set(unConvert(prev.key), prev);
@@ -228,7 +228,7 @@ function updatePrevHusband(mfs, relMap, idPerson) {
   } else {
     let person = idPerson.get(unConvert(key));
     let addProps = person.additionalProperties;
-    prev = {key: toInt(person.id), n: person.name, s: addProps[4].value, ux: mfs.key};
+    prev = {key: toInt(person.id), n: person.name, s: (addProps.filter(p => p.name == "gender"))[0].value, ux: mfs.key};
     console.log("updated here");
     console.log(JSON.stringify(prev));
     relMap.set(unConvert(prev.key), prev);
@@ -263,7 +263,7 @@ function createRelation(key, idPerson, relMap) {
   } else {
       let target2 = idPerson.get(key);
       let addProps = target2.additionalProperties;
-      let mfs = {key: toInt(target2.id), n: target2.name, s: addProps[4].value};
+      let mfs = {key: toInt(target2.id), n: target2.name, s: (addProps.filter(p => p.name == "gender"))[0].value};
       relMap.set(key, mfs);
       return relMap;
   }
