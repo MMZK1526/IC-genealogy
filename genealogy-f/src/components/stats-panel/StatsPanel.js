@@ -1,11 +1,10 @@
 import React from 'react';
-import './StatsPanel.css';
+import css from './StatsPanel.css';
 
 export class StatsPanel extends React.Component {
     render() {
         return (
-            <div className='stats-panel'>
-                <button className='close-button' onClick={this.props.onClick}>x</button>
+            <div className={css.statsPanel}>
                 {this.numberOfFamilyMembers()}
                 {this.avgChildrenPerPerson()}
                 {this.mostPopularCountryOfBirth()}
@@ -38,11 +37,11 @@ export class StatsPanel extends React.Component {
     mostPopularCountryOfBirth() {
         const arr = this.props.data.items.map((item) => this.getCountryOfBirth(item));
         const nonNullArr = arr.filter((x) => x !== null);
-        const counts = new Map();
-        for (const x of nonNullArr) {
-            counts.set(x, counts.has(x) ? counts.get(x) + 1 : 1);
+        const counts = {};
+        for (const country of nonNullArr) {
+            counts[country] = counts[country] ? counts[country] + 1 : 1;
         }
-        const countsArr = Array.from(counts.entries());
+        const countsArr = counts.entries();
         countsArr.sort((x, y) => (y[1] - x[1]));
         console.assert(countsArr.length >= 1);
         const resCountry = countsArr[0][0];
@@ -59,11 +58,11 @@ export class StatsPanel extends React.Component {
     topFamilies() {
         const arr = this.props.data.items.map((item) => this.getFamily(item));
         const nonNullArr = arr.filter((x) => x !== null);
-        const counts = new Map();
-        for (const x of nonNullArr) {
-            counts.set(x, counts.has(x) ? counts.get(x) + 1 : 1);
+        const counts = {};
+        for (const country of nonNullArr) {
+            counts[country] = counts[country] ? counts[country] + 1 : 1;
         }
-        const countsArr = Array.from(counts.entries());
+        const countsArr = counts.entries();
         countsArr.sort((x, y) => (y[1] - x[1]));
         console.assert(countsArr.length >= 1);
 
@@ -89,10 +88,7 @@ export class StatsPanel extends React.Component {
 
     getCountryOfBirth(item) {
         const fullName = this.getProperty(item, 'place of birth');
-        if (fullName === null) {
-            return null;
-        }
-        return fullName.split(',').at(-1).trim();
+        return fullName.split(',').trim();
     }
 
     getFamily(item) {
