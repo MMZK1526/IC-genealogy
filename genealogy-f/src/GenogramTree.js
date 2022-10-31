@@ -762,7 +762,7 @@ export class GenogramTree extends React.Component {
 
               {
                 this.state.showStats &&
-                  <StatsPanel data={this.relations} />
+                  <StatsPanel data={this.props.rawJson} onClick={this.handleStatsClick} />
               }
 
             </div>
