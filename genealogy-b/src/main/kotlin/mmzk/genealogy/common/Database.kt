@@ -68,7 +68,7 @@ object Database {
             }
 
             for (property in item.additionalProperties) {
-                AdditionalPropertiesTable.insert {
+                AdditionalPropertiesTable.insertIgnore {
                     it[itemId] = item.id
                     it[propertyId] = property.propertyId
                     it[value] = property.value

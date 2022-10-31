@@ -42,9 +42,7 @@ fun calculateRelations(input: RelationCalculatorRequest): Map<String, List<List<
         }
     }
 
-    return result.mapValues { (_, paths) ->
-        paths.map { path -> path.map { it.typeId } }
-    }
+    return result.mapValues { (_, paths) -> paths.map { path -> path.map { it.typeId } } }
 }
 
 private fun isPartOfPrunableTriangle(

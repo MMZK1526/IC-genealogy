@@ -280,9 +280,23 @@ function getPersonMap(data) {
     let attributes = new Map;
     attributes.set("name", person.name);
     attributes.set("description", person.description);
+
     for (let attr of person.additionalProperties) {
-      attributes.set(attr.name, attr.value);
+      let fieldName  = attr.name;
+      let fieldValue = attr.value;
+      // If field doesn't present, don't put in the Map
+      if (fieldValue === null || fieldValue === "") continue;
+
+      switch (fieldName) {
+        case "date of birth":
+          fieldValue = fieldValue.replace(/^0+/, '').split("T")[0];
+        case "date of death":
+          fieldValue = fieldValue.replace(/^0+/, '').split("T")[0];
+        default:
+      }
+      attributes.set(fieldName, fieldValue);
     }
+
     personMap.set(personId, attributes)
   }
   return personMap;

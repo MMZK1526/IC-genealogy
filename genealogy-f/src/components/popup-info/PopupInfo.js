@@ -17,9 +17,9 @@ function PopupInfo(props) {
 }
 
 function getAdditionalProperties(data) {
-    Object.keys(Object.fromEntries(data)).map((k) => {
-        console.log(k);
-    })
+    // Object.keys(Object.fromEntries(data)).map((k) => {
+    //     console.log(k);
+    // })
     return Object.keys(Object.fromEntries(data)).map((k) => (
         <div key={k}>
             <div key='k'><h4>{k}:  {data.get(k)}</h4></div>

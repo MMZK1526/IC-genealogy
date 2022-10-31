@@ -10,7 +10,7 @@ import org.jetbrains.exposed.sql.ResultRow
 data class ItemDTO(
     var id: String,
     var name: String,
-    var description: String?,
+    var description: String,
     var aliases: String?,
     var additionalProperties: List<AdditionalProperty> = listOf()
 ) {
@@ -26,8 +26,8 @@ data class ItemDTO(
 @Serializable
 data class AdditionalProperty(
     var propertyId: String,
-    var name: String?,
-    var value: String?
+    var name: String,
+    var value: String
 ) {
     constructor(row: ResultRow) : this(
         row[AdditionalPropertiesTable.propertyId],
