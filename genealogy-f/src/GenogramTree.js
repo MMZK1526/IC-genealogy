@@ -10,6 +10,7 @@ import PopupInfo from './components/popup-info/PopupInfo.js'
 import './GenogramTree.css';
 import { MdPadding } from "react-icons/md";
 import {exportComponentAsPNG} from "react-component-export-image";
+import {StatsPanel} from './components/stats-panel/StatsPanel';
 
 // helper function to convert "WD-Q13423" -> 13423
 function toInt(str) {
@@ -672,7 +673,8 @@ export class GenogramTree extends React.Component {
       this.to = props.to;
       this.state = {
         personInfo: null,
-        isPopped: false
+        isPopped: false,
+        showStats: false,
       }
       this.componentRef = React.createRef();
     }
@@ -700,30 +702,44 @@ export class GenogramTree extends React.Component {
       console.log("From: " + this.from);
       console.log("To: " + this.to);
         return(
-			<div className="tree-box">
-			{
-				this.state.isPopped
-				? <div className="popup">
-					<PopupInfo 
-						closePopUp={this.closePopUp}
-						info={this.personMap.get("WD-Q"+this.state.personInfo)}>
-					</PopupInfo>
-				</div>
-				: ""
-			}
-          
-            <DiagramWrappper
-                nodeDataArray={this.relations}
-                onModelChange={this.handleModelChange}
-                onDiagramEvent={this.handleDiagramEvent}
-                yearFrom = {this.from}
-                yearTo = {this.to}
-                ref={this.componentRef}
-            />
+            <div className="tree-box">
+              {
+                this.state.isPopped
+                    ? <div className="popup">
+                      <PopupInfo
+                          closePopUp={this.closePopUp}
+                          info={this.personMap.get("WD-Q" + this.state.personInfo)}>
+                      </PopupInfo>
+                    </div>
+                    : ""
+              }
 
-            <button className='export-button' onClick={() => exportComponentAsPNG(this.componentRef)}>
-              Export as PNG
-            </button>
+              <DiagramWrappper
+                  nodeDataArray={this.relations}
+                  onModelChange={this.handleModelChange}
+                  onDiagramEvent={this.handleDiagramEvent}
+                  yearFrom={this.from}
+                  yearTo={this.to}
+                  ref={this.componentRef}
+              />
+
+              <div className='top-buttons'>
+                <button onClick={() => exportComponentAsPNG(this.componentRef)}>
+                  Export as PNG
+                </button>
+                <button onClick={() => {
+                  this.setState((prevState) => ({
+                    showStats: !prevState.showStats
+                  }));
+                }}>
+                  Show stats
+                </button>
+              </div>
+
+              {
+                this.state.showStats &&
+                  <StatsPanel data={this.relations} />
+              }
 
             </div>
         );

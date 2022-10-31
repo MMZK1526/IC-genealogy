@@ -13,7 +13,7 @@ import {Adapter} from './components/visualisation-adapter/Adapter';
 import { GenogramTree } from "./GenogramTree";
 import {transform} from "./GenogramTree";
 import { Form } from "react-bootstrap";
-// import ClipLoader from 'react-spinners/ClipLoader';
+import ClipLoader from 'react-spinners/ClipLoader';
 import {exportComponentAsPNG} from 'react-component-export-image';
 
 
@@ -84,17 +84,17 @@ class NameForm extends React.Component {
     render() {
         return (
             <div className='App'>
-                {/*{*/}
-                {/*    !_.isEmpty(this.state.searchJsons)*/}
-                {/*        ? <Sidebar*/}
-                {/*            name={this.state.initialName}*/}
-                {/*            nameChange={this.handleChangeInitialName}*/}
-                {/*            yearFromChange={this.handleChangeFrom}*/}
-                {/*            yearToChange={this.handleChangeTo}*/}
-                {/*            onClick={this.handleSearchSubmit}*/}
-                {/*        />*/}
-                {/*        : null*/}
-                {/*}*/}
+                {
+                    !_.isEmpty(this.state.searchJsons)
+                        ? <Sidebar
+                            name={this.state.initialName}
+                            nameChange={this.handleChangeInitialName}
+                            yearFromChange={this.handleChangeFrom}
+                            yearToChange={this.handleChangeTo}
+                            onClick={this.handleSearchSubmit}
+                        />
+                        : null
+                }
                 <div className='tree-box'>
                     {
                         !_.isEmpty(this.state.relationsJson)
@@ -124,14 +124,14 @@ class NameForm extends React.Component {
                 }
                 {
                     this.state.isLoading
-                        // && <ClipLoader
-                        //     color='#0000ff'
-                        //     cssOverride={{
-                        //         display: 'block',
-                        //         margin: '0 auto',
-                        //     }}
-                        //     size={75}
-                        // />
+                        && <ClipLoader
+                            color='#0000ff'
+                            cssOverride={{
+                                display: 'block',
+                                margin: '0 auto',
+                            }}
+                            size={75}
+                        />
                 }
             </div>
         );
