@@ -15,6 +15,7 @@ import {transform} from "./GenogramTree";
 import { Form } from "react-bootstrap";
 import ClipLoader from 'react-spinners/ClipLoader';
 import {exportComponentAsPNG} from 'react-component-export-image';
+import {CustomUpload} from "./components/custom-upload/CustomUpload";
 
 import {ResultPage} from "./components/result-page/ResultPage.js"
 
@@ -53,6 +54,7 @@ class NameForm extends React.Component {
 
         this.handleSearchSubmit = this.handleSearchSubmit.bind(this);
         this.handleRelationsSubmit = this.handleRelationsSubmit.bind(this);
+        this.handleCustomUpload = this.handleCustomUpload.bind(this);
     }
 
     handleChangeInitialName(event) {
@@ -125,6 +127,7 @@ class NameForm extends React.Component {
                             size={75}
                         />
                 }
+                <CustomUpload onSubmit={this.handleCustomUpload} />
             </div>
         );
     }
@@ -199,6 +202,12 @@ class NameForm extends React.Component {
                 relationsJson: r,
                 isLoading: false,
             });
+        });
+    }
+
+    handleCustomUpload(data) {
+        this.setState({
+            relationsJson: data,
         });
     }
 
