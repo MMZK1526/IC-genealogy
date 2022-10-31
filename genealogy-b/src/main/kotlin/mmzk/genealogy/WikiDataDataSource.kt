@@ -112,7 +112,7 @@ class WikiDataDataSource(
                     )
 
                     dtos[id] = ItemDTO(
-                        id,
+                        makeID(id),
                         name,
                         description,
                         null, // TODO: aliases
