@@ -78,6 +78,11 @@
   /* background-color: beige; */
 }
 
+.card:focus{
+  background-color:beige;
+  border-color:#FFFFFF;
+}
+
 .card #name {
   font-size: 20px;
   margin: 5px;

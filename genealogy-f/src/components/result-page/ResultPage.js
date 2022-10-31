@@ -55,7 +55,7 @@ function Card({ onClick, selected, title, itemId, desc }) {
     const visibility = React.useContext(VisibilityContext);
   
     return (
-        <div className="card" onClick={() => onClick(visibility)}>
+        <div className="card" onClick={() => onClick(visibility)} tabIndex="1">
             <div id="name">{title}</div>
             <div id="desc">{desc}</div>
         </div>
