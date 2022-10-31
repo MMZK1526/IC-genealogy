@@ -33,10 +33,14 @@ class WikiDataDataSource(
                 for (value in result) {
                     row[value.name] = value.value.stringValue()
                 }
-                val id = row[SPARQL.item]?.let(::Url)?.pathSegments?.lastOrNull() ?: continue
+                val id = row[SPARQL.item]?.let(::Url)?.pathSegments?.lastOrNull()?.takeIf {
+                    it.firstOrNull() == 'Q'
+                } ?: continue
                 relations.addAll(typeMap.entries.mapNotNull {
                     Fields.parseID(it.key)?.second?.let { key ->
-                        row[key]?.let(::Url)?.pathSegments?.lastOrNull()?.let { otherID ->
+                        row[key]?.let(::Url)?.pathSegments?.lastOrNull()?.takeIf { otherID ->
+                            otherID.firstOrNull() == 'Q'
+                        }?.let { otherID ->
                             RelationshipDTO(makeID(otherID), makeID(id), it.value, makeID(key))
                         }
                     }
@@ -59,7 +63,9 @@ class WikiDataDataSource(
             for (value in result) {
                 row[value.name] = value.value.stringValue()
             }
-            val id = row[SPARQL.item]?.let(::Url)?.pathSegments?.lastOrNull()?.let { makeID(it) } ?: continue
+            val id = row[SPARQL.item]?.let(::Url)?.pathSegments?.lastOrNull()?.takeIf {
+                it.firstOrNull() == 'Q'
+            } ?: continue
             if (!dtos.contains(id)) {
                 val name = row[SPARQL.name]
                 if (name != null) {
@@ -194,7 +200,8 @@ class WikiDataDataSource(
         // TODO: Handle compound IDs
         val idMap = ids.mapNotNull { Fields.parseID(it)?.second?.let { value -> it to value } }.toMap()
         val queryLabels = idMap.values.joinToString(" ") { "?${it}Label" }
-        val queryStrCore = idMap.values.joinToString("\n") { "OPTIONAL { ?$it wikibase:directClaim wdt:$it . }" }
+        val queryStrCore =
+            idMap.values.joinToString("\n") { "OPTIONAL { ?$it wikibase:directClaim wdt:$it . }" }
         val queryStr = """
             SELECT $queryLabels WHERE {
               $queryStrCore
@@ -284,7 +291,8 @@ class WikiDataDataSource(
             null
         }
         val answer =
-            results?.let { parseRelationSearchResults(it, typeMap) } ?: (setOf<RelationshipDTO>() to setOf<String>())
+            results?.let { parseRelationSearchResults(it, typeMap) }
+                ?: (setOf<RelationshipDTO>() to setOf<String>())
         repo.shutDown()
         answer
     }
