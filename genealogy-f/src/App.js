@@ -13,10 +13,12 @@ import {Adapter} from './components/visualisation-adapter/Adapter';
 import { GenogramTree } from "./GenogramTree";
 import {transform} from "./GenogramTree";
 import { Form } from "react-bootstrap";
-// import ClipLoader from 'react-spinners/ClipLoader';
+import ClipLoader from 'react-spinners/ClipLoader';
+import {exportComponentAsPNG} from 'react-component-export-image';
+import {CustomUpload} from "./components/custom-upload/CustomUpload";
 
 
-// COMMENT THIS BACK IN FOR QUICK TESTIN
+// COMMENT THIS BACK IN FOR QUICK TESTING
 // function App() {
 //   return (
 //     <GenogramTree
@@ -60,6 +62,7 @@ class NameForm extends React.Component {
 
         this.handleSearchSubmit = this.handleSearchSubmit.bind(this);
         this.handleRelationsSubmit = this.handleRelationsSubmit.bind(this);
+        this.handleCustomUpload = this.handleCustomUpload.bind(this);
     }
 
     handleChangeInitialName(event) {
@@ -92,15 +95,15 @@ class NameForm extends React.Component {
                             yearToChange={this.handleChangeTo}
                             onClick={this.handleSearchSubmit}
                         />
-                        : ''
+                        : null
                 }
                 <div className='tree-box'>
                     {
                         !_.isEmpty(this.state.relationsJson)
                             // TODO - entry point for genogram tree
                             ?
-                            <GenogramTree 
-                                rawJson={this.state.relationsJson} 
+                            <GenogramTree
+                                rawJson={this.state.relationsJson}
                                 from={this.state.fromYear}
                                 to={this.state.toYear}
                             />
@@ -123,15 +126,16 @@ class NameForm extends React.Component {
                 }
                 {
                     this.state.isLoading
-                        // && <ClipLoader
-                        //     color='#0000ff'
-                        //     cssOverride={{
-                        //         display: 'block',
-                        //         margin: '0 auto',
-                        //     }}
-                        //     size={75}
-                        // />
+                        && <ClipLoader
+                            color='#0000ff'
+                            cssOverride={{
+                                display: 'block',
+                                margin: '0 auto',
+                            }}
+                            size={75}
+                        />
                 }
+                <CustomUpload onSubmit={this.handleCustomUpload} />
             </div>
         );
     }
@@ -206,6 +210,12 @@ class NameForm extends React.Component {
                 relationsJson: r,
                 isLoading: false,
             });
+        });
+    }
+
+    handleCustomUpload(data) {
+        this.setState({
+            relationsJson: data,
         });
     }
 
