@@ -1,0 +1,94 @@
+.result-page {
+  display: flex;
+  flex-direction: column;
+  /* background-color: beige; */
+  margin: 4em 5em;
+
+  /* font-size: 20px; 
+  font-weight: normal; 
+  line-height: 48px;  */
+}
+
+.result-page #title {
+  font-size: 40px;
+  color: black;
+  margin-bottom: 30px;
+  /* font-size: 20px; 
+  font-weight: normal; 
+  line-height: 48px;  */
+}
+
+.result-page .apply-button{
+  margin-top: 10px;
+  display:inline-block;
+  padding: 0.20em 0.40em;
+  width: 10vw;
+  /* padding:0.20em 1em; */
+  border: 2px solid darkgray;
+  /* margin: 0.2em 0.1em 0.1em 0.5em; */
+  border-radius: 5px;
+  box-sizing: border-box;
+  align-self: flex-start;
+  text-align: start;
+  /* font-family: 'Helvetica Neue', sans-serif;  */
+  font-size: 20px; 
+  font-weight: normal;
+  color: white;
+  text-shadow: 0 0.04em 0.04em rgba(0,0,0,0.35);
+  background-color: blue;
+  /* text-align: center; */
+  transition: all 0.15s;
+}
+
+.result-page .apply-button:hover{
+  text-shadow: 0 0 2em rgba(255,255,255,1);
+  color:#FFFFFF;
+  border-color:#FFFFFF;
+}
+  
+@media all and (max-width:30em){
+  .topbar .apply-button{
+    display:block;
+    margin:0.4em auto;
+  }
+}
+
+
+.result-page #select{
+  display: inline;
+  font-size: large;
+  color: rgb(50, 50, 50);
+  width: 30vw;
+  height: 40px;
+  border: 1px solid #999;
+  font-size: 18px;
+  background-color: transparent;
+  border-radius: 5px;
+
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.card {
+  border: 1px darkslategray solid;
+  border-radius: 5px;
+  height: 300px;
+  width: 200px;
+  margin: 0px 20px 20px 0px;
+  /* background-color: beige; */
+}
+
+.card:focus{
+  background-color:beige;
+  border-color:#FFFFFF;
+}
+
+.card #name {
+  font-size: 20px;
+  margin: 5px;
+  color: darkslategray;
+}
+
+.card #desc {
+  margin: 5px;
+}

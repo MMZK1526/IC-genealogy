@@ -5,7 +5,6 @@ import io.ktor.server.application.*
 import io.ktor.server.request.receive
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import mmzk.genealogy.Fields
 import mmzk.genealogy.common.Database
 import mmzk.genealogy.WikiDataDataSource
 import mmzk.genealogy.common.RelationCalculatorRequest
@@ -43,7 +42,7 @@ fun Application.configureRouting() {
             call.request.queryParameters["id"]?.let { id ->
                 val typeFilter =
                     call.request.queryParameters["types"]?.split(",") ?: listOf("WD-P22", "WD-P25", "WD-P26", "WD-P40")
-                val result = WikiDataDataSource(listOf()).findRelatedPeople(id, typeFilter, depth)
+                val result = WikiDataDataSource(typeFilter).findRelatedPeople(id, depth)
                 call.respond(result)
             } ?: call.respond(
                 HttpStatusCode.BadRequest,
@@ -68,6 +67,15 @@ fun Application.configureRouting() {
         post("/relation_calc") {
             val request = call.receive<RelationCalculatorRequest>()
             call.respond(calculateRelations(request))
+//            val result = WikiDataDataSource(listOf("WD-P22", "WD-P25", "WD-P26", "WD-P40")).findRelatedPeople(
+//                "WD-Q9682",
+//                3
+//            )
+//            call.respond(
+//                calculateRelations(
+//                    RelationCalculatorRequest("WD-Q9682", result.relations.toSet()),
+//                )
+//            )
         }
     }
 }

@@ -22,6 +22,7 @@ export function DropDown(props) {
     <Form>
     <Form.Label className="label">Family Name: </Form.Label>
     <select id="cars" name="cars" onChange={props.onChange}>
+      <option value=""></option>
       <option value="House of Windsor">House of Windsor</option>
       <option value="House of Li">House of Li</option>
       <option value="none">...</option>

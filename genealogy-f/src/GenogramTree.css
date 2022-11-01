@@ -29,3 +29,9 @@
   z-index: 0;
   /* border: 2px dashed gray; */
 }
+
+.toolbar {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+}

@@ -17,6 +17,8 @@ object Fields {
         }
     }
 
+    inline val String.wikidataId get() = "WD-$this"
+
     const val gender = "P21"
     const val family = "P53"
     const val dateOfBirth = "P569"
@@ -40,5 +42,3 @@ object Fields {
         Triple(child.wikidataId, spouse.wikidataId, child.wikidataId)
     )
 }
-
-private inline val String.wikidataId get() = "WD-$this"

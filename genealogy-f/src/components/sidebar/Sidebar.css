@@ -58,7 +58,7 @@
 
 .sidebar .apply-button{
   display:inline-block;
-  padding:0.20em 1em;
+  padding:0.20em 0.40em;
   border:0.1em solid darkgray;
   margin: 2.0em 0.1em 0.1em 0.8em;
   width: 200px;
@@ -72,7 +72,7 @@
   color: white;
   text-shadow: 0 0.04em 0.04em rgba(0,0,0,0.35);
   background-color: blue;
-  text-align: center;
+  text-align: start;
   transition: all 0.15s;
 }
 

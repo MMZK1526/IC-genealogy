@@ -14,7 +14,7 @@ import org.eclipse.rdf4j.repository.sparql.SPARQLRepository
 
 class WikiDataDataSource(
     // TODO: make this functional, so that WikiDataCrawler can be moved into the common package
-    val relationshipTypeFilters: List<String>
+    private val relationshipTypeFilters: List<String>
 ) {
     // Translate a WikiData ID into a Database ID.
     private fun makeID(id: String): String = "WD-$id"
@@ -280,11 +280,11 @@ class WikiDataDataSource(
         answer
     }
 
-    suspend fun findRelatedPeople(id: String, typeFilter: List<String>, depth: Int = 2) = coroutineScope {
+    suspend fun findRelatedPeople(id: String, depth: Int = 2) = coroutineScope {
         val visited = mutableSetOf<String>()
         var frontier = listOf(id)
         var curDepth = 0
-        val typeMap = searchPropertyNameByIDs(typeFilter)
+        val typeMap = searchPropertyNameByIDs(relationshipTypeFilters)
         val targets = searchIndividualByIDs(frontier.mapNotNull { Fields.parseID(it)?.second })
         val people = mutableSetOf<ItemDTO>()
         val relations = mutableSetOf<RelationshipDTO>()

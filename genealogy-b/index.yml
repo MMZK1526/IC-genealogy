@@ -1,0 +1,254 @@
+openapi: '3.0.0'
+info:
+  version: '0.1'
+  title: 'genealogy'
+  description: Backend API for Ancesta Web App
+
+paths:
+  /search:
+    parameters:
+      - in: query
+        name: q
+        description: Finds items whose name contains q
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Searches a name fragment. It will return results from both the database and WikiData, using an order of relevance.
+      responses:
+        200:
+          description: An array of Item objects ordered by relevance.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Item'
+        400:
+          description: Missing query parameter 'q'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Unexpected error
+  /relations_wk:
+    parameters:
+      - name: depth
+        description: Controls how many connected relationships to follow
+        in: query
+        required: false
+        schema:
+          type: number
+          default: 0
+      - name: types
+        description: Only finds items that are related by these relationship types
+        in: query
+        required: false
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+          default:
+            - WD-P22
+            - WD-P25
+            - WD-P26
+            - WD-P40
+      - name: id
+        description: The database ID of the item whose related items is to be found.
+        in: query
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Finds items related to a given item on WikiData.
+      responses:
+        200:
+          description: A RelationsResponse object containing the relations, the target searched for, as well as the non-target items involved in the relations.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RelationsResponse'
+        400:
+          description: Missing id parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Unexpected error
+  /relations_db:
+    parameters:
+      - name: depth
+        description: Controls how many connected relationships to follow
+        in: query
+        required: false
+        schema:
+          type: number
+          default: 0
+      - name: types
+        description: Only finds items that are related by these relationship types
+        in: query
+        required: false
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+          default:
+            - WD-P22
+            - WD-P25
+            - WD-P26
+            - WD-P40
+      - name: id
+        description: The database ID of the item whose related items is to be found.
+        in: query
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Finds items related to a given item in the database.
+      responses:
+        200:
+          description: A RelationsResponse object containing the relations, the target searched for, as well as the non-target items involved in the relations.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RelationsResponse'
+        400:
+          description: Missing id parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Unexpected error
+  /relation_calc:
+    post:
+      summary: Calculates relationships
+      description: Given a set of relationships and a starting item, calculates all the ways in which each non-start item involved can be reached from the start item.
+      requestBody:
+        description: The input to the relation calculator
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RelationCalculatorRequest'
+      responses:
+        200:
+          description: A dictionary with the IDs of the non-starting items as keys, and an array of paths (which are also represented as arrays of the relationship type IDs) as values.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: array
+                    items:
+                      type: string
+        500:
+          description: Unexpected error
+components:
+  schemas:
+    AdditionalProperty:
+      description: an additional property of an item
+      type: object
+      properties:
+        propertyId:
+          type: string
+        name:
+          type: string
+        value:
+          type: string
+      required:
+        - propertyId
+        - name
+        - value
+    Item:
+      description: an item in the database or WikiData
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - additionalProperties
+      properties:
+        id:
+          description: The database ID of the item. It consists of two parts separated by '-'. The first part indicates the data source, and the second part is its ID in that data source. Should match [A-Z]+-[A-Z]*[0-9]+
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        aliases:
+          type: string
+        additionalProperties:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdditionalProperty'
+    Relationship:
+      type: object
+      description: a relationship between two items. The specific semantics depend on the relationship type.
+      properties:
+        item1Id:
+          type: string
+        item2Id:
+          type: string
+        type:
+          description: human readable name of the type of the relationship
+          type: string
+        typeId:
+          description: The database ID for the type of the relationship. It consists of two parts separated by '-'. The first part indicates the data source, and the second part is its ID in that data source. Should match [A-Z]+-[A-Z]*[0-9]+
+          type: string
+      required:
+        - item1Id
+        - item2Id
+        - type
+        - typeId
+    RelationsResponse:
+      description: response for the /relations_wk and /relations_db endpoints
+      type: object
+      properties:
+        targets:
+          description: the target items searched for in the request
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+        items:
+          description: the non-target items involved in the relations
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+        relations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Relationship'
+      required:
+        - targets
+        - items
+        - relations
+    RelationCalculatorRequest:
+      type: object
+      description: request for the /relation_calc endpoint
+      properties:
+        start:
+          type: string
+        relations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Relationship'
+      required:
+        - start
+        - relations
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          description: A human readable error message
+          type: string

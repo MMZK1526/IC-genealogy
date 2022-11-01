@@ -9,6 +9,9 @@ import './App.css';
 import PopupInfo from './components/popup-info/PopupInfo.js'
 import './GenogramTree.css';
 import { MdFolderShared, MdPadding } from "react-icons/md";
+import {exportComponentAsPNG} from "react-component-export-image";
+import {StatsPanel} from './components/stats-panel/StatsPanel';
+import {downloadJsonFile} from "./components/custom-upload/exportAsJson";
 
 // helper function to convert "WD-Q13423" -> 13423
 function toInt(str) {
@@ -21,8 +24,6 @@ function toInt(str) {
 
 // should we apply filter before or after (or in between) tree generation
 // yearFrom and yearTo passed in at start.
-
-
 
 // comparing date using js inbuilt date
 export function applyDateOfBirthFilter(id, dateFrom, dateTo, idPerson) {
@@ -102,24 +103,12 @@ export function transform(data, yearFrom, yearTo, familyName) {
   let people = data.items;
   people.push(target);
   let targetId = target.id;
+  // set up id map for getting attributes later
   idPerson.set(targetId, target);
   for (let x of data.items) {
       idPerson.set(x.id, x);
   }
-  // if (relMap.size > 1) {
-  //   for (let key of relMap.keys()) {
-  //     let r = relMap.get(key);
-  //     if (applyDateOfBirthFilter(key, yearFrom, yearTo, idPerson)) {
-  //       r.opacity = "1.0";
-  //     } else {
-  //       r.opacity = "0.2";
-  //     }
-  //   }
-  //   console.log(newOutput);
-  //   return newOutput;
-  // }
-  // create a map from personId to (relation array of their mother, father and spouse )
-  // console.log(data.relations);
+
   for (let relation of data.relations) {
       var key = relation['item2Id'];
       var target2 = idPerson.get(key);
@@ -174,8 +163,8 @@ export function transform(data, yearFrom, yearTo, familyName) {
       relMap.set(key, mfs)
       relMap = createRelation(relation['item1Id'], idPerson, relMap);
   }
-  // loop through keys (bug of 3 targets in people, otherwise can loop through them)
-  // assumes both mother and father have to exist, (makes more sense)
+
+  // connect mother and father if not married
   console.log("marrying parents");
   for (let key of relMap.keys()) {
     relMap = marryParents(relMap.get(key), relMap, idPerson);
@@ -183,12 +172,6 @@ export function transform(data, yearFrom, yearTo, familyName) {
   // console.log();
   // remove dangling nodes, i.e non-confirmed marriages, or people on edge without mother or father.
   var newOutput = [];
-  // apply filters
-  // move map to 
-  console.log(yearFrom);
-  console.log(yearTo);
-
-  // push to array
 
 
   // apply filters (add opacity to non-filtered)
@@ -203,15 +186,16 @@ export function transform(data, yearFrom, yearTo, familyName) {
   }
   console.log(relMap.values());
 
+  // add unknown nodes for unknown parent
   for (let key of relMap.keys()) {
     let r = relMap.get(key);
     relMap = addUnknown(r, relMap);
   }
 
+  // convert map into array
   for (let key of relMap.keys()) {
     newOutput.push(relMap.get(key));
   }
-  // after adding unknown to smoothen out the graph.
   console.log(newOutput);
   return newOutput;
 
@@ -764,14 +748,17 @@ export class GenogramTree extends React.Component {
       this.closePopUp = this.closePopUp.bind(this);
       // need to pass the filter somewhere else.
       this.relations = transform(props.rawJson, props.from, props.to, props.familyName);
+      this.handleStatsClick = this.handleStatsClick.bind(this);
       this.personMap = getPersonMap(props.rawJson.items);
       this.from = props.from;
       this.to = props.to;
       this.familyName = props.familyName;
       this.state = {
         personInfo: null,
-        isPopped: false
+        isPopped: false,
+        showStats: false,
       }
+      this.componentRef = React.createRef();
     }
 
     closePopUp() {
@@ -785,38 +772,65 @@ export class GenogramTree extends React.Component {
     }
 
     handleDiagramEvent (event) {
+      if (!this.personMap.has("WD-Q" + event.subject.part.key)) {
+          return;
+      }
         this.setState({
           personInfo: event.subject.part.key,
           isPopped: true
         })
-      }
+    }
+
+    handleStatsClick() {
+      this.setState((state) => ({
+        showStats: !state.showStats,
+      }));
+    }
 
     // renders ReactDiagram
     render() {
-      console.log("inside genogramtree");
-      console.log("From: " + this.from);
-      console.log("To: " + this.to);
+      console.log("New family filter: " + this.familyName);
         return(
-			<div className="tree-box">
-			{
-				this.state.isPopped
-				? <div className="popup">
-					<PopupInfo 
-						closePopUp={this.closePopUp}
-						info={this.personMap.get("WD-Q"+this.state.personInfo)}>
-					</PopupInfo>
-				</div>
-				: ""
-			}
-          
-            <DiagramWrappper
-                nodeDataArray={this.relations}
-                onModelChange={this.handleModelChange}
-                onDiagramEvent={this.handleDiagramEvent}
-                yearFrom = {this.from}
-                yearTo = {this.to}
-            />
-            
+            <div className="tree-box">
+              {
+                this.state.isPopped
+                    ? <div className="popup">
+                      <PopupInfo
+                          closePopUp={this.closePopUp}
+                          info={this.personMap.get("WD-Q" + this.state.personInfo)}>
+                      </PopupInfo>
+                    </div>
+                    : ""
+              }
+
+              <DiagramWrappper
+                  nodeDataArray={this.relations}
+                  onModelChange={this.handleModelChange}
+                  onDiagramEvent={this.handleDiagramEvent}
+                  yearFrom={this.from}
+                  yearTo={this.to}
+                  ref={this.componentRef}
+              />
+
+              <div className='toolbar'>
+                <button onClick={() => exportComponentAsPNG(this.componentRef)}>
+                  Export as PNG
+                </button>
+                <button onClick={() => downloadJsonFile(this.props.rawJson)}>
+                  Export as JSON
+                </button>
+                <button onClick={() => {
+                  this.setState((prevState) => ({
+                    showStats: !prevState.showStats
+                  }));
+                }}>
+                  Show stats
+                </button>
+              </div>
+              {
+                this.state.showStats &&
+                  <StatsPanel data={this.props.rawJson} onClick={this.handleStatsClick} />
+              }
             </div>
         );
     }

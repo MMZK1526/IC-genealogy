@@ -5,8 +5,9 @@ import './NameSearch.css'
 
 export function NameSearch(props) {
     return (
-        <div className='welcome' onSubmit={props.onClick}>
+        <form className='welcome' onSubmit={props.onClick}>
             <div id='title'>Ancesta - Genealogy Project</div>
+            <br></br>
             <div id='search'>
                 <MdOutlinePersonSearch size={50} color='darkslategray'/> 
                 <Form.Control
@@ -23,6 +24,6 @@ export function NameSearch(props) {
                     Search
                 </Button>
             </div>
-        </div>
+        </form>
     );
 }

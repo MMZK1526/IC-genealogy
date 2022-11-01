@@ -13,17 +13,11 @@ import {Adapter} from './components/visualisation-adapter/Adapter';
 import { GenogramTree } from "./GenogramTree";
 import {transform} from "./GenogramTree";
 import { Form } from "react-bootstrap";
-// import ClipLoader from 'react-spinners/ClipLoader';
+import ClipLoader from 'react-spinners/ClipLoader';
+import {CustomUpload} from "./components/custom-upload/CustomUpload";
 
-
-// COMMENT THIS BACK IN FOR QUICK TESTIN
-// function App() {
-//   return (
-//     <GenogramTree
-//         relations={this.state.relationsJson}
-//     />
-//   );
-// }
+import {ResultPage} from "./components/result-page/ResultPage.js"
+import {exportComponentAsPNG} from 'react-component-export-image';
 
 // COMMENT THIS IN FOR FULL FLOW TEST
 class App extends React.Component {
@@ -63,14 +57,15 @@ class NameForm extends React.Component {
 
         this.handleSearchSubmit = this.handleSearchSubmit.bind(this);
         this.handleRelationsSubmit = this.handleRelationsSubmit.bind(this);
+        this.handleCustomUpload = this.handleCustomUpload.bind(this);
     }
 
     handleChangeInitialName(event) {
         this.setState({initialName: event.target.value});
     }
 
-    handleChangeChosenId(event) {
-        this.setState({chosenId: event.target.value});
+    handleChangeChosenId(id) {
+        this.setState({chosenId: id});
     }
 
     handleChangeFrom(event) {
@@ -93,8 +88,18 @@ class NameForm extends React.Component {
         return (
             <div className='App'>
                 {
-                    !_.isEmpty(this.state.searchJsons)
-                        ? <Sidebar
+                    _.isEmpty(this.state.searchJsons)
+                    && <NameSearch
+                        onChange={this.handleChangeInitialName}
+                        onClick={this.handleSearchSubmit}
+                    />
+                }
+                {
+                    (
+                        !_.isEmpty(this.state.searchJsons) ||
+                            !_.isEmpty(this.state.relationsJson)
+                    ) &&
+                         <Sidebar
                             name={this.state.initialName}
                             nameChange={this.handleChangeInitialName}
                             yearFromChange={this.handleChangeFrom}
@@ -102,30 +107,26 @@ class NameForm extends React.Component {
                             familyChange={this.handleChangeFamily}
                             onClick={this.handleSearchSubmit}
                         />
-                        : ''
                 }
                 <div className='tree-box'>
                     {
                         !_.isEmpty(this.state.relationsJson)
                             // TODO - entry point for genogram tree
                             ?
-                            <GenogramTree 
-                                rawJson={this.state.relationsJson} 
+                            <GenogramTree
+                                rawJson={this.state.relationsJson}
                                 from={this.state.fromYear}
                                 to={this.state.toYear}
                                 familyName={this.state.familyName}
                             />
                             // <Adapter data={this.state.relationsJson} />
 
-                            : <NameSearch
-                                onChange={this.handleChangeInitialName}
-                                onClick={this.handleSearchSubmit}
-                            />
+                            : ''
                     }
                 </div>
                 {
                     !_.isEmpty(this.state.searchJsons) && _.isEmpty(this.state.relationsJson)
-                        ? <Topbar
+                        ? <ResultPage
                             state={this.state}
                             onChange={this.handleChangeChosenId}
                             onSubmit={this.handleRelationsSubmit}
@@ -134,15 +135,16 @@ class NameForm extends React.Component {
                 }
                 {
                     this.state.isLoading
-                        // && <ClipLoader
-                        //     color='#0000ff'
-                        //     cssOverride={{
-                        //         display: 'block',
-                        //         margin: '0 auto',
-                        //     }}
-                        //     size={75}
-                        // />
+                        && <ClipLoader
+                            color='#0000ff'
+                            cssOverride={{
+                                display: 'block',
+                                margin: '0 auto',
+                            }}
+                            size={75}
+                        />
                 }
+                <CustomUpload onSubmit={this.handleCustomUpload} />
             </div>
         );
     }
@@ -173,6 +175,15 @@ class NameForm extends React.Component {
             let from = this.state.fromYear;
             let to = this.state.toYear;
             let familyName = this.state.familyName;
+
+            if (Object.values(r).length === 0) {
+                alert("Person not found!");
+                this.setState({
+                    relationsJson: {},
+                    isLoading: false,
+                });
+                return;
+            }
 
             r = Object.values(r).filter(function (v) {
                 let birth = v.dateOfBirth;
@@ -209,6 +220,7 @@ class NameForm extends React.Component {
         this.setState({
             isLoading: true,
         });
+        
         this.requests.relations({id: this.state.chosenId}).then(r => {
             if (Object.values(r)[1].length === 0) {
                 this.setState({
@@ -221,6 +233,12 @@ class NameForm extends React.Component {
                 relationsJson: r,
                 isLoading: false,
             });
+        });
+    }
+
+    handleCustomUpload(data) {
+        this.setState({
+            relationsJson: data,
         });
     }
 
