@@ -16,3 +16,17 @@ export function FilterForm(props) {
     </Form>
   );
 }
+
+export function DropDown(props) {
+  return (
+    <Form>
+    <Form.Label className="label" for="cars">Family Name: </Form.Label>
+    <select id="cars" name="cars" onChange={props.onChange}>
+      <option value="House of Windsor">House of Windsor</option>
+      <option value="saab">Saab</option>
+      <option value="fiat">Fiat</option>
+      <option value="audi">Audi</option>
+    </select>
+    </Form>
+  );
+}

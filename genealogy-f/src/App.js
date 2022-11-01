@@ -85,6 +85,7 @@ class NameForm extends React.Component {
 
     handleChangeFamily(event) {
         const val = event.target.value;
+        console.log(val);
         this.setState({familyName: val});
     }
 
