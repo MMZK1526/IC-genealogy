@@ -32,6 +32,7 @@ export function applyDateOfBirthFilter(id, dateFrom, dateTo, idPerson) {
 
   // console.log(id);
   const target = idPerson.get(id);
+  if (target == null) {return false;}
   const addProps = target.additionalProperties;
   // can we make this generic in the future
   const f = addProps.filter(p => p.name == "date of birth");
@@ -64,6 +65,7 @@ export function applyFamilyFilter(id, familyName, idPerson) {
     return true;
   }
   const target = idPerson.get(id);
+  if (target == null) {return false;}
   const addProps = target.additionalProperties;
   // can we make this generic in the future
   const f = addProps.filter(p => p.name == "family");
