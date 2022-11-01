@@ -4,6 +4,7 @@ import io.ktor.http.*
 import java.util.*
 import kotlin.collections.*
 import kotlinx.coroutines.*
+import mmzk.genealogy.common.Database
 import mmzk.genealogy.common.dto.AdditionalProperty
 import mmzk.genealogy.common.dto.ItemDTO
 import mmzk.genealogy.common.dto.RelationsResponse
@@ -177,7 +178,7 @@ class WikiDataDataSource(
         answer
     }
 
-    suspend fun searchPropertyNameByIDs(ids: List<String>) = coroutineScope {
+    private suspend fun searchPropertyNameByIDs(ids: List<String>) = coroutineScope {
         val repo = SPARQLRepository(SPARQL.sparqlEndpoint)
 
         // TODO: Handle compound IDs
@@ -201,9 +202,10 @@ class WikiDataDataSource(
         val answer = results?.let {
             val labelMap = it.next()
                 .mapNotNull { row -> row.value?.let { value -> row.name!! to value.stringValue()!! } }.toMap()
-            idMap.mapValues { entry -> labelMap["${entry.value}Label"] ?: "" }
+            idMap.mapNotNull { entry -> labelMap["${entry.value}Label"]?.let { value -> entry.key to value } }.toMap()
         } ?: mapOf()
         repo.shutDown()
+        Database.insertProperties(answer)
         answer
     }
 
