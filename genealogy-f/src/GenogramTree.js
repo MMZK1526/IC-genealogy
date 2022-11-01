@@ -141,7 +141,7 @@ export function transform(data, yearFrom, yearTo, familyName) {
       if (relation.type === 'spouse') {
         let spouseId = toInt(relation.item1Id);
         // if you already have a spouse listed, then prioritise lisitng a spouse who isnt already married to you. i.e conver to a -> b -> c -> d rather than a <-> b, c <-> d
-              if ((addProps.filter(p => p.name == "gender"))[0].value == 'M') {
+              if ((addProps.filter(p => p.name == "gender"))[0].value == 'Male') {
                 relMap = updatePrevWife(mfs, relMap, idPerson);
                 let newP = relMap.get(unConvert(spouseId));
                 if (newP == null || (newP.vir == null || newP.vir != mfs.key)) {
@@ -222,7 +222,7 @@ function marryParents(mfs, relMap, idPerson) {
 function addUnknown(mfs, relMap) {
   if (mfs.m != null && mfs.f == null) {
     let r2 = relMap.get(unConvert(mfs.m));
-    let newF = {key: mfs.m + 1, n: "unknown", s: 'M', opacity: '0.2'};
+    let newF = {key: mfs.m + 1, n: "unknown", s: 'Male', opacity: '0.2'};
     // marry parent to unknown and set child parent to unknown
     newF.ux = r2.key;
     mfs.f = newF.key;
@@ -233,7 +233,7 @@ function addUnknown(mfs, relMap) {
   // case of unknown mother - temporarily replace with "unknown" node
   if (mfs.m == null && mfs.f != null) {
     let r2 = relMap.get(unConvert(mfs.f));
-    let newM = {key: mfs.f + 1, n: "unknown", s: 'F', opacity: '0.2'};
+    let newM = {key: mfs.f + 1, n: "unknown", s: 'Female', opacity: '0.2'};
     // marry parent to unknown and set child parent to unknown
     newM.vir = r2.key;
     mfs.m = newM.key;
@@ -489,7 +489,7 @@ export class DiagramWrappper extends React.Component {
 
       // two different node templates, one for each sex,
       // named by the category value in the node data object
-      myDiagram.nodeTemplateMap.add("M",  // male
+      myDiagram.nodeTemplateMap.add("Male",  // male
         $(go.Node, "Vertical",
         // TODO can make this non-selectable with selectable: false, but we want clickable but not movable?
         // see this for how to do stuff on click? - https://gojs.net/latest/extensions/Robot.html
@@ -521,7 +521,7 @@ export class DiagramWrappper extends React.Component {
             new go.Binding("text", "n"), new go.Binding("opacity", "opacity"))
         ));
 
-      myDiagram.nodeTemplateMap.add("F",  // female
+      myDiagram.nodeTemplateMap.add("Female",  // female
         $(go.Node, "Vertical",
           { movable: false, locationSpot: go.Spot.Center, locationObjectName: "ICON", selectionObjectName: "ICON" },
           new go.Binding("opacity", "hide", h => h ? 0 : 1),
@@ -635,7 +635,7 @@ export class DiagramWrappper extends React.Component {
                 console.log("cannot create Marriage relationship with unknown person " + wife);
                 continue;
             }
-            if (wdata.s !== "F") {
+            if (wdata.s !== "Female") {
                 console.log("cannot create Marriage relationship with wrong gender person " + wife);
                 continue;
             }
@@ -665,7 +665,7 @@ export class DiagramWrappper extends React.Component {
                 console.log("cannot create Marriage relationship with unknown person " + husband);
                 continue;
             }
-            if (hdata.s !== "M") {
+            if (hdata.s !== "Male") {
                 console.log("cannot create Marriage relationship with wrong gender person " + husband);
                 continue;
             }
@@ -1030,7 +1030,7 @@ export class GenogramTree extends React.Component {
         let spouseB = lablink.toNode;
         if (spouseA.opacity > 0 && spouseB.opacity > 0) {
           // prefer fathers on the left, mothers on the right
-          if (spouseA.data.s === "F") {  // sex is female
+          if (spouseA.data.s === "Female") {  // sex is female
             const temp = spouseA;
             spouseA = spouseB;
             spouseB = temp;
