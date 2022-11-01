@@ -66,11 +66,11 @@ paths:
       summary: Finds items related to a given item on WikiData.
       responses:
         200:
-          description: A RelationshipResponse object containing the relations, the target searched for, as well as the non-target items involved in the relations.
+          description: A RelationsResponse object containing the relations, the target searched for, as well as the non-target items involved in the relations.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RelationshipResponse'
+                $ref: '#/components/schemas/RelationsResponse'
         400:
           description: Missing id parameter
           content:
@@ -113,11 +113,11 @@ paths:
       summary: Finds items related to a given item in the database.
       responses:
         200:
-          description: A RelationshipResponse object containing the relations, the target searched for, as well as the non-target items involved in the relations.
+          description: A RelationsResponse object containing the relations, the target searched for, as well as the non-target items involved in the relations.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RelationshipResponse'
+                $ref: '#/components/schemas/RelationsResponse'
         400:
           description: Missing id parameter
           content:
@@ -128,7 +128,8 @@ paths:
           description: Unexpected error
   /relation_calc:
     post:
-      summary: Given a set of relationships and a starting item, calculates all the ways in which each non-start item involved can be reached from the start item.
+      summary: Calculates relationships
+      description: Given a set of relationships and a starting item, calculates all the ways in which each non-start item involved can be reached from the start item.
       requestBody:
         description: The input to the relation calculator
         required: true
@@ -177,7 +178,7 @@ components:
         - additionalProperties
       properties:
         id:
-          description: The database ID of the item. It consists of two parts separated by '-'. The first part indicates the data source, and the second part is its ID in that data source.
+          description: The database ID of the item. It consists of two parts separated by '-'. The first part indicates the data source, and the second part is its ID in that data source. Should match [A-Z]+-[A-Z]*[0-9]+
           type: string
         name:
           type: string
@@ -201,7 +202,7 @@ components:
           description: human readable name of the type of the relationship
           type: string
         typeId:
-          description: The database ID for the type of the relationship. It consists of two parts separated by '-'. The first part indicates the data source, and the second part is its ID in that data source.
+          description: The database ID for the type of the relationship. It consists of two parts separated by '-'. The first part indicates the data source, and the second part is its ID in that data source. Should match [A-Z]+-[A-Z]*[0-9]+
           type: string
       required:
         - item1Id
