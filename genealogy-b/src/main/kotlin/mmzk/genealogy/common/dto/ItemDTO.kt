@@ -27,11 +27,13 @@ data class ItemDTO(
 data class AdditionalProperty(
     var propertyId: String,
     var name: String,
-    var value: String
+    var value: String,
+    val valueHash: String,
 ) {
     constructor(row: ResultRow) : this(
         row[AdditionalPropertiesTable.propertyId],
         row[PropertyTypeTable.name],
-        row[AdditionalPropertiesTable.value]
+        row[AdditionalPropertiesTable.value],
+        row[AdditionalPropertiesTable.valueHash]
     )
 }

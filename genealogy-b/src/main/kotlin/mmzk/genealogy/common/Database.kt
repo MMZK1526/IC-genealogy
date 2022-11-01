@@ -67,6 +67,7 @@ object Database {
                 it[id] = EntityID(item.id, ItemTable)
                 it[name] = item.name
                 it[description] = item.description
+                it[aliases] = item.aliases
             }
 
             for (property in item.additionalProperties) {
@@ -74,6 +75,7 @@ object Database {
                     it[itemId] = item.id
                     it[propertyId] = property.propertyId
                     it[value] = property.value
+                    it[valueHash] = property.valueHash
                 }
             }
         }

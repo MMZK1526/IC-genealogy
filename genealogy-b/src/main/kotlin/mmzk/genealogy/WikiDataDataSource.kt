@@ -35,12 +35,12 @@ class WikiDataDataSource(
                     row[value.name] = value.value.stringValue()
                 }
                 val id = row[SPARQL.item]?.let(::Url)?.pathSegments?.lastOrNull()?.takeIf {
-                    it.firstOrNull() == 'Q'
+                    it.firstOrNull() == 'Q' || it.firstOrNull() == 'q'
                 } ?: continue
                 relations.addAll(typeMap.entries.mapNotNull {
                     Fields.parseID(it.key)?.second?.let { key ->
                         row[key]?.let(::Url)?.pathSegments?.lastOrNull()?.takeIf { otherID ->
-                            otherID.firstOrNull() == 'Q'
+                            otherID.firstOrNull() == 'Q' || otherID.firstOrNull() == 'q'
                         }?.let { otherID ->
                             RelationshipDTO(makeID(otherID), makeID(id), it.value, makeID(key))
                         }
@@ -57,6 +57,10 @@ class WikiDataDataSource(
         }
 
     private suspend fun parseIndividualSearchResults(results: TupleQueryResult) = coroutineScope {
+        fun getHash(row: Map<String, String>, key: String) = run {
+            row["${key}_"]?.split("/")?.last() ?: ""
+        }
+
         val dtos = mutableMapOf<String, ItemDTO>()
         val personalNames = mutableMapOf<String, NameFormatter>()
         for (result in results) {
@@ -65,34 +69,41 @@ class WikiDataDataSource(
                 row[value.name] = value.value.stringValue()
             }
             val id = row[SPARQL.item]?.let(::Url)?.pathSegments?.lastOrNull()?.takeIf {
-                it.firstOrNull() == 'Q'
+                it.firstOrNull() == 'Q' || it.firstOrNull() == 'q'
             } ?: continue
             if (!dtos.contains(id)) {
                 val name = row[SPARQL.name]
                 if (name != null) {
                     val description = row[SPARQL.description] ?: ""
-                    val alias = row[SPARQL.alias] ?: ""
+                    val alias = row[SPARQL.alias]
                     val dateOfBirth = row[SPARQL.dateOfBirth]?.let {
-                        AdditionalProperty(makeID(Fields.dateOfBirth), "date of birth", it)
+                        AdditionalProperty(
+                            makeID(Fields.dateOfBirth), "date of birth",
+                            it, getHash(row, SPARQL.dateOfBirth)
+                        )
                     }
                     val dateOfDeath = row[SPARQL.dateOfDeath]?.let {
-                        AdditionalProperty(makeID(Fields.dateOfDeath), "date of death", it)
+                        AdditionalProperty(
+                            makeID(Fields.dateOfDeath), "date of death",
+                            it, getHash(row, SPARQL.dateOfDeath)
+                        )
                     }
                     val placeOfBirth = formatLocationWithCountry(
                         row["${SPARQL.placeOfBirth}Label"],
                         row["${SPARQL.placeOfBirthCountry}Label"]
-                    )?.let { AdditionalProperty(makeID(Fields.placeOfBirth), "place of birth", it) }
+                    )?.let { AdditionalProperty("SW-P2", "place of birth", it, "") }
                     val placeOfDeath = formatLocationWithCountry(
                         row["${SPARQL.placeOfDeath}Label"],
                         row["${SPARQL.placeOfDeathCountry}Label"]
-                    )?.let { AdditionalProperty(makeID(Fields.placeOfDeath), "place of death", it) }
-                    val gender = when (row["${SPARQL.gender}Label"]) {
-                        "male" -> "M"
-                        "female" -> "F"
-                        else -> null
-                    }?.let { AdditionalProperty(makeID(Fields.gender), "gender", it) }
+                    )?.let { AdditionalProperty("SW-P3", "place of death", it, "") }
+                    val gender = row["${SPARQL.gender}Label"]?.let {
+                        AdditionalProperty(
+                            makeID(Fields.gender), "gender",
+                            it, getHash(row, SPARQL.gender)
+                        )
+                    }
                     val family = row["${SPARQL.family}Label"]?.let {
-                        AdditionalProperty(makeID(Fields.family), "family", it)
+                        AdditionalProperty(makeID(Fields.family), "family", it, getHash(row, SPARQL.family))
                     }
 
                     dtos[id] = ItemDTO(
@@ -120,9 +131,8 @@ class WikiDataDataSource(
         }
         for ((id, dto) in dtos) {
             dto.additionalProperties += AdditionalProperty(
-                "SW-P1",
-                "personal name",
-                personalNames[id]?.formattedName ?: dto.name
+                "SW-P1", "personal name",
+                personalNames[id]?.formattedName ?: dto.name, ""
             )
         }
         dtos.values.toList()
@@ -135,26 +145,30 @@ class WikiDataDataSource(
         repo.additionalHttpHeaders = Collections.singletonMap("User-Agent", userAgent)
 
         val querySelect = """
-              SELECT ?${SPARQL.item} ?${SPARQL.name} ?${SPARQL.alias} ?${SPARQL.description} ?${SPARQL.family}Label ?${SPARQL.givenName}Label ?${SPARQL.familyName}Label ?${SPARQL.ordinal} ?${SPARQL.familyNameType}Label ?${SPARQL.dateOfBirth} ?${SPARQL.dateOfDeath} ?${SPARQL.placeOfBirth}Label ?${SPARQL.placeOfBirthCountry}Label ?${SPARQL.placeOfDeath}Label ?${SPARQL.placeOfDeathCountry}Label ?${SPARQL.gender}Label WHERE {     
+              SELECT ?${SPARQL.item} ?${SPARQL.name} ?${SPARQL.alias} ?${SPARQL.description} ?${SPARQL.family}_ ?${SPARQL.family}Label ?${SPARQL.givenName}Label ?${SPARQL.familyName}Label ?${SPARQL.ordinal} ?${SPARQL.familyNameType}Label ?${SPARQL.dateOfBirth} ?${SPARQL.dateOfBirth}_ ?${SPARQL.dateOfDeath} ?${SPARQL.dateOfDeath}_ ?${SPARQL.placeOfBirth}Label ?${SPARQL.placeOfBirth}_ ?${SPARQL.placeOfBirthCountry}Label ?${SPARQL.placeOfDeath}Label ?${SPARQL.placeOfDeath}_ ?${SPARQL.placeOfDeathCountry}Label ?${SPARQL.gender}Label ?${SPARQL.gender}_ WHERE {
                   ?${SPARQL.item} wdt:P31 wd:Q5 .
                   OPTIONAL { ?${SPARQL.item} schema:description ?${SPARQL.description} .
                              FILTER ( lang(?${SPARQL.description}) = "en" ). }
-                  OPTIONAL { ?${SPARQL.item} wdt:P53 ?${SPARQL.family} . }
+                  OPTIONAL { ?${SPARQL.item} p:P53 ?${SPARQL.family}_ .
+                             ?${SPARQL.family}_ ps:P53 ?${SPARQL.family} . }
                   OPTIONAL { ?${SPARQL.item} p:P735 ?${SPARQL.givenName}_ .
                              ?${SPARQL.givenName}_ ps:P735 ?${SPARQL.givenName} .
                              OPTIONAL { ?${SPARQL.givenName}_ pq:P1545 ?${SPARQL.ordinal} . } }
                   OPTIONAL { ?${SPARQL.item} p:P734 ?${SPARQL.familyName}_ .
                              ?${SPARQL.familyName}_ ps:P734 ?${SPARQL.familyName} .
                              OPTIONAL { ?${SPARQL.familyName}_ pq:P3831 ?${SPARQL.familyNameType} . } }
-                  OPTIONAL { ?${SPARQL.item} wdt:P569 ?${SPARQL.dateOfBirth} . }
-                  OPTIONAL { ?${SPARQL.item} wdt:P570 ?${SPARQL.dateOfDeath} . }
+                  OPTIONAL { ?${SPARQL.item} p:P569 ?${SPARQL.dateOfBirth}_ .
+                             ?${SPARQL.dateOfBirth}_ ps:P569 ?${SPARQL.dateOfBirth} . }
+                  OPTIONAL { ?${SPARQL.item} p:P570 ?${SPARQL.dateOfDeath}_ .
+                             ?${SPARQL.dateOfDeath}_ ps:P570 ?${SPARQL.dateOfDeath} . }
                   OPTIONAL { ?${SPARQL.item} p:P19 ?${SPARQL.placeOfBirth}_ .
                              ?${SPARQL.placeOfBirth}_ ps:P19 ?${SPARQL.placeOfBirth} .
                              ?${SPARQL.placeOfBirth} wdt:P17 ?${SPARQL.placeOfBirthCountry} . }
                   OPTIONAL { ?${SPARQL.item} p:P20 ?${SPARQL.placeOfDeath}_ .
                              ?${SPARQL.placeOfDeath}_ ps:P20 ?${SPARQL.placeOfDeath} .
                              ?${SPARQL.placeOfDeath} wdt:P17 ?${SPARQL.placeOfDeathCountry} . }
-                  OPTIONAL { ?${SPARQL.item} wdt:P21 ?${SPARQL.gender} . }
+                  OPTIONAL { ?${SPARQL.item} p:P21 ?${SPARQL.gender}_ .
+                             ?${SPARQL.gender}_ ps:P21 ?${SPARQL.gender} . }
                   SERVICE wikibase:mwapi {
                     bd:serviceParam wikibase:api "EntitySearch" .
                     bd:serviceParam wikibase:endpoint "www.wikidata.org" .
@@ -209,32 +223,38 @@ class WikiDataDataSource(
         answer
     }
 
+    // Search for the WikiData entries with the given IDs.
+    // The IDs must be raw WikiData IDs, thus starting with "Q" rather than "WD-".
     suspend fun searchIndividualByIDs(ids: List<String>) = coroutineScope {
         val repo = SPARQLRepository(SPARQL.sparqlEndpoint)
 
         val userAgent = "WikiData Crawler for Genealogy Visualiser WebApp, Contact piopio555888@gmail.com"
         repo.additionalHttpHeaders = Collections.singletonMap("User-Agent", userAgent)
         val querySelect = """
-              SELECT ?${SPARQL.item} ?${SPARQL.name} ?${SPARQL.alias} ?${SPARQL.description} ?${SPARQL.family}Label ?${SPARQL.givenName}Label ?${SPARQL.familyName}Label ?${SPARQL.ordinal} ?${SPARQL.familyNameType}Label ?${SPARQL.dateOfBirth} ?${SPARQL.dateOfDeath} ?${SPARQL.placeOfBirth}Label ?${SPARQL.placeOfBirthCountry}Label ?${SPARQL.placeOfDeath}Label ?${SPARQL.placeOfDeathCountry}Label ?${SPARQL.gender}Label WHERE {                  
+              SELECT ?${SPARQL.item} ?${SPARQL.name} ?${SPARQL.alias} ?${SPARQL.description} ?${SPARQL.family}_ ?${SPARQL.family}Label ?${SPARQL.givenName}Label ?${SPARQL.familyName}Label ?${SPARQL.ordinal} ?${SPARQL.familyNameType}Label ?${SPARQL.dateOfBirth} ?${SPARQL.dateOfBirth}_ ?${SPARQL.dateOfDeath} ?${SPARQL.dateOfDeath}_ ?${SPARQL.placeOfBirth}Label ?${SPARQL.placeOfBirth}_ ?${SPARQL.placeOfBirthCountry}Label ?${SPARQL.placeOfDeath}Label ?${SPARQL.placeOfDeath}_ ?${SPARQL.placeOfDeathCountry}Label ?${SPARQL.gender}Label ?${SPARQL.gender}_ WHERE {                 
                   VALUES ?${SPARQL.item} { ${ids.joinToString(" ") { "wd:$it" }} } .
                   OPTIONAL { ?${SPARQL.item} schema:description ?${SPARQL.description} .
                              FILTER ( lang(?${SPARQL.description}) = "en" ). }
-                  OPTIONAL { ?${SPARQL.item} wdt:P53 ?${SPARQL.family} . }
+                  OPTIONAL { ?${SPARQL.item} p:P53 ?${SPARQL.family}_ .
+                             ?${SPARQL.family}_ ps:P53 ?${SPARQL.family} . }
                   OPTIONAL { ?${SPARQL.item} p:P735 ?${SPARQL.givenName}_ .
                              ?${SPARQL.givenName}_ ps:P735 ?${SPARQL.givenName} .
                              OPTIONAL { ?${SPARQL.givenName}_ pq:P1545 ?${SPARQL.ordinal} . } }
                   OPTIONAL { ?${SPARQL.item} p:P734 ?${SPARQL.familyName}_ .
                              ?${SPARQL.familyName}_ ps:P734 ?${SPARQL.familyName} .
-                              OPTIONAL { ?${SPARQL.familyName}_ pq:P3831 ?${SPARQL.familyNameType} . } }
-                  OPTIONAL { ?${SPARQL.item} wdt:P569 ?${SPARQL.dateOfBirth} . }
-                  OPTIONAL { ?${SPARQL.item} wdt:P570 ?${SPARQL.dateOfDeath} . }
+                             OPTIONAL { ?${SPARQL.familyName}_ pq:P3831 ?${SPARQL.familyNameType} . } }
+                  OPTIONAL { ?${SPARQL.item} p:P569 ?${SPARQL.dateOfBirth}_ .
+                             ?${SPARQL.dateOfBirth}_ ps:P569 ?${SPARQL.dateOfBirth} . }
+                  OPTIONAL { ?${SPARQL.item} p:P570 ?${SPARQL.dateOfDeath}_ .
+                             ?${SPARQL.dateOfDeath}_ ps:P570 ?${SPARQL.dateOfDeath} . }
                   OPTIONAL { ?${SPARQL.item} p:P19 ?${SPARQL.placeOfBirth}_ .
                              ?${SPARQL.placeOfBirth}_ ps:P19 ?${SPARQL.placeOfBirth} .
                              ?${SPARQL.placeOfBirth} wdt:P17 ?${SPARQL.placeOfBirthCountry} . }
                   OPTIONAL { ?${SPARQL.item} p:P20 ?${SPARQL.placeOfDeath}_ .
                              ?${SPARQL.placeOfDeath}_ ps:P20 ?${SPARQL.placeOfDeath} .
                              ?${SPARQL.placeOfDeath} wdt:P17 ?${SPARQL.placeOfDeathCountry} . }
-                  OPTIONAL { ?${SPARQL.item} wdt:P21 ?${SPARQL.gender} . }
+                  OPTIONAL { ?${SPARQL.item} p:P21 ?${SPARQL.gender}_ .
+                             ?${SPARQL.gender}_ ps:P21 ?${SPARQL.gender} . }
                   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
                 }
         """.trimIndent()
