@@ -174,8 +174,9 @@ export function transform(data, yearFrom, yearTo, familyName) {
   }
   // loop through keys (bug of 3 targets in people, otherwise can loop through them)
   // assumes both mother and father have to exist, (makes more sense)
+  console.log("marrying parents");
   for (let key of relMap.keys()) {
-    relMap = marryParents(relMap.get(key), relMap);
+    relMap = marryParents(relMap.get(key), relMap, idPerson);
   }
   // console.log();
   // remove dangling nodes, i.e non-confirmed marriages, or people on edge without mother or father.
@@ -186,36 +187,76 @@ export function transform(data, yearFrom, yearTo, familyName) {
   console.log(yearTo);
 
   // push to array
-  for (let key of relMap.keys()) {
-    newOutput.push(relMap.get(key));
-  }
+
 
   // apply filters (add opacity to non-filtered)
-  for (let r of newOutput) {
-    if (applyDateOfBirthFilter(unConvert(r.key), yearFrom, yearTo, idPerson) && applyFamilyFilter(unConvert(r.key), familyName, idPerson)) {
+  for (let key of relMap.keys()) {
+    let r = relMap.get(key);
+    if (applyDateOfBirthFilter(key, yearFrom, yearTo, idPerson) && applyFamilyFilter(key, familyName, idPerson)) {
       r.opacity = "1.0";
     } else {
       r.opacity = "0.2";
     }
+    relMap.set(key, r);
   }
+  console.log(relMap.values());
+
+  // for (let key of relMap.keys()) {
+  //   let r = relMap.get(key);
+  //   relMap = addUnknown(r, relMap);
+  // }
+
+  for (let key of relMap.keys()) {
+    newOutput.push(relMap.get(key));
+  }
+  // after adding unknown to smoothen out the graph.
   console.log(newOutput);
   return newOutput;
 
 }
 
-function marryParents(mfs, relMap) {
+function marryParents(mfs, relMap, idPerson) {
   // console.log(mfs);
   if (mfs.m != null && mfs.f != null) {
     let x = relMap.get(unConvert(mfs.f));
     let y = relMap.get(unConvert(mfs.m));
     // console.log(x);
     // console.log(y);
-    if (x.ux == null && x.vir == null && y.ux == null && y.vir == null) {
-      console.log("changed");
-      x.ux = y.key;
-      relMap.set(unConvert(x.key), x);
+    if ((x.ux == null || x.ux != y.key) && (y.vir == null || y.vir != x.key)) {
+      console.log(y.key + " now pointing to " + x.key);
+      updatePrevHusband(y, relMap, idPerson);
+      y.vir = x.key;
+      relMap.set(unConvert(y.key), y);
     }
   }
+  // case of unknown father - temporarily replace with "unknown" node
+  return relMap;
+}
+
+function addUnknown(mfs, relMap) {
+  if (mfs.m != null && mfs.f == null) {
+    let r2 = relMap.get(unConvert(mfs.m));
+    let newF = {key: mfs.m + 1, n: "unknown", s: 'F', opacity: "0.2"};
+    // marry parent to unknown and set child parent to unknown
+    r2.vir = newF.key;
+    mfs.f = newF.key;
+    relMap.set(unConvert(newF.key), newF);
+    relMap.set(unConvert(r2.key), r2);
+    relMap.set(unConvert(mfs.key), mfs);
+  }
+
+  // case of unknown mother - temporarily replace with "unknown" node
+  if (mfs.m == null && mfs.f != null) {
+    let r2 = relMap.get(unConvert(mfs.f));
+    let newM = {key: mfs.f + 1, n: "unknown", s: 'M', opacity: "0.2"};
+    // marry parent to unknown and set child parent to unknown
+    r2.ux = newM.key;
+    mfs.m = newM.key;
+    relMap.set(unConvert(newF.key), newM);
+    relMap.set(unConvert(r2.key), r2);
+    relMap.set(unConvert(mfs.key), mfs);
+  }
+
   return relMap;
 }
 
