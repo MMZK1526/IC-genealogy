@@ -193,7 +193,7 @@ export function transform(data, yearFrom, yearTo, familyName) {
   for (let key of relMap.keys()) {
     let r = relMap.get(key);
     if (applyDateOfBirthFilter(key, yearFrom, yearTo, idPerson) && applyFamilyFilter(key, familyName, idPerson)) {
-      r.opacity = "1.0";
+      r.opacity = r.opacity == null ? "1.0" : r.opacity;
     } else {
       r.opacity = "0.2";
     }
@@ -201,10 +201,10 @@ export function transform(data, yearFrom, yearTo, familyName) {
   }
   console.log(relMap.values());
 
-  // for (let key of relMap.keys()) {
-  //   let r = relMap.get(key);
-  //   relMap = addUnknown(r, relMap);
-  // }
+  for (let key of relMap.keys()) {
+    let r = relMap.get(key);
+    relMap = addUnknown(r, relMap);
+  }
 
   for (let key of relMap.keys()) {
     newOutput.push(relMap.get(key));
@@ -236,24 +236,22 @@ function marryParents(mfs, relMap, idPerson) {
 function addUnknown(mfs, relMap) {
   if (mfs.m != null && mfs.f == null) {
     let r2 = relMap.get(unConvert(mfs.m));
-    let newF = {key: mfs.m + 1, n: "unknown", s: 'F', opacity: "0.2"};
+    let newF = {key: mfs.m + 1, n: "unknown", s: 'M', opacity: '0.2'};
     // marry parent to unknown and set child parent to unknown
-    r2.vir = newF.key;
+    newF.ux = r2.key;
     mfs.f = newF.key;
     relMap.set(unConvert(newF.key), newF);
-    relMap.set(unConvert(r2.key), r2);
     relMap.set(unConvert(mfs.key), mfs);
   }
 
   // case of unknown mother - temporarily replace with "unknown" node
   if (mfs.m == null && mfs.f != null) {
     let r2 = relMap.get(unConvert(mfs.f));
-    let newM = {key: mfs.f + 1, n: "unknown", s: 'M', opacity: "0.2"};
+    let newM = {key: mfs.f + 1, n: "unknown", s: 'F', opacity: '0.2'};
     // marry parent to unknown and set child parent to unknown
-    r2.ux = newM.key;
+    newM.vir = r2.key;
     mfs.m = newM.key;
-    relMap.set(unConvert(newF.key), newM);
-    relMap.set(unConvert(r2.key), r2);
+    relMap.set(unConvert(newM.key), newM);
     relMap.set(unConvert(mfs.key), mfs);
   }
 
