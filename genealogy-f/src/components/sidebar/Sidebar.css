@@ -35,6 +35,14 @@
   font-weight: 600;
 }
 
+.sidebar .family-field{
+  margin-left: 20px;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  font-family: "Avenir Next", sans-serif;
+  font-weight: 600;
+}
+
 /* .sidebar .apply-button{
   display: inline-block;
   align-self: stretch;

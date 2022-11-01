@@ -8,7 +8,7 @@ import {ReactDiagram} from 'gojs-react';
 import './App.css';
 import PopupInfo from './components/popup-info/PopupInfo.js'
 import './GenogramTree.css';
-import { MdPadding } from "react-icons/md";
+import { MdFolderShared, MdPadding } from "react-icons/md";
 
 // helper function to convert "WD-Q13423" -> 13423
 function toInt(str) {
@@ -21,22 +21,24 @@ function toInt(str) {
 
 // should we apply filter before or after (or in between) tree generation
 // yearFrom and yearTo passed in at start.
+
+
+
+// comparing date using js inbuilt date
 export function applyDateOfBirthFilter(id, dateFrom, dateTo, idPerson) {
   if (dateFrom == '' && dateTo == '') {
     return true;
   }
-  const d1 = dateFrom == '' ? new Date("1000-01-01") : new Date(dateFrom);
-  const d2 = dateTo == '' ? new Date("3000-01-01") : new Date(dateTo);
+
   // console.log(id);
   const target = idPerson.get(id);
   const addProps = target.additionalProperties;
   // can we make this generic in the future
   const f = addProps.filter(p => p.name == "date of birth");
   // console.log(f);
-  console.log(f);
-  let dob = f[0].value;
+  // console.log(f);
   // could be improved for large chain of unknown date of birth people.
-  if (dob == null) {
+  if (f[0] == null  || f[0].length == 0 || f[0].value == null) {
     const r = relMap.get(id);
     if (r.m == null || r.f == null) {
       return false;
@@ -49,15 +51,45 @@ export function applyDateOfBirthFilter(id, dateFrom, dateTo, idPerson) {
   const date = (f[0].value).split("T");
   // console.log(date[0]);
   const d3 = new Date(date[0]);
+  const d1 = dateFrom == '' ? new Date(-8640000000000000) : new Date(dateFrom);
+  const d2 = dateTo == '' ? new Date("3000-01-01") : new Date(dateTo);
   // console.log("comparing " + d1 + "with " + d2 + "and " + d3);
   return d1 <= d3 && d3 <= d2;
+}
+
+// comparing family on string
+export function applyFamilyFilter(id, familyName, idPerson) {
+  console.log(familyName);
+  if (familyName == '') {
+    return true;
+  }
+  const target = idPerson.get(id);
+  const addProps = target.additionalProperties;
+  // can we make this generic in the future
+  const f = addProps.filter(p => p.name == "family");
+  // console.log(f);
+  // console.log(f);
+  // could be improved for large chain of unknown date of birth people.
+  if (f[0] == null  || f[0].length == 0 || f[0].value == null) {
+    const r = relMap.get(id);
+    if (r.m == null || r.f == null) {
+      return false;
+    }
+    const m = applyFamilyFilter(unConvert(r.m), familyName, idPerson)
+    const f = applyFamilyFilter(unConvert(r.f), familyName, idPerson)
+    // check if both parents are out of the date range, if so then assume unknown also outside, otherwise leave in.
+    return m && f;
+  }
+  console.log(f[0].value);
+  // console.log("comparing " + d1 + "with " + d2 + "and " + d3);
+  return f[0].value === familyName;
 }
 
 // global map from id of person to their attributes, used to change opacity for filtering in the goJs diagram.
 var relMap = new Map();
 
 // ^^^^^^ SEE ABOVE transformed format helper function to transfrom JSON into goJS nodeDataArray format.
-export function transform(data, yearFrom, yearTo) {
+export function transform(data, yearFrom, yearTo, familyName) {
   // check if already generated
   // tree still being regenrated can we improve on this.
 
@@ -116,19 +148,27 @@ export function transform(data, yearFrom, yearTo) {
           mfs.f = toInt(relation.item1Id);
       }
       if (relation.type === 'spouse') {
-        console.log(relation['item2Id'] + "has spouse " + relation['item1Id']);
+        let spouseId = toInt(relation.item1Id);
         // if you already have a spouse listed, then prioritise lisitng a spouse who isnt already married to you. i.e conver to a -> b -> c -> d rather than a <-> b, c <-> d
               if ((addProps.filter(p => p.name == "gender"))[0].value == 'M') {
                 relMap = updatePrevWife(mfs, relMap, idPerson);
-                mfs.ux = toInt(relation.item1Id);
+                let newP = relMap.get(unConvert(spouseId));
+                if (newP == null || (newP.vir == null || newP.vir != mfs.key)) {
+                  console.log("NEW RELATION: " + mfs.key + " wife now pointing to " + toInt(relation.item1Id));
+                  mfs.ux = spouseId
+                }
+
               } else {
                 relMap = updatePrevHusband(mfs, relMap, idPerson);
-                mfs.vir = toInt(relation.item1Id);
-                console.log("updating vir" + mfs.vir);
-              }
+                let newP = relMap.get(unConvert(spouseId));
+                if (newP == null || (newP.ux == null || newP.ux != mfs.key)) {
+                  console.log("NEW RELATION: " + mfs.key + " husband now pointing to" + toInt(relation.item1Id));
+                  mfs.vir = spouseId
+                }
+          }
+                // console.log(mfs.key + "husband now pointing to " + mfs.vir);
         console.log(JSON.stringify(mfs));
-
-      }
+    }
       relMap.set(key, mfs)
       relMap = createRelation(relation['item1Id'], idPerson, relMap);
   }
@@ -142,7 +182,6 @@ export function transform(data, yearFrom, yearTo) {
   var newOutput = [];
   // apply filters
   // move map to 
-  console.log(relMap.values());
   console.log(yearFrom);
   console.log(yearTo);
 
@@ -153,7 +192,7 @@ export function transform(data, yearFrom, yearTo) {
 
   // apply filters (add opacity to non-filtered)
   for (let r of newOutput) {
-    if (applyDateOfBirthFilter(unConvert(r.key), yearFrom, yearTo, idPerson)) {
+    if (applyDateOfBirthFilter(unConvert(r.key), yearFrom, yearTo, idPerson) && applyFamilyFilter(unConvert(r.key), familyName, idPerson)) {
       r.opacity = "1.0";
     } else {
       r.opacity = "0.2";
@@ -165,12 +204,12 @@ export function transform(data, yearFrom, yearTo) {
 }
 
 function marryParents(mfs, relMap) {
-  console.log(mfs);
+  // console.log(mfs);
   if (mfs.m != null && mfs.f != null) {
     let x = relMap.get(unConvert(mfs.f));
     let y = relMap.get(unConvert(mfs.m));
-    console.log(x);
-    console.log(y);
+    // console.log(x);
+    // console.log(y);
     if (x.ux == null && x.vir == null && y.ux == null && y.vir == null) {
       console.log("changed");
       x.ux = y.key;
@@ -194,25 +233,27 @@ function updatePrevWife(mfs, relMap, idPerson) {
     let person = idPerson.get(unConvert(key));
     let addProps = person.additionalProperties;
     prev = {key: toInt(person.id), n: person.name, s: (addProps.filter(p => p.name == "gender"))[0].value, vir: mfs.key};
-    console.log("updated here");
+    console.log("SHOULDNT GET HERE");
     console.log(JSON.stringify(prev));
     relMap.set(unConvert(prev.key), prev);
     return relMap;
   }
+  // looping over person you were pointing to before
   // set prev husband to your id, apply recursively.
   if (prev.vir == undefined) {
     prev.vir = mfs.key;
+    console.log(prev.key + "husband now pointing to " + mfs.key);
     relMap = relMap.set(unConvert(prev.key), prev);
     return relMap;
   } else if (prev.vir == mfs.key) {
     return relMap;
   } else {
     // must be case that previously pointed to someone else
-    console.log("previous partner was " + prev.vir);
     let temp = prev;
+    relMap = updatePrevHusband(temp, relMap, idPerson);
     prev.vir = mfs.key;
-    relMap = relMap.set(unConvert(prev.key), prev);
-    return updatePrevHusband(temp, relMap, idPerson);
+    console.log(prev.key + "husband now pointing to " + mfs.key);
+    return relMap.set(unConvert(prev.key), prev);
   }
 }
 
@@ -229,26 +270,27 @@ function updatePrevHusband(mfs, relMap, idPerson) {
     let person = idPerson.get(unConvert(key));
     let addProps = person.additionalProperties;
     prev = {key: toInt(person.id), n: person.name, s: (addProps.filter(p => p.name == "gender"))[0].value, ux: mfs.key};
-    console.log("updated here");
+    console.log("SHOULDNT GET HERE");
     console.log(JSON.stringify(prev));
     relMap.set(unConvert(prev.key), prev);
     return relMap;
   }
   // set prev husband to your id, apply recursively.
   if (prev.ux == undefined) {
-    console.log("previous partner was " + prev.ux);
     prev.ux = mfs.key;
     relMap = relMap.set(unConvert(prev.key), prev);
+    console.log(prev.key + "wife now pointing to " + mfs.key);
     return relMap;
   } else if (prev.ux == mfs.key) {
     return relMap;
   } else {
     // must be case that previously pointed to someone else
-    console.log("previous partner was " + prev.ux);
+    console.log(prev.key + "wife now pointing to " + mfs.key);
     let temp = prev;
+    relMap = updatePrevWife(temp, relMap, idPerson);
     prev.ux = mfs.key;
     relMap = relMap.set(unConvert(prev.key), prev);
-    return updatePrevWife(temp, relMap, idPerson);
+    return relMap;
   }
 }
 
@@ -679,10 +721,12 @@ export class GenogramTree extends React.Component {
       this.handleModelChange = this.handleModelChange.bind(this);
       this.handleDiagramEvent = this.handleDiagramEvent.bind(this);
       this.closePopUp = this.closePopUp.bind(this);
-      this.relations = transform(props.rawJson, props.from, props.to);
+      // need to pass the filter somewhere else.
+      this.relations = transform(props.rawJson, props.from, props.to, props.familyName);
       this.personMap = getPersonMap(props.rawJson.items);
       this.from = props.from;
       this.to = props.to;
+      this.familyName = props.familyName;
       this.state = {
         personInfo: null,
         isPopped: false

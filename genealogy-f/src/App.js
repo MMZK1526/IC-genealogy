@@ -48,6 +48,7 @@ class NameForm extends React.Component {
             relationsJson: {},
             fromYear: '',
             toYear: '',
+            familyName: '',
             transformedArr: [],
             isLoading: false,
         };
@@ -57,6 +58,8 @@ class NameForm extends React.Component {
         this.handleChangeChosenId = this.handleChangeChosenId.bind(this);
         this.handleChangeFrom = this.handleChangeFrom.bind(this);
         this.handleChangeTo = this.handleChangeTo.bind(this);
+        this.handleChangeFamily = this.handleChangeFamily.bind(this);
+
 
         this.handleSearchSubmit = this.handleSearchSubmit.bind(this);
         this.handleRelationsSubmit = this.handleRelationsSubmit.bind(this);
@@ -80,6 +83,11 @@ class NameForm extends React.Component {
         this.setState({toYear: val});
     }
 
+    handleChangeFamily(event) {
+        const val = event.target.value;
+        this.setState({familyName: val});
+    }
+
     render() {
         return (
             <div className='App'>
@@ -90,6 +98,7 @@ class NameForm extends React.Component {
                             nameChange={this.handleChangeInitialName}
                             yearFromChange={this.handleChangeFrom}
                             yearToChange={this.handleChangeTo}
+                            familyChange={this.handleChangeFamily}
                             onClick={this.handleSearchSubmit}
                         />
                         : ''
@@ -103,6 +112,7 @@ class NameForm extends React.Component {
                                 rawJson={this.state.relationsJson} 
                                 from={this.state.fromYear}
                                 to={this.state.toYear}
+                                familyName={this.state.familyName}
                             />
                             // <Adapter data={this.state.relationsJson} />
 
@@ -149,9 +159,11 @@ class NameForm extends React.Component {
             console.log("Handle Filter: "+ Object.values(this.state.relationsJson));
             let from = this.state.fromYear;
             let to = this.state.toYear;
+            let familyName = this.state.familyName;
             this.setState({
                 fromYear: from,
                 toYear: to,
+                familyName: familyName,
             });
             this.render();
             return;
@@ -159,6 +171,7 @@ class NameForm extends React.Component {
         await this.requests.search(this.state.initialName).then(r => {
             let from = this.state.fromYear;
             let to = this.state.toYear;
+            let familyName = this.state.familyName;
 
             r = Object.values(r).filter(function (v) {
                 let birth = v.dateOfBirth;
@@ -178,6 +191,7 @@ class NameForm extends React.Component {
                 chosenId: r[0].id,
                 fromYear : from,
                 toYear: to,
+                familyName: familyName,
                 relationsJson: {},
                 isLoading: false,
             });

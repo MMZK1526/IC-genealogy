@@ -15,6 +15,9 @@ export function Sidebar(props) {
       <div className='date-to-field'>
         <FilterForm title="To :" placeholder="Year of Birth" type="text" onChange={props.yearToChange}/>
       </div>
+      <div className='family-field'>
+        <FilterForm title="Family Name" placeholder="e.g. Windsor" type="text" onChange={props.familyChange}/>
+      </div>
       <Button className='apply-button' size='lg' type='primary' onClick={props.onClick}>
         Apply filters
       </Button>
