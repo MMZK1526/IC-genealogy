@@ -138,11 +138,15 @@ function bfs(node, keyRel, relMap, idPerson) {
       // set up mother and father and spouses of current node
       let target = idPerson.get(node);
       let addProps = target.additionalProperties;
-      let gender = (addProps.filter(p => p.name == "gender"))[0].value;
+      let genderArr = (addProps.filter(p => p.name == "gender"))[0];
+      if (genderArr == undefined) {
+        continue;
+      }
+      let gender = genderArr.value;
       // gender = gender == "male" ? "M" : "F";
       let r = {key: node, n: target.name, m: m, f: f, s: gender}
       console.log(ss);
-      console.log(JSON.stringify(r));
+      // console.log(JSON.stringify(r));
       if (ss !== undefined) {
         console.log("got here");
         // check your not at a depth of 2 away from some people.
@@ -157,7 +161,7 @@ function bfs(node, keyRel, relMap, idPerson) {
         edges.push(...ss);
       }
       console.log("Mapped to ")
-      console.log(JSON.stringify(r));
+      // console.log(JSON.stringify(r));
       relMap.set(node, r);
 
       // // depth of 1 of spouse
@@ -432,9 +436,12 @@ function marryParentsUndef(mfs, relMap, idPerson) {
 
 function marryParents(mfs, relMap, idPerson) {
   // console.log(mfs);
-  if (mfs.m !== null && mfs.f != null) {
+  if (mfs.m != null && mfs.f != null) {
     let x = relMap.get(unConvert(mfs.f));
     let y = relMap.get(unConvert(mfs.m));
+    if (x == null || y == null) {
+      return relMap;
+    }
     // console.log(x);
     // console.log(y);
     if ((x.ux == null || x.ux != y.key) && (y.vir == null || y.vir != x.key)) {
