@@ -139,28 +139,44 @@ function bfs(node, keyRel, relMap, idPerson) {
       let target = idPerson.get(node);
       let addProps = target.additionalProperties;
       let gender = (addProps.filter(p => p.name == "gender"))[0].value;
-      gender = gender == "male" ? "M" : "F";
+      // gender = gender == "male" ? "M" : "F";
       let r = {key: node, n: target.name, m: m, f: f, s: gender}
+      console.log(ss);
+      console.log(JSON.stringify(r));
+      if (ss !== undefined) {
+        console.log("got here");
+        // check your not at a depth of 2 away from some people.
+        let p = ss.filter(n => explored.has(n));
+        if (p.length == 0) {
+          if (gender == "male") {
+            r.ux = ss
+          } else {
+            r.vir = ss;
+          }
+        }
+        edges.push(...ss);
+      }
       console.log("Mapped to ")
-      console.log(r);
+      console.log(JSON.stringify(r));
       relMap.set(node, r);
 
-      // depth of 1 of spouse
-      if (ss !== undefined) {
-        for (let s of ss) {
-          // TODO uncomment here for collapsable spouse -> spouse chains (however messy if on one line)
-          // edges.push(s);
-          let targetS = idPerson.get(s);
-          let addPropsS = (targetS).additionalProperties;
-          let genderS = (addPropsS.filter(p => p.name == "gender"))[0].value;
-          genderS = genderS == "male" ? "M" : "F";
-          let rS = gender == "M" ? {key: s, n : targetS.name, s: genderS, vir: node} : {key: s, n : targetS.name, s: genderS, ux: node}
-          console.log("setting spouse: " + s);
-          console.log(rS);
-          relMap.set(s, rS);
-          explored.add(s);
-        }
-      }
+      // // depth of 1 of spouse
+      // if (ss !== undefined) {
+      //   for (let s of ss) {
+      //     // TODO uncomment here for collapsable spouse -> spouse chains (however messy if on one line)
+      //     // edges.push(s);
+      //     let targetS = idPerson.get(s);
+      //     let addPropsS = (targetS).additionalProperties;
+      //     let genderS = (addPropsS.filter(p => p.name == "gender"))[0].value;
+      //     genderS = genderS == "male" ? "M" : "F";
+      //     let rS = gender == "M" ? {key: s, n : targetS.name, s: genderS, vir: node} : {key: s, n : targetS.name, s: genderS, ux: node}
+      //     console.log("setting spouse: " + s);
+      //     console.log(rS);
+      //     relMap.set(s, rS);
+      //     explored.add(s);
+      //   }
+      // }
+
       // set up children of node
       if (cs !== undefined) {
         edges.push(...cs);
@@ -219,11 +235,40 @@ export function transform2(data, yearFrom, yearTo, familyName) {
     bfs(target.id, keyRel, relMap, idPerson);
     let output = [];
 
+
+    const deepCopy = new Map(JSON.parse(
+      JSON.stringify(Array.from(relMap))
+    ));
     // connect parents if one out of sync
+    //go through the deepcopy so we dont have to recursviely update other marriages
+    for (let key of deepCopy.keys()) {
+      let r = deepCopy.get(key);
+      console.log(JSON.stringify(r));
+      if (Array.isArray(r.vir)) {
+        for (let i = 0; i < r.vir.length; i++) {
+          let r2 = relMap.get(r.vir[i]);
+          r2.ux = r.key;
+          relMap.set(r2.key, r2)
+        }
+        r.vir = undefined;
+        relMap.set(key, r);
+      } else if (Array.isArray(r.ux)) {
+        for (let i = 0; i < r.ux.length; i++) {
+          console.log(r.ux[i]);
+          let r2 = relMap.get(r.ux[i]);
+          r2.vir = r.key;
+          relMap.set(r2.key, r2)
+        }
+        r.ux = undefined;
+        relMap.set(key, r);
+      }
+    }
+
 
     // turn string keys into ints fro formatting into goJs node data array
     for (let key of relMap.keys()) {
       let r = relMap.get(key);
+      console.log(r);
       r.key = r.key == undefined ? undefined : toInt(r.key);
       r.m = r.m == undefined ? undefined : toInt(r.m);
       r.f = r.f == undefined ? undefined : toInt(r.f);
@@ -232,9 +277,12 @@ export function transform2(data, yearFrom, yearTo, familyName) {
       relMap.set(key, r);
     }
 
+
     for (let key of relMap.keys()) {
       relMap = marryParentsUndef(relMap.get(key), relMap, idPerson);
     }
+
+
 
     for (let key of relMap.keys()) {
       output.push(relMap.get(key));
@@ -384,7 +432,7 @@ function marryParentsUndef(mfs, relMap, idPerson) {
 
 function marryParents(mfs, relMap, idPerson) {
   // console.log(mfs);
-  if (mfs.m !== fun && mfs.f != null) {
+  if (mfs.m !== null && mfs.f != null) {
     let x = relMap.get(unConvert(mfs.f));
     let y = relMap.get(unConvert(mfs.m));
     // console.log(x);
@@ -928,7 +976,7 @@ export class GenogramTree extends React.Component {
       this.handleDiagramEvent = this.handleDiagramEvent.bind(this);
       this.closePopUp = this.closePopUp.bind(this);
       // need to pass the filter somewhere else.
-      this.relations = transform(props.rawJson, props.from, props.to, props.familyName);
+      this.relations = transform2(props.rawJson, props.from, props.to, props.familyName);
       this.handleStatsClick = this.handleStatsClick.bind(this);
       this.personMap = getPersonMap(props.rawJson.items);
       this.from = props.from;
