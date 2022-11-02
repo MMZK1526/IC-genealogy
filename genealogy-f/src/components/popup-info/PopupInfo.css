@@ -2,12 +2,62 @@
     position: relative;
     padding: 20px;
     width: 70%;
-    max-width: 500px;
-    background-color: #FFF;
+    max-width: 700px;
+    background-color: #F5F5DC;
+    /* height: fit-content */
+    block-size: fit-content;
+    border-radius: 5px;
 }
 
 .popup-inner .close-btn {
     position: absolute;
     top: 15px;
     right: 15px;
+    border: none !important;
+    background-color: transparent;
+}
+
+/* .popup-inner .close-btn {
+    padding: .2em .5em;
+    box-shadow: 0 4px 0 darken(#8A0917,10%);
+    color: #fff;
+}
+.button--inline {
+    padding: .25em .5em;
+}
+.popup-inner .close-btn:hover,
+.popup-inner .close-btn:focus {
+    background-color: lighten(#8A0917, 10%);
+    box-shadow: 0 4px 0 #8A0917;
+}
+.popup-inner .close-btn:active {
+    box-shadow: 0 0 0 #8A0917;
+} */
+
+
+.row {
+    display: flex;
+    flex-direction: row;
+}
+
+.col_key {
+    display: flex;
+    flex-direction: column;
+    width: 30%;
+}
+
+.col_val {
+    display: flex;
+    flex-direction: column;
+    width: 90%;
+}
+
+#key {
+    height: 10%;
+    margin: 5px;
+}
+
+#val {
+    height: 10%;
+    margin: 5px;
 }
