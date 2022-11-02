@@ -12,11 +12,15 @@ import { MdFolderShared, MdPadding } from "react-icons/md";
 import {exportComponentAsPNG} from "react-component-export-image";
 import {StatsPanel} from './components/stats-panel/StatsPanel';
 import {downloadJsonFile} from "./components/custom-upload/exportAsJson";
+import {MyQueue} from "./MyQueue"
 
 // helper function to convert "WD-Q13423" -> 13423
 function toInt(str) {
-    return Number(str.substring(4));
+  if (str == null) {
+    return null;
   }
+  return Number(str.substring(4));
+}
 
 // { key: 0, n: "Aaron", s: "M", m: -10, f: -11, ux: 1, a: ["C", "F", "K"] },
 // { key: 1, n: "Alice", s: "F", m: -12, f: -13, a: ["B", "H", "K"] },
@@ -91,11 +95,165 @@ export function applyFamilyFilter(id, familyName, idPerson) {
 // global map from id of person to their attributes, used to change opacity for filtering in the goJs diagram.
 var relMap = new Map();
 
+
+
+function bfs(node, keyRel, relMap, idPerson) {
+   let q = new MyQueue();
+   let explored = new Set();
+   q.enqueue(node);
+
+   // Mark the first node as explored explored.
+   explored.add(node);
+
+   // We'll continue till our queue gets empty
+   // could be more inefficinet as we have to check some null case rather than only going over determined lists, but overall better code
+   while (q.length() > 0) {
+      let node = q.dequeue();
+      console.log("Visiting: " + node);
+
+      let typeMap = keyRel.get(node);
+      let m,f,ss,cs;
+      let edges = [];
+      if (typeMap == null) {
+        m = f = cs = ss = undefined;
+      } else {
+        m = typeMap.get('mother');
+        f = typeMap.get('father');
+        cs = typeMap.get('child');
+        ss = typeMap.get('spouse');
+      }
+      // edge of bfs
+
+      if (f !== undefined) {
+        edges.push(...f);
+        f = f[0];
+      }
+      if (m !== undefined) {
+        edges.push(...m);
+        m = m[0];
+      }
+      // stop here (advanced mode, expands on these aswell)
+
+      // only bloodline
+      // set up mother and father and spouses of current node
+      let target = idPerson.get(node);
+      let addProps = target.additionalProperties;
+      let gender = (addProps.filter(p => p.name == "gender"))[0].value;
+      gender = gender == "male" ? "M" : "F";
+      let r = {key: node, n: target.name, m: m, f: f, s: gender}
+      console.log("Mapped to ")
+      console.log(r);
+      relMap.set(node, r);
+
+      // depth of 1 of spouse
+      if (ss !== undefined) {
+        for (let s of ss) {
+          // TODO uncomment here for collapsable spouse -> spouse chains (however messy if on one line)
+          // edges.push(s);
+          let targetS = idPerson.get(s);
+          let addPropsS = (targetS).additionalProperties;
+          let genderS = (addPropsS.filter(p => p.name == "gender"))[0].value;
+          genderS = genderS == "male" ? "M" : "F";
+          let rS = gender == "M" ? {key: s, n : targetS.name, s: genderS, vir: node} : {key: s, n : targetS.name, s: genderS, ux: node}
+          console.log("setting spouse: " + s);
+          console.log(rS);
+          relMap.set(s, rS);
+          explored.add(s);
+        }
+      }
+      // set up children of node
+      if (cs !== undefined) {
+        edges.push(...cs);
+      }
+      // Log every element that comes out of the Queue
+
+
+      // 1. In the edges object, we search for nodes this node is directly connected to.
+      // 2. We filter out the nodes that have already been explored.
+      // 3. Then we mark each unexplored node as explored and add it to the queue.
+
+      // let c = typeMap.get('child');
+      console.log(edges);
+      console.log(q);
+      edges.filter(n => !explored.has(n))
+      .forEach(n => {
+         explored.add(n);
+         q.enqueue(n);
+      });
+    }
+  }
+
+export function transform2(data, yearFrom, yearTo, familyName) {
+  console.log(data);
+  // data.people to be replaced with data.items in Mulang version
+  let target = data.targets[0];
+  let idPerson = new Map();
+  let people = data.items;
+  people.push(target);
+  let targetId = target.id;
+  // set up id map for getting attributes later
+  idPerson.set(targetId, target);
+  for (let x of data.items) {
+      idPerson.set(x.id, x);
+  }
+    // turn relations into map from key to relations, map of maps
+    let keyRel = new Map();
+    for (let relation of data.relations) {
+      let key = relation.item2Id;
+      let typeMap = new Map();
+      if (keyRel.has(key)) {
+        typeMap = keyRel.get(key);
+        let arr = typeMap.get(relation.type);
+        if (arr == null) {
+          typeMap.set(relation.type, [relation.item1Id]);
+        } else {
+          arr.push(relation.item1Id);
+          typeMap.set(relation.type, arr);
+        }
+      } else {
+        keyRel.set(key, typeMap.set(relation.type, [relation.item1Id]));
+      }
+    }
+    console.log(keyRel.values());
+    // updates relMap by doing bfs from root.
+    bfs(target.id, keyRel, relMap, idPerson);
+    let output = [];
+
+    // connect parents if one out of sync
+
+    // turn string keys into ints fro formatting into goJs node data array
+    for (let key of relMap.keys()) {
+      let r = relMap.get(key);
+      r.key = r.key == undefined ? undefined : toInt(r.key);
+      r.m = r.m == undefined ? undefined : toInt(r.m);
+      r.f = r.f == undefined ? undefined : toInt(r.f);
+      r.vir = r.vir == undefined ? undefined : toInt(r.vir);
+      r.ux = r.ux == undefined ? undefined : toInt(r.ux);
+      relMap.set(key, r);
+    }
+
+    for (let key of relMap.keys()) {
+      relMap = marryParentsUndef(relMap.get(key), relMap, idPerson);
+    }
+
+    for (let key of relMap.keys()) {
+      output.push(relMap.get(key));
+    }
+
+    console.log(output);
+
+
+
+    return output;
+}
+
+
+
+
 // ^^^^^^ SEE ABOVE transformed format helper function to transfrom JSON into goJS nodeDataArray format.
 export function transform(data, yearFrom, yearTo, familyName) {
   // check if already generated
   // tree still being regenrated can we improve on this.
-
   console.log(data);
   // data.people to be replaced with data.items in Mulang version
   let target = data.targets[0];
@@ -139,6 +297,7 @@ export function transform(data, yearFrom, yearTo, familyName) {
           mfs.f = toInt(relation.item1Id);
       }
       if (relation.type === 'spouse') {
+        // check not double spouse (fix for the time being)
         let spouseId = toInt(relation.item1Id);
         // if you already have a spouse listed, then prioritise lisitng a spouse who isnt already married to you. i.e conver to a -> b -> c -> d rather than a <-> b, c <-> d
               if ((addProps.filter(p => p.name == "gender"))[0].value == 'M') {
@@ -201,9 +360,31 @@ export function transform(data, yearFrom, yearTo, familyName) {
 
 }
 
+
+function marryParentsUndef(mfs, relMap, idPerson) {
+  if (mfs.m !== undefined && mfs.f !== undefined) {
+    let x = relMap.get(unConvert(mfs.f));
+    let y = relMap.get(unConvert(mfs.m));
+    if (x == undefined || y == undefined) {
+      return relMap;
+    }
+    // console.log(x);
+    // console.log(y);
+    if ((x.ux == undefined || x.ux != y.key) && (y.vir == undefined || y.vir != x.key)) {
+      console.log(y.key + " now pointing to " + x.key);
+      updatePrevHusband(y, relMap, idPerson);
+      y.vir = x.key;
+      relMap.set(unConvert(y.key), y);
+    }
+  }
+  // case of unknown father - temporarily replace with "unknown" node
+  return relMap; 
+}
+
+
 function marryParents(mfs, relMap, idPerson) {
   // console.log(mfs);
-  if (mfs.m != null && mfs.f != null) {
+  if (mfs.m !== fun && mfs.f != null) {
     let x = relMap.get(unConvert(mfs.f));
     let y = relMap.get(unConvert(mfs.m));
     // console.log(x);
@@ -493,7 +674,7 @@ export class DiagramWrappper extends React.Component {
         $(go.Node, "Vertical",
         // TODO can make this non-selectable with selectable: false, but we want clickable but not movable?
         // see this for how to do stuff on click? - https://gojs.net/latest/extensions/Robot.html
-          {movable: false, locationSpot: go.Spot.Center, locationObjectName: "ICON", selectionObjectName: "ICON"},
+          {movable: true, locationSpot: go.Spot.Center, locationObjectName: "ICON", selectionObjectName: "ICON"},
           new go.Binding("opacity", "hide", h => h ? 0 : 1),
           new go.Binding("pickable", "hide", h => !h),
           $(go.Panel,
@@ -523,7 +704,7 @@ export class DiagramWrappper extends React.Component {
 
       myDiagram.nodeTemplateMap.add("F",  // female
         $(go.Node, "Vertical",
-          { movable: false, locationSpot: go.Spot.Center, locationObjectName: "ICON", selectionObjectName: "ICON" },
+          { movable: true, locationSpot: go.Spot.Center, locationObjectName: "ICON", selectionObjectName: "ICON" },
           new go.Binding("opacity", "hide", h => h ? 0 : 1),
           new go.Binding("pickable", "hide", h => !h),
           $(go.Panel,
