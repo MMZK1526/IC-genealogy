@@ -205,7 +205,7 @@ class NameForm extends React.Component {
 
     }
 
-    handleRelationsSubmit(event) {
+    async handleRelationsSubmit(event) {
         if (this.state.chosenId === '') {
             alert("Haven't selected a person!");
             return;
@@ -215,7 +215,7 @@ class NameForm extends React.Component {
             isLoading: true,
         });
         
-        this.requests.relations({id: this.state.chosenId}).then(r => {
+        await this.requests.relations({id: this.state.chosenId}).then(r => {
             if (Object.values(r)[1].length === 0) {
                 this.setState({
                     relationsJson: {},
@@ -227,6 +227,12 @@ class NameForm extends React.Component {
                 relationsJson: r,
                 isLoading: false,
             });
+        });
+
+        await this.requests.relation_calc(
+            {start: this.state.chosenId, relations: this.state.relationsJson.relations}
+        ).then(r => {
+            console.log(r);
         });
     }
 
