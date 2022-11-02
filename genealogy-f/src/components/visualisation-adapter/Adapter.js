@@ -60,9 +60,9 @@ export class Adapter extends React.Component {
         console.assert(filteredProperties.length > 0);
         const gender = filteredProperties[0].value;
         return (
-            gender === 'F'
+            gender === 'female'
             ? 'female'
-                : gender === 'M'
+                : gender === 'male'
                     ? 'male'
                         : 'non-binary'
         );

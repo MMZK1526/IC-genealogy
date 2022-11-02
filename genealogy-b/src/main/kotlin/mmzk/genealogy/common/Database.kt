@@ -41,13 +41,15 @@ object Database {
     }
 
     fun findItemByName(name: String): List<ItemDTO> = transaction {
-        val statement = TransactionManager.current().connection.prepareStatement("""
+        val statement = TransactionManager.current().connection.prepareStatement(
+            """
             SELECT indexed_item.*, ts_rank_cd(indexed_aliases, query) AS rank
             FROM indexed_item, websearch_to_tsquery(?) as query
             WHERE indexed_aliases @@ query
             ORDER BY rank DESC
             LIMIT 20;
-        """.trimIndent())
+        """.trimIndent()
+        )
         statement.fillParameters(listOf(TextColumnType() to name))
         val resultSet = statement.executeQuery()
         val list = mutableListOf<Item>()
@@ -65,6 +67,7 @@ object Database {
                 it[id] = EntityID(item.id, ItemTable)
                 it[name] = item.name
                 it[description] = item.description
+                it[aliases] = item.aliases
             }
 
             for (property in item.additionalProperties) {
@@ -72,7 +75,17 @@ object Database {
                     it[itemId] = item.id
                     it[propertyId] = property.propertyId
                     it[value] = property.value
+                    it[valueHash] = property.valueHash
                 }
+            }
+        }
+    }
+
+    fun insertProperties(propertyMap: Map<String, String>) = transaction {
+        for (propertyEntry in propertyMap) {
+            PropertyTypeTable.insertIgnore {
+                it[id] = EntityID(propertyEntry.key, PropertyTypeTable)
+                it[name] = propertyEntry.value
             }
         }
     }
