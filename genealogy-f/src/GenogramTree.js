@@ -976,7 +976,7 @@ export class GenogramTree extends React.Component {
       this.handleDiagramEvent = this.handleDiagramEvent.bind(this);
       this.closePopUp = this.closePopUp.bind(this);
       // need to pass the filter somewhere else.
-      this.relations = transform2(props.rawJson, props.from, props.to, props.familyName);
+      this.relations = transform(props.rawJson, props.from, props.to, props.familyName);
       this.handleStatsClick = this.handleStatsClick.bind(this);
       this.personMap = getPersonMap(props.rawJson.items);
       this.from = props.from;
