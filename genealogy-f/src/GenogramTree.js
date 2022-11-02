@@ -593,6 +593,7 @@ function getPersonMap(data) {
       let fieldValue = attr.value;
       // If field doesn't present, don't put in the Map
       if (fieldValue === null || fieldValue === "") continue;
+      if (attr.propertyId === "WD-P19" || attr.propertyId === "WD-P20") continue;
 
       switch (fieldName) {
         case "date of birth":

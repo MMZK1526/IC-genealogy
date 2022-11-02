@@ -3,8 +3,10 @@
     padding: 20px;
     width: 70%;
     max-width: 700px;
-    background-color: #FFF;
-    height: fit-content
+    background-color: #F5F5DC;
+    /* height: fit-content */
+    block-size: fit-content;
+    border-radius: 5px;
 }
 
 .popup-inner .close-btn {
@@ -52,8 +54,10 @@
 
 #key {
     height: 10%;
+    margin: 5px;
 }
 
 #val {
     height: 10%;
+    margin: 5px;
 }
