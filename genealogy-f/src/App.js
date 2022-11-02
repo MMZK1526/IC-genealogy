@@ -1,18 +1,11 @@
-import {FamilyTree} from "./components/family-tree/FamilyTree";
 import _ from "lodash";
 import {Sidebar} from './components/sidebar/Sidebar.js';
 import {Requests} from './requests';
 import React from "react";
-import * as go from 'gojs';
-import {ReactDiagram} from 'gojs-react';
 import './App.css';
-import {Topbar} from './components/topbar/Topbar.js'
 import {NameSearch} from './components/name-search/NameSearch.js'
-import {Adapter} from './components/visualisation-adapter/Adapter';
 
 import { GenogramTree } from "./GenogramTree";
-import {transform} from "./GenogramTree";
-import { Form } from "react-bootstrap";
 import ClipLoader from 'react-spinners/ClipLoader';
 import {CustomUpload} from "./components/custom-upload/CustomUpload";
 
@@ -125,7 +118,7 @@ class NameForm extends React.Component {
                     }
                 </div>
                 {
-                    !_.isEmpty(this.state.searchJsons) && _.isEmpty(this.state.relationsJson)
+                    !_.isEmpty(this.state.searchJsons) && _.isEmpty(this.state.relationsJson) && !this.state.isLoading
                         ? <ResultPage
                             state={this.state}
                             onChange={this.handleChangeChosenId}
@@ -136,6 +129,7 @@ class NameForm extends React.Component {
                 {
                     this.state.isLoading
                         && <ClipLoader
+                            className="loading"
                             color='#0000ff'
                             cssOverride={{
                                 display: 'block',
