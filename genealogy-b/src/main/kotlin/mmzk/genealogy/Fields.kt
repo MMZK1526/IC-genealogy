@@ -29,10 +29,9 @@ object Fields {
     const val father = "P22"
     const val mother = "P25"
     const val child = "P40"
-
-    const val wikiBaseEntityId = "wikibase-entityid"
+    const val givenName = "P735"
+    const val familyName = "P734"
     const val string = "string"
-    const val time = "time"
 
     val prunableTriangles = listOf(
         Triple(father.wikidataId, child.wikidataId, spouse.wikidataId),

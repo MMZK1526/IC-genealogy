@@ -145,7 +145,7 @@ object Database {
             AdditionalPropertiesTable.itemId.inList(this@toDTOWithAdditionalProperties.map { it.id.value })
         }.groupBy { it[AdditionalPropertiesTable.itemId] }
         return this.map { dao ->
-            ItemDTO(dao, additionalPropertiesByItem[dao.id.value]?.map(::AdditionalProperty) ?: listOf())
+            ItemDTO(dao, additionalPropertiesByItem[dao.id.value]?.map(::AdditionalProperty)?.toSet() ?: setOf())
         }
     }
 
