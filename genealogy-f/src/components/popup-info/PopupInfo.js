@@ -1,13 +1,15 @@
 import Button from 'react-bootstrap/Button';
 import {FilterForm} from '../filter/Filter.js'
 import React from "react";
+import {AiFillCloseCircle} from "react-icons/ai"
 import "./PopupInfo.css"
 
 function PopupInfo(props) {
     return (
         <div className='popup-inner'>
-            <button className='close-btn' onClick={props.closePopUp}
-            >close</button>
+            <button className='close-btn' onClick={props.closePopUp}>
+                <AiFillCloseCircle size={40} color='red'/>
+            </button>
             {/* <div class="row"> */}
             {getAdditionalProperties(props.info)}
             {/* </div> */}
@@ -39,7 +41,7 @@ function getAdditionalProperties(data) {
 function getAttrName(data) {
     return Object.keys(Object.fromEntries(data)).map((k) => (
         <div id='key' key={k}>
-            <h4>{k}</h4>
+            <p>{k}</p>
         </div>
     ))
 }
@@ -47,7 +49,7 @@ function getAttrName(data) {
 function getAttrVal(data) {
     return Object.keys(Object.fromEntries(data)).map((k) => (
         <div id='val' key={data.get(k)}>
-            <h4>{data.get(k)}</h4>
+            <p>{data.get(k)}</p>
         </div>
     ))
 }

@@ -4,13 +4,34 @@
     width: 70%;
     max-width: 700px;
     background-color: #FFF;
+    height: fit-content
 }
 
 .popup-inner .close-btn {
     position: absolute;
     top: 15px;
     right: 15px;
+    border: none !important;
+    background-color: transparent;
 }
+
+/* .popup-inner .close-btn {
+    padding: .2em .5em;
+    box-shadow: 0 4px 0 darken(#8A0917,10%);
+    color: #fff;
+}
+.button--inline {
+    padding: .25em .5em;
+}
+.popup-inner .close-btn:hover,
+.popup-inner .close-btn:focus {
+    background-color: lighten(#8A0917, 10%);
+    box-shadow: 0 4px 0 #8A0917;
+}
+.popup-inner .close-btn:active {
+    box-shadow: 0 0 0 #8A0917;
+} */
+
 
 .row {
     display: flex;

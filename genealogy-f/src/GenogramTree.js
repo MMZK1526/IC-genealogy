@@ -573,6 +573,10 @@ function createRelation(key, idPerson, relMap) {
 
 }
 
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 // Create a map of maps
 // Outer map: personId -> inner map
 // Inner map: property -> value
@@ -581,8 +585,8 @@ function getPersonMap(data) {
   for (let person of data) {
     const personId = person.id;
     let attributes = new Map;
-    attributes.set("name", person.name);
-    attributes.set("description", person.description);
+    attributes.set("Name", person.name);
+    attributes.set("Description", person.description);
 
     for (let attr of person.additionalProperties) {
       let fieldName  = attr.name;
@@ -597,7 +601,7 @@ function getPersonMap(data) {
           fieldValue = fieldValue.replace(/^0+/, '').split("T")[0];
         default:
       }
-      attributes.set(fieldName, fieldValue);
+      attributes.set(capitalizeFirstLetter(fieldName), fieldValue);
     }
 
     personMap.set(personId, attributes)
