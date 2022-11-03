@@ -577,10 +577,12 @@ function getPersonMap(data) {
       if (attr.value === null || attr.value === "") continue;
       if (attr.propertyId === "WD-P19" || attr.propertyId === "WD-P20") continue; // not used by new PoB, PoD design
       if (attr.name === "family name" || attr.name === "given name") continue;    // this two fields not show, use personal name instead
-
-      if (attrMap.has(attr.name)) {
+      
+      if (attrMap.has(attr.name) && attr.name === "family") {
         let newVal = attrMap.get(attr.name) + "; " + attr.value;
         attrMap.set(attr.name, newVal);
+      } else if (attrMap.has(attr.name)) {
+        continue;
       } else {
         attrMap.set(attr.name, attr.value);
       }
@@ -597,19 +599,19 @@ function getPersonMap(data) {
       attributes.set(capitalizeFirstLetter(key), value);
     } )
 
-    for (let attr of attrMap) {
-      let fieldName  = attr.name;
-      let fieldValue = attr.value;
+    // for (let attr of attrMap) {
+    //   let fieldName  = attr.name;
+    //   let fieldValue = attr.value;
 
-      switch (fieldName) {
-        case "date of birth":
-          fieldValue = fieldValue.replace(/^0+/, '').split("T")[0];
-        case "date of death":
-          fieldValue = fieldValue.replace(/^0+/, '').split("T")[0];
-        default:
-      }
-      attributes.set(capitalizeFirstLetter(fieldName), fieldValue);
-    }
+    //   switch (fieldName) {
+    //     case "date of birth":
+    //       fieldValue = fieldValue.replace(/^0+/, '').split("T")[0];
+    //     case "date of death":
+    //       fieldValue = fieldValue.replace(/^0+/, '').split("T")[0];
+    //     default:
+    //   }
+    //   attributes.set(capitalizeFirstLetter(fieldName), fieldValue);
+    // }
 
     personMap.set(personId, attributes)
   }
