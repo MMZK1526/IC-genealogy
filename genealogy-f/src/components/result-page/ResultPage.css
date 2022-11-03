@@ -70,22 +70,22 @@
 }
 
 .card {
-  border: 1px darkslategray solid;
+  border: 1px darkslateblue solid;
   border-radius: 5px;
   height: 300px;
   width: 200px;
   margin: 0px 20px 20px 0px;
+  background-color: rgba(201, 220, 236, 0.3);
   /* background-color: beige; */
 }
 
 .card:hover{
-  background-color: rgba(245, 245, 220, 0.25);
+  background-color:lavender;
   border-color:#FFFFFF;
 }
 
 .card:focus{
-  background-color:beige;
-  border-color:#FFFFFF;
+  background-color: rgba(72, 61, 139, 0.3);
 }
 
 .card #name {
