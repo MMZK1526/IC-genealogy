@@ -118,14 +118,14 @@ class WikiDataDataSource(
                     it,
                     getHash(row, SPARQL.givenName),
                     setOfNotNull(
-                        row[SPARQL.ordinal]?.let { ord -> QualifierDTO("WD-1545", "series ordinal", ord) }
+                        row[SPARQL.ordinal]?.let { ord -> QualifierDTO("WD-P1545", "series ordinal", ord) }
                     ))
             }
             val familyName = row["${SPARQL.familyName}Label"]?.let {
                 AdditionalPropertyDTO(makeID(Fields.familyName), "family name", it, getHash(row, SPARQL.familyName),
                     setOfNotNull(
                         row["${SPARQL.familyNameType}Label"]?.let { role ->
-                            QualifierDTO("WD-3831", "object has role", role)
+                            QualifierDTO("WD-P3831", "object has role", role)
                         }
                     ))
             }
