@@ -325,6 +325,7 @@ export function transform(data, yearFrom, yearTo, familyName) {
       // check if relation ID exist in data.item, if not then discard (edge of search?)
       if (target2 === undefined) {
         console.log("------- ERROR -------- key :" + key + "not found in data.items");
+        // continue;
       }
       // split select target into their additional properties (general, not predetermined)
       // need a filter here depending on which type of tree we are using.

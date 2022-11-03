@@ -7,7 +7,7 @@ export class StatsPanel extends React.Component {
             <div className='stats-panel'>
                 <button className='close-button' onClick={this.props.onClick}>x</button>
                 {this.numberOfFamilyMembers()}
-                {this.avgChildrenPerPerson()}
+                {/*{this.avgChildrenPerPerson()}*/}
                 {this.mostPopularCountryOfBirth()}
                 {this.topFamilies()}
             </div>
