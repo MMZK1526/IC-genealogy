@@ -24,8 +24,8 @@ export class CustomUpload extends React.Component {
                 {
                     this.state.show &&
                     <form onSubmit={this.handleSubmit}>
-                        <input type='file' id='myFile' name='filename' onChange={this.handleChange}/>
-                        <input type='submit'/>
+                        <input id='button' type='file' name='filename' onChange={this.handleChange}/>
+                        <input id='button' type='submit'/>
                     </form>
                 }
             </div>
