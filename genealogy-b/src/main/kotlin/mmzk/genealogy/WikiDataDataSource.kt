@@ -309,9 +309,9 @@ class WikiDataDataSource(
         // TODO: Handle compound types
         val queryLabels = typeMap.keys.joinToString(" ") { "?${Fields.parseID(it)?.second}" }
         val queryStrCore = typeMap.keys.joinToString("\n") {
-            "OPTIONAL { ?item p:${Fields.parseID(it)?.second}/ps:${Fields.parseID(it)?.second} ?${
+            "OPTIONAL { ?item p:${Fields.parseID(it)?.second} [ps:${Fields.parseID(it)?.second} ?${
                 Fields.parseID(it)?.second
-            } . }"
+            }; wikibase:rank ?${Fields.parseID(it)?.second}rank;] . }\nFILTER ( ?${Fields.parseID(it)?.second}rank != wikibase:DeprecatedRank )"
         }
         val querySelect = """
               SELECT ?${SPARQL.item} $queryLabels WHERE {
