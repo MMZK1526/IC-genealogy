@@ -19,25 +19,20 @@
 }
 
 .result-page .apply-button{
-  margin-top: 10px;
-  display:inline-block;
-  padding: 0.20em 0.40em;
-  width: 10vw;
-  /* padding:0.20em 1em; */
-  border: 2px solid darkgray;
-  /* margin: 0.2em 0.1em 0.1em 0.5em; */
+  display: inline-block;
+  border: 0.1em solid darkgray;
   border-radius: 5px;
-  box-sizing: border-box;
-  align-self: flex-start;
+  padding: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  align-self: stretch;
   text-align: start;
   /* font-family: 'Helvetica Neue', sans-serif;  */
   font-size: 20px; 
-  font-weight: normal;
   color: white;
-  text-shadow: 0 0.04em 0.04em rgba(0,0,0,0.35);
-  background-color: blue;
-  /* text-align: center; */
+  background-color:darkblue;
   transition: all 0.15s;
+  width: 10em;
 }
 
 .result-page .apply-button:hover{

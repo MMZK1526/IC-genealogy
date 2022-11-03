@@ -115,7 +115,11 @@ class NameForm extends React.Component {
                             size={75}
                         />
                 }
-                <CustomUpload onSubmit={this.handleCustomUpload} />
+                {
+                    _.isEmpty(this.state.relationsJson) && 
+                    !this.state.isLoading &&
+                    <CustomUpload onSubmit={this.handleCustomUpload} />
+                }
             </div>
         );
     }

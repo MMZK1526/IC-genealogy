@@ -18,8 +18,8 @@
   display: inline;
   font-size: large;
   color: rgb(50, 50, 50);
-  border: dashed #999;
-  background-color: rgba(245, 245, 220, 0.25);
+  border: dashed #999 2px;
+  background-color: lavender;
   border-radius: 5px;
-  width: 11.5vw;
+  width: 200px;
 }
