@@ -23,16 +23,15 @@ function getAdditionalProperties(data) {
         
         <div> 
             <h2>{data.get("Name")}</h2>
-            <div className="row">
+            {/* <div className="row">
                 <div className="col_key" >
-                    {/* <h2>Attributes</h2> */}
                     {getAttrName(data)}
                 </div>
                 <div className="col_val" >
-                    {/* <h2>Values</h2> */}
                     {getAttrVal(data)}
                 </div>
-            </div>
+            </div> */}
+            {getAllAttr(data)}
         </div> 
     )
     // return Object.keys(Object.fromEntries(data)).map((k) => (
@@ -40,6 +39,19 @@ function getAdditionalProperties(data) {
     //         <div key='k'><h4>{k}:  {data.get(k)}</h4></div>
     //     </div>
     // ))
+}
+
+function getAllAttr(data) {
+    return Object.keys(Object.fromEntries(data)).map((k) => (
+        <div className="row">
+            <div id='col_key'>
+                <p>{k}</p>
+            </div>
+            <div id='col_val'>
+                <p>{data.get(k)}</p>
+            </div>
+        </div>
+    ))
 }
 
 function getAttrName(data) {

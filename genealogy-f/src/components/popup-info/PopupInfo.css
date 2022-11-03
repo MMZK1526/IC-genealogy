@@ -29,16 +29,18 @@
     height: auto;
 }
 
-.col_key {
+#col_key {
     display: flex;
     flex-direction: column;
     width: 30%;
+    padding: 0px;
 }
 
-.col_val {
+#col_val {
     display: flex;
     flex-direction: column;
     width: 90%;
+    padding: 0px;
 }
 
 #key {
