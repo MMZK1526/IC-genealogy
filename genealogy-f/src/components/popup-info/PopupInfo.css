@@ -11,8 +11,8 @@
 
 .popup-inner .close-btn {
     position: absolute;
-    top: 15px;
-    right: 15px;
+    top: 20px;
+    right: 20px;
     border: none !important;
     background-color: transparent;
 }
@@ -34,6 +34,10 @@
     box-shadow: 0 0 0 #8A0917;
 } */
 
+.col {
+    display: flex;
+    flex-direction: column;
+}
 
 .row {
     display: flex;
@@ -53,11 +57,12 @@
 }
 
 #key {
-    height: 10%;
     margin: 5px;
+    height: 50px;
+    color: darkslategray;
 }
 
 #val {
-    height: 10%;
     margin: 5px;
+    height: 50px;
 }
