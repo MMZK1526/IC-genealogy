@@ -65,7 +65,7 @@ export function applyDateOfBirthFilter(id, dateFrom, dateTo, idPerson) {
 
 // comparing family on string
 export function applyFamilyFilter(id, familyName, idPerson) {
-  console.log(familyName);
+  // console.log(familyName);
   if (familyName == '') {
     return true;
   }
@@ -87,7 +87,7 @@ export function applyFamilyFilter(id, familyName, idPerson) {
     // check if both parents are out of the date range, if so then assume unknown also outside, otherwise leave in.
     return m && f;
   }
-  console.log(f[0].value);
+  // console.log(f[0].value);
   // console.log("comparing " + d1 + "with " + d2 + "and " + d3);
   return f[0].value === familyName;
 }
@@ -108,7 +108,7 @@ function bfs(node, keyRel, relMap, idPerson) {
    // could be more inefficinet as we have to check some null case rather than only going over determined lists, but overall better code
    while (q.length() > 0) {
       let node = q.dequeue();
-      console.log("Visiting: " + node);
+      // console.log("Visiting: " + node);
 
       let typeMap = keyRel.get(node);
       let m,f,ss,cs;
@@ -144,10 +144,10 @@ function bfs(node, keyRel, relMap, idPerson) {
       let gender = genderArr.value;
       // gender = gender == "male" ? "M" : "F";
       let r = {key: node, n: target.name, m: m, f: f, s: gender}
-      console.log(ss);
+      // console.log(ss);
       // console.log(JSON.stringify(r));
       if (ss !== undefined) {
-        console.log("got here");
+        // console.log("got here");
         // check your not at a depth of 2 away from some people. (alter this code to remove this.)
         let p = ss.filter(n => explored.has(n));
         if (p.length == 0) {
@@ -159,7 +159,7 @@ function bfs(node, keyRel, relMap, idPerson) {
         }
         edges.push(...ss);
       }
-      console.log("Mapped to ")
+      // console.log("Mapped to ")
       // console.log(JSON.stringify(r));
       relMap.set(node, r);
 
@@ -175,7 +175,7 @@ function bfs(node, keyRel, relMap, idPerson) {
       // 3. Then we mark each unexplored node as explored and add it to the queue.
 
       // let c = typeMap.get('child');
-      console.log(edges);
+      // console.log(edges);
       console.log(q);
       edges.filter(n => !explored.has(n))
       .forEach(n => {
@@ -186,7 +186,7 @@ function bfs(node, keyRel, relMap, idPerson) {
   }
 
 export function transform2(data, yearFrom, yearTo, familyName) {
-  console.log(data);
+  // console.log(data);
   // data.people to be replaced with data.items in Mulang version
   let target = data.targets[0];
   let idPerson = new Map();
@@ -216,7 +216,7 @@ export function transform2(data, yearFrom, yearTo, familyName) {
         keyRel.set(key, typeMap.set(relation.type, [relation.item1Id]));
       }
     }
-    console.log(keyRel.values());
+    // console.log(keyRel.values());
     // updates relMap by doing bfs from root.
     bfs(target.id, keyRel, relMap, idPerson);
     let output = [];
@@ -229,7 +229,7 @@ export function transform2(data, yearFrom, yearTo, familyName) {
     //go through the deepcopy so we dont have to recursviely update other marriages
     for (let key of deepCopy.keys()) {
       let r = deepCopy.get(key);
-      console.log(JSON.stringify(r));
+      // console.log(JSON.stringify(r));
       if (Array.isArray(r.vir)) {
         for (let i = 0; i < r.vir.length; i++) {
           let r2 = relMap.get(r.vir[i]);
@@ -240,7 +240,7 @@ export function transform2(data, yearFrom, yearTo, familyName) {
         relMap.set(key, r);
       } else if (Array.isArray(r.ux)) {
         for (let i = 0; i < r.ux.length; i++) {
-          console.log(r.ux[i]);
+          // console.log(r.ux[i]);
           let r2 = relMap.get(r.ux[i]);
           r2.vir = r.key;
           relMap.set(r2.key, r2)
@@ -254,7 +254,7 @@ export function transform2(data, yearFrom, yearTo, familyName) {
     // turn string keys into ints fro formatting into goJs node data array
     for (let key of relMap.keys()) {
       let r = relMap.get(key);
-      console.log(r);
+      // console.log(r);
       r.key = r.key == undefined ? undefined : toInt(r.key);
       r.m = r.m == undefined ? undefined : toInt(r.m);
       r.f = r.f == undefined ? undefined : toInt(r.f);
@@ -274,7 +274,7 @@ export function transform2(data, yearFrom, yearTo, familyName) {
       output.push(relMap.get(key));
     }
 
-    console.log(output);
+    // console.log(output);
 
 
 
@@ -287,7 +287,7 @@ export function transform(data, yearFrom, yearTo, familyName) {
   // check if already generated
   relMap = new Map();
   // tree still being regenrated can we improve on this.
-  console.log(data);
+  // console.log(data);
   // data.people to be replaced with data.items in Mulang version
   let target = data.targets[0];
   let idPerson = new Map();
@@ -338,7 +338,7 @@ export function transform(data, yearFrom, yearTo, familyName) {
                 relMap = updatePrevWife(mfs, relMap, idPerson);
                 let newP = relMap.get(unConvert(spouseId));
                 if (newP == null || (newP.vir == null || newP.vir != mfs.key)) {
-                  console.log("NEW RELATION: " + mfs.key + " wife now pointing to " + toInt(relation.item1Id));
+                  // console.log("NEW RELATION: " + mfs.key + " wife now pointing to " + toInt(relation.item1Id));
                   mfs.ux = spouseId
                 }
 
@@ -346,19 +346,19 @@ export function transform(data, yearFrom, yearTo, familyName) {
                 relMap = updatePrevHusband(mfs, relMap, idPerson);
                 let newP = relMap.get(unConvert(spouseId));
                 if (newP == null || (newP.ux == null || newP.ux != mfs.key)) {
-                  console.log("NEW RELATION: " + mfs.key + " husband now pointing to" + toInt(relation.item1Id));
+                  // console.log("NEW RELATION: " + mfs.key + " husband now pointing to" + toInt(relation.item1Id));
                   mfs.vir = spouseId
                 }
           }
                 // console.log(mfs.key + "husband now pointing to " + mfs.vir);
-        console.log(JSON.stringify(mfs));
+        // console.log(JSON.stringify(mfs));
     }
       relMap.set(key, mfs)
       relMap = createRelation(relation['item1Id'], idPerson, relMap);
   }
 
   // connect mother and father if not married
-  console.log("marrying parents");
+  // console.log("marrying parents");
   for (let key of relMap.keys()) {
     relMap = marryParents(relMap.get(key), relMap, idPerson);
   }
@@ -377,7 +377,7 @@ export function transform(data, yearFrom, yearTo, familyName) {
     }
     relMap.set(key, r);
   }
-  console.log(relMap.values());
+  // console.log(relMap.values());
 
   // add unknown nodes for unknown parent
   for (let key of relMap.keys()) {
@@ -389,7 +389,7 @@ export function transform(data, yearFrom, yearTo, familyName) {
   for (let key of relMap.keys()) {
     newOutput.push(relMap.get(key));
   }
-  console.log(newOutput);
+  // console.log(newOutput);
   return newOutput;
 
 }
@@ -405,7 +405,7 @@ function marryParentsUndef(mfs, relMap, idPerson) {
     // console.log(x);
     // console.log(y);
     if ((x.ux == undefined || x.ux != y.key) && (y.vir == undefined || y.vir != x.key)) {
-      console.log(y.key + " now pointing to " + x.key);
+      // console.log(y.key + " now pointing to " + x.key);
       updatePrevHusband(y, relMap, idPerson);
       y.vir = x.key;
       relMap.set(unConvert(y.key), y);
@@ -427,7 +427,7 @@ function marryParents(mfs, relMap, idPerson) {
     // console.log(x);
     // console.log(y);
     if ((x.ux == null || x.ux != y.key) && (y.vir == null || y.vir != x.key)) {
-      console.log(y.key + " now pointing to " + x.key);
+      // console.log(y.key + " now pointing to " + x.key);
       updatePrevHusband(y, relMap, idPerson);
       y.vir = x.key;
       relMap.set(unConvert(y.key), y);
@@ -476,7 +476,7 @@ function updatePrevWife(mfs, relMap, idPerson) {
     let person = idPerson.get(unConvert(key));
     let addProps = person.additionalProperties;
     prev = {key: toInt(person.id), n: person.name, s: (addProps.filter(p => p.name == "gender"))[0].value, vir: mfs.key};
-    console.log("SHOULDNT GET HERE");
+    // console.log("SHOULDNT GET HERE");
     console.log(JSON.stringify(prev));
     relMap.set(unConvert(prev.key), prev);
     return relMap;
@@ -485,7 +485,7 @@ function updatePrevWife(mfs, relMap, idPerson) {
   // set prev husband to your id, apply recursively.
   if (prev.vir == undefined) {
     prev.vir = mfs.key;
-    console.log(prev.key + "husband now pointing to " + mfs.key);
+    // console.log(prev.key + "husband now pointing to " + mfs.key);
     relMap = relMap.set(unConvert(prev.key), prev);
     return relMap;
   } else if (prev.vir == mfs.key) {
@@ -495,7 +495,7 @@ function updatePrevWife(mfs, relMap, idPerson) {
     let temp = prev;
     relMap = updatePrevHusband(temp, relMap, idPerson);
     prev.vir = mfs.key;
-    console.log(prev.key + "husband now pointing to " + mfs.key);
+    // console.log(prev.key + "husband now pointing to " + mfs.key);
     return relMap.set(unConvert(prev.key), prev);
   }
 }
@@ -513,7 +513,7 @@ function updatePrevHusband(mfs, relMap, idPerson) {
     let person = idPerson.get(unConvert(key));
     let addProps = person.additionalProperties;
     prev = {key: toInt(person.id), n: person.name, s: (addProps.filter(p => p.name == "gender"))[0].value, ux: mfs.key};
-    console.log("SHOULDNT GET HERE");
+    // console.log("SHOULDNT GET HERE");
     console.log(JSON.stringify(prev));
     relMap.set(unConvert(prev.key), prev);
     return relMap;
@@ -522,13 +522,13 @@ function updatePrevHusband(mfs, relMap, idPerson) {
   if (prev.ux == undefined) {
     prev.ux = mfs.key;
     relMap = relMap.set(unConvert(prev.key), prev);
-    console.log(prev.key + "wife now pointing to " + mfs.key);
+    // console.log(prev.key + "wife now pointing to " + mfs.key);
     return relMap;
   } else if (prev.ux == mfs.key) {
     return relMap;
   } else {
     // must be case that previously pointed to someone else
-    console.log(prev.key + "wife now pointing to " + mfs.key);
+    // console.log(prev.key + "wife now pointing to " + mfs.key);
     let temp = prev;
     relMap = updatePrevWife(temp, relMap, idPerson);
     prev.ux = mfs.key;
@@ -618,7 +618,7 @@ function getPersonMap(data) {
   return personMap;
 }
 
-export class DiagramWrappper extends React.Component {
+export class DiagramWrapper extends React.Component {
   static relMap = relMap;
   constructor(props) {
     super(props);
@@ -877,15 +877,15 @@ export class DiagramWrappper extends React.Component {
             const wife = uxs[j];
             const wdata = model.findNodeDataForKey(wife);
             if (key === wife) {
-              console.log("cannot create Marriage relationship with self" + wife);
+              // console.log("cannot create Marriage relationship with self" + wife);
               continue;
             }
             if (!wdata) {
-                console.log("cannot create Marriage relationship with unknown person " + wife);
+                // console.log("cannot create Marriage relationship with unknown person " + wife);
                 continue;
             }
             if (wdata.s !== "female") {
-                console.log("cannot create Marriage relationship with wrong gender person " + wife);
+                // console.log("cannot create Marriage relationship with wrong gender person " + wife);
                 continue;
             }
             const link = findMarriage(diagram, key, wife);
@@ -907,11 +907,11 @@ export class DiagramWrappper extends React.Component {
             const husband = virs[j];
             const hdata = model.findNodeDataForKey(husband);
             if (key === husband) {
-              console.log("cannot create Marriage relationship with self" + husband);
+              // console.log("cannot create Marriage relationship with self" + husband);
               continue;
             }
             if (!hdata) {
-                console.log("cannot create Marriage relationship with unknown person " + husband);
+                // console.log("cannot create Marriage relationship with unknown person " + husband);
                 continue;
             }
             // console.log("person data");
@@ -919,7 +919,7 @@ export class DiagramWrappper extends React.Component {
             // console.log("husband data");
             // console.log(hdata);
             if (hdata.s !== "male") {
-                console.log("cannot create Marriage relationship with wrong gender person " + husband);
+                // console.log("cannot create Marriage relationship with wrong gender person " + husband);
                 continue;
             }
             const link = findMarriage(diagram, key, husband);
@@ -958,13 +958,13 @@ export class DiagramWrappper extends React.Component {
           }
           if (link === null) {
             // or warn no known mother or no known father or no known marriage between them
-            console.log("unknown marriage: " + mother + " & " + father);
+            // console.log("unknown marriage: " + mother + " & " + father);
             continue;
           }
           const mdata = link.data;
           if (mdata.labelKeys === undefined || mdata.labelKeys[0] === undefined) continue;
           const mlabkey = mdata.labelKeys[0];
-          console.log("MLAB KEY: " + mlabkey);
+          // console.log("MLAB KEY: " + mlabkey);
           const cdata = { from: mlabkey, to: key, opacity: opacity};
           myDiagram.model.addLinkData(cdata);
         }
@@ -974,6 +974,7 @@ export class DiagramWrappper extends React.Component {
   }
 
   render() {
+    // console.log(JSON.stringify(this.props.nodeDataArray));
     return (
           <ReactDiagram
             ref={this.diagramRef}
@@ -1000,12 +1001,9 @@ export class GenogramTree extends React.Component {
       this.handleDiagramEvent = this.handleDiagramEvent.bind(this);
       this.closePopUp = this.closePopUp.bind(this);
       // need to pass the filter somewhere else.
-      this.relations = transform(props.rawJson, props.from, props.to, props.familyName);
+      this.relations = transform(this.props.rawJson, this.props.from, this.props.to, this.props.familyName);
       this.handleStatsClick = this.handleStatsClick.bind(this);
       this.personMap = getPersonMap(props.rawJson.items);
-      this.from = props.from;
-      this.to = props.to;
-      this.familyName = props.familyName;
       this.state = {
         personInfo: null,
         isPopped: false,
@@ -1042,7 +1040,10 @@ export class GenogramTree extends React.Component {
 
     // renders ReactDiagram
     render() {
-      console.log("New family filter: " + this.familyName);
+      console.log("New family filter: " + this.props.familyName);
+      console.log(JSON.stringify(this.props.from));
+      console.log(JSON.stringify(this.props.to));
+      this.relations = transform(this.props.rawJson, this.props.from, this.props.to, this.props.familyName);
         return(
             <div className="tree-box">
               {
@@ -1055,13 +1056,13 @@ export class GenogramTree extends React.Component {
                     </div>
                     : ""
               }
-
-              <DiagramWrappper
+            
+              <DiagramWrapper
                   nodeDataArray={this.relations}
                   onModelChange={this.handleModelChange}
                   onDiagramEvent={this.handleDiagramEvent}
-                  yearFrom={this.from}
-                  yearTo={this.to}
+                  yearFrom={this.props.from}
+                  yearTo={this.props.to}
                   ref={this.componentRef}
               />
 
@@ -1264,7 +1265,7 @@ export class GenogramTree extends React.Component {
     commitNodes() {
       super.commitNodes();
       const horiz = this.direction === 0.0 || this.direction === 180.0;
-      console.log(horiz);
+      // console.log(horiz);
       // position regular nodes
       this.network.vertexes.each(v => {
         if (v.node !== null && !v.node.isLinkLabel) {

@@ -144,7 +144,7 @@ class NameForm extends React.Component {
 
     handleChangeFamily(event) {
         const val = event.target.value;
-        console.log(val);
+        // console.log(val);
         this.setState({familyName: val});
     }
 
@@ -173,9 +173,10 @@ class NameForm extends React.Component {
             this.setState({
                 fromYear: from,
                 toYear: to,
+                // relationsJson: {},
                 familyName: familyName,
             });
-            this.render();
+            // this.render();
             return;
         }
         await this.requests.search(this.state.initialName).then(r => {
@@ -204,7 +205,7 @@ class NameForm extends React.Component {
                 }
                 return true;
             });
-
+            // console.log(JSON.stringify(r));
             this.setState({
                 searchJsons: r,
                 chosenId: r[0].id,
@@ -247,10 +248,10 @@ class NameForm extends React.Component {
         this.requests.relationCalc(
             {start: id, relations: relationsJson.relations}
         ).then(r => {
-            const newRelationsJson = this.integrateKinshipIntoRelationsJson(r, relationsJson);
+            // const newRelationsJson = this.integrateKinshipIntoRelationsJson(r, relationsJson);
             this.setState({
                 kinshipJson: r,
-                relationsJson: newRelationsJson,
+                relationsJson: relationsJson,
                 isLoading: false,
             });
         });
