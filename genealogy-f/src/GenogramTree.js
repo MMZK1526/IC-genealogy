@@ -96,7 +96,6 @@ export function applyFamilyFilter(id, familyName, idPerson) {
 var relMap = new Map();
 
 
-
 function bfs(node, keyRel, relMap, idPerson) {
    let q = new MyQueue();
    let explored = new Set();
@@ -149,7 +148,7 @@ function bfs(node, keyRel, relMap, idPerson) {
       // console.log(JSON.stringify(r));
       if (ss !== undefined) {
         console.log("got here");
-        // check your not at a depth of 2 away from some people.
+        // check your not at a depth of 2 away from some people. (alter this code to remove this.)
         let p = ss.filter(n => explored.has(n));
         if (p.length == 0) {
           if (gender == "male") {
@@ -163,23 +162,6 @@ function bfs(node, keyRel, relMap, idPerson) {
       console.log("Mapped to ")
       // console.log(JSON.stringify(r));
       relMap.set(node, r);
-
-      // // depth of 1 of spouse
-      // if (ss !== undefined) {
-      //   for (let s of ss) {
-      //     // TODO uncomment here for collapsable spouse -> spouse chains (however messy if on one line)
-      //     // edges.push(s);
-      //     let targetS = idPerson.get(s);
-      //     let addPropsS = (targetS).additionalProperties;
-      //     let genderS = (addPropsS.filter(p => p.name == "gender"))[0].value;
-      //     genderS = genderS == "male" ? "M" : "F";
-      //     let rS = gender == "M" ? {key: s, n : targetS.name, s: genderS, vir: node} : {key: s, n : targetS.name, s: genderS, ux: node}
-      //     console.log("setting spouse: " + s);
-      //     console.log(rS);
-      //     relMap.set(s, rS);
-      //     explored.add(s);
-      //   }
-      // }
 
       // set up children of node
       if (cs !== undefined) {
@@ -300,11 +282,10 @@ export function transform2(data, yearFrom, yearTo, familyName) {
 }
 
 
-
-
 // ^^^^^^ SEE ABOVE transformed format helper function to transfrom JSON into goJS nodeDataArray format.
 export function transform(data, yearFrom, yearTo, familyName) {
   // check if already generated
+  relMap = new Map();
   // tree still being regenrated can we improve on this.
   console.log(data);
   // data.people to be replaced with data.items in Mulang version
@@ -458,7 +439,7 @@ function marryParents(mfs, relMap, idPerson) {
 function addUnknown(mfs, relMap) {
   if (mfs.m != null && mfs.f == null) {
     let r2 = relMap.get(unConvert(mfs.m));
-    let newF = {key: mfs.m + 1, n: "unknown", s: 'male', opacity: '0.2'};
+    let newF = {key: mfs.m * -1, n: "unknown", s: 'male', opacity: '0.2'};
     // marry parent to unknown and set child parent to unknown
     newF.ux = r2.key;
     mfs.f = newF.key;
@@ -469,7 +450,7 @@ function addUnknown(mfs, relMap) {
   // case of unknown mother - temporarily replace with "unknown" node
   if (mfs.m == null && mfs.f != null) {
     let r2 = relMap.get(unConvert(mfs.f));
-    let newM = {key: mfs.f + 1, n: "unknown", s: 'female', opacity: '0.2'};
+    let newM = {key: mfs.f * -1, n: "unknown", s: 'female', opacity: '0.2'};
     // marry parent to unknown and set child parent to unknown
     newM.vir = r2.key;
     mfs.m = newM.key;
@@ -901,6 +882,10 @@ export class DiagramWrappper extends React.Component {
                 console.log("cannot create Marriage relationship with unknown person " + husband);
                 continue;
             }
+            console.log("person data");
+            console.log(data)
+            console.log("husband data");
+            console.log(hdata);
             if (hdata.s !== "male") {
                 console.log("cannot create Marriage relationship with wrong gender person " + husband);
                 continue;
