@@ -39,6 +39,7 @@ class NameForm extends React.Component {
             familyName: '',
             transformedArr: [],
             isLoading: false,
+            isEdited: false,
         };
         this.requests = new Requests();
 
@@ -175,7 +176,9 @@ class NameForm extends React.Component {
                 toYear: to,
                 // relationsJson: {},
                 familyName: familyName,
+                isEdited: this.state.isEdited
             });
+            this.state.isEdited = false;
             // this.render();
             return;
         }

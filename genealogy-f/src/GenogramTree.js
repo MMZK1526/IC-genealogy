@@ -628,20 +628,7 @@ export class DiagramWrapper extends React.Component {
     this.nodeDataArray = props.nodeDataArray;
     this.yearFrom = props.yearFrom;
     this.yearTo = props.yearTo;
-    this.diagram = $(go.Diagram,
-      {
-        initialAutoScale: go.Diagram.Uniform,
-        "undoManager.isEnabled": false,
-        // when a node is selected, draw a big yellow circle behind it
-        nodeSelectionAdornmentTemplate:
-          $(go.Adornment, "Auto",
-            { layerName: "Grid" },  // the predefined layer that is behind everything else
-            $(go.Shape, "Circle", {fill: "#c1cee3", stroke: null }),
-            $(go.Placeholder, { margin: 2 })
-          ),
-        layout:  // use a custom layout, defined below
-          $(GenogramLayout, { direction: 90, layerSpacing: 30, columnSpacing: 10 })
-      });
+    this.state = { diagram: undefined, isFirstRender: true };
     this.init();
   }
 
@@ -662,6 +649,27 @@ export class DiagramWrapper extends React.Component {
   }
   
   init() {
+      if (!(this.state.diagram === undefined)) {
+        this.diagram = this.state.diagram;
+        return;
+      }
+
+      this.state.diagram = $(go.Diagram,
+        {
+          initialAutoScale: go.Diagram.Uniform,
+          "undoManager.isEnabled": false,
+          // when a node is selected, draw a big yellow circle behind it
+          nodeSelectionAdornmentTemplate:
+            $(go.Adornment, "Auto",
+              { layerName: "Grid" },  // the predefined layer that is behind everything else
+              $(go.Shape, "Circle", {fill: "#c1cee3", stroke: null }),
+              $(go.Placeholder, { margin: 2 })
+            ),
+          layout:  // use a custom layout, defined below
+            $(GenogramLayout, { direction: 90, layerSpacing: 30, columnSpacing: 10 })
+        })
+      this.diagram = this.state.diagram;
+      
       // determine the color for each attribute shape
       function attrFill(a) {
         switch (a) {
@@ -968,7 +976,10 @@ export class DiagramWrapper extends React.Component {
   }
 
   render() {
-    this.setupDiagram(this.props.nodeDataArray, this.props.nodeDataArray[0].key);
+    if (this.state.isFirstRender || this.props.isEdited == true) {
+      this.state.isFirstRender = false;
+      this.setupDiagram(this.props.nodeDataArray, this.props.nodeDataArray[0].key);
+    }
     return (
           <ReactDiagram
             ref={this.diagramRef}
