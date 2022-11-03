@@ -13,5 +13,5 @@ object AllPropertiesAndQualifiersView: Table("all_properties_and_qualifiers") {
     val valueHash = text("value_hash")
     val qualifierType = varchar("qualifier_type", 32).nullable()
     val qualifierName = varchar("qualifier_name", 255)
-    val qualifierValue = text("qualifier_value").nullable()
+    val qualifierValue = text("qualifier_value")
 }

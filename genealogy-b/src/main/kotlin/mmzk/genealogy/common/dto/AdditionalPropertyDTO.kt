@@ -36,7 +36,7 @@ data class AdditionalPropertyDTO(
 data class QualifierDTO(
     val typeId: String,
     val type: String,
-    val value: String?,
+    val value: String,
 ) {
 
     companion object {

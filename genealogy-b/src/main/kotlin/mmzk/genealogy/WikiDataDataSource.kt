@@ -5,10 +5,7 @@ import java.util.*
 import kotlin.collections.*
 import kotlinx.coroutines.*
 import mmzk.genealogy.common.Database
-import mmzk.genealogy.common.dto.AdditionalPropertyDTO
-import mmzk.genealogy.common.dto.ItemDTO
-import mmzk.genealogy.common.dto.RelationsResponse
-import mmzk.genealogy.common.dto.RelationshipDTO
+import mmzk.genealogy.common.dto.*
 import org.eclipse.rdf4j.query.TupleQueryResult
 import org.eclipse.rdf4j.queryrender.RenderUtils
 import org.eclipse.rdf4j.repository.sparql.SPARQLRepository
@@ -116,10 +113,21 @@ class WikiDataDataSource(
                 AdditionalPropertyDTO(makeID(Fields.family), "family", it, getHash(row, SPARQL.family))
             }
             val givenName = row["${SPARQL.givenName}Label"]?.let {
-                AdditionalPropertyDTO(makeID(Fields.givenName), "given name", it, getHash(row, SPARQL.givenName))
+                AdditionalPropertyDTO(makeID(Fields.givenName),
+                    "given name",
+                    it,
+                    getHash(row, SPARQL.givenName),
+                    setOfNotNull(
+                        row[SPARQL.ordinal]?.let { ord -> QualifierDTO("WD-1545", "series ordinal", ord) }
+                    ))
             }
             val familyName = row["${SPARQL.familyName}Label"]?.let {
-                AdditionalPropertyDTO(makeID(Fields.familyName), "family name", it, getHash(row, SPARQL.familyName))
+                AdditionalPropertyDTO(makeID(Fields.familyName), "family name", it, getHash(row, SPARQL.familyName),
+                    setOfNotNull(
+                        row["${SPARQL.familyNameType}Label"]?.let { role ->
+                            QualifierDTO("WD-3831", "object has role", role)
+                        }
+                    ))
             }
 
             dtos[id]?.let {
