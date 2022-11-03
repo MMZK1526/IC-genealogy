@@ -17,6 +17,7 @@ export class CustomUpload extends React.Component {
     render() {
         return (
             <div className='custom-upload'>
+                <label id='label'>Or you can try...</label>
                 <button id='button' type='primary' onClick={this.handleClick}>
                     Upload custom data
                 </button>
