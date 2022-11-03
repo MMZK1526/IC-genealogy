@@ -2,12 +2,12 @@
     display: flex;
     position: absolute;
     bottom: 50px;
-    padding: 10px 20px 10px 20px;
+    padding: 5px 20px 5px 20px;
     flex-direction: row;
     align-items: center;
     align-self: center;
     justify-content: space-between;
-    width: 35vw;
+    /* width: 35vw; */
     background-color: beige;
     border-radius: 5px;
 }

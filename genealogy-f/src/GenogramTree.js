@@ -1040,13 +1040,13 @@ export class GenogramTree extends React.Component {
               />
 
               <div className='toolbar'>
-                <button onClick={() => exportComponentAsPNG(this.componentRef)}>
+                <button id='button' onClick={() => exportComponentAsPNG(this.componentRef)}>
                   Export as PNG
                 </button>
-                <button onClick={() => downloadJsonFile(this.props.rawJson)}>
+                <button id='button' onClick={() => downloadJsonFile(this.props.rawJson)}>
                   Export as JSON
                 </button>
-                <button onClick={() => {
+                <button id='button' onClick={() => {
                   this.setState((prevState) => ({
                     showStats: !prevState.showStats
                   }));

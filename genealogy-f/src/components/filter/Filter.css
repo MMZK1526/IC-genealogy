@@ -10,7 +10,7 @@
   font-size: large;
   color: rgb(50, 50, 50);
   background-color: transparent;
-  border-style: dashed;
+  border: dashed #ccc 2px;
   border-radius: 5px;
 }
 
@@ -18,8 +18,8 @@
   display: inline;
   font-size: large;
   color: rgb(50, 50, 50);
-  border: dashed #999 2px;
-  background-color: lavender;
+  border: dashed #ccc 2px;
+  background-color: rgba(255, 240, 245, 0.5);
   border-radius: 5px;
   width: 200px;
 }

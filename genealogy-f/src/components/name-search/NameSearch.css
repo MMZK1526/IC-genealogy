@@ -35,6 +35,7 @@
   border: 0.1em solid darkgray;
   border-radius: 5px;
   margin: 10px;
+  padding: 10px 20px 10px 20px;
   align-self: stretch;
   text-align: center;
   /* font-family: 'Helvetica Neue', sans-serif;  */
@@ -42,7 +43,7 @@
   color: white;
   background-color: darkblue;
   transition: all 0.15s;
-  width: 7.5em;
+  width: 7em;
 }
 
 .welcome .search-button:hover{
