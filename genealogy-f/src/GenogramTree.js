@@ -1056,7 +1056,9 @@ export class GenogramTree extends React.Component {
               </div>
               {
                 this.state.showStats &&
+                <div className="popup">
                   <StatsPanel data={this.props.rawJson} onClick={this.handleStatsClick} />
+                </div>
               }
             </div>
         );

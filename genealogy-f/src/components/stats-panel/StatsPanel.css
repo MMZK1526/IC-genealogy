@@ -4,13 +4,20 @@
     left: 50%;
     transform: translate(-50%, -50%);
     background-color: white;
-    opacity: 100%;
-    padding: 10px;
-    border: solid black;
+    padding: 20px;
+    border-radius: 5px;
+}
+
+.stats-panel #stat {
+    margin: 10px
 }
 
 .close-button {
     position: absolute;
-    top: 5px;
-    right: 5px;
+    top: 20px;
+    right: 20px;
+
+    border: none !important;
+    background-color: transparent;
+    border-radius: 0;
 }

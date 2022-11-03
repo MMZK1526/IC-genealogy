@@ -1,15 +1,18 @@
 import React from 'react';
 import './StatsPanel.css';
+import {AiOutlineClose} from "react-icons/ai"
 
 export class StatsPanel extends React.Component {
     render() {
         return (
             <div className='stats-panel'>
-                <button className='close-button' onClick={this.props.onClick}>x</button>
-                {this.numberOfFamilyMembers()}
+                <button className='close-button' onClick={this.props.onClick}>
+                    <AiOutlineClose size={30} color='red'/>
+                </button>
+                <div id='stat'>{this.numberOfFamilyMembers()}</div>
                 {/*{this.avgChildrenPerPerson()}*/}
-                {this.mostPopularCountryOfBirth()}
-                {this.topFamilies()}
+                <div id='stat'>{this.mostPopularCountryOfBirth()}</div>
+                <div id='stat'>{this.topFamilies()}</div>
             </div>
         );
     }
