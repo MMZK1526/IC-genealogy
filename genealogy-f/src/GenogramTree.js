@@ -570,12 +570,36 @@ function getPersonMap(data) {
     attributes.set("Name", person.name);
     attributes.set("Description", person.description);
 
+    let attrMap = new Map;
+    // wash data for additionalProperties
     for (let attr of person.additionalProperties) {
+      // If field doesn't present, don't put in the Map
+      if (attr.value === null || attr.value === "") continue;
+      if (attr.propertyId === "WD-P19" || attr.propertyId === "WD-P20") continue; // not used by new PoB, PoD design
+      if (attr.name === "family name" || attr.name === "given name") continue;    // this two fields not show, use personal name instead
+
+      if (attrMap.has(attr.name)) {
+        let newVal = attrMap.get(attr.name) + "; " + attr.value;
+        attrMap.set(attr.name, newVal);
+      } else {
+        attrMap.set(attr.name, attr.value);
+      }
+    }
+
+    attrMap.forEach((value, key) => {
+      switch (key) {
+        case "date of birth":
+          value = value.replace(/^0+/, '').split("T")[0];
+        case "date of death":
+          value = value.replace(/^0+/, '').split("T")[0];
+        default:
+      }
+      attributes.set(capitalizeFirstLetter(key), value);
+    } )
+
+    for (let attr of attrMap) {
       let fieldName  = attr.name;
       let fieldValue = attr.value;
-      // If field doesn't present, don't put in the Map
-      if (fieldValue === null || fieldValue === "") continue;
-      if (attr.propertyId === "WD-P19" || attr.propertyId === "WD-P20") continue;
 
       switch (fieldName) {
         case "date of birth":
