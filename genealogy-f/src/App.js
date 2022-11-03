@@ -258,11 +258,14 @@ class NameForm extends React.Component {
             idItemMap.set(item.id, item);
         }
         for (const key of Object.keys(kinshipJson)) {
-            const arr = kinshipJson[key].length >= 1 ? kinshipJson[key][0] : [];
+            const kinshipStr = kinshipJson[key].map((arr) => {
+                arr.reverse();
+                return arr.join(' of the ');
+            }).join('\n');
             const property = {
                 propertyId: 'WD-kinship',
                 name: 'relation to the searched person',
-                value: arr.join(' -> '),
+                value: kinshipStr,
                 valueHash: null,
             };
             console.assert(idItemMap.has(key));
