@@ -5,7 +5,7 @@ import java.util.*
 import kotlin.collections.*
 import kotlinx.coroutines.*
 import mmzk.genealogy.common.Database
-import mmzk.genealogy.common.dto.AdditionalProperty
+import mmzk.genealogy.common.dto.AdditionalPropertyDTO
 import mmzk.genealogy.common.dto.ItemDTO
 import mmzk.genealogy.common.dto.RelationsResponse
 import mmzk.genealogy.common.dto.RelationshipDTO
@@ -82,44 +82,44 @@ class WikiDataDataSource(
                 }
             }
             val dateOfBirth = row[SPARQL.dateOfBirth]?.let {
-                AdditionalProperty(
+                AdditionalPropertyDTO(
                     makeID(Fields.dateOfBirth), "date of birth", it, getHash(row, SPARQL.dateOfBirth)
                 )
             }
             val dateOfDeath = row[SPARQL.dateOfDeath]?.let {
-                AdditionalProperty(
+                AdditionalPropertyDTO(
                     makeID(Fields.dateOfDeath), "date of death", it, getHash(row, SPARQL.dateOfDeath)
                 )
             }
             val placeOfBirth = row["${SPARQL.placeOfBirth}Label"]?.let {
-                AdditionalProperty(
+                AdditionalPropertyDTO(
                     makeID(Fields.placeOfBirth), "place of birth", it, getHash(row, SPARQL.placeOfBirth)
                 )
             }
             val placeOfDeath = row["${SPARQL.placeOfDeath}Label"]?.let {
-                AdditionalProperty(
+                AdditionalPropertyDTO(
                     makeID(Fields.placeOfDeath), "place of death", it, getHash(row, SPARQL.placeOfDeath)
                 )
             }
             val placeOfBirthSW = formatLocationWithCountry(
                 row["${SPARQL.placeOfBirth}Label"],
                 row["${SPARQL.placeOfBirthCountry}Label"]
-            )?.let { AdditionalProperty("SW-P2", "place of birth", it, "") }
+            )?.let { AdditionalPropertyDTO("SW-P2", "place of birth", it, "") }
             val placeOfDeathSW = formatLocationWithCountry(
                 row["${SPARQL.placeOfDeath}Label"],
                 row["${SPARQL.placeOfDeathCountry}Label"]
-            )?.let { AdditionalProperty("SW-P3", "place of death", it, "") }
+            )?.let { AdditionalPropertyDTO("SW-P3", "place of death", it, "") }
             val gender = row["${SPARQL.gender}Label"]?.let {
-                AdditionalProperty(makeID(Fields.gender), "gender", it, getHash(row, SPARQL.gender))
+                AdditionalPropertyDTO(makeID(Fields.gender), "gender", it, getHash(row, SPARQL.gender))
             }
             val family = row["${SPARQL.family}Label"]?.let {
-                AdditionalProperty(makeID(Fields.family), "family", it, getHash(row, SPARQL.family))
+                AdditionalPropertyDTO(makeID(Fields.family), "family", it, getHash(row, SPARQL.family))
             }
             val givenName = row["${SPARQL.givenName}Label"]?.let {
-                AdditionalProperty(makeID(Fields.givenName), "given name", it, getHash(row, SPARQL.givenName))
+                AdditionalPropertyDTO(makeID(Fields.givenName), "given name", it, getHash(row, SPARQL.givenName))
             }
             val familyName = row["${SPARQL.familyName}Label"]?.let {
-                AdditionalProperty(makeID(Fields.familyName), "family name", it, getHash(row, SPARQL.familyName))
+                AdditionalPropertyDTO(makeID(Fields.familyName), "family name", it, getHash(row, SPARQL.familyName))
             }
 
             dtos[id]?.let {
@@ -153,7 +153,7 @@ class WikiDataDataSource(
             }
         }
         for ((id, dto) in dtos) {
-            dto.additionalProperties += AdditionalProperty(
+            dto.additionalProperties += AdditionalPropertyDTO(
                 "SW-P1", "personal name",
                 personalNames[id]?.formattedName ?: dto.name, ""
             )
