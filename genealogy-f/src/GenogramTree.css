@@ -32,14 +32,15 @@
 
 .toolbar {
     position: absolute;
-    bottom: 10px;
+    top: 10px;
     left: 10px;
 
     display: flex;
     flex-direction: row;
 
-    background-color: rgba(255, 240, 245, 0.5);
-    padding: 15px;
+    /* background-color: rgba(255, 240, 245, 1.0); */
+    background-color: rgba(201, 220, 236, 1);
+    padding: 5px;
     border-radius: 5px;
 }
 
