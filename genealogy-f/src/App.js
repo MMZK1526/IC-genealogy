@@ -261,7 +261,7 @@ class NameForm extends React.Component {
             const kinshipStr = kinshipJson[key].map((arr) => {
                 arr.reverse();
                 return arr.join(' of the ');
-            }).join('\n');
+            }).join('; ');
             const property = {
                 propertyId: 'WD-kinship',
                 name: 'relation to the searched person',
