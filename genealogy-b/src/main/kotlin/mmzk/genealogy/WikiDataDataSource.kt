@@ -311,7 +311,7 @@ class WikiDataDataSource(
         val queryStrCore = typeMap.keys.joinToString("\n") {
             "OPTIONAL { ?item p:${Fields.parseID(it)?.second} [ps:${Fields.parseID(it)?.second} ?${
                 Fields.parseID(it)?.second
-            }; wikibase:rank ?${Fields.parseID(it)?.second}rank;] . }\nFILTER ( ?${Fields.parseID(it)?.second}rank != wikibase:DeprecatedRank )"
+            }; wikibase:rank ?${Fields.parseID(it)?.second}rank;] . \nFILTER ( ?${Fields.parseID(it)?.second}rank != wikibase:DeprecatedRank ) }"
         }
         val querySelect = """
               SELECT ?${SPARQL.item} $queryLabels WHERE {
@@ -320,6 +320,7 @@ class WikiDataDataSource(
                   $queryStrCore
               }
         """.trimIndent()
+//        println(querySelect)
         val results = try {
             repo.connection.prepareTupleQuery(querySelect).evaluate()
         } catch (exception: Exception) {
