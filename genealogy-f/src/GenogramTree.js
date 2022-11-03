@@ -888,10 +888,10 @@ export class DiagramWrappper extends React.Component {
                 console.log("cannot create Marriage relationship with unknown person " + husband);
                 continue;
             }
-            console.log("person data");
-            console.log(data)
-            console.log("husband data");
-            console.log(hdata);
+            // console.log("person data");
+            // console.log(data)
+            // console.log("husband data");
+            // console.log(hdata);
             if (hdata.s !== "male") {
                 console.log("cannot create Marriage relationship with wrong gender person " + husband);
                 continue;
