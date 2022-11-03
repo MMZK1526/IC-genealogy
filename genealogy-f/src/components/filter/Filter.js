@@ -20,7 +20,7 @@ export function FilterForm(props) {
 export function DropDown(props) {
   return (
     <Form>
-    <Form.Label className="label">Family Name: </Form.Label>
+    <Form.Label className="label">Family: </Form.Label>
     <select className="family-select" name="cars" onChange={props.onChange}>
       <option value=""></option>
       <option value="House of Windsor">House of Windsor</option>
