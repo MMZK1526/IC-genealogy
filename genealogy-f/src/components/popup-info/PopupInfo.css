@@ -6,7 +6,7 @@
     /* background-color: #F5F5DC; */
     background-color: rgba(255, 255, 255, 0.99);
     /* height: fit-content */
-    block-size: fit-content;
+    /* block-size: fit-content; */
     border-radius: 5px;
 }
 
@@ -26,21 +26,26 @@
 .row {
     display: flex;
     flex-direction: row;
-    height: auto;
+    height: 4vh;
+    /* max-height: 10; */
 }
+
+.desc {
+    font-style: italic;
+    padding-bottom: 100px;
+}
+
 
 #col_key {
     display: flex;
     flex-direction: column;
     width: 30%;
-    padding: 0px;
 }
 
 #col_val {
     display: flex;
     flex-direction: column;
     width: 90%;
-    padding: 0px;
 }
 
 #key {

@@ -1,6 +1,7 @@
 import Button from 'react-bootstrap/Button';
 import {FilterForm} from '../filter/Filter.js'
 import React from "react";
+import { capitalizeFirstLetter } from '../../GenogramTree.js';
 import {AiOutlineClose} from "react-icons/ai"
 import "./PopupInfo.css"
 
@@ -23,6 +24,8 @@ function getAdditionalProperties(data) {
         
         <div> 
             <h2>{data.get("Name")}</h2>
+            <label className="desc">{capitalizeFirstLetter(data.get("Description"))}</label>
+            <br></br><br></br>
             {/* <div className="row">
                 <div className="col_key" >
                     {getAttrName(data)}
@@ -32,6 +35,7 @@ function getAdditionalProperties(data) {
                 </div>
             </div> */}
             {getAllAttr(data)}
+            <br></br>
         </div> 
     )
     // return Object.keys(Object.fromEntries(data)).map((k) => (
@@ -42,7 +46,9 @@ function getAdditionalProperties(data) {
 }
 
 function getAllAttr(data) {
-    return Object.keys(Object.fromEntries(data)).map((k) => (
+    return Object.keys(Object.fromEntries(data)).filter(function (k) {
+        return k !== "Name" && k !== "Description";
+      }).map((k) => (
         <div className="row" key={k}>
             <div id='col_key'>
                 <p>{k}</p>
