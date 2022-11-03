@@ -23,16 +23,19 @@ export class Requests {
             });
     }
 
-    relation_calc({start, relations}) {
-        const url = `${this.baseUrl}/relation_calc`
+    relationCalc({start, relations}) {
+        const url = `${this.baseUrl}/relation_calc`;
         const body = {
             start: start,
             relations: relations,
-        }
+        };
+        const headers = new Headers();
+        headers.append('Content-Type', 'application/json');
         const request = new Request(
             url,
             {
                 method: 'POST',
+                headers: headers,
                 body: JSON.stringify(body),
             }
         );

@@ -51,6 +51,7 @@ class NameForm extends React.Component {
         this.handleSearchSubmit = this.handleSearchSubmit.bind(this);
         this.handleRelationsSubmit = this.handleRelationsSubmit.bind(this);
         this.handleCustomUpload = this.handleCustomUpload.bind(this);
+        this.setRelationCalc = this.setRelationCalc.bind(this);
     }
 
     handleChangeInitialName(event) {
@@ -214,8 +215,8 @@ class NameForm extends React.Component {
         this.setState({
             isLoading: true,
         });
-        
-        await this.requests.relations({id: this.state.chosenId}).then(r => {
+
+        this.requests.relations({id: this.state.chosenId}).then(r => {
             if (Object.values(r)[1].length === 0) {
                 this.setState({
                     relationsJson: {},
@@ -227,12 +228,10 @@ class NameForm extends React.Component {
                 relationsJson: r,
                 isLoading: false,
             });
-        });
-
-        await this.requests.relation_calc(
-            {start: this.state.chosenId, relations: this.state.relationsJson.relations}
-        ).then(r => {
-            console.log(r);
+            this.setRelationCalc(
+                this.state.chosenId,
+                r.relations,
+            );
         });
     }
 
@@ -242,6 +241,13 @@ class NameForm extends React.Component {
         });
     }
 
+    setRelationCalc(id, relations) {
+        this.requests.relationCalc(
+            {start: id, relations: relations}
+        ).then(r => {
+            console.log(r);
+        });
+    }
 }
 
 export default App;
