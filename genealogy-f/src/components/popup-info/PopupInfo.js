@@ -43,7 +43,7 @@ function getAdditionalProperties(data) {
 
 function getAllAttr(data) {
     return Object.keys(Object.fromEntries(data)).map((k) => (
-        <div className="row">
+        <div className="row" key={k}>
             <div id='col_key'>
                 <p>{k}</p>
             </div>
