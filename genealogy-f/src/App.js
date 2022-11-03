@@ -96,13 +96,13 @@ class NameForm extends React.Component {
                 {
                     !_.isEmpty(this.state.searchJsons) &&
                     _.isEmpty(this.state.relationsJson) &&
-                    !this.state.isLoading &&
-                        <ResultPage
-                                state={this.state}
-                                onChange={this.handleChangeChosenId}
-                                onSubmit={this.handleRelationsSubmit}
-                        />
-                }
+                        !this.state.isLoading &&
+                            <ResultPage
+                                    state={this.state}
+                                    onChange={this.handleChangeChosenId}
+                                    onSubmit={this.handleRelationsSubmit}
+                            />
+                    }
                 {
                     this.state.isLoading
                         && <ClipLoader
