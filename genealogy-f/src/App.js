@@ -33,6 +33,7 @@ class NameForm extends React.Component {
             searchJsons: [],
             chosenId: '',
             relationsJson: {},
+            kinshipJson: {},
             fromYear: '',
             toYear: '',
             familyName: '',
@@ -51,30 +52,7 @@ class NameForm extends React.Component {
         this.handleSearchSubmit = this.handleSearchSubmit.bind(this);
         this.handleRelationsSubmit = this.handleRelationsSubmit.bind(this);
         this.handleCustomUpload = this.handleCustomUpload.bind(this);
-    }
-
-    handleChangeInitialName(event) {
-        this.setState({initialName: event.target.value});
-    }
-
-    handleChangeChosenId(id) {
-        this.setState({chosenId: id});
-    }
-
-    handleChangeFrom(event) {
-        const val = event.target.value;
-        this.setState({fromYear: val});
-    }
-
-    handleChangeTo(event) {
-        const val = event.target.value;
-        this.setState({toYear: val});
-    }
-
-    handleChangeFamily(event) {
-        const val = event.target.value;
-        console.log(val);
-        this.setState({familyName: val});
+        this.setRelationCalc = this.setRelationCalc.bind(this);
     }
 
     render() {
@@ -103,9 +81,8 @@ class NameForm extends React.Component {
                 }
                 <div className='tree-box'>
                     {
-                        !_.isEmpty(this.state.relationsJson)
-                            // TODO - entry point for genogram tree
-                            ?
+                        !_.isEmpty(this.state.relationsJson) &&
+                        !_.isEmpty(this.state.kinshipJson) &&
                             <GenogramTree
                                 rawJson={this.state.relationsJson}
                                 from={this.state.fromYear}
@@ -114,17 +91,17 @@ class NameForm extends React.Component {
                             />
                             // <Adapter data={this.state.relationsJson} />
 
-                            : ''
                     }
                 </div>
                 {
-                    !_.isEmpty(this.state.searchJsons) && _.isEmpty(this.state.relationsJson) && !this.state.isLoading
-                        ? <ResultPage
-                            state={this.state}
-                            onChange={this.handleChangeChosenId}
-                            onSubmit={this.handleRelationsSubmit}
+                    !_.isEmpty(this.state.searchJsons) &&
+                    _.isEmpty(this.state.relationsJson) &&
+                    !this.state.isLoading &&
+                        <ResultPage
+                                state={this.state}
+                                onChange={this.handleChangeChosenId}
+                                onSubmit={this.handleRelationsSubmit}
                         />
-                        : ''
                 }
                 {
                     this.state.isLoading
@@ -141,6 +118,38 @@ class NameForm extends React.Component {
                 <CustomUpload onSubmit={this.handleCustomUpload} />
             </div>
         );
+    }
+
+    handleChangeInitialName(event) {
+        this.setState({initialName: event.target.value});
+    }
+
+    handleChangeChosenId(id) {
+        this.setState({chosenId: id});
+    }
+
+    handleChangeFrom(event) {
+        const val = event.target.value;
+        this.setState({fromYear: val});
+    }
+
+    handleChangeTo(event) {
+        const val = event.target.value;
+        this.setState({toYear: val});
+    }
+
+    handleChangeFamily(event) {
+        const val = event.target.value;
+        console.log(val);
+        this.setState({familyName: val});
+    }
+
+    handleCustomUpload(data) {
+        const chosenId = data.targets[0].id;
+        this.setRelationCalc(chosenId, data);
+        // this.setState({
+        //     relationsJson: data,
+        // });
     }
 
     async handleSearchSubmit(event) {
@@ -205,7 +214,7 @@ class NameForm extends React.Component {
 
     }
 
-    handleRelationsSubmit(event) {
+    async handleRelationsSubmit(event) {
         if (this.state.chosenId === '') {
             alert("Haven't selected a person!");
             return;
@@ -214,8 +223,8 @@ class NameForm extends React.Component {
         this.setState({
             isLoading: true,
         });
-        
-        this.requests.relations({id: this.state.chosenId}).then(r => {
+
+        await this.requests.relations({id: this.state.chosenId}).then(r => {
             if (Object.values(r)[1].length === 0) {
                 this.setState({
                     relationsJson: {},
@@ -223,19 +232,54 @@ class NameForm extends React.Component {
                 alert("No relationship found!")
                 return;
             }
+            this.setRelationCalc(
+                this.state.chosenId,
+                r,
+            );
+        });
+    }
+
+    setRelationCalc(id, relationsJson) {
+        this.requests.relationCalc(
+            {start: id, relations: relationsJson.relations}
+        ).then(r => {
+            const newRelationsJson = this.integrateKinshipIntoRelationsJson(r, relationsJson);
             this.setState({
-                relationsJson: r,
+                kinshipJson: r,
+                relationsJson: newRelationsJson,
                 isLoading: false,
             });
         });
     }
 
-    handleCustomUpload(data) {
-        this.setState({
-            relationsJson: data,
-        });
+    integrateKinshipIntoRelationsJson(kinshipJson, relationsJson) {
+        const idItemMap = new Map();
+        for (const item of relationsJson.items) {
+            idItemMap.set(item.id, item);
+        }
+        for (const key of Object.keys(kinshipJson)) {
+            const kinshipStr = kinshipJson[key].map((arr) => {
+                arr.reverse();
+                return arr.join(' of the ');
+            }).join('; ');
+            const property = {
+                propertyId: 'WD-kinship',
+                name: 'relation to the searched person',
+                value: kinshipStr,
+                valueHash: null,
+            };
+            console.assert(idItemMap.has(key));
+            const item = idItemMap.get(key);
+            const props = item.additionalProperties;
+            props.push(property);
+            item.additionalProperties = props;
+            idItemMap.set(key, item);
+        }
+        const newItems = Array.from(idItemMap.values());
+        const res = relationsJson;
+        res.items = newItems;
+        return res;
     }
-
 }
 
 export default App;

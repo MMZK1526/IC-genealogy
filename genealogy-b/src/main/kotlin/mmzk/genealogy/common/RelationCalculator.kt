@@ -102,7 +102,7 @@ private fun kinshipCalculator(primitives: List<String>): List<String> {
     for (primitive in primitives) {
         when (primitive) {
             Fields.father.wikidataId -> {
-                if (fallingLvl != 0 && risingLvl != 0 && !isRising) {
+                if (fallingLvl != 0) {
                     reckoning()
                 }
 
@@ -111,7 +111,7 @@ private fun kinshipCalculator(primitives: List<String>): List<String> {
                 isRising = true
             }
             Fields.mother.wikidataId -> {
-                if (fallingLvl != 0 && risingLvl != 0 && !isRising) {
+                if (fallingLvl != 0) {
                     reckoning()
                 }
 

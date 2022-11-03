@@ -306,6 +306,7 @@ export function transform(data, yearFrom, yearTo, familyName) {
       // check if relation ID exist in data.item, if not then discard (edge of search?)
       if (target2 === undefined) {
         console.log("------- ERROR -------- key :" + key + "not found in data.items");
+        // continue;
       }
       // split select target into their additional properties (general, not predetermined)
       // need a filter here depending on which type of tree we are using.
@@ -554,6 +555,10 @@ function createRelation(key, idPerson, relMap) {
 
 }
 
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 // Create a map of maps
 // Outer map: personId -> inner map
 // Inner map: property -> value
@@ -562,14 +567,15 @@ function getPersonMap(data) {
   for (let person of data) {
     const personId = person.id;
     let attributes = new Map;
-    attributes.set("name", person.name);
-    attributes.set("description", person.description);
+    attributes.set("Name", person.name);
+    attributes.set("Description", person.description);
 
     for (let attr of person.additionalProperties) {
       let fieldName  = attr.name;
       let fieldValue = attr.value;
       // If field doesn't present, don't put in the Map
       if (fieldValue === null || fieldValue === "") continue;
+      if (attr.propertyId === "WD-P19" || attr.propertyId === "WD-P20") continue;
 
       switch (fieldName) {
         case "date of birth":
@@ -578,7 +584,7 @@ function getPersonMap(data) {
           fieldValue = fieldValue.replace(/^0+/, '').split("T")[0];
         default:
       }
-      attributes.set(fieldName, fieldValue);
+      attributes.set(capitalizeFirstLetter(fieldName), fieldValue);
     }
 
     personMap.set(personId, attributes)

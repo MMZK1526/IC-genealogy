@@ -5,7 +5,6 @@ node_modules/
 */.gradle
 genealogy-f/playground
 **/package-lock.json
-**/playground.js
-**/playground.json
+**/playground*
 **/myRelations.json
 package.json

@@ -5,10 +5,7 @@ import com.zaxxer.hikari.HikariDataSource
 import java.net.URI
 import mmzk.genealogy.common.dao.Item
 import mmzk.genealogy.common.dao.Relationship
-import mmzk.genealogy.common.dto.AdditionalProperty
-import mmzk.genealogy.common.dto.ItemDTO
-import mmzk.genealogy.common.dto.RelationsResponse
-import mmzk.genealogy.common.dto.RelationshipDTO
+import mmzk.genealogy.common.dto.*
 import mmzk.genealogy.common.tables.*
 import mmzk.genealogy.common.tables.RelationshipTable.type
 import org.jetbrains.exposed.dao.EntityID
@@ -71,11 +68,20 @@ object Database {
             }
 
             for (property in item.additionalProperties) {
-                AdditionalPropertiesTable.insertIgnore {
+                AdditionalPropertyTable.insertIgnore {
                     it[itemId] = item.id
                     it[propertyId] = property.propertyId
                     it[value] = property.value
                     it[valueHash] = property.valueHash
+                }
+                for (qualifier in property.qualifiers) {
+                    QualifierTable.insertIgnore {
+                        it[itemId] = item.id
+                        it[qualifierType] = qualifier.typeId
+                        it[value] = qualifier.value
+                        it[valueHash] = property.valueHash
+                        it[propertyId] = property.propertyId
+                    }
                 }
             }
         }
@@ -141,11 +147,21 @@ object Database {
         }
 
     private fun Iterable<Item>.toDTOWithAdditionalProperties(): List<ItemDTO> {
-        val additionalPropertiesByItem = AdditionalPropertiesTable.innerJoin(PropertyTypeTable).select {
-            AdditionalPropertiesTable.itemId.inList(this@toDTOWithAdditionalProperties.map { it.id.value })
-        }.groupBy { it[AdditionalPropertiesTable.itemId] }
+        val qualifiersByItem =
+            AllPropertiesAndQualifiersView.select {
+                    AllPropertiesAndQualifiersView.id.inList(this@toDTOWithAdditionalProperties.map { it.id.value })
+                }
+                .groupBy { it[AllPropertiesAndQualifiersView.id] }
+                .mapValues { (k, v) ->
+                    v.groupBy { it[AllPropertiesAndQualifiersView.propertyId] to it[AllPropertiesAndQualifiersView.valueHash] }
+                }
         return this.map { dao ->
-            ItemDTO(dao, additionalPropertiesByItem[dao.id.value]?.map(::AdditionalProperty) ?: listOf())
+            val qualifiersByProperty = qualifiersByItem[dao.id.value] ?: mapOf()
+            val properties = qualifiersByProperty.values.mapNotNullTo(mutableSetOf()) { rows ->
+                val qualifiers = rows.mapNotNullTo(mutableSetOf(), QualifierDTO::fromAllPropertiesAndQualifiersResultRow)
+                AdditionalPropertyDTO.fromAllPropertiesAndQualifiersResultRow(rows[0], qualifiers)
+            }
+            ItemDTO(dao, properties)
         }
     }
 

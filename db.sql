@@ -65,19 +65,6 @@ CREATE TABLE public.item (
 
 
 --
--- Name: indexed_item; Type: VIEW; Schema: public; Owner: -
---
-
-CREATE VIEW public.indexed_item AS
- SELECT item.name,
-    item.id,
-    item.description,
-    item.aliases,
-    to_tsvector('english'::regconfig, (((item.name)::text || ' '::text) || COALESCE(item.aliases, ''::text))) AS indexed_aliases
-   FROM public.item;
-
-
---
 -- Name: property_type; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -97,8 +84,63 @@ CREATE TABLE public.qualifier (
     qualifier_type character varying(32) NOT NULL,
     value_hash text NOT NULL,
     value text,
-    property_id character varying(32)
+    property_id character varying(32) NOT NULL
 );
+
+
+--
+-- Name: all_properties_and_qualifiers; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.all_properties_and_qualifiers AS
+ SELECT item.name,
+    item.id,
+    item.description,
+    item.aliases,
+    everything_with_name.property_id,
+    everything_with_name.property_name,
+    everything_with_name.value,
+    everything_with_name.value_hash,
+    everything_with_name.qualifier_name,
+    everything_with_name.qualifier_type,
+    everything_with_name.qualifier_value
+   FROM (public.item
+     LEFT JOIN ( SELECT ap_with_name.item_id,
+            ap_with_name.property_id,
+            ap_with_name.value,
+            ap_with_name.value_hash,
+            ap_with_name.property_name,
+            q_with_name.property_name AS qualifier_name,
+            q_with_name.qualifier_type,
+            q_with_name.value AS qualifier_value
+           FROM (( SELECT additional_property.item_id,
+                    additional_property.property_id,
+                    additional_property.value,
+                    additional_property.value_hash,
+                    property_type.property_name
+                   FROM (public.additional_property
+                     JOIN public.property_type ON (((property_type.id)::text = (additional_property.property_id)::text)))) ap_with_name
+             LEFT JOIN ( SELECT qualifier.item_id,
+                    qualifier.qualifier_type,
+                    qualifier.value_hash,
+                    qualifier.value,
+                    qualifier.property_id,
+                    property_type.property_name
+                   FROM (public.qualifier
+                     JOIN public.property_type ON (((property_type.id)::text = (qualifier.qualifier_type)::text)))) q_with_name ON ((((ap_with_name.item_id)::text = (q_with_name.item_id)::text) AND ((ap_with_name.property_id)::text = (q_with_name.property_id)::text) AND (ap_with_name.value_hash = q_with_name.value_hash))))) everything_with_name ON (((everything_with_name.item_id)::text = (item.id)::text)));
+
+
+--
+-- Name: indexed_item; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.indexed_item AS
+ SELECT item.name,
+    item.id,
+    item.description,
+    item.aliases,
+    to_tsvector('english'::regconfig, (((item.name)::text || ' '::text) || COALESCE(item.aliases, ''::text))) AS indexed_aliases
+   FROM public.item;
 
 
 --
@@ -148,7 +190,7 @@ ALTER TABLE ONLY public.item
 --
 
 ALTER TABLE ONLY public.qualifier
-    ADD CONSTRAINT qualifier_pkey PRIMARY KEY (item_id, qualifier_type, value_hash);
+    ADD CONSTRAINT qualifier_pkey PRIMARY KEY (item_id, qualifier_type, value_hash, property_id);
 
 
 --

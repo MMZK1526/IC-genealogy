@@ -164,9 +164,27 @@ components:
           type: string
         value:
           type: string
+        qualifiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Qualifier'
       required:
         - propertyId
         - name
+        - value
+    Qualifier:
+      description: additional qualification about an additional property
+      type: object
+      properties:
+        typeId:
+          type: string
+        type:
+          type: string
+        value:
+          type: string
+      required:
+        - typeId
+        - type
         - value
     Item:
       description: an item in the database or WikiData
