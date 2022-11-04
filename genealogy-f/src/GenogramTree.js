@@ -55,10 +55,18 @@ export function applyDateOfBirthFilter(id, dateFrom, dateTo, idPerson) {
     // // check if both parents are out of the date range, if so then assume unknown also outside, otherwise leave in.
     // return m && f;
   }
+
   const date = (f[0].value).split("T");
   const d3 = new Date(date[0]);
-  const d1 = dateFrom == '' ? new Date(-8640000000000000) : new Date(dateFrom);
-  const d2 = dateTo == '' ? new Date("3000-01-01") : new Date(dateTo);
+  const d1 = new Date(-8640000000000000);
+  if (dateFrom !== undefined && dateFrom !== null && dateFrom != '') {
+    d1.setFullYear(dateFrom, 0, 1);
+  }
+  const d2 = new Date(8640000000000000);
+  if (dateTo !== undefined && dateTo !== null && dateTo != '') {
+    d2.setFullYear(dateTo, 0, 1);
+  }
+
   return d1 <= d3 && d3 <= d2;
 }
 
