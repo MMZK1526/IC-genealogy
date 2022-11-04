@@ -3,6 +3,13 @@ import './StatsPanel.css';
 import {AiOutlineClose} from "react-icons/ai"
 
 export class StatsPanel extends React.Component {
+    constructor() {
+        super();
+        this.listCreator = this.listCreator.bind(this);
+        this.getCountryOfBirth = this.getCountryOfBirth.bind(this);
+        this.getFamily = this.getFamily.bind(this);
+    }
+
     render() {
         return (
             <div className='stats-panel'>
@@ -11,7 +18,7 @@ export class StatsPanel extends React.Component {
                 </button>
                 <div id='stat'>{this.numberOfFamilyMembers()}</div>
                 {/*{this.avgChildrenPerPerson()}*/}
-                <div id='stat'>{this.mostPopularCountryOfBirth()}</div>
+                <div id='stat'>{this.topCountriesOfBirth()}</div>
                 <div id='stat'>{this.topFamilies()}</div>
             </div>
         );
@@ -38,29 +45,16 @@ export class StatsPanel extends React.Component {
         );
     }
 
-    mostPopularCountryOfBirth() {
-        const arr = this.props.data.items.map((item) => this.getCountryOfBirth(item));
-        const nonNullArr = arr.filter((x) => x !== null);
-        const counts = new Map();
-        for (const x of nonNullArr) {
-            counts.set(x, counts.has(x) ? counts.get(x) + 1 : 1);
-        }
-        const countsArr = Array.from(counts.entries());
-        countsArr.sort((x, y) => (y[1] - x[1]));
-        console.assert(countsArr.length >= 1);
-        const resCountry = countsArr[0][0];
-        const resCount = countsArr[0][1];
-
-        return (
-            <div>
-                <b>Most popular country of birth</b><br/>
-                {resCountry} ({Math.round(resCount / nonNullArr.length * 100)}%)
-            </div>
-        );
+    topCountriesOfBirth() {
+        return this.listCreator(this.getCountryOfBirth, 'Most popular countries of birth');
     }
 
     topFamilies() {
-        const arr = this.props.data.items.map((item) => this.getFamily(item));
+        return this.listCreator(this.getFamily, 'Most popular families');
+    }
+
+    listCreator(propertyGetter, text) {
+        const arr = this.props.data.items.map((item) => propertyGetter(item));
         const nonNullArr = arr.filter((x) => x !== null);
         const counts = new Map();
         for (const x of nonNullArr) {
@@ -73,7 +67,7 @@ export class StatsPanel extends React.Component {
         return (
             <div>
                 <div>
-                    <b>Most popular families</b>
+                    <b>{text}</b>
                 </div>
                 {
                     countsArr.slice(0, 5).map((xy) => (
