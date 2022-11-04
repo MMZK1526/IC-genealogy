@@ -3,6 +3,7 @@ import {Sidebar} from './components/sidebar/Sidebar.js';
 import {Requests} from './requests';
 import React from "react";
 import './App.css';
+import './components/shared.css';
 import {NameSearch} from './components/name-search/NameSearch.js'
 
 import { GenogramTree } from "./GenogramTree";
@@ -61,7 +62,7 @@ class NameForm extends React.Component {
     render() {
         return (
             <div className='App'>
-                <button onClick={this.handleHomeButtonClick} className='home-button'>
+                <button onClick={this.handleHomeButtonClick} className='home-button blue-button'>
                     Home
                 </button>
                 {

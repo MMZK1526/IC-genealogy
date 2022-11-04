@@ -14,6 +14,7 @@ import {StatsPanel} from './components/stats-panel/StatsPanel';
 import {downloadJsonFile} from "./components/custom-upload/exportAsJson";
 import {MyQueue} from "./MyQueue"
 import EscapeCloseable from "./components/escape-closeable/EscapeCloseable";
+import './components/shared.css';
 
 // helper function to convert "WD-Q13423" -> 13423
 function toInt(str) {
@@ -1093,20 +1094,20 @@ export class GenogramTree extends React.Component {
               />
 
               <div className='toolbar'>
-                <button id='button' onClick={() => exportComponentAsPNG(this.componentRef)}>
+                <button className='blue-button' onClick={() => exportComponentAsPNG(this.componentRef)}>
                   Export as PNG
                 </button>
-                <button id='button' onClick={() => downloadJsonFile(this.props.rawJson)}>
+                <button className='blue-button' onClick={() => downloadJsonFile(this.props.rawJson)}>
                   Export as JSON
                 </button>
-                <button id='button' onClick={() => {
+                <button className='blue-button' onClick={() => {
                   this.setState((prevState) => ({
                     showStats: !prevState.showStats
                   }));
                 }}>
                   Show stats
                 </button>
-                <button id='button' onClick={this.props.homeClick}>
+                <button className='blue-button' onClick={this.props.homeClick}>
                   Home
                 </button>
               </div>

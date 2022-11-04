@@ -43,20 +43,3 @@
     padding: 5px;
     border-radius: 5px;
 }
-
-.toolbar #button {
-    text-align: start;
-    display: inline-block;
-    border: 0.1em solid darkgray;
-    border-radius: 5px;
-    padding: 5px;
-    margin: 5px;
-    align-self: stretch;
-    text-align: start;
-    /* font-family: 'Helvetica Neue', sans-serif;  */
-    font-size: 12px; 
-    color: white;
-    background-color: rgba(0, 0, 139, 0.8);
-    transition: all 0.15s;
-    /* width: 5em; */
-}
