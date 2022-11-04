@@ -24,8 +24,8 @@ function getAdditionalProperties(data) {
         
         <div> 
             <h2>{data.get("Name")}</h2>
-            <label className="desc">{capitalizeFirstLetter(data.get("Description"))}</label>
-            <br></br><br></br>
+            {data.has("Description") ? <label className="desc">{capitalizeFirstLetter(data.get("Description"))}<br></br><br></br></label> : ''}
+            
             {/* <div className="row">
                 <div className="col_key" >
                     {getAttrName(data)}

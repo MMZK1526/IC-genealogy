@@ -567,7 +567,11 @@ function getPersonMap(data) {
     const personId = person.id;
     let attributes = new Map;
     attributes.set("Name", person.name);
-    attributes.set("Description", person.description);
+
+    if (person.description !== '') {
+      attributes.set("Description", person.description);
+    }
+
 
     let attrMap = new Map;
     // wash data for additionalProperties
