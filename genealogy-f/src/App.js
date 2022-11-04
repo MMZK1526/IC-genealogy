@@ -41,6 +41,7 @@ class NameForm extends React.Component {
             isLoading: false,
             isEdited: false,
         };
+        this.initialState = JSON.parse(JSON.stringify(this.state));
         this.requests = new Requests();
 
         this.handleChangeInitialName = this.handleChangeInitialName.bind(this);
@@ -54,11 +55,15 @@ class NameForm extends React.Component {
         this.handleRelationsSubmit = this.handleRelationsSubmit.bind(this);
         this.handleCustomUpload = this.handleCustomUpload.bind(this);
         this.setRelationCalc = this.setRelationCalc.bind(this);
+        this.handleHomeButtonClick = this.handleHomeButtonClick.bind(this);
     }
 
     render() {
         return (
             <div className='App'>
+                <button onClick={this.handleHomeButtonClick} className='home-button'>
+                    Home
+                </button>
                 {
                     _.isEmpty(this.state.searchJsons)
                     && <NameSearch
@@ -117,7 +122,7 @@ class NameForm extends React.Component {
                         />
                 }
                 {
-                    _.isEmpty(this.state.relationsJson) && 
+                    _.isEmpty(this.state.relationsJson) &&
                     !this.state.isLoading &&
                     <CustomUpload onSubmit={this.handleCustomUpload} />
                 }
@@ -286,6 +291,10 @@ class NameForm extends React.Component {
         const res = relationsJson;
         res.items = newItems;
         return res;
+    }
+
+    handleHomeButtonClick() {
+        this.setState(this.initialState);
     }
 }
 
