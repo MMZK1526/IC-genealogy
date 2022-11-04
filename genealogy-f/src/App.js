@@ -94,6 +94,7 @@ class NameForm extends React.Component {
                                 from={this.state.fromYear}
                                 to={this.state.toYear}
                                 familyName={this.state.familyName}
+                                homeClick={this.handleHomeButtonClick}
                             />
                             // <Adapter data={this.state.relationsJson} />
 
@@ -156,10 +157,10 @@ class NameForm extends React.Component {
 
     handleCustomUpload(data) {
         const chosenId = data.targets[0].id;
+        this.state.searchJsons = {
+            foo: 'bar',
+        };
         this.setRelationCalc(chosenId, data);
-        // this.setState({
-        //     relationsJson: data,
-        // });
     }
 
     async handleSearchSubmit(event) {

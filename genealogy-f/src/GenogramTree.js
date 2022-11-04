@@ -1094,6 +1094,9 @@ export class GenogramTree extends React.Component {
                 }}>
                   Show stats
                 </button>
+                <button id='button' onClick={this.props.homeClick}>
+                  Home
+                </button>
               </div>
               {
                 this.state.showStats &&
