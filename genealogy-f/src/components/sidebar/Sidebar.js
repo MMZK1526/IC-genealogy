@@ -16,7 +16,7 @@ export function Sidebar(props) {
         {/* <FilterForm title="Family Name" placeholder="e.g. Windsor" type="text" onChange={props.familyChange}/> */}
       {/* </div> */}
       <div className = 'family-field'><DropDown onChange={props.familyChange}/> </div>
-      <Button className='apply-button' size='lg' type='primary' onClick={props.onClick}>
+      <Button className='apply-button' size='lg' type='primary' onClick={props.onClick} disabled={true}>
         Apply filters
       </Button>
     </div>

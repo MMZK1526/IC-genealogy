@@ -15,7 +15,9 @@ export default class EscapeCloseable extends React.Component {
         this.setState({
             visible: false,
         });
-        this.props.onClick();
+        if (this.props.onClick) {
+            this.props.onClick();
+        }
     }
 
     render() {
