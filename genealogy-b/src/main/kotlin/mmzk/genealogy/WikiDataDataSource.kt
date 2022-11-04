@@ -256,7 +256,7 @@ class WikiDataDataSource(
 
     // Search for the WikiData entries with the given IDs.
     // The IDs must be raw WikiData IDs, thus starting with "Q" rather than "WD-".
-    suspend fun searchIndividualByIDs(ids: List<String>) = coroutineScope {
+    private suspend fun searchIndividualByIDs(ids: List<String>) = coroutineScope {
         val repo = SPARQLRepository(SPARQL.sparqlEndpoint)
 
         val userAgent = "WikiData Crawler for Genealogy Visualiser WebApp, Contact piopio555888@gmail.com"

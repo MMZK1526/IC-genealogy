@@ -87,6 +87,16 @@ object Database {
         }
     }
 
+    fun insertRelations(relations: List<RelationshipDTO>) = transaction {
+        for (relation in relations) {
+            RelationshipTable.insertIgnore {
+                it[item1] = EntityID(relation.item1Id, ItemTable)
+                it[item2] = EntityID(relation.item2Id, ItemTable)
+                it[type] = EntityID(relation.typeId, PropertyTypeTable)
+            }
+        }
+    }
+
     fun insertProperties(propertyMap: Map<String, String>) = transaction {
         for (propertyEntry in propertyMap) {
             PropertyTypeTable.insertIgnore {
@@ -98,14 +108,12 @@ object Database {
 
     private fun findRelatedItems(ids: Set<String>, typeFilter: List<String>): Pair<Set<RelationshipDTO>, Set<String>> {
         val relationships = Relationship.find {
-            RelationshipTable.item1.asStringColumn.inList(ids) and
+            RelationshipTable.item2.asStringColumn.inList(ids) and
                     type.asStringColumn.inList(typeFilter)
         }
         val items = relationships.mapNotNull {
-            if (it.item1.id.value in ids && it.item2.id.value in ids) {
+            if (it.item1.id.value in ids) {
                 null
-            } else if (it.item1.id.value in ids) {
-                it.item2
             } else {
                 it.item1
             }
@@ -134,10 +142,7 @@ object Database {
                 if (curDepth >= depth) {
                     break
                 }
-                val (newRelations, nextPeople) = findRelatedItems(
-                    frontier,
-                    typeFilter
-                )
+                val (newRelations, nextPeople) = findRelatedItems(frontier, typeFilter)
                 relations.addAll(newRelations)
                 frontier = nextPeople.filterTo(mutableSetOf()) { !visited.contains(it) }
                 curDepth++
@@ -149,16 +154,17 @@ object Database {
     private fun Iterable<Item>.toDTOWithAdditionalProperties(): List<ItemDTO> {
         val qualifiersByItem =
             AllPropertiesAndQualifiersView.select {
-                    AllPropertiesAndQualifiersView.id.inList(this@toDTOWithAdditionalProperties.map { it.id.value })
-                }
+                AllPropertiesAndQualifiersView.id.inList(this@toDTOWithAdditionalProperties.map { it.id.value })
+            }
                 .groupBy { it[AllPropertiesAndQualifiersView.id] }
-                .mapValues { (k, v) ->
+                .mapValues { (_, v) ->
                     v.groupBy { it[AllPropertiesAndQualifiersView.propertyId] to it[AllPropertiesAndQualifiersView.valueHash] }
                 }
         return this.map { dao ->
             val qualifiersByProperty = qualifiersByItem[dao.id.value] ?: mapOf()
             val properties = qualifiersByProperty.values.mapNotNullTo(mutableSetOf()) { rows ->
-                val qualifiers = rows.mapNotNullTo(mutableSetOf(), QualifierDTO::fromAllPropertiesAndQualifiersResultRow)
+                val qualifiers =
+                    rows.mapNotNullTo(mutableSetOf(), QualifierDTO::fromAllPropertiesAndQualifiersResultRow)
                 AdditionalPropertyDTO.fromAllPropertiesAndQualifiersResultRow(rows[0], qualifiers)
             }
             ItemDTO(dao, properties)
