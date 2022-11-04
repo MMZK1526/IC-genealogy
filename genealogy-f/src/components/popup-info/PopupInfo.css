@@ -6,11 +6,7 @@
     /* background-color: #F5F5DC; */
     background-color: rgba(255, 255, 255, 0.99);
     /* height: fit-content */
-<<<<<<< HEAD
-    /* block-size: fit-content; */
-=======
     block-size: fit-content;
->>>>>>> 44849ef ([mm2320] (UI) unify stats page UI)
     border-radius: 5px;
 }
 
