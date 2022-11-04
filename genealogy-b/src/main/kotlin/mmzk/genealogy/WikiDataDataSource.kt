@@ -334,8 +334,8 @@ class WikiDataDataSource(
         answer
     }
 
-    suspend fun findRelatedPeople(id: String, depth: Int = 2) = coroutineScope {
-        val visited = mutableSetOf<String>()
+    suspend fun findRelatedPeople(id: String, visitedItems: List<String>, depth: Int = 2) = coroutineScope {
+        val visited = visitedItems.toMutableSet()
         var frontier = listOf(id)
         var curDepth = 0
         val typeMap = searchPropertyNameByIDs(relationshipTypeFilters)

@@ -38,11 +38,11 @@ fun Application.configureRouting() {
 
         get("/relations_wk") {
             val depth = call.request.queryParameters["depth"]?.toIntOrNull() ?: 0
-
+            val visitedItems = call.request.queryParameters["visited_items"]?.split(",") ?: listOf()
             call.request.queryParameters["id"]?.let { id ->
                 val typeFilter =
                     call.request.queryParameters["types"]?.split(",") ?: listOf("WD-P22", "WD-P25", "WD-P26", "WD-P40")
-                val result = WikiDataDataSource(typeFilter).findRelatedPeople(id, depth)
+                val result = WikiDataDataSource(typeFilter).findRelatedPeople(id, visitedItems, depth)
                 call.respond(result)
 //                Database.insertItems(result.items)
 //                Database.insertRelations(result.relations)
