@@ -174,7 +174,6 @@ class NameForm extends React.Component {
             this.setState({
                 fromYear: from,
                 toYear: to,
-                // relationsJson: {},
                 familyName: familyName,
                 isEdited: this.state.isEdited
             });
@@ -198,7 +197,7 @@ class NameForm extends React.Component {
 
             r = Object.values(r).filter(function (v) {
                 let birth = v.dateOfBirth;
-                if (birth == null) return true;
+                if (birth === null || birth === undefined) return true;
                 if (from !== '' && to !== '') {
                     return (parseInt(birth.substring(0, 4)) >= parseInt(from) && parseInt(birth.substring(0, 4)) <= parseInt(to))
                 } else if (from !== '') {

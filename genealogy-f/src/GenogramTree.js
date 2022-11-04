@@ -37,29 +37,28 @@ export function applyDateOfBirthFilter(id, dateFrom, dateTo, idPerson) {
 
   // console.log(id);
   const target = idPerson.get(id);
-  if (target == null) {return false;}
+  if (target === null) {return false;}
   const addProps = target.additionalProperties;
   // can we make this generic in the future
   const f = addProps.filter(p => p.name == "date of birth");
   // console.log(f);
   // console.log(f);
   // could be improved for large chain of unknown date of birth people.
-  if (f[0] == null  || f[0].length == 0 || f[0].value == null) {
-    const r = relMap.get(id);
-    if (r.m == null || r.f == null) {
-      return false;
-    }
-    const m = applyDateOfBirthFilter(unConvert(r.m), dateFrom, dateTo, idPerson)
-    const f = applyDateOfBirthFilter(unConvert(r.f), dateFrom, dateTo, idPerson)
-    // check if both parents are out of the date range, if so then assume unknown also outside, otherwise leave in.
-    return m && f;
+  if (f[0] === null || f[0] === undefined || f[0].length == 0) {
+    return true;
+    // const r = relMap.get(id);
+    // if (r.m === null || r.f === null) {
+    //   return false;
+    // }
+    // const m = applyDateOfBirthFilter(unConvert(r.m), dateFrom, dateTo, idPerson)
+    // const f = applyDateOfBirthFilter(unConvert(r.f), dateFrom, dateTo, idPerson)
+    // // check if both parents are out of the date range, if so then assume unknown also outside, otherwise leave in.
+    // return m && f;
   }
   const date = (f[0].value).split("T");
-  // console.log(date[0]);
   const d3 = new Date(date[0]);
   const d1 = dateFrom == '' ? new Date(-8640000000000000) : new Date(dateFrom);
   const d2 = dateTo == '' ? new Date("3000-01-01") : new Date(dateTo);
-  // console.log("comparing " + d1 + "with " + d2 + "and " + d3);
   return d1 <= d3 && d3 <= d2;
 }
 
