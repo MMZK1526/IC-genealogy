@@ -26,7 +26,7 @@
 .row {
     display: flex;
     flex-direction: row;
-    height: 4vh;
+    height: 6vh;
     /* max-height: 10; */
 }
 
