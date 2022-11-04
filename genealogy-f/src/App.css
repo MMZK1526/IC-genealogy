@@ -37,3 +37,10 @@ table th {
 .loading {
   justify-content: center;
 }
+
+.home-button {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
