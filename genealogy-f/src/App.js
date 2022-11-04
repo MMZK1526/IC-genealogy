@@ -39,7 +39,7 @@ class NameForm extends React.Component {
             familyName: '',
             transformedArr: [],
             isLoading: false,
-            isEdited: false,
+            editCount: 0,
         };
         this.initialState = JSON.parse(JSON.stringify(this.state));
         this.requests = new Requests();
@@ -94,6 +94,7 @@ class NameForm extends React.Component {
                                 from={this.state.fromYear}
                                 to={this.state.toYear}
                                 familyName={this.state.familyName}
+                                editCount={this.state.editCount}
                             />
                             // <Adapter data={this.state.relationsJson} />
 
@@ -140,18 +141,17 @@ class NameForm extends React.Component {
 
     handleChangeFrom(event) {
         const val = event.target.value;
-        this.setState({fromYear: val});
+        this.setState((previous) => ({fromYear: val, editCount: previous.editCount + 1}));
     }
 
     handleChangeTo(event) {
         const val = event.target.value;
-        this.setState({toYear: val});
+        this.setState((previous) => ({toYear: val, editCount: previous.editCount + 1}));
     }
 
     handleChangeFamily(event) {
         const val = event.target.value;
-        // console.log(val);
-        this.setState({familyName: val});
+        this.setState((previous) => ({familyName: val, editCount: previous.editCount + 1}));
     }
 
     handleCustomUpload(data) {
@@ -179,11 +179,8 @@ class NameForm extends React.Component {
             this.setState({
                 fromYear: from,
                 toYear: to,
-                familyName: familyName,
-                isEdited: this.state.isEdited
+                familyName: familyName
             });
-            this.state.isEdited = false;
-            // this.render();
             return;
         }
         await this.requests.search(this.state.initialName).then(r => {

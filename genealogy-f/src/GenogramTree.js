@@ -985,7 +985,8 @@ export class DiagramWrapper extends React.Component {
   }
 
   render() {
-    if (this.state.isFirstRender || this.props.isEdited == true) {
+    console.log("UPDATE: " + this.props.updateDiagram);
+    if (this.state.isFirstRender || this.props.updateDiagram) {
       this.state.isFirstRender = false;
       this.setupDiagram(this.props.nodeDataArray, this.props.nodeDataArray[0].key);
     }
@@ -1022,6 +1023,7 @@ export class GenogramTree extends React.Component {
         personInfo: null,
         isPopped: false,
         showStats: false,
+        editCount: 0
       }
       this.componentRef = React.createRef();
     }
@@ -1057,7 +1059,14 @@ export class GenogramTree extends React.Component {
       console.log("New family filter: " + this.props.familyName);
       console.log(JSON.stringify(this.props.from));
       console.log(JSON.stringify(this.props.to));
-      this.relations = transform(this.props.rawJson, this.props.from, this.props.to, this.props.familyName);
+      var updateDiagram = false;
+      console.log("NEW: " + this.props.editCount);
+      console.log("OLD: " + this.state.editCount);
+      if (this.props.editCount != this.state.editCount) {
+        this.state.editCount = this.props.editCount;
+        this.relations = transform(this.props.rawJson, this.props.from, this.props.to, this.props.familyName);
+        updateDiagram = true;
+      }
         return(
             <div className="tree-box">
               {
@@ -1072,6 +1081,8 @@ export class GenogramTree extends React.Component {
               }
             
               <DiagramWrapper
+                  updateDiagram={updateDiagram}
+                  editCount={this.props.editCount}
                   nodeDataArray={this.relations}
                   onModelChange={this.handleModelChange}
                   onDiagramEvent={this.handleDiagramEvent}
