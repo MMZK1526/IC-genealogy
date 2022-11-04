@@ -1076,7 +1076,9 @@ export class GenogramTree extends React.Component {
                     ? <div className="popup">
                       <PopupInfo
                           closePopUp={this.closePopUp}
-                          info={this.personMap.get("WD-Q" + this.state.personInfo)}>
+                          info={this.personMap.get("WD-Q" + this.state.personInfo)}
+                          onClick={this.props.onPopupClick.bind(null, "WD-Q" + this.state.personInfo)}
+                      >
                       </PopupInfo>
                     </div>
                     : ""

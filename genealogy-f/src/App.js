@@ -57,6 +57,8 @@ class NameForm extends React.Component {
         this.handleCustomUpload = this.handleCustomUpload.bind(this);
         this.setRelationCalc = this.setRelationCalc.bind(this);
         this.handleHomeButtonClick = this.handleHomeButtonClick.bind(this);
+        this.fetchRelations = this.fetchRelations.bind(this);
+        this.popupFetchRelations = this.popupFetchRelations.bind(this);
     }
 
     render() {
@@ -97,6 +99,7 @@ class NameForm extends React.Component {
                                 familyName={this.state.familyName}
                                 homeClick={this.handleHomeButtonClick}
                                 editCount={this.state.editCount}
+                                onPopupClick={this.popupFetchRelations}
                             />
                             // <Adapter data={this.state.relationsJson} />
 
@@ -222,7 +225,13 @@ class NameForm extends React.Component {
                 isLoading: false,
             });
         });
+    }
 
+    async popupFetchRelations(id) {
+        this.setState({
+            chosenId: id,
+        });
+        await this.fetchRelations(id);
     }
 
     async handleRelationsSubmit(event) {
@@ -231,11 +240,15 @@ class NameForm extends React.Component {
             return;
         }
         event.preventDefault();
+        await this.fetchRelations(this.state.chosenId);
+    }
+
+    async fetchRelations(id) {
         this.setState({
             isLoading: true,
         });
 
-        await this.requests.relations({id: this.state.chosenId}).then(r => {
+        await this.requests.relations({id: id}).then(r => {
             if (Object.values(r)[1].length === 0) {
                 this.setState({
                     relationsJson: {},
@@ -244,7 +257,7 @@ class NameForm extends React.Component {
                 return;
             }
             this.setRelationCalc(
-                this.state.chosenId,
+                id,
                 r,
             );
         });

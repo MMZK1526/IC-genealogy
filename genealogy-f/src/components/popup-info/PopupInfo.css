@@ -18,6 +18,11 @@
     background-color: transparent;
 }
 
+.new-search-button {
+    display: block;
+    margin: auto;
+}
+
 .col {
     display: flex;
     flex-direction: column;

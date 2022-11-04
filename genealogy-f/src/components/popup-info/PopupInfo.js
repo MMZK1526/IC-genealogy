@@ -4,21 +4,29 @@ import React from "react";
 import { capitalizeFirstLetter } from '../../GenogramTree.js';
 import {AiOutlineClose} from "react-icons/ai"
 import "./PopupInfo.css"
+import '../shared.css';
 import EscapeCloseable from "../escape-closeable/EscapeCloseable";
 
 function PopupInfo(props) {
+    const onClick = (event) => {
+        props.onClick();
+    };
+
     return (
         <div className='popup-inner'>
-        <EscapeCloseable onClick={props.closePopUp}>
+            <EscapeCloseable onClick={props.closePopUp}>
                 <button className='close-btn' onClick={props.closePopUp}>
                     <AiOutlineClose size={30} color='red'/>
                 </button>
                 {/* <div class="row"> */}
                 {getAdditionalProperties(props.info)}
                 {/* </div> */}
-        </EscapeCloseable>
+                <button className='new-search-button blue-button' onClick={onClick} disabled={true}>
+                    Search for this person
+                </button>
+            </EscapeCloseable>
         </div>
-    )
+    );
 }
 
 function getAdditionalProperties(data) {
