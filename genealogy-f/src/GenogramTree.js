@@ -45,15 +45,12 @@ export function applyDateOfBirthFilter(id, dateFrom, dateTo, idPerson) {
   // console.log(f);
   // could be improved for large chain of unknown date of birth people.
   if (f[0] === null || f[0] === undefined || f[0].length == 0) {
-    return true;
-    // const r = relMap.get(id);
-    // if (r.m === null || r.f === null) {
-    //   return false;
-    // }
-    // const m = applyDateOfBirthFilter(unConvert(r.m), dateFrom, dateTo, idPerson)
-    // const f = applyDateOfBirthFilter(unConvert(r.f), dateFrom, dateTo, idPerson)
-    // // check if both parents are out of the date range, if so then assume unknown also outside, otherwise leave in.
-    // return m && f;
+    const r = relMap.get(id);
+    // return true;
+    const m = r.m === null || r.m === undefined ? false : applyDateOfBirthFilter(unConvert(r.m), dateFrom, dateTo, idPerson)
+    const f = r.f === null || r.f === undefined ? false : applyDateOfBirthFilter(unConvert(r.f), dateFrom, dateTo, idPerson)
+    // check if both parents are out of the date range, if so then assume unknown also outside, otherwise leave in.
+    return m || f;
   }
 
   const date = (f[0].value).split("T");
