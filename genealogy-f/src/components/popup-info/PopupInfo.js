@@ -8,16 +8,16 @@ import EscapeCloseable from "../escape-closeable/EscapeCloseable";
 
 function PopupInfo(props) {
     return (
+        <div className='popup-inner'>
         <EscapeCloseable onClick={props.closePopUp}>
-            <div className='popup-inner'>
                 <button className='close-btn' onClick={props.closePopUp}>
                     <AiOutlineClose size={30} color='red'/>
                 </button>
                 {/* <div class="row"> */}
                 {getAdditionalProperties(props.info)}
                 {/* </div> */}
-            </div>
         </EscapeCloseable>
+        </div>
     )
 }
 
