@@ -82,19 +82,20 @@ export function applyFamilyFilter(id, familyName, idPerson) {
   // console.log(f);
   // console.log(f);
   // could be improved for large chain of unknown date of birth people.
-  if (f[0] == null  || f[0].length == 0 || f[0].value == null) {
-    const r = relMap.get(id);
-    if (r.m == null || r.f == null) {
-      return false;
-    }
-    const m = applyFamilyFilter(unConvert(r.m), familyName, idPerson)
-    const f = applyFamilyFilter(unConvert(r.f), familyName, idPerson)
-    // check if both parents are out of the date range, if so then assume unknown also outside, otherwise leave in.
-    return m && f;
+  if (f[0] == null || f[0].length == 0 || f[0].value == null) {
+    return false;
+    // const r = relMap.get(id);
+    // if (r.m == null || r.f == null) {
+    //   return false;
+    // }
+    // const m = applyFamilyFilter(unConvert(r.m), familyName, idPerson)
+    // const f = applyFamilyFilter(unConvert(r.f), familyName, idPerson)
+    // // check if both parents are out of the date range, if so then assume unknown also outside, otherwise leave in.
+    // return m && f;
   }
   // console.log(f[0].value);
   // console.log("comparing " + d1 + "with " + d2 + "and " + d3);
-  return f[0].value === familyName;
+  return f.some((x) => x.value.toLowerCase().includes(familyName.toLowerCase()));
 }
 
 // global map from id of person to their attributes, used to change opacity for filtering in the goJs diagram.
