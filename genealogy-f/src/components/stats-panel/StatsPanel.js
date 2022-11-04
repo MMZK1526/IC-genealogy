@@ -3,8 +3,8 @@ import './StatsPanel.css';
 import {AiOutlineClose} from "react-icons/ai"
 
 export class StatsPanel extends React.Component {
-    constructor() {
-        super();
+    constructor(props) {
+        super(props);
         this.listCreator = this.listCreator.bind(this);
         this.getCountryOfBirth = this.getCountryOfBirth.bind(this);
         this.getFamily = this.getFamily.bind(this);
