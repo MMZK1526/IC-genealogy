@@ -13,6 +13,7 @@ import {exportComponentAsPNG} from "react-component-export-image";
 import {StatsPanel} from './components/stats-panel/StatsPanel';
 import {downloadJsonFile} from "./components/custom-upload/exportAsJson";
 import {MyQueue} from "./MyQueue"
+import EscapeCloseable from "./components/escape-closeable/EscapeCloseable";
 
 // helper function to convert "WD-Q13423" -> 13423
 function toInt(str) {
@@ -1082,9 +1083,9 @@ export class GenogramTree extends React.Component {
               </div>
               {
                 this.state.showStats &&
-                <div className="popup">
+                <EscapeCloseable className="popup">
                   <StatsPanel data={this.props.rawJson} onClick={this.handleStatsClick} />
-                </div>
+                </EscapeCloseable>
               }
             </div>
         );
