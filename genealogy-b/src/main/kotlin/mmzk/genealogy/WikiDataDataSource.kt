@@ -194,10 +194,10 @@ class WikiDataDataSource(
                              ?${SPARQL.dateOfDeath}_ ps:P570 ?${SPARQL.dateOfDeath} . }
                   OPTIONAL { ?${SPARQL.item} p:P19 ?${SPARQL.placeOfBirth}_ .
                              ?${SPARQL.placeOfBirth}_ ps:P19 ?${SPARQL.placeOfBirth} .
-                             ?${SPARQL.placeOfBirth} wdt:P17 ?${SPARQL.placeOfBirthCountry} . }
+                             OPTIONAL { ?${SPARQL.placeOfBirth} wdt:P17 ?${SPARQL.placeOfBirthCountry} . } }
                   OPTIONAL { ?${SPARQL.item} p:P20 ?${SPARQL.placeOfDeath}_ .
                              ?${SPARQL.placeOfDeath}_ ps:P20 ?${SPARQL.placeOfDeath} .
-                             ?${SPARQL.placeOfDeath} wdt:P17 ?${SPARQL.placeOfDeathCountry} . }
+                             OPTIONAL { ?${SPARQL.placeOfDeath} wdt:P17 ?${SPARQL.placeOfDeathCountry} . } }
                   OPTIONAL { ?${SPARQL.item} p:P21 ?${SPARQL.gender}_ .
                              ?${SPARQL.gender}_ ps:P21 ?${SPARQL.gender} . }
                   SERVICE wikibase:mwapi {
@@ -280,10 +280,10 @@ class WikiDataDataSource(
                              ?${SPARQL.dateOfDeath}_ ps:P570 ?${SPARQL.dateOfDeath} . }
                   OPTIONAL { ?${SPARQL.item} p:P19 ?${SPARQL.placeOfBirth}_ .
                              ?${SPARQL.placeOfBirth}_ ps:P19 ?${SPARQL.placeOfBirth} .
-                             ?${SPARQL.placeOfBirth} wdt:P17 ?${SPARQL.placeOfBirthCountry} . }
+                             OPTIONAL { ?${SPARQL.placeOfBirth} wdt:P17 ?${SPARQL.placeOfBirthCountry} . } }
                   OPTIONAL { ?${SPARQL.item} p:P20 ?${SPARQL.placeOfDeath}_ .
                              ?${SPARQL.placeOfDeath}_ ps:P20 ?${SPARQL.placeOfDeath} .
-                             ?${SPARQL.placeOfDeath} wdt:P17 ?${SPARQL.placeOfDeathCountry} . }
+                             OPTIONAL { ?${SPARQL.placeOfDeath} wdt:P17 ?${SPARQL.placeOfDeathCountry} . } }
                   OPTIONAL { ?${SPARQL.item} p:P21 ?${SPARQL.gender}_ .
                              ?${SPARQL.gender}_ ps:P21 ?${SPARQL.gender} . }
                   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
