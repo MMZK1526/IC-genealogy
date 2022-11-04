@@ -250,10 +250,10 @@ class NameForm extends React.Component {
         this.requests.relationCalc(
             {start: id, relations: relationsJson.relations}
         ).then(r => {
-            // const newRelationsJson = this.integrateKinshipIntoRelationsJson(r, relationsJson);
+            const newRelationsJson = this.integrateKinshipIntoRelationsJson(r, relationsJson);
             this.setState({
                 kinshipJson: r,
-                relationsJson: relationsJson,
+                relationsJson: newRelationsJson,
                 isLoading: false,
             });
         });
