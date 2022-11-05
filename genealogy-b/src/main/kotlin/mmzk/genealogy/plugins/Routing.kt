@@ -26,7 +26,7 @@ fun Application.configureRouting() {
         // additionalProperties: A list of JSON objects representing the properties of this item
         get("/search") {
             call.request.queryParameters["q"]?.let { name ->
-                val searchedItems = WikiDataDataSource(listOf()).searchIndividualByName(name) // Search in WikiData
+                val searchedItems = WikiDataDataSource().searchIndividualByName(name) // Search in WikiData
                 Database.insertItems(searchedItems) // Put new results in database (pre-existing ones are ignored)
                 val matchedItemsInDB = Database.findItemByName(name) // Fetch items with matching names
                 call.respond(matchedItemsInDB)
@@ -40,9 +40,11 @@ fun Application.configureRouting() {
             val depth = call.request.queryParameters["depth"]?.toIntOrNull() ?: 0
             val visitedItems = call.request.queryParameters["visited_items"]?.split(",") ?: listOf()
             call.request.queryParameters["id"]?.let { id ->
-                val typeFilter =
-                    call.request.queryParameters["types"]?.split(",") ?: listOf("WD-P22", "WD-P25", "WD-P26", "WD-P40")
-                val result = WikiDataDataSource(typeFilter).findRelatedPeople(id, visitedItems, depth)
+                val d0types =
+                    call.request.queryParameters["d0types"]?.split(",") ?: listOf("WD-P26")
+                val d1types =
+                    call.request.queryParameters["d1types"]?.split(",") ?: listOf("WD-P22", "WD-P25", "WD-P40")
+                val result = WikiDataDataSource(d0types, d1types).findRelatedPeople(id, visitedItems, depth)
                 call.respond(result)
                 Database.insertItems(result.items)
                 Database.insertRelations(result.relations)

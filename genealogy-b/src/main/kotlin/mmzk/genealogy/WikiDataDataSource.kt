@@ -11,8 +11,7 @@ import org.eclipse.rdf4j.queryrender.RenderUtils
 import org.eclipse.rdf4j.repository.sparql.SPARQLRepository
 
 class WikiDataDataSource(
-    // TODO: make this functional, so that WikiDataCrawler can be moved into the common package
-    private val relationshipTypeFilters: List<String>
+    private val d0TypeFilters: List<String> = listOf(), private val d1TypeFilters: List<String> = listOf()
 ) {
     // Translate a WikiData ID into a Database ID.
     private fun makeID(id: String): String = "WD-$id"
@@ -22,10 +21,15 @@ class WikiDataDataSource(
             "$location, $country"
         } else location ?: country
 
-    private suspend fun parseRelationSearchResults(results: TupleQueryResult, typeMap: Map<String, String>) =
+    private suspend fun parseRelationSearchResults(
+        results: TupleQueryResult,
+        d0TypeMap: Map<String, String>,
+        d1TypeMap: Map<String, String>
+    ) =
         coroutineScope {
             val relations = mutableSetOf<RelationshipDTO>()
-            val newIndividuals = mutableSetOf<String>()
+            val d0NewIndividuals = mutableMapOf<String, MutableList<String>>()
+            val d1NewIndividuals = mutableMapOf<String, MutableList<String>>()
             for (result in results) {
                 val row = mutableMapOf<String, String>()
                 for (value in result) {
@@ -34,7 +38,7 @@ class WikiDataDataSource(
                 val id = row[SPARQL.item]?.let(::Url)?.pathSegments?.lastOrNull()?.takeIf {
                     it.firstOrNull() == 'Q' || it.firstOrNull() == 'q'
                 } ?: continue
-                relations.addAll(typeMap.entries.mapNotNull {
+                relations.addAll((d0TypeMap + d1TypeMap).entries.mapNotNull {
                     Fields.parseID(it.key)?.second?.let { key ->
                         row[key]?.let(::Url)?.pathSegments?.lastOrNull()?.takeIf { otherID ->
                             otherID.firstOrNull() == 'Q' || otherID.firstOrNull() == 'q'
@@ -43,14 +47,19 @@ class WikiDataDataSource(
                         }
                     }
                 })
-                newIndividuals.addAll(typeMap.entries.mapNotNull {
-                    Fields.parseID(it.key)?.second?.let { key ->
-                        row[key]?.let(::Url)?.pathSegments?.lastOrNull()
+
+                for (relation in relations) {
+                    if (d0TypeMap.contains(relation.typeId)) {
+                        d0NewIndividuals.getOrPut(relation.item1Id) { mutableListOf() }.add(relation.item2Id)
+                    } else {
+                        d1NewIndividuals.getOrPut(relation.item1Id) { mutableListOf() }.add(relation.item2Id)
                     }
-                })
+                }
             }
 
-            relations to newIndividuals
+            d1NewIndividuals.minusAssign(d0NewIndividuals.keys)
+
+            Triple(relations, d0NewIndividuals, d1NewIndividuals)
         }
 
     private suspend fun parseIndividualSearchResults(results: TupleQueryResult) = coroutineScope {
@@ -257,11 +266,13 @@ class WikiDataDataSource(
     // Search for the WikiData entries with the given IDs.
     // The IDs must be raw WikiData IDs, thus starting with "Q" rather than "WD-".
     private suspend fun searchIndividualByIDs(ids: List<String>) = coroutineScope {
-        val repo = SPARQLRepository(SPARQL.sparqlEndpoint)
-
-        val userAgent = "WikiData Crawler for Genealogy Visualiser WebApp, Contact piopio555888@gmail.com"
-        repo.additionalHttpHeaders = Collections.singletonMap("User-Agent", userAgent)
-        val querySelect = """
+        if (ids.isEmpty()) {
+            listOf()
+        } else {
+            val repo = SPARQLRepository(SPARQL.sparqlEndpoint)
+            val userAgent = "WikiData Crawler for Genealogy Visualiser WebApp, Contact piopio555888@gmail.com"
+            repo.additionalHttpHeaders = Collections.singletonMap("User-Agent", userAgent)
+            val querySelect = """
               SELECT ?${SPARQL.item} ?${SPARQL.name} ?${SPARQL.alias} ?${SPARQL.description} ?${SPARQL.family}_ ?${SPARQL.family}Label ?${SPARQL.givenName}_ ?${SPARQL.givenName}Label ?${SPARQL.familyName}_ ?${SPARQL.familyName}Label ?${SPARQL.ordinal} ?${SPARQL.familyNameType}Label ?${SPARQL.dateOfBirth} ?${SPARQL.dateOfBirth}_ ?${SPARQL.dateOfDeath} ?${SPARQL.dateOfDeath}_ ?${SPARQL.placeOfBirth}Label ?${SPARQL.placeOfBirth}_ ?${SPARQL.placeOfBirthCountry}Label ?${SPARQL.placeOfDeath}Label ?${SPARQL.placeOfDeath}_ ?${SPARQL.placeOfDeathCountry}Label ?${SPARQL.gender}Label ?${SPARQL.gender}_ WHERE {
                   VALUES ?${SPARQL.item} { ${ids.joinToString(" ") { "wd:$it" }} } .
                   OPTIONAL { ?${SPARQL.item} schema:description ?${SPARQL.description} .
@@ -289,77 +300,89 @@ class WikiDataDataSource(
                   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
                 }
         """.trimIndent()
-        val results = try {
-            repo.connection.prepareTupleQuery(querySelect).evaluate()
-        } catch (exception: Exception) {
-            exception.printStackTrace()
-            null
-        }
+            val results = try {
+                repo.connection.prepareTupleQuery(querySelect).evaluate()
+            } catch (exception: Exception) {
+                exception.printStackTrace()
+                null
+            }
 
-        val answer = results?.let { parseIndividualSearchResults(it) } ?: listOf()
-        repo.shutDown()
-        answer
+            val answer = results?.let { parseIndividualSearchResults(it) } ?: listOf()
+            repo.shutDown()
+            answer
+        }
     }
 
-    private suspend fun searchRelationByIDs(ids: List<String>, typeMap: Map<String, String>) = coroutineScope {
-        val repo = SPARQLRepository(SPARQL.sparqlEndpoint)
+    private suspend fun searchRelationByIDs(
+        ids: List<String>,
+        d0TypeMap: Map<String, String>,
+        d1TypeMap: Map<String, String>
+    ) =
+        coroutineScope {
+            val repo = SPARQLRepository(SPARQL.sparqlEndpoint)
+            val typeMap = d0TypeMap + d1TypeMap
 
-        val userAgent = "WikiData Crawler for Genealogy Visualiser WebApp, Contact piopio555888@gmail.com"
-        repo.additionalHttpHeaders = Collections.singletonMap("User-Agent", userAgent)
-        // TODO: Handle compound types
-        val queryLabels = typeMap.keys.joinToString(" ") { "?${Fields.parseID(it)?.second}" }
-        val queryStrCore = typeMap.keys.joinToString("\n") {
-            "OPTIONAL { ?item p:${Fields.parseID(it)?.second} [ps:${Fields.parseID(it)?.second} ?${
-                Fields.parseID(it)?.second
-            }; wikibase:rank ?${Fields.parseID(it)?.second}rank;] . \nFILTER ( ?${Fields.parseID(it)?.second}rank != wikibase:DeprecatedRank ) }"
-        }
-        val querySelect = """
+            val userAgent = "WikiData Crawler for Genealogy Visualiser WebApp, Contact piopio555888@gmail.com"
+            repo.additionalHttpHeaders = Collections.singletonMap("User-Agent", userAgent)
+            // TODO: Handle compound types
+            val queryLabels = typeMap.keys.joinToString(" ") { "?${Fields.parseID(it)?.second}" }
+            val queryStrCore = typeMap.keys.joinToString("\n") {
+                "OPTIONAL { ?item p:${Fields.parseID(it)?.second} [ps:${Fields.parseID(it)?.second} ?${
+                    Fields.parseID(it)?.second
+                }; wikibase:rank ?${Fields.parseID(it)?.second}rank;] . \nFILTER ( ?${Fields.parseID(it)?.second}rank != wikibase:DeprecatedRank ) }"
+            }
+            val querySelect = """
               SELECT ?${SPARQL.item} $queryLabels WHERE {
                   VALUES ?${SPARQL.item} { ${ids.joinToString(" ") { "wd:$it" }} } .
 
                   $queryStrCore
               }
         """.trimIndent()
-//        println(querySelect)
-        val results = try {
-            repo.connection.prepareTupleQuery(querySelect).evaluate()
-        } catch (exception: Exception) {
-            exception.printStackTrace()
-            null
+            val results = try {
+                repo.connection.prepareTupleQuery(querySelect).evaluate()
+            } catch (exception: Exception) {
+                exception.printStackTrace()
+                null
+            }
+            val answer =
+                results?.let { parseRelationSearchResults(it, d0TypeMap, d1TypeMap) }
+                    ?: Triple(
+                        setOf<RelationshipDTO>(),
+                        mapOf<String, MutableList<String>>(),
+                        mapOf<String, MutableList<String>>()
+                    )
+            repo.shutDown()
+            answer
         }
-        val answer =
-            results?.let { parseRelationSearchResults(it, typeMap) }
-                ?: (setOf<RelationshipDTO>() to setOf<String>())
-        repo.shutDown()
-        answer
-    }
 
     suspend fun findRelatedPeople(id: String, visitedItems: List<String>, depth: Int = 2) = coroutineScope {
         val visited = visitedItems.toMutableSet()
-        var frontier = listOf(id)
-        var curDepth = 0
-        val typeMap = searchPropertyNameByIDs(relationshipTypeFilters)
-        val targets = searchIndividualByIDs(frontier.mapNotNull { Fields.parseID(it)?.second })
-        val people = mutableSetOf<ItemDTO>()
+        var frontier = mapOf(id to 0)
+        val d0TypeMap = searchPropertyNameByIDs(d0TypeFilters)
+        val d1TypeMap = searchPropertyNameByIDs(d1TypeFilters)
+        val targets = searchIndividualByIDs(frontier.mapNotNull { Fields.parseID(it.key)?.second })
+        val people = mutableMapOf<ItemDTO, Int>()
         val relations = mutableSetOf<RelationshipDTO>()
 
-        while (true) {
-            val newPeople = searchIndividualByIDs(frontier.mapNotNull { Fields.parseID(it)?.second })
-            people.addAll(newPeople)
-            visited.addAll(newPeople.map { it.id })
-            if (curDepth >= depth) {
-                break
+        while (frontier.isNotEmpty()) {
+            val newPeople = searchIndividualByIDs(frontier.mapNotNull { Fields.parseID(it.key)?.second })
+            for (newPerson in newPeople) {
+                people[newPerson] = frontier[newPerson.id]!!
             }
-            val (newRelations, nextPeople) = searchRelationByIDs(
-                frontier.mapNotNull { Fields.parseID(it)?.second },
-                typeMap
+            visited.addAll(newPeople.map { it.id })
+
+            val (newRelations, d0NextPeople, d1NextPeople) = searchRelationByIDs(
+                frontier.mapNotNull { Fields.parseID(it.key)?.second },
+                d0TypeMap, d1TypeMap
             )
             relations.addAll(newRelations)
-            frontier = nextPeople.map { "WD-$it" }.filter { !visited.contains(it) }
-            curDepth++
+            frontier = d0NextPeople.map { it.key to it.value.minOf { value -> frontier[value]!! } }
+                .filter { !visited.contains(it.first) && it.second <= depth }
+                .toMap() + d1NextPeople.map { it.key to it.value.minOf { value -> frontier[value]!! } + 1 }
+                .filter { !visited.contains(it.first) && it.second <= depth }
         }
 
-        RelationsResponse(targets, people.toList(), relations.toList())
+        RelationsResponse(targets, people.map { it.key }.toList(), relations.toList())
     }
 
     private object SPARQL {
