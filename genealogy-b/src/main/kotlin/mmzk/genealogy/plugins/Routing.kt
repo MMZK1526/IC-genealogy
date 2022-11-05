@@ -26,8 +26,8 @@ fun Application.configureRouting() {
         // additionalProperties: A list of JSON objects representing the properties of this item
         get("/search") {
             call.request.queryParameters["q"]?.let { name ->
-//                val searchedItems = WikiDataDataSource(listOf()).searchIndividualByName(name) // Search in WikiData
-//                Database.insertItems(searchedItems) // Put new results in database (pre-existing ones are ignored)
+                val searchedItems = WikiDataDataSource(listOf()).searchIndividualByName(name) // Search in WikiData
+                Database.insertItems(searchedItems) // Put new results in database (pre-existing ones are ignored)
                 val matchedItemsInDB = Database.findItemByName(name) // Fetch items with matching names
                 call.respond(matchedItemsInDB)
             } ?: call.respond(
@@ -44,8 +44,8 @@ fun Application.configureRouting() {
                     call.request.queryParameters["types"]?.split(",") ?: listOf("WD-P22", "WD-P25", "WD-P26", "WD-P40")
                 val result = WikiDataDataSource(typeFilter).findRelatedPeople(id, visitedItems, depth)
                 call.respond(result)
-//                Database.insertItems(result.items)
-//                Database.insertRelations(result.relations)
+                Database.insertItems(result.items)
+                Database.insertRelations(result.relations)
             } ?: call.respond(
                 HttpStatusCode.BadRequest,
                 mapOf("error" to "Missing query parameter \"q\"!")
