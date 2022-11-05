@@ -8,8 +8,12 @@ import '../shared.css';
 import EscapeCloseable from "../escape-closeable/EscapeCloseable";
 
 function PopupInfo(props) {
-    const onClick = (event) => {
-        props.onClick();
+    const onNew = (event) => {
+        props.onNew();
+    };
+
+    const onExtend = (event) => {
+        props.onExtend();
     };
 
     return (
@@ -21,8 +25,11 @@ function PopupInfo(props) {
                 {/* <div class="row"> */}
                 {getAdditionalProperties(props.info)}
                 {/* </div> */}
-                <button className='new-search-button blue-button' onClick={onClick} disabled={false}>
+                <button className='new-search-button blue-button' onClick={onNew} disabled={false}>
                     Search for this person
+                </button>
+                <button className='new-search-button blue-button' onClick={onExtend} disabled={false}>
+                    Extend search
                 </button>
             </EscapeCloseable>
         </div>

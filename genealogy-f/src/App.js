@@ -63,8 +63,11 @@ class NameForm extends React.Component {
         this.setRelationCalc = this.setRelationCalc.bind(this);
         this.handleHomeButtonClick = this.handleHomeButtonClick.bind(this);
         this.fetchRelations = this.fetchRelations.bind(this);
-        this.handlePopupClick = this.handlePopupClick.bind(this);
-        this.goAndRefresh = this.goAndRefresh.bind(this);
+        this.handlePopupNew = this.handlePopupNew.bind(this);
+        this.handlePopupExtend = this.handlePopupExtend.bind(this);
+        this.hideTree = this.hideTree.bind(this);
+        this.unhideTree = this.unhideTree.bind(this);
+        this.fetchRelationsAndRender = this.fetchRelationsAndRender.bind(this);
     }
 
     render() {
@@ -106,8 +109,8 @@ class NameForm extends React.Component {
                                 familyName={this.state.familyName}
                                 homeClick={this.handleHomeButtonClick}
                                 editCount={this.state.editCount}
-                                onPopupClick={this.handlePopupClick}
-                                // ref={this.genogramTree}
+                                onPopupNew={this.handlePopupNew}
+                                onPopupExtend={this.handlePopupExtend}
                             />
                             // <Adapter data={this.state.relationsJson} />
                     }
@@ -231,28 +234,73 @@ class NameForm extends React.Component {
 
     async handleCustomUpload(data) {
         const chosenId = data.targets[0].id;
-        const f = () => this.setRelationCalc(chosenId, data);
-        this.goAndRefresh(f);
+        await this.hideTree();
+        await this.setRelationCalc(chosenId, data);
+        await this.unhideTree();
     }
 
-    handlePopupClick(id) {
-        const f = () => this.fetchRelations(id);
-        this.goAndRefresh(f);
+    async handlePopupNew(id) {
+        await this.fetchRelationsAndRender(id);
     }
 
-    handleDisambiguationClick(event) {
+    async handlePopupExtend(id) {
+        console.assert(!_.isEmpty(this.state.relationsJson));
+        const oldRelationsJson = structuredClone(this.state.relationsJson);
+        await this.hideTree();
+        await this.fetchRelations(id);
+        const newRelationsJson = this.state.relationsJson;
+        const mergedRelationsJson = this.mergeRelations(oldRelationsJson, newRelationsJson);
+        await this.setRelationCalc(id, mergedRelationsJson);
+        await this.unhideTree();
+    }
+
+    async handleDisambiguationClick(event) {
         if (this.state.chosenId === '') {
             alert("Haven't selected a person!");
             return;
         }
         event.preventDefault();
-        const f = () => this.fetchRelations(this.state.chosenId);
-        this.goAndRefresh(f);
+        await this.fetchRelationsAndRender(this.state.chosenId);
     }
 
-    async goAndRefresh(f) {
+    mergeRelations(oldRel, newRel) {
+        const res = {};
+        res.targets = oldRel.targets;
+        const idItemMap = new Map();
+        for (const item of oldRel.items) {
+            idItemMap.set(item.id, item);
+        }
+        const idRelMap = new Map();
+        for (const rel of oldRel.relations) {
+            idRelMap.set(`${rel.item1Id} ${rel.item2Id}`, rel);
+        }
+        for (const item of newRel.items) {
+            if (!idItemMap.has(item.id)) {
+                idItemMap.set(item.id, item);
+            }
+        }
+        for (const rel of newRel.relations) {
+            const key = `${rel.item1Id} ${rel.item2Id}`;
+            if (!idRelMap.has(key)) {
+                idRelMap.set(key, rel);
+            }
+        }
+        res.items = Array.from(idItemMap.values());
+        res.relations = Array.from(idRelMap.values());
+        return res;
+    }
+
+    async fetchRelationsAndRender(id) {
+        await this.hideTree();
+        await this.fetchRelations(id);
+        await this.unhideTree();
+    }
+
+    async hideTree() {
         await this.setStatePromise({showTree: false});
-        await f();
+    }
+
+    async unhideTree() {
         await this.setStatePromise({showTree: true});
     }
 
