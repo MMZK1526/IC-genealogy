@@ -14,14 +14,13 @@ export class Requests {
 
     relations({id = 'WD-Q152308', depth = 2} = {}) {
         const url = `${this.baseUrl}/relations_wk?id=${id}&depth=${depth}`
-        const res = fetch(url)
+        return fetch(url)
             .then(response => {
                 return response.json();
             })
             .catch((error) => {
                 console.error(`Error: ${error}`);
             });
-        return res;
     }
 
     relationCalc({start, relations}) {

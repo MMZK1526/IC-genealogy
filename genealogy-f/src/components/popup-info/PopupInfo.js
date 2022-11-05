@@ -21,7 +21,7 @@ function PopupInfo(props) {
                 {/* <div class="row"> */}
                 {getAdditionalProperties(props.info)}
                 {/* </div> */}
-                <button className='new-search-button blue-button' onClick={onClick} disabled={true}>
+                <button className='new-search-button blue-button' onClick={onClick} disabled={false}>
                     Search for this person
                 </button>
             </EscapeCloseable>

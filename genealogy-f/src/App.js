@@ -13,6 +13,8 @@ import {CustomUpload} from "./components/custom-upload/CustomUpload";
 import {ResultPage} from "./components/result-page/ResultPage.js"
 import {exportComponentAsPNG} from 'react-component-export-image';
 import {unmountComponentAtNode, findDOMNode} from 'react-dom';
+import * as util from 'util';
+
 
 // COMMENT THIS IN FOR FULL FLOW TEST
 class App extends React.Component {
@@ -56,13 +58,13 @@ class NameForm extends React.Component {
 
 
         this.handleSearchSubmit = this.handleSearchSubmit.bind(this);
-        this.handleRelationsSubmit = this.handleRelationsSubmit.bind(this);
+        this.handleDisambiguationClick = this.handleDisambiguationClick.bind(this);
         this.handleCustomUpload = this.handleCustomUpload.bind(this);
         this.setRelationCalc = this.setRelationCalc.bind(this);
         this.handleHomeButtonClick = this.handleHomeButtonClick.bind(this);
         this.fetchRelations = this.fetchRelations.bind(this);
-        this.popupFetchRelations = this.popupFetchRelations.bind(this);
-        this.temporarilyUnmountTreeAndPerformAction = this.temporarilyUnmountTreeAndPerformAction.bind(this);
+        this.handlePopupClick = this.handlePopupClick.bind(this);
+        this.goAndRefresh = this.goAndRefresh.bind(this);
     }
 
     render() {
@@ -72,17 +74,19 @@ class NameForm extends React.Component {
                     Home
                 </button>
                 {
-                    _.isEmpty(this.state.searchJsons)
-                    && <NameSearch
-                        onChange={this.handleChangeInitialName}
-                        onClick={this.handleSearch}
-                    />
+                    _.isEmpty(this.state.searchJsons) &&
+                    !this.state.showTree &&
+                        <NameSearch
+                            onChange={this.handleChangeInitialName}
+                            onClick={this.handleSearchSubmit}
+                        />
                 }
                 {
                     (
                         !_.isEmpty(this.state.searchJsons) ||
-                            !_.isEmpty(this.state.relationsJson)
+                        !_.isEmpty(this.state.relationsJson)
                     ) &&
+                    !this.state.showTree &&
                          <Sidebar
                             name={this.state.initialName}
                             nameChange={this.handleChangeInitialName}
@@ -102,22 +106,23 @@ class NameForm extends React.Component {
                                 familyName={this.state.familyName}
                                 homeClick={this.handleHomeButtonClick}
                                 editCount={this.state.editCount}
-                                onPopupClick={this.popupFetchRelations}
+                                onPopupClick={this.handlePopupClick}
                                 // ref={this.genogramTree}
                             />
                             // <Adapter data={this.state.relationsJson} />
                     }
                 </div>
-                {/*{*/}
-                {/*    !_.isEmpty(this.state.searchJsons) &&*/}
-                {/*    _.isEmpty(this.state.relationsJson) &&*/}
-                {/*        !this.state.isLoading &&*/}
-                {/*            <ResultPage*/}
-                {/*                    state={this.state}*/}
-                {/*                    onChange={this.handleChangeChosenId}*/}
-                {/*                    onSubmit={this.handleRelationsSubmit}*/}
-                {/*            />*/}
-                {/*}*/}
+                {
+                    !_.isEmpty(this.state.searchJsons) &&
+                    _.isEmpty(this.state.relationsJson) &&
+                    !this.state.isLoading &&
+                    !this.state.showTree &&
+                            <ResultPage
+                                    state={this.state}
+                                    onChange={this.handleChangeChosenId}
+                                    onSubmit={this.handleDisambiguationClick}
+                            />
+                }
                 {
                     this.state.isLoading
                         && <ClipLoader
@@ -138,6 +143,8 @@ class NameForm extends React.Component {
             </div>
         );
     }
+
+    setStatePromise = util.promisify(this.setState);
 
     handleChangeInitialName(event) {
         this.setState({initialName: event.target.value});
@@ -224,76 +231,58 @@ class NameForm extends React.Component {
 
     async handleCustomUpload(data) {
         const chosenId = data.targets[0].id;
-        this.setState({
-            searchJsons: {
-                foo: 'bar',
-            }
-        });
-        await this.popupFetchRelations(chosenId);
+        const f = () => this.setRelationCalc(chosenId, data);
+        this.goAndRefresh(f);
     }
 
-    async popupFetchRelations(id) {
-        this.temporarilyUnmountTreeAndPerformAction(
-            () => (this.fetchRelations(id))
-        );
+    handlePopupClick(id) {
+        const f = () => this.fetchRelations(id);
+        this.goAndRefresh(f);
     }
 
-    async handleRelationsSubmit(event) {
+    handleDisambiguationClick(event) {
         if (this.state.chosenId === '') {
             alert("Haven't selected a person!");
             return;
         }
         event.preventDefault();
-        this.temporarilyUnmountTreeAndPerformAction(
-            () => (this.fetchRelations(this.state.chosenId))
-        );
+        const f = () => this.fetchRelations(this.state.chosenId);
+        this.goAndRefresh(f);
     }
 
-    temporarilyUnmountTreeAndPerformAction(f) {
-        this.setState(
-            {showTree: false},
-            async () => {
-                await f();
-                await this.setState({showTree: true});
-            }
-        );
+    async goAndRefresh(f) {
+        await this.setStatePromise({showTree: false});
+        await f();
+        await this.setStatePromise({showTree: true});
     }
 
     async fetchRelations(id) {
-        // const node = ReactDOM.findDOMNode(this.genogramTree);
-        // ReactDOM.unmountComponentAtNode(node);
-        await this.setState(
-            {
-                isLoading: true,
-                chosenId: id,
-            },
-            async () => {
-                this.requests.relations({id: id}).then((r) => {
-                    if (Object.values(r)[1].length === 0) {
-                        this.setState({
-                            relationsJson: {},
-                        });
-                        alert("No relationship found!")
-                        return;
-                    }
-                    this.setRelationCalc(
-                        id,
-                        r,
-                    );
-                });
+        await this.setStatePromise({
+            isLoading: true,
+            chosenId: id,
+        });
+        const relations = await this.requests.relations({id: id});
+        if (Object.values(relations)[1].length === 0) {
+            this.setStatePromise({
+                relationsJson: {},
             });
+            alert("No relationship found!")
+            return;
+        }
+        await this.setRelationCalc(
+            id,
+            relations,
+        );
     }
 
-    setRelationCalc(id, relationsJson) {
-        this.requests.relationCalc(
-            {start: id, relations: relationsJson.relations}
-        ).then(r => {
-            const newRelationsJson = this.integrateKinshipIntoRelationsJson(r, relationsJson);
-            this.setState({
-                kinshipJson: r,
-                relationsJson: newRelationsJson,
-                isLoading: false,
-            });
+    async setRelationCalc(id, relationsJson) {
+        const kinshipJson = await this.requests.relationCalc(
+            {start: id, relations: relationsJson.relations});
+        const newRelationsJson = this.integrateKinshipIntoRelationsJson(kinshipJson, relationsJson);
+        await this.setStatePromise({
+            kinshipJson: kinshipJson,
+            relationsJson: newRelationsJson,
+            isLoading: false,
         });
     }
 
