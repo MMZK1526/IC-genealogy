@@ -375,11 +375,12 @@ class WikiDataDataSource(
                 frontier.mapNotNull { Fields.parseID(it.key)?.second },
                 d0TypeMap, d1TypeMap
             )
-            relations.addAll(newRelations)
+
             frontier = d0NextPeople.map { it.key to it.value.minOf { value -> frontier[value]!! } }
                 .filter { !visited.contains(it.first) && it.second <= depth }
                 .toMap() + d1NextPeople.map { it.key to it.value.minOf { value -> frontier[value]!! } + 1 }
                 .filter { !visited.contains(it.first) && it.second <= depth }
+            relations.addAll(newRelations.filter { visited.contains(it.item1Id) || frontier.contains(it.item1Id) })
         }
 
         RelationsResponse(targets, people.map { it.key }.toList(), relations.toList())

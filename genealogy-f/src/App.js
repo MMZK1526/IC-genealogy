@@ -345,11 +345,14 @@ class NameForm extends React.Component {
                 return arr.join(' of the ');
             }).join('; ');
             const property = {
-                propertyId: 'WD-kinship',
+                propertyId: 'PB-kinship',
                 name: 'relation to the searched person',
                 value: kinshipStr,
                 valueHash: null,
             };
+            if (!idItemMap.has(key)) {
+                console.log(key);
+            }
             console.assert(idItemMap.has(key));
             const item = idItemMap.get(key);
             const props = item.additionalProperties;
