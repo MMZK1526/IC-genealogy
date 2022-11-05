@@ -1,7 +1,7 @@
 import _ from "lodash";
 import {Sidebar} from './components/sidebar/Sidebar.js';
 import {Requests} from './requests';
-import React from "react";
+import React, {Component} from "react";
 import './App.css';
 import './components/shared.css';
 import {NameSearch} from './components/name-search/NameSearch.js'
@@ -12,6 +12,7 @@ import {CustomUpload} from "./components/custom-upload/CustomUpload";
 
 import {ResultPage} from "./components/result-page/ResultPage.js"
 import {exportComponentAsPNG} from 'react-component-export-image';
+import {unmountComponentAtNode, findDOMNode} from 'react-dom';
 
 // COMMENT THIS IN FOR FULL FLOW TEST
 class App extends React.Component {
@@ -41,9 +42,11 @@ class NameForm extends React.Component {
             transformedArr: [],
             isLoading: false,
             editCount: 0,
+            showTree: false,
         };
         this.initialState = JSON.parse(JSON.stringify(this.state));
         this.requests = new Requests();
+        // this.genogramTree = React.createRef();
 
         this.handleChangeInitialName = this.handleChangeInitialName.bind(this);
         this.handleChangeChosenId = this.handleChangeChosenId.bind(this);
@@ -59,6 +62,7 @@ class NameForm extends React.Component {
         this.handleHomeButtonClick = this.handleHomeButtonClick.bind(this);
         this.fetchRelations = this.fetchRelations.bind(this);
         this.popupFetchRelations = this.popupFetchRelations.bind(this);
+        this.temporarilyUnmountTreeAndPerformAction = this.temporarilyUnmountTreeAndPerformAction.bind(this);
     }
 
     render() {
@@ -71,7 +75,7 @@ class NameForm extends React.Component {
                     _.isEmpty(this.state.searchJsons)
                     && <NameSearch
                         onChange={this.handleChangeInitialName}
-                        onClick={this.handleSearchSubmit}
+                        onClick={this.handleSearch}
                     />
                 }
                 {
@@ -90,8 +94,7 @@ class NameForm extends React.Component {
                 }
                 <div className='tree-box'>
                     {
-                        !_.isEmpty(this.state.relationsJson) &&
-                        !_.isEmpty(this.state.kinshipJson) &&
+                        this.state.showTree &&
                             <GenogramTree
                                 rawJson={this.state.relationsJson}
                                 from={this.state.fromYear}
@@ -100,21 +103,21 @@ class NameForm extends React.Component {
                                 homeClick={this.handleHomeButtonClick}
                                 editCount={this.state.editCount}
                                 onPopupClick={this.popupFetchRelations}
+                                // ref={this.genogramTree}
                             />
                             // <Adapter data={this.state.relationsJson} />
-
                     }
                 </div>
-                {
-                    !_.isEmpty(this.state.searchJsons) &&
-                    _.isEmpty(this.state.relationsJson) &&
-                        !this.state.isLoading &&
-                            <ResultPage
-                                    state={this.state}
-                                    onChange={this.handleChangeChosenId}
-                                    onSubmit={this.handleRelationsSubmit}
-                            />
-                    }
+                {/*{*/}
+                {/*    !_.isEmpty(this.state.searchJsons) &&*/}
+                {/*    _.isEmpty(this.state.relationsJson) &&*/}
+                {/*        !this.state.isLoading &&*/}
+                {/*            <ResultPage*/}
+                {/*                    state={this.state}*/}
+                {/*                    onChange={this.handleChangeChosenId}*/}
+                {/*                    onSubmit={this.handleRelationsSubmit}*/}
+                {/*            />*/}
+                {/*}*/}
                 {
                     this.state.isLoading
                         && <ClipLoader
@@ -157,14 +160,6 @@ class NameForm extends React.Component {
     handleChangeFamily(event) {
         const val = event.target.value;
         this.setState((previous) => ({familyName: val, editCount: previous.editCount + 1}));
-    }
-
-    handleCustomUpload(data) {
-        const chosenId = data.targets[0].id;
-        this.state.searchJsons = {
-            foo: 'bar',
-        };
-        this.setRelationCalc(chosenId, data);
     }
 
     async handleSearchSubmit(event) {
@@ -227,11 +222,20 @@ class NameForm extends React.Component {
         });
     }
 
-    async popupFetchRelations(id) {
+    async handleCustomUpload(data) {
+        const chosenId = data.targets[0].id;
         this.setState({
-            chosenId: id,
+            searchJsons: {
+                foo: 'bar',
+            }
         });
-        await this.fetchRelations(id);
+        await this.popupFetchRelations(chosenId);
+    }
+
+    async popupFetchRelations(id) {
+        this.temporarilyUnmountTreeAndPerformAction(
+            () => (this.fetchRelations(id))
+        );
     }
 
     async handleRelationsSubmit(event) {
@@ -240,27 +244,44 @@ class NameForm extends React.Component {
             return;
         }
         event.preventDefault();
-        await this.fetchRelations(this.state.chosenId);
+        this.temporarilyUnmountTreeAndPerformAction(
+            () => (this.fetchRelations(this.state.chosenId))
+        );
+    }
+
+    temporarilyUnmountTreeAndPerformAction(f) {
+        this.setState(
+            {showTree: false},
+            async () => {
+                await f();
+                await this.setState({showTree: true});
+            }
+        );
     }
 
     async fetchRelations(id) {
-        this.setState({
-            isLoading: true,
-        });
-
-        await this.requests.relations({id: id}).then(r => {
-            if (Object.values(r)[1].length === 0) {
-                this.setState({
-                    relationsJson: {},
+        // const node = ReactDOM.findDOMNode(this.genogramTree);
+        // ReactDOM.unmountComponentAtNode(node);
+        await this.setState(
+            {
+                isLoading: true,
+                chosenId: id,
+            },
+            async () => {
+                this.requests.relations({id: id}).then((r) => {
+                    if (Object.values(r)[1].length === 0) {
+                        this.setState({
+                            relationsJson: {},
+                        });
+                        alert("No relationship found!")
+                        return;
+                    }
+                    this.setRelationCalc(
+                        id,
+                        r,
+                    );
                 });
-                alert("No relationship found!")
-                return;
-            }
-            this.setRelationCalc(
-                id,
-                r,
-            );
-        });
+            });
     }
 
     setRelationCalc(id, relationsJson) {
