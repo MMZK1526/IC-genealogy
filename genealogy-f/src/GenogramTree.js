@@ -831,7 +831,15 @@ export class DiagramWrapper extends React.Component {
 
       this.diagram.linkTemplateMap.add("Marriage",  // for marriage relationships
         $(go.Link,
-          { selectable: false, layerName: "Background" },
+          { 
+            routing: go.Link.Normal, 
+            curve: go.Link.Bezier, 
+            curviness: 2, 
+            fromSpot: go.Spot.Top,
+            toSpot: go.Spot.Top,
+            selectable: false, 
+            layerName: "Background" 
+          },
           $(go.Shape, { strokeWidth: 2.5, stroke: "#5d8cc1" /* blue */}, new go.Binding("opacity", "opacity"))
         ));
     
