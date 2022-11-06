@@ -148,31 +148,12 @@ export function transform(data, yearFrom, yearTo, familyName) {
         motherfuckers.father = relation.item1Id;
     }
     if (relation.type === 'spouse') {
-      // check not double spouse (fix for the time being)
-      // let spouseId = relation.item1Id;
       motherfuckers.spouse.push(relation.item1Id);
-      // if you already have a spouse listed, then prioritise listng a spouse who isn't already married to you. i.e convert to a -> b -> c -> d rather than a <-> b, c <-> d
-      // if ((addProps.filter(p => p.name == 'gender'))[0].value == 'male') {
-      //   relMap = updatePrevWife(motherfuckers, relMap, idPerson);
-      //   let newP = relMap.get(spouseId);
-      //   if (newP == null || (newP.vir == null || newP.vir != motherfuckers.key)) {
-      //     motherfuckers.ux = spouseId
-      //   }
-
-      // } else {
-      //   relMap = updatePrevHusband(motherfuckers, relMap, idPerson);
-      //   let newP = relMap.get(spouseId);
-      //   if (newP == null || (newP.ux == null || newP.ux != motherfuckers.key)) {
-      //     motherfuckers.vir = spouseId
-      //   }
-      // }
     }
     relMap.set(key, motherfuckers);
-    console.log("YES: " + relMap);
     var targetKey = relation['item1Id'];
     var targetItem = idPerson.get(targetKey);
     if (!relMap.has(targetKey)) {
-      console.log("NO: " + targetKey);
       var genderKey = targetItem.additionalProperties.filter(p => p.name == 'gender')[0]
       var gender = genderKey ? genderKey.value : undefined
       relMap.set(targetKey, {
@@ -184,13 +165,6 @@ export function transform(data, yearFrom, yearTo, familyName) {
     }
   }
 
-  // connect mother and father if not married
-  // console.log('marrying parents');
-  // for (let key of relMap.keys()) {
-  //   relMap = marryParents(relMap.get(key), relMap, idPerson);
-  // }
-  // console.log();
-  // remove dangling nodes, i.e non-confirmed marriages, or people on edge without mother or father.
   var newOutput = [];
 
   // apply filters (add opacity to non-filtered)
@@ -203,7 +177,6 @@ export function transform(data, yearFrom, yearTo, familyName) {
     }
     relMap.set(key, r);
   }
-  // console.log(relMap.values());
 
   // add unknown nodes for unknown parent
   for (let key of relMap.keys()) {
@@ -219,27 +192,6 @@ export function transform(data, yearFrom, yearTo, familyName) {
   return newOutput;
 
 }
-
-// function marryParents(mfs, relMap, idPerson) {
-//   // console.log(mfs);
-//   if (mfs.mother != null && mfs.father != null) {
-//     let x = relMap.get(mfs.father);
-//     let y = relMap.get(mfs.mother);
-//     if (x == null || y == null) {
-//       return relMap;
-//     }
-//     // console.log(x);
-//     // console.log(y);
-//     if ((x.ux == null || x.ux != y.key) && (y.vir == null || y.vir != x.key)) {
-//       // console.log(y.key + ' now pointing to ' + x.key);
-//       updatePrevHusband(y, relMap, idPerson);
-//       y.vir = x.key;
-//       relMap.set(y.key, y);
-//     }
-//   }
-//   // case of unknown father - temporarily replace with 'unknown' node
-//   return relMap;
-// }
 
 function addUnknown(mfs, relMap) {
   if (mfs.mother && !mfs.father) {
@@ -263,81 +215,6 @@ function addUnknown(mfs, relMap) {
 
   return relMap;
 }
-
-// function updatePrevWife(mfs, relMap, idPerson) {
-//   // this was your partner before
-//   let key = mfs.ux;
-//   // base case end recursion.
-//   if (key === undefined) {
-//     return relMap;
-//   }
-//   var prev = {};
-//   if (relMap.has(key)) {
-//     prev = relMap.get(key);
-//   } else {
-//     let person = idPerson.get(key);
-//     let addProps = person.additionalProperties;
-//     prev = {key: person.id, name: person.name, gender: (addProps.filter(p => p.name == 'gender'))[0].value, vir: mfs.key};
-//     // console.log('SHOULDNT GET HERE');
-//     console.log(JSON.stringify(prev));
-//     relMap.set(prev.key, prev);
-//     return relMap;
-//   }
-//   // looping over person you were pointing to before
-//   // set prev husband to your id, apply recursively.
-//   if (prev.vir === undefined) {
-//     prev.vir = mfs.key;
-//     // console.log(prev.key + 'husband now pointing to ' + mfs.key);
-//     relMap = relMap.set(prev.key, prev);
-//     return relMap;
-//   } else if (prev.vir == mfs.key) {
-//     return relMap;
-//   } else {
-//     // must be case that previously pointed to someone else
-//     let temp = prev;
-//     relMap = updatePrevHusband(temp, relMap, idPerson);
-//     prev.vir = mfs.key;
-//     // console.log(prev.key + 'husband now pointing to ' + mfs.key);
-//     return relMap.set(prev.key, prev);
-//   }
-// }
-
-// function updatePrevHusband(mfs, relMap, idPerson) {
-//   let key = mfs.vir;
-//   // base case end recursion.
-//   if (key === undefined) {
-//     return relMap;
-//   }
-//   var prev = {};
-//   if (relMap.has(key)) {
-//     prev = relMap.get(key);
-//   } else {
-//     let person = idPerson.get(key);
-//     let addProps = person.additionalProperties;
-//     prev = {key: person.id, name: person.name, gender: (addProps.filter(p => p.name == 'gender'))[0].value, ux: mfs.key};
-//     // console.log('SHOULDNT GET HERE');
-//     console.log(JSON.stringify(prev));
-//     relMap.set(prev.key, prev);
-//     return relMap;
-//   }
-//   // set prev husband to your id, apply recursively.
-//   if (prev.ux === undefined) {
-//     prev.ux = mfs.key;
-//     relMap = relMap.set(prev.key, prev);
-//     // console.log(prev.key + 'wife now pointing to ' + mfs.key);
-//     return relMap;
-//   } else if (prev.ux == mfs.key) {
-//     return relMap;
-//   } else {
-//     // must be case that previously pointed to someone else
-//     // console.log(prev.key + 'wife now pointing to ' + mfs.key);
-//     let temp = prev;
-//     relMap = updatePrevWife(temp, relMap, idPerson);
-//     prev.ux = mfs.key;
-//     relMap = relMap.set(prev.key, prev);
-//     return relMap;
-//   }
-// }
 
 export function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
@@ -385,21 +262,7 @@ function getPersonMap(data) {
         default:
       }
       attributes.set(capitalizeFirstLetter(key), value);
-    } )
-
-    // for (let attr of attrMap) {
-    //   let fieldName  = attr.name;
-    //   let fieldValue = attr.value;
-
-    //   switch (fieldName) {
-    //     case 'date of birth':
-    //       fieldValue = fieldValue.replace(/^0+/, '').split('T')[0];
-    //     case 'date of death':
-    //       fieldValue = fieldValue.replace(/^0+/, '').split('T')[0];
-    //     default:
-    //   }
-    //   attributes.set(capitalizeFirstLetter(fieldName), fieldValue);
-    // }
+    });
 
     personMap.set(personId, attributes)
   }
