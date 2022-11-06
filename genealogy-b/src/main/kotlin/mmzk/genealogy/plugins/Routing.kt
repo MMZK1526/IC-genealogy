@@ -40,11 +40,11 @@ fun Application.configureRouting() {
             val depth = call.request.queryParameters["depth"]?.toIntOrNull() ?: 0
             val visitedItems = call.request.queryParameters["visited_items"]?.split(",") ?: listOf()
             call.request.queryParameters["id"]?.let { id ->
-                val d0types =
-                    call.request.queryParameters["d0types"]?.split(",") ?: listOf("WD-P26")
-                val d1types =
-                    call.request.queryParameters["d1types"]?.split(",") ?: listOf("WD-P22", "WD-P25", "WD-P40")
-                val result = WikiDataDataSource(d0types, d1types).findRelatedPeople(id, visitedItems, depth)
+                val homoStrata =
+                    call.request.queryParameters["homo_strata"]?.split(",") ?: listOf("WD-P26")
+                val heteroStrata =
+                    call.request.queryParameters["hetero_strata"]?.split(",") ?: listOf("WD-P22", "WD-P25", "WD-P40")
+                val result = WikiDataDataSource(homoStrata, heteroStrata).findRelatedPeople(id, visitedItems, depth)
                 call.respond(result)
                 Database.insertItems(result.items)
                 Database.insertRelations(result.relations)
@@ -56,11 +56,13 @@ fun Application.configureRouting() {
 
         get("/relations_db") {
             val depth = call.request.queryParameters["depth"]?.toIntOrNull() ?: 0
-
+            val visitedItems = call.request.queryParameters["visited_items"]?.split(",") ?: listOf()
             call.request.queryParameters["id"]?.let { id ->
-                val typeFilter =
-                    call.request.queryParameters["types"]?.split(",") ?: listOf("WD-P22", "WD-P25", "WD-P26", "WD-P40")
-                val result = Database.findRelatedItems(id, typeFilter, depth)
+                val homoStrata =
+                    call.request.queryParameters["homo_strata"]?.split(",") ?: listOf("WD-P26")
+                val heteroStrata =
+                    call.request.queryParameters["hetero_strata"]?.split(",") ?: listOf("WD-P22", "WD-P25", "WD-P40")
+                val result = Database.findRelatedItems(id, homoStrata.toSet(), heteroStrata.toSet(), depth, visitedItems.toMutableSet())
                 call.respond(result)
             } ?: call.respond(
                 HttpStatusCode.BadRequest,

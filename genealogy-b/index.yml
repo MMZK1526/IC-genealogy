@@ -34,15 +34,33 @@ paths:
           description: Unexpected error
   /relations_wk:
     parameters:
+      - name: id
+        description: The database ID of the item whose related items is to be found.
+        in: query
+        required: true
+        schema:
+          type: string
       - name: depth
-        description: Controls how many connected relationships to follow
+        description: Controls how many "levels" of relationships to return
         in: query
         required: false
         schema:
           type: number
           default: 0
-      - name: types
-        description: Only finds items that are related by these relationship types
+      - name: homo_strata
+        description: These relationships relate items on the same level
+        in: query
+        required: false
+        style: form
+        explode: false
+        schema:
+          type: array
+          items:
+            type: string
+          default:
+            - WD-P26
+      - name: hetero_strata
+        description: These relationships relate items on adjacent levels
         in: query
         required: false
         style: form
@@ -54,14 +72,17 @@ paths:
           default:
             - WD-P22
             - WD-P25
-            - WD-P26
             - WD-P40
-      - name: id
-        description: The database ID of the item whose related items is to be found.
+      - name: visited_items
+        description: Do not search the relationships of these items
         in: query
-        required: true
+        required: false
+        style: form
+        explode: false
         schema:
-          type: string
+          type: array
+          items:
+            type: string
     get:
       summary: Finds items related to a given item on WikiData.
       responses:
@@ -81,33 +102,54 @@ paths:
           description: Unexpected error
   /relations_db:
     parameters:
-      - name: depth
-        description: Controls how many connected relationships to follow
-        in: query
-        required: false
-        schema:
-          type: number
-          default: 0
-      - name: types
-        description: Only finds items that are related by these relationship types
-        in: query
-        required: false
-        style: form
-        explode: false
-        schema:
-          type: array
-          items:
-            type: string
-          default:
-            - WD-P22
-            - WD-P25
-            - WD-P26
-            - WD-P40
-      - name: id
-        description: The database ID of the item whose related items is to be found.
-        in: query
-        required: true
-        schema:
+    - name: id
+      description: The database ID of the item whose related items is to be found.
+      in: query
+      required: true
+      schema:
+        type: string
+    - name: depth
+      description: Controls how many "levels" of relationships to return
+      in: query
+      required: false
+      schema:
+        type: number
+        default: 0
+    - name: homo_strata
+      description: These relationships relate items on the same level
+      in: query
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: array
+        items:
+          type: string
+        default:
+          - WD-P26
+    - name: hetero_strata
+      description: These relationships relate items on adjacent levels
+      in: query
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: array
+        items:
+          type: string
+        default:
+          - WD-P22
+          - WD-P25
+          - WD-P40
+    - name: visited_items
+      description: Do not search the relationships of these items
+      in: query
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: array
+        items:
           type: string
     get:
       summary: Finds items related to a given item in the database.
@@ -203,6 +245,7 @@ components:
         description:
           type: string
         aliases:
+          nullable: true
           type: string
         additionalProperties:
           type: array

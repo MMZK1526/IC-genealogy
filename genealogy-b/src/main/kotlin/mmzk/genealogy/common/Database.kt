@@ -106,10 +106,13 @@ object Database {
         }
     }
 
-    private fun findRelatedItems(ids: Set<String>, typeFilter: List<String>): Pair<Set<RelationshipDTO>, Set<String>> {
+    private fun findRelatedItems(
+        ids: Set<String>,
+        homoStrata: Set<String>,
+        heteroStrata: Set<String>): Triple<Set<RelationshipDTO>, MutableMap<String, MutableList<String>>, MutableMap<String, MutableList<String>>> {
         val relationships = Relationship.find {
             RelationshipTable.item2.asStringColumn.inList(ids) and
-                    type.asStringColumn.inList(typeFilter)
+                    type.asStringColumn.inList(homoStrata + heteroStrata)
         }
         val items = relationships.mapNotNull {
             if (it.item1.id.value in ids) {
@@ -119,36 +122,54 @@ object Database {
             }
         }
 
-        return relationships.mapTo(mutableSetOf(), ::RelationshipDTO) to items.mapTo(mutableSetOf()) { it.id.value }
+        val sameLevelNewItems = mutableMapOf<String, MutableList<String>>()
+        val differentLevelNewItems = mutableMapOf<String, MutableList<String>>()
+        for (relation in relationships) {
+            if (homoStrata.contains(relation.type.id.value)) {
+                sameLevelNewItems.getOrPut(relation.item1.id.value) { mutableListOf() }.add(relation.item2.id.value)
+            } else {
+                differentLevelNewItems.getOrPut(relation.item1.id.value) { mutableListOf() }.add(relation.item2.id.value)
+            }
+        }
+        differentLevelNewItems -= sameLevelNewItems.keys
+
+        return Triple(
+            relationships.mapTo(mutableSetOf(), ::RelationshipDTO),
+            sameLevelNewItems, differentLevelNewItems
+        )
     }
 
-    fun findRelatedItems(id: String, typeFilter: List<String>, depth: Int = 1) =
+    fun findRelatedItems(
+        id: String,
+        homoStrata: Set<String>,
+        heteroStrata: Set<String>,
+        depth: Int,
+        visited: MutableSet<String>
+    ) =
         transaction {
-            val visited = mutableSetOf<String>()
-            var frontier = setOf(id)
-            var curDepth = 0
+            var frontier = mapOf(id to 0)
             val targets = Item.find {
-                ItemTable.id.asStringColumn.inList(frontier)
+                ItemTable.id.asStringColumn.inList(frontier.keys)
             }.toDTOWithAdditionalProperties()
-            val people = mutableSetOf<ItemDTO>()
+            val items = mutableSetOf<ItemDTO>()
             val relations = mutableSetOf<RelationshipDTO>()
 
-            while (true) {
+            while (frontier.isNotEmpty()) {
                 val newPeople = Item.find {
-                    ItemTable.id.asStringColumn.inList(frontier)
+                    ItemTable.id.asStringColumn.inList(frontier.keys)
                 }.toDTOWithAdditionalProperties()
-                people.addAll(newPeople)
+                items.addAll(newPeople)
                 visited.addAll(newPeople.map { it.id })
-                if (curDepth >= depth) {
-                    break
-                }
-                val (newRelations, nextPeople) = findRelatedItems(frontier, typeFilter)
-                relations.addAll(newRelations)
-                frontier = nextPeople.filterTo(mutableSetOf()) { !visited.contains(it) }
-                curDepth++
+                val (newRelations, nextSameLevelItems, nextDifferentLevelItems) = findRelatedItems(frontier.keys, homoStrata, heteroStrata)
+
+                frontier = nextSameLevelItems.map {it.key to it.value.minOf { value -> frontier[value]!! }  }
+                    .filter { !visited.contains(it.first) && it.second <= depth }
+                    .toMap() + nextDifferentLevelItems.map { it.key to it.value.minOf { value -> frontier[value]!! } + 1 }
+                    .filter { !visited.contains(it.first) && it.second <= depth }
+                relations.addAll(newRelations.filter { visited.contains(it.item1Id) || frontier.contains(it.item1Id) })
             }
 
-            RelationsResponse(targets, people.toList(), relations.toList())
+            RelationsResponse(targets, items.toList(), relations.toList())
         }
 
     private fun Iterable<Item>.toDTOWithAdditionalProperties(): List<ItemDTO> {

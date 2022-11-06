@@ -11,7 +11,7 @@ import org.eclipse.rdf4j.queryrender.RenderUtils
 import org.eclipse.rdf4j.repository.sparql.SPARQLRepository
 
 class WikiDataDataSource(
-    private val d0TypeFilters: List<String> = listOf(), private val d1TypeFilters: List<String> = listOf()
+    private val homoStrataFilters: List<String> = listOf(), private val heteroStrataFilters: List<String> = listOf()
 ) {
     // Translate a WikiData ID into a Database ID.
     private fun makeID(id: String): String = "WD-$id"
@@ -23,13 +23,13 @@ class WikiDataDataSource(
 
     private suspend fun parseRelationSearchResults(
         results: TupleQueryResult,
-        d0TypeMap: Map<String, String>,
-        d1TypeMap: Map<String, String>
+        homoStrataMap: Map<String, String>,
+        heteroStrataMap: Map<String, String>
     ) =
         coroutineScope {
             val relations = mutableSetOf<RelationshipDTO>()
-            val d0NewIndividuals = mutableMapOf<String, MutableList<String>>()
-            val d1NewIndividuals = mutableMapOf<String, MutableList<String>>()
+            val sameLevelNewIndividuals = mutableMapOf<String, MutableList<String>>()
+            val differentLevelNewIndividuals = mutableMapOf<String, MutableList<String>>()
             for (result in results) {
                 val row = mutableMapOf<String, String>()
                 for (value in result) {
@@ -38,7 +38,7 @@ class WikiDataDataSource(
                 val id = row[SPARQL.item]?.let(::Url)?.pathSegments?.lastOrNull()?.takeIf {
                     it.firstOrNull() == 'Q' || it.firstOrNull() == 'q'
                 } ?: continue
-                relations.addAll((d0TypeMap + d1TypeMap).entries.mapNotNull {
+                relations.addAll((homoStrataMap + heteroStrataMap).entries.mapNotNull {
                     Fields.parseID(it.key)?.second?.let { key ->
                         row[key]?.let(::Url)?.pathSegments?.lastOrNull()?.takeIf { otherID ->
                             otherID.firstOrNull() == 'Q' || otherID.firstOrNull() == 'q'
@@ -47,19 +47,17 @@ class WikiDataDataSource(
                         }
                     }
                 })
-
-                for (relation in relations) {
-                    if (d0TypeMap.contains(relation.typeId)) {
-                        d0NewIndividuals.getOrPut(relation.item1Id) { mutableListOf() }.add(relation.item2Id)
-                    } else {
-                        d1NewIndividuals.getOrPut(relation.item1Id) { mutableListOf() }.add(relation.item2Id)
-                    }
+            }
+            for (relation in relations) {
+                if (homoStrataMap.contains(relation.typeId)) {
+                    sameLevelNewIndividuals.getOrPut(relation.item1Id) { mutableListOf() }.add(relation.item2Id)
+                } else {
+                    differentLevelNewIndividuals.getOrPut(relation.item1Id) { mutableListOf() }.add(relation.item2Id)
                 }
             }
+            differentLevelNewIndividuals -= sameLevelNewIndividuals.keys
 
-            d1NewIndividuals.minusAssign(d0NewIndividuals.keys)
-
-            Triple(relations, d0NewIndividuals, d1NewIndividuals)
+            Triple(relations, sameLevelNewIndividuals, differentLevelNewIndividuals)
         }
 
     private suspend fun parseIndividualSearchResults(results: TupleQueryResult) = coroutineScope {
@@ -315,12 +313,12 @@ class WikiDataDataSource(
 
     private suspend fun searchRelationByIDs(
         ids: List<String>,
-        d0TypeMap: Map<String, String>,
-        d1TypeMap: Map<String, String>
+        homoStrataMap: Map<String, String>,
+        heteroStrataMap: Map<String, String>
     ) =
         coroutineScope {
             val repo = SPARQLRepository(SPARQL.sparqlEndpoint)
-            val typeMap = d0TypeMap + d1TypeMap
+            val typeMap = homoStrataMap + heteroStrataMap
 
             val userAgent = "WikiData Crawler for Genealogy Visualiser WebApp, Contact piopio555888@gmail.com"
             repo.additionalHttpHeaders = Collections.singletonMap("User-Agent", userAgent)
@@ -345,7 +343,7 @@ class WikiDataDataSource(
                 null
             }
             val answer =
-                results?.let { parseRelationSearchResults(it, d0TypeMap, d1TypeMap) }
+                results?.let { parseRelationSearchResults(it, homoStrataMap, heteroStrataMap) }
                     ?: Triple(
                         setOf<RelationshipDTO>(),
                         mapOf<String, MutableList<String>>(),
@@ -358,8 +356,8 @@ class WikiDataDataSource(
     suspend fun findRelatedPeople(id: String, visitedItems: List<String>, depth: Int = 2) = coroutineScope {
         val visited = visitedItems.toMutableSet()
         var frontier = mapOf(id to 0)
-        val d0TypeMap = searchPropertyNameByIDs(d0TypeFilters)
-        val d1TypeMap = searchPropertyNameByIDs(d1TypeFilters)
+        val homoStrataMap = searchPropertyNameByIDs(homoStrataFilters)
+        val heteroStrataMap = searchPropertyNameByIDs(heteroStrataFilters)
         val targets = searchIndividualByIDs(frontier.mapNotNull { Fields.parseID(it.key)?.second })
         val people = mutableMapOf<ItemDTO, Int>()
         val relations = mutableSetOf<RelationshipDTO>()
@@ -371,14 +369,14 @@ class WikiDataDataSource(
             }
             visited.addAll(newPeople.map { it.id })
 
-            val (newRelations, d0NextPeople, d1NextPeople) = searchRelationByIDs(
+            val (newRelations, nextPeopleOnSameLevel, nextPeopleOnDifferentLevel) = searchRelationByIDs(
                 frontier.mapNotNull { Fields.parseID(it.key)?.second },
-                d0TypeMap, d1TypeMap
+                homoStrataMap, heteroStrataMap
             )
 
-            frontier = d0NextPeople.map { it.key to it.value.minOf { value -> frontier[value]!! } }
+            frontier = nextPeopleOnSameLevel.map { it.key to it.value.minOf { value -> frontier[value]!! } }
                 .filter { !visited.contains(it.first) && it.second <= depth }
-                .toMap() + d1NextPeople.map { it.key to it.value.minOf { value -> frontier[value]!! } + 1 }
+                .toMap() + nextPeopleOnDifferentLevel.map { it.key to it.value.minOf { value -> frontier[value]!! } + 1 }
                 .filter { !visited.contains(it.first) && it.second <= depth }
             relations.addAll(newRelations.filter { visited.contains(it.item1Id) || frontier.contains(it.item1Id) })
         }
