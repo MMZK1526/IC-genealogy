@@ -15,6 +15,7 @@ import {downloadJsonFile} from './components/custom-upload/exportAsJson';
 import {MyQueue} from './MyQueue'
 import EscapeCloseable from './components/escape-closeable/EscapeCloseable';
 import './components/shared.css';
+import _ from 'lodash';
 
 // should we apply filter before or after (or in between) tree generation
 // yearFrom and yearTo passed in at start.
@@ -90,7 +91,23 @@ export function applyFamilyFilter(id, familyName, idPerson) {
 var relMap = new Map();
 
 // ^^^^^^ SEE ABOVE transformed format helper function to transfrom JSON into goJS nodeDataArray format.
-export function transform(data, yearFrom, yearTo, familyName) {
+function transformNewDoesNotWork(data, yearFrom, yearTo, familyName) {
+  const res = structuredClone(data);
+  res.targets = oldRel.targets;
+  const idItemMap = new Map();
+  for (const item of oldRel.items) {
+    idItemMap.set(item.id, item);
+  }
+  for (const item of newRel.items) {
+    if (!idItemMap.has(item.id)) {
+      idItemMap.set(item.id, item);
+    }
+  }
+  res.items = Array.from(idItemMap.values());
+  return res;
+}
+
+function transform(data, yearFrom, yearTo, familyName) {
   relMap = new Map();
 
   let target = data.targets[0]; // The root
