@@ -677,6 +677,7 @@ export class GenogramTree extends React.Component {
                           info={this.personMap.get(this.state.personInfo)}
                           onNew={this.props.onPopupNew.bind(null, this.state.personInfo)}
                           onExtend={this.props.onPopupExtend.bind(null, this.state.personInfo)}
+                          allowExtend={this.props.allowExtend}
                       >
                       </PopupInfo>
                     </div>
