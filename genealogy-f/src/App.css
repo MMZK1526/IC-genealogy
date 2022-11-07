@@ -34,12 +34,12 @@ table th {
   border: 1px solid #000000;
 }
 
-.home-button {
+/* .home-button {
   position: fixed;
   top: 20px;
   left: 50%;
   transform: translate(-50%, -50%);
-}
+} */
 
 .loading {
   justify-content: center;

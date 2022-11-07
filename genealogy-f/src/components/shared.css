@@ -7,9 +7,23 @@
     margin: 5px;
     align-self: stretch;
     /* font-family: 'Helvetica Neue', sans-serif;  */
-    font-size: 12px;
+    font-size: 14px;
     color: white;
-    background-color: rgba(0, 0, 139, 0.8);
+    background-color: rgba(0, 0, 139, 1.0);
     transition: all 0.15s;
-    /* width: 5em; */
+    width: fit-content;
+}
+
+.toolbar {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+
+    display: flex;
+    flex-direction: row;
+
+    /* background-color: rgba(255, 240, 245, 1.0); */
+    background-color: rgba(201, 220, 236, 1);
+    padding: 5px;
+    border-radius: 5px;
 }

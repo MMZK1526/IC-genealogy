@@ -16,6 +16,8 @@ import EscapeCloseable from './components/escape-closeable/EscapeCloseable';
 import './components/shared.css';
 import _ from 'lodash';
 
+import {BiHomeAlt} from "react-icons/bi"
+
 // should we apply filter before or after (or in between) tree generation
 // yearFrom and yearTo passed in at start.
 
@@ -741,6 +743,9 @@ export class GenogramTree extends React.Component {
               />
 
               <div className='toolbar'>
+                <button className='blue-button' onClick={this.props.homeClick}>
+                  <BiHomeAlt size={30}/>
+                </button>
                 <button className='blue-button' onClick={() => exportComponentAsPNG(this.componentRef)}>
                   Export as PNG
                 </button>
@@ -754,9 +759,7 @@ export class GenogramTree extends React.Component {
                 }}>
                   Show stats
                 </button>
-                <button className='blue-button' onClick={this.props.homeClick}>
-                  Home
-                </button>
+                
               </div>
               {
                 this.state.showStats &&

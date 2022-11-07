@@ -77,9 +77,6 @@ class NameForm extends React.Component {
     render() {
         return (
             <div className='App'>
-                <button onClick={this.handleHomeButtonClick} className='home-button blue-button'>
-                    Home <BiHomeAlt/>
-                </button>
                     {
                         _.isEmpty(this.state.searchJsons) &&
                         !this.state.showTree &&
@@ -122,11 +119,18 @@ class NameForm extends React.Component {
                         _.isEmpty(this.state.relationsJson) &&
                         !this.state.isLoading &&
                         !this.state.showTree &&
-                        <ResultPage
-                            state={this.state}
-                            onChange={this.handleChangeChosenId}
-                            onSubmit={this.handleDisambiguationClick}
-                        />
+                        <div>
+                            <div className="toolbar">
+                                <button onClick={this.handleHomeButtonClick} className='blue-button'>
+                                    <BiHomeAlt size={30}/>
+                                </button>
+                            </div>
+                            <ResultPage
+                                state={this.state}
+                                onChange={this.handleChangeChosenId}
+                                onSubmit={this.handleDisambiguationClick}
+                            />
+                        </div>
                     }
                     {
                         (this.state.isLoading ||
