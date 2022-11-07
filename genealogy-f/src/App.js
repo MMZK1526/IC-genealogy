@@ -77,17 +77,17 @@ class NameForm extends React.Component {
                 <button onClick={this.handleHomeButtonClick} className='home-button blue-button'>
                     Home
                 </button>
-                {
-                    _.isEmpty(this.state.searchJsons) &&
-                    !this.state.showTree &&
+                    {
+                        _.isEmpty(this.state.searchJsons) &&
+                        !this.state.showTree &&
                         <NameSearch
                             onChange={this.handleChangeInitialName}
                             onClick={this.handleSearchSubmit}
                         />
-                }
-                {
-                    this.state.showTree &&
-                         <Sidebar
+                    }
+                    {
+                        this.state.showTree &&
+                        <Sidebar
                             name={this.state.initialName}
                             nameChange={this.handleChangeInitialName}
                             yearFromChange={this.handleChangeFrom}
@@ -95,38 +95,38 @@ class NameForm extends React.Component {
                             familyChange={this.handleChangeFamily}
                             onClick={this.handleSearchSubmit}
                         />
-                }
+                    }
                 <div className='tree-box'>
                     {
                         this.state.showTree &&
-                            <GenogramTree
-                                rawJson={this.state.relationsJson}
-                                from={this.state.fromYear}
-                                to={this.state.toYear}
-                                familyName={this.state.familyName}
-                                homeClick={this.handleHomeButtonClick}
-                                editCount={this.state.editCount}
-                                onPopupNew={this.handlePopupNew}
-                                onPopupExtend={this.handlePopupExtend}
-                                allowExtend={this.state.allowExtend}
-                            />
-                            // <Adapter data={this.state.relationsJson} />
+                        <GenogramTree
+                            rawJson={this.state.relationsJson}
+                            from={this.state.fromYear}
+                            to={this.state.toYear}
+                            familyName={this.state.familyName}
+                            homeClick={this.handleHomeButtonClick}
+                            editCount={this.state.editCount}
+                            onPopupNew={this.handlePopupNew}
+                            onPopupExtend={this.handlePopupExtend}
+                            allowExtend={this.state.allowExtend}
+                        />
+                        // <Adapter data={this.state.relationsJson} />
                     }
                 </div>
-                {
-                    !_.isEmpty(this.state.searchJsons) &&
-                    _.isEmpty(this.state.relationsJson) &&
-                    !this.state.isLoading &&
-                    !this.state.showTree &&
-                            <ResultPage
-                                    state={this.state}
-                                    onChange={this.handleChangeChosenId}
-                                    onSubmit={this.handleDisambiguationClick}
-                            />
-                }
-                {
-                    (this.state.isLoading ||
-                    this.state.isBeingExtended) &&
+                    {
+                        !_.isEmpty(this.state.searchJsons) &&
+                        _.isEmpty(this.state.relationsJson) &&
+                        !this.state.isLoading &&
+                        !this.state.showTree &&
+                        <ResultPage
+                            state={this.state}
+                            onChange={this.handleChangeChosenId}
+                            onSubmit={this.handleDisambiguationClick}
+                        />
+                    }
+                    {
+                        (this.state.isLoading ||
+                            this.state.isBeingExtended) &&
                         <ClipLoader
                             className={
                                 this.state.isBeingExtended ?
@@ -140,12 +140,12 @@ class NameForm extends React.Component {
                             }}
                             size={75}
                         />
-                }
-                {
-                    _.isEmpty(this.state.relationsJson) &&
-                    !this.state.isLoading &&
-                    <CustomUpload onSubmit={this.handleCustomUpload} />
-                }
+                    }
+                    {
+                        _.isEmpty(this.state.relationsJson) &&
+                        !this.state.isLoading &&
+                        <CustomUpload onSubmit={this.handleCustomUpload}/>
+                    }
             </div>
         );
     }
