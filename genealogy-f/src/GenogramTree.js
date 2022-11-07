@@ -30,14 +30,13 @@ export function applyDateOfBirthFilter(id, dateFrom, dateTo, idPerson) {
   const target = idPerson.get(id);
   if (target === null) {return false;}
   const addProps = target.additionalProperties;
-  // can we make this generic in the future
   const father = addProps.filter(p => p.name == 'date of birth');
-  // console.log(father);
-  // console.log(father);
   // could be improved for large chain of unknown date of birth people.
   if (father[0] === null || father[0] === undefined || father[0].length == 0) {
     const r = relMap.get(id);
-    // return true;
+    if (!r) {
+      return false;
+    }
     const mother = r.mother === null || r.mother === undefined ? false : applyDateOfBirthFilter(r.mother, dateFrom, dateTo, idPerson)
     const father = r.father === null || r.father === undefined ? false : applyDateOfBirthFilter(r.father, dateFrom, dateTo, idPerson)
     // check if both parents are out of the date range, if so then assume unknown also outside, otherwise leave in.
@@ -58,34 +57,21 @@ export function applyDateOfBirthFilter(id, dateFrom, dateTo, idPerson) {
   return d1 <= d3 && d3 <= d2;
 }
 
-// comparing family on string
 export function applyFamilyFilter(id, familyName, idPerson) {
-  // console.log(familyName);
   if (familyName == '') {
     return true;
   }
   const target = idPerson.get(id);
-  if (target == null) {return false;}
-  const addProps = target.additionalProperties;
-  // can we make this generic in the future
-  const father = addProps.filter(p => p.name == 'family');
-  // console.log(father);
-  // console.log(father);
-  // could be improved for large chain of unknown date of birth people.
-  if (father[0] == null || father[0].length == 0 || father[0].value == null) {
+  if (target == null) {
     return false;
-    // const r = relMap.get(id);
-    // if (r.mother == null || r.father == null) {
-    //   return false;
-    // }
-    // const mother = applyFamilyFilter(r.mother, familyName, idPerson)
-    // const father = applyFamilyFilter(r.father, familyName, idPerson)
-    // // check if both parents are out of the date range, if so then assume unknown also outside, otherwise leave in.
-    // return mother && father;
   }
-  // console.log(father[0].value);
-  // console.log('comparing ' + d1 + 'with ' + d2 + 'and ' + d3);
-  return father.some((x) => x.value.toLowerCase().includes(familyName.toLowerCase()));
+  const addProps = target.additionalProperties;
+  // can we make this generic in the future // TODO: WE WILL
+  const family = addProps.filter(p => p.name == 'family');
+  if (family[0] == null || family[0].length == 0 || family[0].value == null) {
+    return false;
+  }
+  return family.some((x) => x.value.toLowerCase().includes(familyName.toLowerCase()));
 }
 
 // global map from id of person to their attributes, used to change opacity for filtering in the goJs diagram.
@@ -556,7 +542,7 @@ export class DiagramWrapper extends React.Component {
     return null;
   }
 
-  findhasChild(diagram, a, b) {  // A and B are node keys
+  findHasChild(diagram, a, b) {  // A and B are node keys
     const nodeA = diagram.findNodeForKey(a);
     const nodeB = diagram.findNodeForKey(b);
     if (nodeA !== null && nodeB !== null) {
@@ -593,7 +579,7 @@ export class DiagramWrapper extends React.Component {
               continue;
           }
           const link = this.findMarriage(diagram, key, wife);
-          if (link === null) {
+          if (link == null && diagram.findNodeForKey(wife)) {
             // add a label node for the marriage link
             const mlab = { gender: 'LinkLabel' };
             model.addNodeData(mlab);
@@ -606,7 +592,6 @@ export class DiagramWrapper extends React.Component {
     }
   }
 
-
   // process parent-child relationships once all marriages are known
   setupParents(diagram) {
     const model = diagram.model;
@@ -617,22 +602,16 @@ export class DiagramWrapper extends React.Component {
       const mother = data.mother;
       const father = data.father;
 
-      if (mother !== undefined && father !== undefined) {
-        // const link = this.findMarriage(diagram, mother, father);
-        // if (link === null) {
-        //   // or warn no known mother or no known father or no known marriage between them
-        //   console.log('unknown marriage: ' + mother + ' & ' + father);
-        //   continue;
-        // }
-        
-        var link = this.findhasChild(diagram, father, mother);
+      if (mother && father && diagram.findNodeForKey(father) && diagram.findNodeForKey(mother)) {        
+        var link = this.findHasChild(diagram, father, mother);
         if (link == null) {
           // add a label node for the marriage link
           const mlab = { gender: 'LinkLabel' };
           model.addNodeData(mlab);
           this.diagram.model.addLinkData({ from: father, to: mother, labelKeys: [mlab.key], category: 'hasChild' });
-          link = this.findhasChild(diagram, father, mother);
+          link = this.findHasChild(diagram, father, mother);
         }
+        
         const mdata = link.data;
         if (mdata.labelKeys === undefined || mdata.labelKeys[0] === undefined) {
           console.log("Should not happen");
