@@ -1,5 +1,4 @@
 import {FamilyTree} from './components/family-tree/FamilyTree';
-import _ from 'lodash';
 import {Sidebar} from './components/sidebar/Sidebar.js';
 import {Requests} from './requests';
 import React from 'react';
@@ -132,6 +131,11 @@ function transform(data, yearFrom, yearTo, familyName) {
       continue;
     }
 
+    // if (applyDateOfBirthFilter(key, yearFrom, yearTo, idPerson) && applyFamilyFilter(key, familyName, idPerson)) {
+    //   // continue;
+    //   console.log("here")
+    // }
+
     // split select target into their additional properties (general, not predetermined)
     // need a filter here depending on which type of tree we are using.
     var addProps = sourceItem.additionalProperties;
@@ -159,7 +163,6 @@ function transform(data, yearFrom, yearTo, familyName) {
     }
     if (relation.type === 'mother') {
         motherfuckers.mother = relation.item1Id;
-
     }
     if (relation.type === 'father') {
         motherfuckers.father = relation.item1Id;
@@ -189,10 +192,11 @@ function transform(data, yearFrom, yearTo, familyName) {
     let r = relMap.get(key);
     if (applyDateOfBirthFilter(key, yearFrom, yearTo, idPerson) && applyFamilyFilter(key, familyName, idPerson)) {
       r.opacity = r.opacity == null ? '1.0' : r.opacity;
+      relMap.set(key, r);
     } else {
       r.opacity = '0.2';
+      relMap.delete(key);
     }
-    relMap.set(key, r);
   }
 
   // add unknown nodes for unknown parent
@@ -500,6 +504,20 @@ export class DiagramWrapper extends React.Component {
           $(go.Shape, { strokeWidth: 2.5, stroke: '#5d8cc1' /* blue */}, new go.Binding('opacity', 'opacity'))
         ));
 
+        this.diagram.linkTemplateMap.add('Highlight',  // for marriage relationships
+        $(go.Link,
+          {
+            routing: go.Link.Normal,
+            curve: go.Link.Bezier,
+            curviness: 2,
+            fromSpot: go.Spot.Top,
+            toSpot: go.Spot.Top,
+            selectable: false,
+            layerName: 'Background'
+          },
+          $(go.Shape, { strokeWidth: 2.5, stroke: '#FFBF00' /* yellow */}, new go.Binding('opacity', 'opacity'))
+        ));
+
     return this.diagram;
   }
 
@@ -646,6 +664,7 @@ export class GenogramTree extends React.Component {
       this.closePopUp = this.closePopUp.bind(this);
       // need to pass the filter somewhere else.
       this.relations = transform(this.props.rawJson, this.props.from, this.props.to, this.props.familyName);
+      this.originalJson = this.props.rawJson;
       this.handleStatsClick = this.handleStatsClick.bind(this);
       this.personMap = getPersonMap(props.rawJson.items);
       this.state = {
