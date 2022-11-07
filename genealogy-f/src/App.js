@@ -49,6 +49,7 @@ class NameForm extends React.Component {
             showTree: false,
             extendId: '',
             isBeingExtended: false,
+            allowExtend: true,
         };
         this.initialState = JSON.parse(JSON.stringify(this.state));
         this.requests = new Requests();
@@ -111,6 +112,7 @@ class NameForm extends React.Component {
                                 onPopupNew={this.handlePopupNew}
                                 onPopupExtend={this.handlePopupExtend}
                                 personInfo={this.state.extendId}
+                                allowExtend={this.state.allowExtend}
                             />
                             // <Adapter data={this.state.relationsJson} />
                     }
@@ -250,7 +252,10 @@ class NameForm extends React.Component {
 
     async handlePopupExtend(id) {
         console.assert(!_.isEmpty(this.state.relationsJson));
-        await this.setStatePromise({isBeingExtended: true});
+        await this.setStatePromise({
+            isBeingExtended: true,
+            allowExtend: false,
+        });
         const oldRelationsJson = structuredClone(this.state.relationsJson);
 
         // Update state to chosen node
@@ -264,8 +269,13 @@ class NameForm extends React.Component {
         const mergedRelationsJson = this.mergeRelations(oldRelationsJson, newRelationsJson);
         await this.setRelationCalc(id, mergedRelationsJson);
         await this.hideTree();
-        await this.setStatePromise({isBeingExtended: false});
+        await this.setStatePromise({
+            isBeingExtended: false,
+        });
         await this.unhideTree();
+        await this.setStatePromise({
+            allowExtend: true,
+        });
     }
 
     async handleDisambiguationClick(event) {
