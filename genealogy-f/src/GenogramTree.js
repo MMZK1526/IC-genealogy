@@ -193,8 +193,7 @@ function transform(data, yearFrom, yearTo, familyName) {
   for (let key of relMap.keys()) {
     let r = relMap.get(key);
     if (applyDateOfBirthFilter(key, yearFrom, yearTo, idPerson) && applyFamilyFilter(key, familyName, idPerson)) {
-      r.opacity = r.opacity == null ? '1.0' : r.opacity;
-      relMap.set(key, r);
+      r.opacity = r.opacity == null ? '0.9' : r.opacity;
     } else {
       r.opacity = '0.2';
       relMap.delete(key);
@@ -338,10 +337,10 @@ export class DiagramWrapper extends React.Component {
             $(go.Adornment, 'Auto',
               { layerName: 'Grid' },  // the predefined layer that is behind everything else
               $(go.Shape, 'Circle', {fill: '#c1cee3', stroke: null }),
-              $(go.Placeholder, { margin: 2 })
+              $(go.Placeholder, { margin: 0 })
             ),
           layout:  // use a custom layout, defined below
-            $(GenogramLayout, { direction: 90, layerSpacing: 30, columnSpacing: 10 })
+            $(GenogramLayout, { direction: 90, layerSpacing: 45, columnSpacing: 10 })
         })
       this.diagram = this.state.diagram;
       // determine the color for each attribute shape
@@ -501,22 +500,20 @@ export class DiagramWrapper extends React.Component {
             selectable: false,
             layerName: 'Background'
           },
-          $(go.Shape, { strokeWidth: 2.5, stroke: '#5d8cc1' /* blue */}, new go.Binding('opacity', 'opacity'))
+          $(go.Shape, { strokeWidth: 1, stroke: '#5d8cc1' /* blue */}, new go.Binding('opacity', 'opacity'))
         ));
 
-        this.diagram.linkTemplateMap.add('Highlight',  // for marriage relationships
-        $(go.Link,
-          {
-            routing: go.Link.Normal,
-            curve: go.Link.Bezier,
-            curviness: 2,
-            fromSpot: go.Spot.Top,
-            toSpot: go.Spot.Top,
-            selectable: false,
-            layerName: 'Background'
-          },
-          $(go.Shape, { strokeWidth: 2.5, stroke: '#FFBF00' /* yellow */}, new go.Binding('opacity', 'opacity'))
-        ));
+      this.diagram.linkTemplateMap.add('hasChild',  // between parents
+      $(SemicircleLink,
+        {
+          routing: go.Link.Normal,
+          fromSpot: go.Spot.Bottom,
+          toSpot: go.Spot.Bottom,
+          selectable: false,
+          layerName: 'Background'
+        },
+        $(go.Shape, { strokeWidth: 1, stroke: '#5d8cc1' /* blue */}, new go.Binding('opacity', 'opacity'))
+      ));
 
     return this.diagram;
   }
@@ -568,7 +565,6 @@ export class DiagramWrapper extends React.Component {
       const key = data.key;
       // filtering
       let uxs = data.spouse;
-      let opacity = data.opacity;
       if (uxs !== undefined) {
         if (typeof uxs === 'string') uxs = [uxs];
         for (let j = 0; j < uxs.length; j++) {
@@ -588,7 +584,7 @@ export class DiagramWrapper extends React.Component {
             const mlab = { gender: 'LinkLabel' };
             model.addNodeData(mlab);
             // add the marriage link itself, also referring to the label node
-            const mdata = { from: key, to: wife, labelKeys: [mlab.key], category: 'Marriage' , opacity: opacity};
+            const mdata = {from: key, to: wife, labelKeys: [mlab.key], category: 'Marriage'};
             model.addLinkData(mdata);
           }
         }
@@ -1061,14 +1057,14 @@ export class GenogramTree extends React.Component {
       ty -= py;
   
       var dia = Math.sqrt((fx - tx) * (fx - tx) + (fy - ty) * (fy - ty));
-      let height = 100;
-      let radius = Math.sqrt((dia / 2) * (dia / 2) + (dia - height) * (dia - height));
-  
+      let height = 35;
+      let radius = (height * height + dia * dia / 4) / (2 * height);
+      
       return new go.Geometry()
-             .add(new go.PathFigure(fx, fy, false)
+             .add(new go.PathFigure(fx, fy + this.fromSpot === go.Spot.Bottom ? 2 : 10, false)
                   .add(new go.PathSegment(
                     go.PathSegment.SvgArc, 
-                    tx, ty, radius, radius, 0, 0, this.fromSpot === go.Spot.Bottom ? 0 : 1
+                    tx, ty + this.fromSpot === go.Spot.Bottom ? 2 : 10, radius, radius, 0, 0, (fx > tx) == (this.fromSpot === go.Spot.Bottom)
                     )));
     }
   }
