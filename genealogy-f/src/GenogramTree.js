@@ -340,7 +340,7 @@ export class DiagramWrapper extends React.Component {
               $(go.Placeholder, { margin: 0 })
             ),
           layout:  // use a custom layout, defined below
-            $(GenogramLayout, { direction: 90, layerSpacing: 45, columnSpacing: 10 })
+            $(GenogramLayout, { direction: 90, layerSpacing: 120, columnSpacing: 10 })
         })
       this.diagram = this.state.diagram;
       // determine the color for each attribute shape
@@ -512,7 +512,7 @@ export class DiagramWrapper extends React.Component {
           selectable: false,
           layerName: 'Background'
         },
-        $(go.Shape, { strokeWidth: 1, stroke: '#5d8cc1' /* blue */}, new go.Binding('opacity', 'opacity'))
+        $(go.Shape, { strokeWidth: 1, stroke: '#ff0000' /* red */}, new go.Binding('opacity', 'opacity'))
       ));
 
     return this.diagram;
@@ -551,6 +551,20 @@ export class DiagramWrapper extends React.Component {
         const link = it.value;
         // Link.data.category === 'Marriage' means it'gender a marriage relationship
         if (link.data !== null && link.data.category === 'Marriage') return link;
+      }
+    }
+    return null;
+  }
+
+  findhasChild(diagram, a, b) {  // A and B are node keys
+    const nodeA = diagram.findNodeForKey(a);
+    const nodeB = diagram.findNodeForKey(b);
+    if (nodeA !== null && nodeB !== null) {
+      const it = nodeA.findLinksBetween(nodeB);  // in either direction
+      while (it.next()) {
+        const link = it.value;
+        // Link.data.category === 'Marriage' means it'gender a marriage relationship
+        if (link.data !== null && link.data.category === 'hasChild') return link;
       }
     }
     return null;
@@ -604,15 +618,28 @@ export class DiagramWrapper extends React.Component {
       const father = data.father;
 
       if (mother !== undefined && father !== undefined) {
-        const link = this.findMarriage(diagram, mother, father);
-        if (link === null) {
-          // or warn no known mother or no known father or no known marriage between them
-          console.log('unknown marriage: ' + mother + ' & ' + father);
-          continue;
+        // const link = this.findMarriage(diagram, mother, father);
+        // if (link === null) {
+        //   // or warn no known mother or no known father or no known marriage between them
+        //   console.log('unknown marriage: ' + mother + ' & ' + father);
+        //   continue;
+        // }
+        
+        var link = this.findhasChild(diagram, father, mother);
+        if (link == null) {
+          // add a label node for the marriage link
+          const mlab = { gender: 'LinkLabel' };
+          model.addNodeData(mlab);
+          this.diagram.model.addLinkData({ from: father, to: mother, labelKeys: [mlab.key], category: 'hasChild' });
+          link = this.findhasChild(diagram, father, mother);
         }
         const mdata = link.data;
-        if (mdata.labelKeys === undefined || mdata.labelKeys[0] === undefined) continue;
+        if (mdata.labelKeys === undefined || mdata.labelKeys[0] === undefined) {
+          console.log("Should not happen");
+          continue;
+        } 
         const mlabkey = mdata.labelKeys[0];
+
         // console.log('MLAB KEY: ' + mlabkey);
         const cdata = { from: mlabkey, to: key };
         this.diagram.model.addLinkData(cdata);
@@ -1061,10 +1088,10 @@ export class GenogramTree extends React.Component {
       let radius = (height * height + dia * dia / 4) / (2 * height);
       
       return new go.Geometry()
-             .add(new go.PathFigure(fx, fy + this.fromSpot === go.Spot.Bottom ? 2 : 10, false)
+             .add(new go.PathFigure(fx, fy + (this.fromSpot === go.Spot.Bottom ? 0 : 10), false)
                   .add(new go.PathSegment(
                     go.PathSegment.SvgArc, 
-                    tx, ty + this.fromSpot === go.Spot.Bottom ? 2 : 10, radius, radius, 0, 0, (fx > tx) == (this.fromSpot === go.Spot.Bottom)
+                    tx, ty + (this.fromSpot === go.Spot.Bottom ? 0 : 10), radius, radius, 0, 0, (fx > tx) == (this.fromSpot === go.Spot.Bottom)
                     )));
     }
   }
