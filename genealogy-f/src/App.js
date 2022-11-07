@@ -85,11 +85,7 @@ class NameForm extends React.Component {
                         />
                 }
                 {
-                    (
-                        !_.isEmpty(this.state.searchJsons) ||
-                        !_.isEmpty(this.state.relationsJson)
-                    ) &&
-                    !this.state.showTree &&
+                    this.state.showTree &&
                          <Sidebar
                             name={this.state.initialName}
                             nameChange={this.handleChangeInitialName}
