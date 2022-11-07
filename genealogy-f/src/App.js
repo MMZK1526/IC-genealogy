@@ -47,7 +47,8 @@ class NameForm extends React.Component {
             isLoading: false,
             editCount: 0,
             showTree: false,
-            extendId: ''
+            extendId: '',
+            isBeingExtended: false,
         };
         this.initialState = JSON.parse(JSON.stringify(this.state));
         this.requests = new Requests();
@@ -58,7 +59,6 @@ class NameForm extends React.Component {
         this.handleChangeFrom = this.handleChangeFrom.bind(this);
         this.handleChangeTo = this.handleChangeTo.bind(this);
         this.handleChangeFamily = this.handleChangeFamily.bind(this);
-
 
         this.handleSearchSubmit = this.handleSearchSubmit.bind(this);
         this.handleDisambiguationClick = this.handleDisambiguationClick.bind(this);
@@ -127,9 +127,14 @@ class NameForm extends React.Component {
                             />
                 }
                 {
-                    this.state.isLoading
-                        && <ClipLoader
-                            className="loading"
+                    (this.state.isLoading ||
+                    this.state.isBeingExtended) &&
+                        <ClipLoader
+                            className={
+                                this.state.isBeingExtended ?
+                                    'top-spinner' :
+                                    'loading'
+                            }
                             color='#0000ff'
                             cssOverride={{
                                 display: 'block',
@@ -245,6 +250,7 @@ class NameForm extends React.Component {
 
     async handlePopupExtend(id) {
         console.assert(!_.isEmpty(this.state.relationsJson));
+        await this.setStatePromise({isBeingExtended: true});
         const oldRelationsJson = structuredClone(this.state.relationsJson);
 
         // Update state to chosen node
@@ -257,6 +263,8 @@ class NameForm extends React.Component {
         const newRelationsJson = this.state.relationsJson;
         const mergedRelationsJson = this.mergeRelations(oldRelationsJson, newRelationsJson);
         await this.setRelationCalc(id, mergedRelationsJson);
+        await this.hideTree();
+        await this.setStatePromise({isBeingExtended: false});
         await this.unhideTree();
     }
 

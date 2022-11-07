@@ -34,13 +34,27 @@ table th {
   border: 1px solid #000000;
 }
 
+.home-button {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
 .loading {
   justify-content: center;
 }
 
-.home-button {
-  position: absolute;
+.top-spinner {
+  position: fixed;
   top: 20px;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.bottom-spinner {
+  position: fixed;
+  bottom: 20px;
   left: 50%;
   transform: translate(-50%, -50%);
 }
