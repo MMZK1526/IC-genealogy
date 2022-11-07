@@ -188,7 +188,7 @@ export function transform(data, yearFrom, yearTo, familyName) {
   for (let key of relMap.keys()) {
     newOutput.push(relMap.get(key));
   }
-  console.log(newOutput);
+  // console.log(newOutput);
   return newOutput;
 
 }
@@ -280,6 +280,7 @@ export class DiagramWrapper extends React.Component {
     this.yearFrom = props.yearFrom;
     this.yearTo = props.yearTo;
     this.state = { diagram: undefined, isFirstRender: true };
+    this.personInfo = props.personInfo
     this.init();
   }
 
@@ -320,7 +321,6 @@ export class DiagramWrapper extends React.Component {
             $(GenogramLayout, { direction: 90, layerSpacing: 30, columnSpacing: 10 })
         })
       this.diagram = this.state.diagram;
-
       // determine the color for each attribute shape
       function attrFill(a) {
         switch (a) {
@@ -593,7 +593,14 @@ export class DiagramWrapper extends React.Component {
     console.log('UPDATE: ' + this.props.updateDiagram);
     if (this.state.isFirstRender || this.props.updateDiagram) {
       this.state.isFirstRender = false;
-      this.setupDiagram(this.props.nodeDataArray, this.props.nodeDataArray[0].key);
+
+      // From graph expand
+      if (this.personInfo !== '') {
+        this.setupDiagram(this.props.nodeDataArray, this.personInfo);
+      }
+      else {
+        this.setupDiagram(this.props.nodeDataArray, this.props.nodeDataArray[0].key);
+      }
     }
     return (
           <ReactDiagram
@@ -625,11 +632,11 @@ export class GenogramTree extends React.Component {
       this.handleStatsClick = this.handleStatsClick.bind(this);
       this.personMap = getPersonMap(props.rawJson.items);
       this.state = {
-        personInfo: null,
+        personInfo: props.personInfo,
         isPopped: false,
         showStats: false,
-        editCount: 0
-      }
+        editCount: 0,
+      };
       this.componentRef = React.createRef();
     }
 
@@ -667,6 +674,7 @@ export class GenogramTree extends React.Component {
         this.relations = transform(this.props.rawJson, this.props.from, this.props.to, this.props.familyName);
         updateDiagram = true;
       }
+
         return(
             <div className='tree-box'>
               {
@@ -692,6 +700,7 @@ export class GenogramTree extends React.Component {
                   yearFrom={this.props.from}
                   yearTo={this.props.to}
                   ref={this.componentRef}
+                  personInfo={this.state.personInfo} // TODO: from props directly?
               />
 
               <div className='toolbar'>

@@ -15,6 +15,8 @@ import {exportComponentAsPNG} from 'react-component-export-image';
 import {unmountComponentAtNode, findDOMNode} from 'react-dom';
 import * as util from 'util';
 
+import {BiHomeAlt} from "react-icons/bi"
+
 
 // COMMENT THIS IN FOR FULL FLOW TEST
 class App extends React.Component {
@@ -45,6 +47,7 @@ class NameForm extends React.Component {
             isLoading: false,
             editCount: 0,
             showTree: false,
+            extendId: ''
         };
         this.initialState = JSON.parse(JSON.stringify(this.state));
         this.requests = new Requests();
@@ -74,7 +77,7 @@ class NameForm extends React.Component {
         return (
             <div className='App'>
                 <button onClick={this.handleHomeButtonClick} className='home-button blue-button'>
-                    Home
+                    Home <BiHomeAlt/>
                 </button>
                 {
                     _.isEmpty(this.state.searchJsons) &&
@@ -111,6 +114,7 @@ class NameForm extends React.Component {
                                 editCount={this.state.editCount}
                                 onPopupNew={this.handlePopupNew}
                                 onPopupExtend={this.handlePopupExtend}
+                                personInfo={this.state.extendId}
                             />
                             // <Adapter data={this.state.relationsJson} />
                     }
@@ -246,6 +250,12 @@ class NameForm extends React.Component {
     async handlePopupExtend(id) {
         console.assert(!_.isEmpty(this.state.relationsJson));
         const oldRelationsJson = structuredClone(this.state.relationsJson);
+
+        // Update state to chosen node
+        this.setState ({
+            extendId: id
+        });
+
         await this.hideTree();
         await this.fetchRelations(id);
         const newRelationsJson = this.state.relationsJson;
