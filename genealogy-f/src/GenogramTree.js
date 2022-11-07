@@ -493,11 +493,9 @@ export class DiagramWrapper extends React.Component {
         );
 
       this.diagram.linkTemplateMap.add('Marriage',  // for marriage relationships
-        $(go.Link,
+        $(SemicircleLink,
           {
             routing: go.Link.Normal,
-            curve: go.Link.Bezier,
-            curviness: 2,
             fromSpot: go.Spot.Top,
             toSpot: go.Spot.Top,
             selectable: false,
@@ -1037,3 +1035,40 @@ export class GenogramTree extends React.Component {
     }
   }
   
+  class SemicircleLink extends go.Link {
+    makeGeometry() {
+      var curviness = this.computeCurviness();
+      if (curviness === 0) return super.makeGeometry();
+  
+      var fromport = this.fromPort;
+      var toport = this.toPort;
+      if (fromport === null || toport === null) return new Geometry(Geometry.Line);
+  
+      var fp = this.getPoint(0);
+      var tp = this.getPoint(this.pointsCount - 1);
+  
+      var fx = fp.x;
+      var fy = fp.y;
+      var tx = tp.x;
+      var ty = tp.y;
+  
+      var px = Math.min(fx, tx);
+      var py = Math.min(fy, ty);
+  
+      fx -= px;
+      fy -= py;
+      tx -= px;
+      ty -= py;
+  
+      var dia = Math.sqrt((fx - tx) * (fx - tx) + (fy - ty) * (fy - ty));
+      let height = 100;
+      let radius = Math.sqrt((dia / 2) * (dia / 2) + (dia - height) * (dia - height));
+  
+      return new go.Geometry()
+             .add(new go.PathFigure(fx, fy, false)
+                  .add(new go.PathSegment(
+                    go.PathSegment.SvgArc, 
+                    tx, ty, radius, radius, 0, 0, this.fromSpot === go.Spot.Bottom ? 0 : 1
+                    )));
+    }
+  }
