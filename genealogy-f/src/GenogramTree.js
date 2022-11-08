@@ -342,7 +342,7 @@ export class DiagramWrapper extends React.Component {
               $(go.Placeholder, { margin: 0 })
             ),
           layout:  // use a custom layout, defined below
-            $(GenogramLayout, { direction: 90, layerSpacing: 60, columnSpacing: 0 })
+            $(GenogramLayout, { direction: 90, layerSpacing: 50, columnSpacing: 0 })
         })
       this.diagram = this.state.diagram;
       // determine the color for each attribute shape
@@ -534,8 +534,8 @@ export class DiagramWrapper extends React.Component {
           //TODO this should be got from this.state.relationJSON from App.js
           nodeDataArray: array
         });
-    this.setupMarriages(this.diagram);
     this.setupParents(this.diagram);
+    this.setupMarriages(this.diagram);
 
     const node = this.diagram.findNodeForKey(focusId);
     if (node !== null) {
@@ -596,11 +596,15 @@ export class DiagramWrapper extends React.Component {
           }
           const link = this.findMarriage(diagram, key, wife);
           if (link == null && diagram.findNodeForKey(wife)) {
+            const hasChildLink = this.findHasChild(diagram, key, wife);
             // add a label node for the marriage link
-            const mlab = { gender: 'LinkLabel' };
-            model.addNodeData(mlab);
             // add the marriage link itself, also referring to the label node
-            const mdata = {from: key, to: wife, labelKeys: [mlab.key], category: 'Marriage'};
+            var mdata = {from: key, to: wife, category: 'Marriage'};
+            if (!hasChildLink) {
+              const mlab = { gender: 'LinkLabel' };
+              model.addNodeData(mlab);
+              mdata.labelKeys = [mlab.key];
+            }
             model.addLinkData(mdata);
           }
         }
@@ -776,22 +780,43 @@ class GenogramTree extends React.Component {
     async fetchRelations(id) {
       const relationJSON = await this.requests.relations({id: id});
       if (this.state.originalJSON == null) {
-        this.state.originalJSON = relationJSON;
+        this.state.originalJSON = JSON.parse(JSON.stringify(relationJSON));
       }
-      this.state.relationJSON = relationJSON;
+      this.fetchKinships(id, this.state.originalJSON);
+
+      // Use filter
+      const filters = this.state.filters;
+
+      const visited = new go.Set();
+      if (filters.bloodline) {
+        console.log("血胤");
+        var frontier = [id];
+
+        while (frontier.length > 0) {
+          var cur = frontier.shift();
+          var newElems = relationJSON.relations
+              .filter((r) => r.item2Id === cur && r.type !== "spouse" && !visited.contains(r.item1Id))
+              .map((r) => r.item1Id);
+          visited.addAll(newElems);
+          frontier.push(...newElems);
+        }
+      }
+
+      relationJSON.items = relationJSON.items.filter((i) => visited.contains(i.id));
+      relationJSON.relations = relationJSON.relations.filter((r) => visited.contains(r.item1Id) && visited.contains(r.item2Id))
       this.setState({
         isLoading: false,
         isUpdated: true,
+        relationJSON: relationJSON,
       });
-      this.fetchKinships(id);
     }
 
-    async fetchKinships(id) {
-      const kinshipJSON = await this.requests.relationCalc({start: id, relations: this.state.relationJSON.relations});
-      const newrelationJSON = this.integrateKinshipIntorelationJSON(kinshipJSON, this.state.relationJSON);
+    async fetchKinships(id, relationJSON) {
+      const kinshipJSON = await this.requests.relationCalc({start: id, relations: relationJSON.relations});
+      const newrelationJSON = this.integrateKinshipIntorelationJSON(kinshipJSON, relationJSON);
       this.setState({
           kinshipJSON: kinshipJSON,
-          relationJSON: newrelationJSON,
+          originalJSON: newrelationJSON,
       });
     }
 
@@ -822,11 +847,10 @@ class GenogramTree extends React.Component {
       var updateDiagram = false;
       if (this.state.isUpdated) {
         this.state.isUpdated = false;
-        this.state.editCount = this.props.editCount;
         this.relations = transform(this.state.relationJSON, this.state.from, this.state.to, this.state.family);
         updateDiagram = true;
       }
-      this.personMap = getPersonMap(this.state.relationJSON.items);
+      this.personMap = getPersonMap(this.state.originalJSON.items);
 
       return(
           <div className='tree-box'>
@@ -929,22 +953,20 @@ class GenogramTree extends React.Component {
         if (!node.isLayoutPositioned || !node.isVisible()) continue;
         if (nonmemberonly && node.containingGroup !== null) continue;
         if (node.isLinkLabel) {
-          // get marriage Link
-          const link = node.labeledLink;
-          if (node.labeledLink.data.category) {
-            const spouseA = link.fromNode;
-            const spouseB = link.toNode;
-            const vertex = net.addNode(node);
-            // now define the vertex size to be big enough to hold both spouses
-            if (horiz) {
-              vertex.height = spouseA.actualBounds.height + this.spouseSpacing + spouseB.actualBounds.height;
-              vertex.width = Math.max(spouseA.actualBounds.width, spouseB.actualBounds.width);
-              vertex.focus = new go.Point(vertex.width / 2, spouseA.actualBounds.height + this.spouseSpacing / 2);
-            } else {
-              vertex.width = spouseA.actualBounds.width + this.spouseSpacing + spouseB.actualBounds.width;
-              vertex.height = Math.max(spouseA.actualBounds.height, spouseB.actualBounds.height);
-              vertex.focus = new go.Point(spouseA.actualBounds.width + this.spouseSpacing / 2, vertex.height / 2);
-            }
+        // get Haschild Link
+        const link = node.labeledLink;
+          const spouseA = link.fromNode;
+          const spouseB = link.toNode;
+          const vertex = net.addNode(node);
+          // now define the vertex size to be big enough to hold both spouses
+          if (horiz) {
+            vertex.height = spouseA.actualBounds.height + this.spouseSpacing + spouseB.actualBounds.height;
+            vertex.width = Math.max(spouseA.actualBounds.width, spouseB.actualBounds.width);
+            vertex.focus = new go.Point(vertex.width / 2, spouseA.actualBounds.height + this.spouseSpacing / 2);
+          } else {
+            vertex.width = spouseA.actualBounds.width + this.spouseSpacing + spouseB.actualBounds.width;
+            vertex.height = Math.max(spouseA.actualBounds.height, spouseB.actualBounds.height);
+            vertex.focus = new go.Point(spouseA.actualBounds.width + this.spouseSpacing / 2, vertex.height / 2);
           }
         } else {
           // don't add a vertex for any married person!
@@ -961,6 +983,7 @@ class GenogramTree extends React.Component {
           }
         }
       }
+
       // now do all Links
       it.reset();
       while (it.next()) {
