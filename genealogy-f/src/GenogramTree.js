@@ -506,13 +506,15 @@ export class DiagramWrapper extends React.Component {
         ));
 
       this.diagram.linkTemplateMap.add('hasChild',  // between parents
-      $(SemicircleLink,
+      $(go.Link,
         {
-          routing: go.Link.Normal,
+          routing: go.Link.Orthogonal,
           fromSpot: go.Spot.Bottom,
           toSpot: go.Spot.Bottom,
           selectable: false,
-          layerName: 'Background'
+          layerName: 'Background',
+          toEndSegmentLength: 30,
+          fromEndSegmentLength: 30
         },
         $(go.Shape, { strokeWidth: 1, stroke: '#ff0000' /* red */}, new go.Binding('opacity', 'opacity'))
       ));
