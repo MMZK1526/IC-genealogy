@@ -974,7 +974,7 @@ class GenogramTree extends React.Component {
           // assume a marriage Link has a label Node
           let marriages = 0;
           node.linksConnected.each(l => {
-            if (l.isLabeledLink) marriages++;
+            if (l.category === 'hasChild') marriages++;
           });
           if (marriages === 0) {
             net.addNode(node);
@@ -1028,11 +1028,14 @@ class GenogramTree extends React.Component {
           })
         });
         marriages.each(link => {
-          // find the vertex for the marriage link (i.e. for the label node)
-          const mlab = link.labelNodes.first()
-          const v = net.findVertex(mlab);
-          if (v !== null) {
-            net.linkVertexes(dummyvert, v, null);
+          console.log(link.category);
+          if (link.category === 'hasChild') {
+            // find the vertex for the marriage link (i.e. for the label node)
+            const mlab = link.labelNodes.first()
+            const v = net.findVertex(mlab);
+            if (v !== null) {
+              net.linkVertexes(dummyvert, v, null);
+            }
           }
         });
         // done with these people, now see if there are any other multiple-married people
@@ -1045,7 +1048,7 @@ class GenogramTree extends React.Component {
       if (coll.has(node)) return;
       coll.add(node);
       node.linksConnected.each(l => {
-        if (l.isLabeledLink) {  // if it'gender a marriage link, continue with both spouses
+        if (l.category === 'hasChild') {  // if it'gender a marriage link, continue with both spouses
           this.extendCohort(coll, l.fromNode);
           this.extendCohort(coll, l.toNode);
         }
