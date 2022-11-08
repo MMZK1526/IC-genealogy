@@ -802,8 +802,8 @@ class GenogramTree extends React.Component {
         }
       }
 
-      // relationJSON.items = relationJSON.items.filter((i) => visited.contains(i.id));
-      // relationJSON.relations = relationJSON.relations.filter((r) => visited.contains(r.item1Id) && visited.contains(r.item2Id))
+      relationJSON.items = relationJSON.items.filter((i) => visited.contains(i.id));
+      relationJSON.relations = relationJSON.relations.filter((r) => visited.contains(r.item1Id) && visited.contains(r.item2Id))
       this.setState({
         isLoading: false,
         isUpdated: true,
