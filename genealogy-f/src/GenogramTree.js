@@ -625,7 +625,7 @@ export class DiagramWrapper extends React.Component {
       const mother = data.mother;
       const father = data.father;
 
-      if (mother && father && diagram.findNodeForKey(father) && diagram.findNodeForKey(mother)) {        
+      if (mother && father && diagram.findNodeForKey(father) && diagram.findNodeForKey(mother)) {    
         var link = this.findHasChild(diagram, father, mother);
         if (link == null) {
           // add a label node for the hasChild link
@@ -976,7 +976,7 @@ class GenogramTree extends React.Component {
           // assume a marriage Link has a label Node
           let marriages = 0;
           node.linksConnected.each(l => {
-            marriages++;
+            if (l.isLabeledLink) marriages++;
           });
           if (marriages === 0) {
             net.addNode(node);
