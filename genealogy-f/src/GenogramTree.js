@@ -19,6 +19,7 @@ import './components/shared.css';
 import _ from 'lodash';
 
 import {BiHomeAlt} from "react-icons/bi"
+import { FilterModel } from './filterModel';
 
 function withRouter(Component) {
   function ComponentWithRouterProp(props) {
@@ -696,6 +697,7 @@ class GenogramTree extends React.Component {
           this.isLoading = true;
         }
         this.state = {
+          isUpdated: false,
           isLoading: this.isLoading,
           originalJSON: this.rawJSON,
           relationJSON: this.rawJSON,
@@ -703,11 +705,11 @@ class GenogramTree extends React.Component {
           personInfo: null,
           isPopped: false,
           showStats: false,
-          editCount: 0,
           from: '',
           to: '',
           family: '',
-          isPopped: false
+          isPopped: false,
+          filters: new FilterModel()
         };
         this.componentRef = React.createRef();
       }
@@ -776,12 +778,20 @@ class GenogramTree extends React.Component {
       if (this.state.originalJSON == null) {
         this.state.originalJSON = relationJSON;
       }
-      const kinshipJSON = await this.requests.relationCalc({start: id, relations: relationJSON.relations});
-      const newrelationJSON = this.integrateKinshipIntorelationJSON(kinshipJSON, relationJSON);
+      this.state.relationJSON = relationJSON;
+      this.setState({
+        isLoading: false,
+        isUpdated: true,
+      });
+      this.fetchKinships(id);
+    }
+
+    async fetchKinships(id) {
+      const kinshipJSON = await this.requests.relationCalc({start: id, relations: this.state.relationJSON.relations});
+      const newrelationJSON = this.integrateKinshipIntorelationJSON(kinshipJSON, this.state.relationJSON);
       this.setState({
           kinshipJSON: kinshipJSON,
           relationJSON: newrelationJSON,
-          isLoading: false,
       });
     }
 
@@ -810,12 +820,13 @@ class GenogramTree extends React.Component {
       }
 
       var updateDiagram = false;
-      if (this.props.editCount != this.state.editCount) {
+      if (this.state.isUpdated) {
+        this.state.isUpdated = false;
         this.state.editCount = this.props.editCount;
         this.relations = transform(this.state.relationJSON, this.state.from, this.state.to, this.state.family);
-        this.personMap = getPersonMap(this.state.relationJSON.items);
         updateDiagram = true;
       }
+      this.personMap = getPersonMap(this.state.relationJSON.items);
 
       return(
           <div className='tree-box'>
