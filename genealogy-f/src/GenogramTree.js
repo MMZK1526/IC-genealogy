@@ -495,7 +495,7 @@ export class DiagramWrapper extends React.Component {
         );
 
       this.diagram.linkTemplateMap.add('Marriage',  // for marriage relationships
-        $(TriangularLink,
+        $(ArcLink,
           {
             routing: go.Link.Normal,
             fromSpot: go.Spot.Top,
@@ -507,7 +507,7 @@ export class DiagramWrapper extends React.Component {
         ));
 
       this.diagram.linkTemplateMap.add('hasChild',  // between parents
-      $(TriangularLink,
+      $(ArcLink,
         {
           routing: go.Link.Normal,
           fromSpot: go.Spot.Bottom,
@@ -1176,7 +1176,7 @@ class GenogramTree extends React.Component {
     }
   }
   
-  class TriangularLink extends go.Link {
+  class ArcLink extends go.Link {
     rotate(x, y, rad) {
       return {
         x: x * Math.cos(rad) - y * Math.sin(rad),
@@ -1290,44 +1290,4 @@ class GenogramTree extends React.Component {
       return true;
     }
   }
-
-  class SemicircleLink extends go.Link {
-    makeGeometry() {
-      var curviness = this.computeCurviness();
-      if (curviness === 0) return super.makeGeometry();
-  
-      var fromport = this.fromPort;
-      var toport = this.toPort;
-      if (fromport === null || toport === null) return new Geometry(Geometry.Line);
-  
-      var fp = this.getPoint(0);
-      var tp = this.getPoint(this.pointsCount - 1);
-  
-      var fx = fp.x;
-      var fy = fp.y;
-      var tx = tp.x;
-      var ty = tp.y;
-  
-      var px = Math.min(fx, tx);
-      var py = Math.min(fy, ty);
-  
-      fx -= px;
-      fy -= py;
-      tx -= px;
-      ty -= py;
-  
-      var dia = Math.sqrt((fx - tx) * (fx - tx) + (fy - ty) * (fy - ty));
-      let height = Math.min(30, dia / 5);
-      let radius = (height * height + dia * dia / 4) / (2 * height);
-      this.dia = dia;
-      
-      return new go.Geometry()
-             .add(new go.PathFigure(fx, fy + (this.fromSpot === go.Spot.Bottom ? 0 : 10), false)
-                  .add(new go.PathSegment(
-                    go.PathSegment.SvgArc, 
-                    tx, ty + (this.fromSpot === go.Spot.Bottom ? 0 : 10), radius, radius, 0, 0, (fx > tx) == (this.fromSpot === go.Spot.Bottom)
-                    )));
-    }
-  }
-
 export default withRouter(GenogramTree);
