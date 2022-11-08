@@ -125,6 +125,7 @@ function transform(data, yearFrom, yearTo, familyName) {
   for (let x of data.items) {
       idPerson.set(x.id, x);
   }
+
   // END TODO
 
   for (let relation of data.relations) {
@@ -192,15 +193,15 @@ function transform(data, yearFrom, yearTo, familyName) {
   var newOutput = [];
 
   // apply filters (add opacity to non-filtered)
-  for (let key of relMap.keys()) {
-    let r = relMap.get(key);
-    if (applyDateOfBirthFilter(key, yearFrom, yearTo, idPerson) && applyFamilyFilter(key, familyName, idPerson)) {
-      r.opacity = r.opacity == null ? '0.9' : r.opacity;
-    } else {
-      r.opacity = '0.2';
-      relMap.delete(key);
-    }
-  }
+  // for (let key of relMap.keys()) {
+  //   let r = relMap.get(key);
+  //   if (applyDateOfBirthFilter(key, yearFrom, yearTo, idPerson) && applyFamilyFilter(key, familyName, idPerson)) {
+  //     r.opacity = r.opacity == null ? '0.9' : r.opacity;
+  //   } else {
+  //     r.opacity = '0.2';
+  //     relMap.delete(key);
+  //   }
+  // }
 
   // add unknown nodes for unknown parent
   for (let key of relMap.keys()) {
@@ -212,7 +213,7 @@ function transform(data, yearFrom, yearTo, familyName) {
   for (let key of relMap.keys()) {
     newOutput.push(relMap.get(key));
   }
-  // console.log(newOutput);
+
   return newOutput;
 
 }
@@ -627,7 +628,7 @@ export class DiagramWrapper extends React.Component {
       if (mother && father && diagram.findNodeForKey(father) && diagram.findNodeForKey(mother)) {        
         var link = this.findHasChild(diagram, father, mother);
         if (link == null) {
-          // add a label node for the marriage link
+          // add a label node for the hasChild link
           const mlab = { gender: 'LinkLabel' };
           model.addNodeData(mlab);
           this.diagram.model.addLinkData({ from: father, to: mother, labelKeys: [mlab.key], category: 'hasChild' });
@@ -644,8 +645,7 @@ export class DiagramWrapper extends React.Component {
           continue;
         } 
         const mlabkey = mdata.labelKeys[0];
-
-        // console.log('MLAB KEY: ' + mlabkey);
+        console.log(`GOOD: ${key}`);
         const cdata = { from: mlabkey, to: key };
         this.diagram.model.addLinkData(cdata);
       }
@@ -804,8 +804,8 @@ class GenogramTree extends React.Component {
         }
       }
 
-      relationJSON.items = relationJSON.items.filter((i) => visited.contains(i.id));
-      relationJSON.relations = relationJSON.relations.filter((r) => visited.contains(r.item1Id) && visited.contains(r.item2Id))
+      // relationJSON.items = relationJSON.items.filter((i) => visited.contains(i.id));
+      // relationJSON.relations = relationJSON.relations.filter((r) => visited.contains(r.item1Id) && visited.contains(r.item2Id))
       this.setState({
         isLoading: false,
         isUpdated: true,
@@ -1030,7 +1030,6 @@ class GenogramTree extends React.Component {
           })
         });
         marriages.each(link => {
-          console.log(link.category);
           // find the vertex for the marriage link (i.e. for the label node)
           const mlab = link.labelNodes.first()
           const v = net.findVertex(mlab);
@@ -1048,8 +1047,10 @@ class GenogramTree extends React.Component {
       if (coll.has(node)) return;
       coll.add(node);
       node.linksConnected.each(l => {
-        this.extendCohort(coll, l.fromNode);
-        this.extendCohort(coll, l.toNode);
+        if (l.isLabeledLink) {  // if it'gender a marriage link, continue with both spouses
+          this.extendCohort(coll, l.fromNode);
+          this.extendCohort(coll, l.toNode);
+        }
       });
     }
 
