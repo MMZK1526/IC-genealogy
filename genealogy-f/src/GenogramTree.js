@@ -507,15 +507,15 @@ export class DiagramWrapper extends React.Component {
         ));
 
       this.diagram.linkTemplateMap.add('hasChild',  // between parents
-      $(go.Link,
+      $(TriangularLink,
         {
-          routing: go.Link.Orthogonal,
+          routing: go.Link.Normal,
           fromSpot: go.Spot.Bottom,
           toSpot: go.Spot.Bottom,
           selectable: false,
           layerName: 'Background',
-          toEndSegmentLength: 30,
-          fromEndSegmentLength: 30
+          curve: go.Link.Bezier,
+          curviness: 5
         },
         $(go.Shape, { strokeWidth: 1, stroke: '#ff0000' /* red */}, new go.Binding('opacity', 'opacity'))
       ));
@@ -1178,6 +1178,60 @@ class GenogramTree extends React.Component {
     }
   }
   
+  class TriangularLink extends go.Link {
+    rotate(x, y, rad) {
+      return {
+        x: x * Math.cos(rad) - y * Math.sin(rad),
+        y: y * Math.cos(rad) + x * Math.sin(rad)
+      };
+    }
+
+    computePoints() {
+      var fromnode = this.fromNode;
+      if (!fromnode) return false;
+      var fromport = this.fromPort;
+      var fromspot = this.computeSpot(true);
+      var tonode = this.toNode;
+      if (!tonode) return false;
+      var toport = this.toPort;
+      var tospot = this.computeSpot(false);
+      var frompoint = this.getLinkPoint(fromnode, fromport, fromspot, true, true, tonode, toport);
+      if (!frompoint.isReal()) return false;
+      var topoint = this.getLinkPoint(tonode, toport, tospot, false, true, fromnode, fromport);
+      if (!topoint.isReal()) return false;
+    
+      this.clearPoints();
+      this.addPoint(frompoint);
+
+      let fx = frompoint.x;
+      let fy = frompoint.y;
+      let tx = topoint.x;
+      let ty = topoint.y;
+      // console.log(fx + " " + fy + " " + tx + " " + ty);
+      let slopeAngle = Math.atan2(ty - fy, tx - fx);
+      let rotatedFromPoint = this.rotate(fx, fy, -slopeAngle);
+      let rotatedToPoint = this.rotate(tx, ty, -slopeAngle);
+
+      var dia = Math.sqrt((fx - tx) * (fx - tx) + (fy - ty) * (fy - ty));
+      let height = Math.min(30, dia / 5);
+
+      let X = (rotatedFromPoint.x + rotatedToPoint.x) / 2;
+      let Y = rotatedFromPoint.y + height * ((fx > tx) != (this.fromSpot === go.Spot.Bottom) ? 1 : -1);
+      let secondPoint = this.rotate(
+        X, 
+        Y,
+        slopeAngle
+        );
+      this.addPointAt(secondPoint.x, secondPoint.y);
+      this.addPoint(topoint);
+
+
+      let radius = (height * height + dia * dia / 4) / (2 * height);
+      this.updateTargetBindings();
+      return true;
+    }
+  }
+
   class SemicircleLink extends go.Link {
     makeGeometry() {
       var curviness = this.computeCurviness();
