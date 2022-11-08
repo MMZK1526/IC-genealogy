@@ -2,6 +2,7 @@ import {FamilyTree} from './components/family-tree/FamilyTree';
 import {Sidebar} from './components/sidebar/Sidebar.js';
 import {Requests} from './requests';
 import React from 'react';
+import ClipLoader from 'react-spinners/ClipLoader';
 import * as go from 'gojs';
 import {ReactDiagram} from 'gojs-react';
 import './App.css';
@@ -340,7 +341,7 @@ export class DiagramWrapper extends React.Component {
               $(go.Placeholder, { margin: 0 })
             ),
           layout:  // use a custom layout, defined below
-            $(GenogramLayout, { direction: 90, layerSpacing: 60, columnSpacing: 10 })
+            $(GenogramLayout, { direction: 90, layerSpacing: 60, columnSpacing: 0 })
         })
       this.diagram = this.state.diagram;
       // determine the color for each attribute shape
@@ -485,10 +486,10 @@ export class DiagramWrapper extends React.Component {
       this.diagram.linkTemplate =  // for parent-child relationships
         $(go.Link,
           {
-            routing: go.Link.Orthogonal, corner: 5,
+            routing: go.Link.Orthogonal, corner: 0,
             layerName: 'Background', selectable: false,
           },
-          $(go.Shape, { stroke: '#424242', strokeWidth: 2}, new go.Binding('opacity', 'opacity'))
+          $(go.Shape, { stroke: '#424242', strokeWidth: 1}, new go.Binding('opacity', 'opacity'))
         );
 
       this.diagram.linkTemplateMap.add('Marriage',  // for marriage relationships
@@ -625,6 +626,10 @@ export class DiagramWrapper extends React.Component {
           this.diagram.model.addLinkData({ from: father, to: mother, labelKeys: [mlab.key], category: 'hasChild' });
           link = this.findHasChild(diagram, father, mother);
         }
+
+        // link = this.findMarriage(diagram, father, mother);
+
+        // if (link == null) continue;
         
         const mdata = link.data;
         if (mdata.labelKeys === undefined || mdata.labelKeys[0] === undefined) {
@@ -675,7 +680,6 @@ export class DiagramWrapper extends React.Component {
 class GenogramTree extends React.Component {
     constructor(props) {
       super(props);
-      console.log(JSON.stringify(props));
       this.source = props.router.location.state ? props.router.location.state.source : null;
       if (this.source) {
         this.rawJSON = props.router.location.state.relations;
@@ -692,6 +696,7 @@ class GenogramTree extends React.Component {
           this.isLoading = true;
         }
         this.state = {
+          isLoading: this.isLoading,
           originalJSON: this.rawJSON,
           relationJSON: this.rawJSON,
           kinshipJSON: null,
@@ -750,9 +755,9 @@ class GenogramTree extends React.Component {
               value: kinshipStr,
               valueHash: null,
           };
-          if (!idItemMap.has(key)) {
-              console.log(key);
-          }
+          // if (!idItemMap.has(key)) {
+          //     console.log(key);
+          // }
           console.assert(idItemMap.has(key));
           const item = idItemMap.get(key);
           const props = item.additionalProperties;
@@ -789,7 +794,19 @@ class GenogramTree extends React.Component {
 
       if (this.state.relationJSON == null) {
         this.fetchRelations(this.source);
-        return;
+        
+        return (
+          <div><ClipLoader
+                          className={
+                            'spinner'
+                          }
+                          color='#0000ff'
+                          cssOverride={{
+                              display: 'block',
+                              margin: '0 auto',
+                          }}
+          size={75}/></div>
+        );
       }
 
       var updateDiagram = false;
@@ -866,12 +883,11 @@ class GenogramTree extends React.Component {
 
   }
 
-  // extra class not sure what i
   class GenogramLayout extends go.LayeredDigraphLayout {
     constructor() {
       super();
       this.initializeOption = go.LayeredDigraphLayout.InitDepthFirstIn;
-      this.spouseSpacing = 30;  // minimum space between spouses
+      this.spouseSpacing = 5;  // minimum space between spouses
     }
 
     makeNetwork(coll) {
@@ -893,6 +909,7 @@ class GenogramTree extends React.Component {
     add(net, coll, nonmemberonly) {
       const horiz = this.direction === 0.0 || this.direction === 180.0;
       const multiSpousePeople = new go.Set();
+      const couples = new go.Set();
       // consider all Nodes in the given collection
       const it = coll.iterator;
       while (it.next()) {
@@ -900,23 +917,23 @@ class GenogramTree extends React.Component {
         if (!(node instanceof go.Node)) continue;
         if (!node.isLayoutPositioned || !node.isVisible()) continue;
         if (nonmemberonly && node.containingGroup !== null) continue;
-        // if it'gender an unmarried Node, or if it'gender a Link Label Node, create a LayoutVertex for it
         if (node.isLinkLabel) {
           // get marriage Link
           const link = node.labeledLink;
-          const spouseA = link.fromNode;
-          const spouseB = link.toNode;
-          // create vertex representing both husband and wife
-          const vertex = net.addNode(node);
-          // now define the vertex size to be big enough to hold both spouses
-          if (horiz) {
-            vertex.height = spouseA.actualBounds.height + this.spouseSpacing + spouseB.actualBounds.height;
-            vertex.width = Math.max(spouseA.actualBounds.width, spouseB.actualBounds.width);
-            vertex.focus = new go.Point(vertex.width / 2, spouseA.actualBounds.height + this.spouseSpacing / 2);
-          } else {
-            vertex.width = spouseA.actualBounds.width + this.spouseSpacing + spouseB.actualBounds.width;
-            vertex.height = Math.max(spouseA.actualBounds.height, spouseB.actualBounds.height);
-            vertex.focus = new go.Point(spouseA.actualBounds.width + this.spouseSpacing / 2, vertex.height / 2);
+          if (node.labeledLink.data.category) {
+            const spouseA = link.fromNode;
+            const spouseB = link.toNode;
+            const vertex = net.addNode(node);
+            // now define the vertex size to be big enough to hold both spouses
+            if (horiz) {
+              vertex.height = spouseA.actualBounds.height + this.spouseSpacing + spouseB.actualBounds.height;
+              vertex.width = Math.max(spouseA.actualBounds.width, spouseB.actualBounds.width);
+              vertex.focus = new go.Point(vertex.width / 2, spouseA.actualBounds.height + this.spouseSpacing / 2);
+            } else {
+              vertex.width = spouseA.actualBounds.width + this.spouseSpacing + spouseB.actualBounds.width;
+              vertex.height = Math.max(spouseA.actualBounds.height, spouseB.actualBounds.height);
+              vertex.focus = new go.Point(spouseA.actualBounds.width + this.spouseSpacing / 2, vertex.height / 2);
+            }
           }
         } else {
           // don't add a vertex for any married person!
@@ -1151,8 +1168,9 @@ class GenogramTree extends React.Component {
       ty -= py;
   
       var dia = Math.sqrt((fx - tx) * (fx - tx) + (fy - ty) * (fy - ty));
-      let height = 35;
+      let height = Math.min(30, dia / 5);
       let radius = (height * height + dia * dia / 4) / (2 * height);
+      this.dia = dia;
       
       return new go.Geometry()
              .add(new go.PathFigure(fx, fy + (this.fromSpot === go.Spot.Bottom ? 0 : 10), false)
