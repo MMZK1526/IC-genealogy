@@ -1,24 +1,26 @@
 import _ from "lodash";
 import {Sidebar} from './components/sidebar/Sidebar.js';
 import {Requests} from './requests';
-import React, {Component} from "react";
+import {Home} from './Home';
 import './App.css';
 import './components/shared.css';
-import {NameSearch} from './components/name-search/NameSearch.js'
+import {NameSearch} from './components/name-search/NameSearch.js';
 
-import { GenogramTree } from "./GenogramTree";
+import GenogramTree from "./GenogramTree";
 import ClipLoader from 'react-spinners/ClipLoader';
 import {CustomUpload} from "./components/custom-upload/CustomUpload";
 
-import {ResultPage} from "./components/result-page/ResultPage.js"
-import {exportComponentAsPNG} from 'react-component-export-image';
-import {unmountComponentAtNode, findDOMNode} from 'react-dom';
+import ResultPage from "./components/result-page/ResultPage.js";
+import React from "react";
+import {
+    BrowserRouter as Router,
+    Routes,
+    Route,
+  } from "react-router-dom";
 import * as util from 'util';
 
 import {BiHomeAlt} from "react-icons/bi"
 
-
-// COMMENT THIS IN FOR FULL FLOW TEST
 class App extends React.Component {
     componentDidMount(){
         document.title = "Ancesta - Genealogy Project"
@@ -53,7 +55,6 @@ class NameForm extends React.Component {
         };
         this.initialState = JSON.parse(JSON.stringify(this.state));
         this.requests = new Requests();
-        // this.genogramTree = React.createRef();
 
         this.handleChangeInitialName = this.handleChangeInitialName.bind(this);
         this.handleChangeChosenId = this.handleChangeChosenId.bind(this);
@@ -75,6 +76,20 @@ class NameForm extends React.Component {
     }
 
     render() {
+        return (
+            <div className="App">
+              <Router>
+                <div className="container">
+                <Routes>
+                    <Route path="/" element={<Home requests={this.requests}/>} />
+                    <Route path="/result" element={<ResultPage requests={this.requests}/>} />
+                    <Route path="/tree" element={<GenogramTree requests={this.requests}/>} />
+                </Routes>
+                </div>
+              </Router>
+            </div>
+          );
+
         return (
             <div className='App'>
                     {
@@ -338,13 +353,6 @@ class NameForm extends React.Component {
             chosenId: id,
         });
         const relations = await this.requests.relations({id: id});
-        if (Object.values(relations)[1].length === 0) {
-            this.setStatePromise({
-                relationsJson: {},
-            });
-            alert("No relationship found!")
-            return;
-        }
         await this.setRelationCalc(
             id,
             relations,

@@ -1,54 +1,73 @@
 import './ResultPage.css'
 import { ScrollMenu, VisibilityContext  } from "react-horizontal-scrolling-menu";
 import React from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate } from "react-router-dom";
+import {BiHomeAlt} from "react-icons/bi"
 
-const getItems = () =>
-    Array(20)
-        .fill(0)
-        .map((_, ind) => ({ id: `element-${ind}` }));
-
-export function ResultPage(props) {
-    const [items, setItems] = React.useState(getItems);
-    const [selected, setSelected] = React.useState([]);
-    const [position, setPosition] = React.useState(0);
-
-    const isItemSelected = (id) => !!selected.find((el) => el === id);
-
-    const handleClick =
-        (id) =>
-        ({ getItemById, scrollToItem }) => {
-            const itemSelected = isItemSelected(id);
-
-        setSelected((currentSelected) =>
-            itemSelected
-            ? currentSelected.filter((el) => el !== id)
-            : currentSelected.concat(id)
-        );
-
-        props.onChange(id)
-    };
-
+function withRouter(Component) {
+  function ComponentWithRouterProp(props) {
+    let location = useLocation();
+    let navigate = useNavigate();
+    let params = useParams();
     return (
-        <form className='result-page' onSubmit={props.onSubmit}>
-            <div id='title'>
-                {'Are you looking for... '}
-            </div>
-            <ScrollMenu>
-                {props.state.searchJsons.map((x) => {
-                    // const desc = x.description ? " - " + x.description : ""
-                    return <Card
-                        itemId={x.id}
-                        title={x.name}
-                        key={x.id}
-                        desc={x.description}
-                        onClick={handleClick(x.id)}
-                        // selected={isItemSelected(id)}
-                    />
-                })}
-            </ScrollMenu>
-            <input className='apply-button' type="submit" value="Show tree" />
-        </form>
+      <Component
+        {...props}
+        router={{ location, navigate, params }}
+      />
     );
+  }
+
+  return ComponentWithRouterProp;
+}
+
+class ResultPage extends React.Component {
+    constructor(props) {
+      super(props);
+      this.rawJSON = props.router.location.state ? props.router.location.state.result : null;
+      this.state = {
+        showTree: false
+      };
+      this.id = null;
+    }
+
+    render() {
+      if (this.state.showTree) {
+        return (<Navigate to="/tree" replace={true} state={{source: this.id, relations: null}}/>);
+      }
+      return (
+          <form className='result-page' onSubmit={async (event) => {
+            event.preventDefault();
+            if (this.id == null) {
+              alert("Haven't selected a person!");
+              return;
+            }
+
+            this.setState({showTree: true});
+          }}>
+              <div className="toolbar">
+                <Link to={'/'} className='blue-button'>
+                    <BiHomeAlt size={30}/>
+                </Link>
+            </div>
+              <div id='title'>
+                  {'Are you looking for... '}
+              </div>
+              <ScrollMenu>
+                  {this.rawJSON && this.rawJSON.map((x) => {
+                      return <Card
+                          itemId={x.id}
+                          title={x.name}
+                          key={x.id}
+                          desc={x.description}
+                          onClick={() => this.id = x.id}
+                      />
+                  })}
+              </ScrollMenu>
+              <input className='apply-button' type="submit" value="Show tree" />
+          </form>
+      );
+    }
 }
 
 function Card({ onClick, selected, title, itemId, desc }) {
@@ -61,3 +80,5 @@ function Card({ onClick, selected, title, itemId, desc }) {
         </div>
     );
   }
+
+export default withRouter(ResultPage);

@@ -11,15 +11,29 @@ import { MdFolderShared, MdPadding } from 'react-icons/md';
 import {exportComponentAsPNG} from 'react-component-export-image';
 import {StatsPanel} from './components/stats-panel/StatsPanel';
 import {downloadJsonFile} from './components/custom-upload/exportAsJson';
-import {MyQueue} from './MyQueue'
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import EscapeCloseable from './components/escape-closeable/EscapeCloseable';
+import { Link } from "react-router-dom";
 import './components/shared.css';
 import _ from 'lodash';
 
 import {BiHomeAlt} from "react-icons/bi"
 
-// should we apply filter before or after (or in between) tree generation
-// yearFrom and yearTo passed in at start.
+function withRouter(Component) {
+  function ComponentWithRouterProp(props) {
+    let location = useLocation();
+    let navigate = useNavigate();
+    let params = useParams();
+    return (
+      <Component
+        {...props}
+        router={{ location, navigate, params }}
+      />
+    );
+  }
+
+  return ComponentWithRouterProp;
+}
 
 // comparing date using js inbuilt date
 export function applyDateOfBirthFilter(id, dateFrom, dateTo, idPerson) {
@@ -326,7 +340,7 @@ export class DiagramWrapper extends React.Component {
               $(go.Placeholder, { margin: 0 })
             ),
           layout:  // use a custom layout, defined below
-            $(GenogramLayout, { direction: 90, layerSpacing: 120, columnSpacing: 10 })
+            $(GenogramLayout, { direction: 90, layerSpacing: 60, columnSpacing: 10 })
         })
       this.diagram = this.state.diagram;
       // determine the color for each attribute shape
@@ -515,7 +529,7 @@ export class DiagramWrapper extends React.Component {
           // if a node data object is copied, copy its data.a Array
           copiesArrays: true,
           // create all of the nodes for people
-          //TODO this should be got from this.state.relationsJson from App.js
+          //TODO this should be got from this.state.relationJSON from App.js
           nodeDataArray: array
         });
     this.setupMarriages(this.diagram);
@@ -658,24 +672,40 @@ export class DiagramWrapper extends React.Component {
 // called whenever model is changed
 
 // class encapsulating the tree initialisation and rendering
-export class GenogramTree extends React.Component {
+class GenogramTree extends React.Component {
     constructor(props) {
       super(props);
-      this.handleModelChange = this.handleModelChange.bind(this);
-      this.handleDiagramEvent = this.handleDiagramEvent.bind(this);
-      this.closePopUp = this.closePopUp.bind(this);
-      // need to pass the filter somewhere else.
-      this.relations = transform(this.props.rawJson, this.props.from, this.props.to, this.props.familyName);
-      this.originalJson = this.props.rawJson;
-      this.handleStatsClick = this.handleStatsClick.bind(this);
-      this.personMap = getPersonMap(props.rawJson.items);
-      this.state = {
-        personInfo: props.personInfo,
-        isPopped: false,
-        showStats: false,
-        editCount: 0,
-      };
-      this.componentRef = React.createRef();
+      console.log(JSON.stringify(props));
+      this.source = props.router.location.state ? props.router.location.state.source : null;
+      if (this.source) {
+        this.rawJSON = props.router.location.state.relations;
+        this.handleModelChange = this.handleModelChange.bind(this);
+        this.handleDiagramEvent = this.handleDiagramEvent.bind(this);
+        this.closePopUp = this.closePopUp.bind(this);
+        this.handleStatsClick = this.handleStatsClick.bind(this);
+        this.requests = this.props.requests;
+        if (this.rawJSON) {
+          this.relations = transform(this.rawJSON, this.state.from, this.state.to, this.state.family);
+          this.personMap = getPersonMap(this.rawJSON.items);
+          this.isLoading = false;
+        } else {
+          this.isLoading = true;
+        }
+        this.state = {
+          originalJSON: this.rawJSON,
+          relationJSON: this.rawJSON,
+          kinshipJSON: null,
+          personInfo: null,
+          isPopped: false,
+          showStats: false,
+          editCount: 0,
+          from: '',
+          to: '',
+          family: '',
+          isPopped: false
+        };
+        this.componentRef = React.createRef();
+      }
     }
 
     closePopUp() {
@@ -704,71 +734,129 @@ export class GenogramTree extends React.Component {
       }));
     }
 
+    integrateKinshipIntorelationJSON(kinshipJson, relationJSON) {
+      const idItemMap = new Map();
+      for (const item of relationJSON.items) {
+          idItemMap.set(item.id, item);
+      }
+      for (const key of Object.keys(kinshipJson)) {
+          const kinshipStr = kinshipJson[key].map((arr) => {
+              arr.reverse();
+              return arr.join(' of the ');
+          }).join('; ');
+          const property = {
+              propertyId: 'PB-kinship',
+              name: 'relation to the searched person',
+              value: kinshipStr,
+              valueHash: null,
+          };
+          if (!idItemMap.has(key)) {
+              console.log(key);
+          }
+          console.assert(idItemMap.has(key));
+          const item = idItemMap.get(key);
+          const props = item.additionalProperties;
+          props.push(property);
+          item.additionalProperties = props;
+          idItemMap.set(key, item);
+      }
+      const newItems = Array.from(idItemMap.values());
+      const res = relationJSON;
+      res.items = newItems;
+      return res;
+    }
+
+    async fetchRelations(id) {
+      const relationJSON = await this.requests.relations({id: id});
+      if (this.state.originalJSON == null) {
+        this.state.originalJSON = relationJSON;
+      }
+      const kinshipJSON = await this.requests.relationCalc({start: id, relations: relationJSON.relations});
+      const newrelationJSON = this.integrateKinshipIntorelationJSON(kinshipJSON, relationJSON);
+      this.setState({
+          kinshipJSON: kinshipJSON,
+          relationJSON: newrelationJSON,
+          isLoading: false,
+      });
+    }
+
     // renders ReactDiagram
     render() {
+      if (this.source == null) {
+        alert('Invalid URL!');
+        return;
+      }
+
+      if (this.state.relationJSON == null) {
+        this.fetchRelations(this.source);
+        return;
+      }
+
       var updateDiagram = false;
       if (this.props.editCount != this.state.editCount) {
         this.state.editCount = this.props.editCount;
-        this.relations = transform(this.props.rawJson, this.props.from, this.props.to, this.props.familyName);
+        this.relations = transform(this.state.relationJSON, this.state.from, this.state.to, this.state.family);
+        this.personMap = getPersonMap(this.state.relationJSON.items);
         updateDiagram = true;
       }
 
-        return(
-            <div className='tree-box'>
-              {
-                this.state.isPopped
-                    ? <div className='popup'>
-                      <PopupInfo
-                          closePopUp={this.closePopUp}
-                          info={this.personMap.get(this.state.personInfo)}
-                          onNew={this.props.onPopupNew.bind(null, this.state.personInfo)}
-                          onExtend={this.props.onPopupExtend.bind(null, this.state.personInfo)}
-                          allowExtend={this.props.allowExtend}
-                      >
-                      </PopupInfo>
-                    </div>
-                    : ''
-              }
+      return(
+          <div className='tree-box'>
+            {
+              this.state.isPopped
+                  ? <div className='popup'>
+                    <PopupInfo
+                        closePopUp={this.closePopUp}
+                        info={this.personMap.get(this.state.personInfo)}
+                        onNew={this.fetchRelations.bind(null, this.state.personInfo)}
+                        onExtend={() => null}
+                        // onExtend={this.props.onPopupExtend.bind(null, this.state.personInfo)}
+                        allowExtend={this.props.allowExtend}
+                    >
+                    </PopupInfo>
+                  </div>
+                  : ''
+            }
 
-              <DiagramWrapper
-                  updateDiagram={updateDiagram}
-                  editCount={this.props.editCount}
-                  nodeDataArray={this.relations}
-                  onModelChange={this.handleModelChange}
-                  onDiagramEvent={this.handleDiagramEvent}
-                  yearFrom={this.props.from}
-                  yearTo={this.props.to}
-                  ref={this.componentRef}
-                  personInfo={this.state.personInfo} // TODO: from props directly?
-              />
+            <DiagramWrapper
+                updateDiagram={updateDiagram}
+                editCount={this.props.editCount}
+                nodeDataArray={this.relations}
+                onModelChange={this.handleModelChange}
+                onDiagramEvent={this.handleDiagramEvent}
+                yearFrom={this.props.from}
+                yearTo={this.props.to}
+                ref={this.componentRef}
+                personInfo={this.state.personInfo} // TODO: from props directly?
+            />
 
-              <div className='toolbar'>
-                <button className='blue-button' onClick={this.props.homeClick}>
+            <div className='toolbar'>
+                <Link to={'/'} className='blue-button'>
                   <BiHomeAlt size={30}/>
-                </button>
-                <button className='blue-button' onClick={() => exportComponentAsPNG(this.componentRef)}>
-                  Export as PNG
-                </button>
-                <button className='blue-button' onClick={() => downloadJsonFile(this.props.rawJson)}>
-                  Export as JSON
-                </button>
-                <button className='blue-button' onClick={() => {
-                  this.setState((prevState) => ({
-                    showStats: !prevState.showStats
-                  }));
-                }}>
-                  Show stats
-                </button>
-                
-              </div>
-              {
-                this.state.showStats &&
-                <EscapeCloseable className='popup'>
-                  <StatsPanel data={this.props.rawJson} onClick={this.handleStatsClick} />
-                </EscapeCloseable>
-              }
+                </Link>
+              <button className='blue-button' onClick={() => exportComponentAsPNG(this.componentRef)}>
+                Export as PNG
+              </button>
+              <button className='blue-button' onClick={() => downloadJsonFile(this.rawJSON)}>
+                Export as JSON
+              </button>
+              <button className='blue-button' onClick={() => {
+                this.setState((prevState) => ({
+                  showStats: !prevState.showStats
+                }));
+              }}>
+                Show stats
+              </button>
+              
             </div>
-        );
+            {
+              this.state.showStats &&
+              <EscapeCloseable className='popup'>
+                <StatsPanel data={this.state.relationJSON} onClick={this.handleStatsClick} />
+              </EscapeCloseable>
+            }
+          </div>
+      );
     }
     // initialises tree (in theory should only be called once, diagram should be .clear() and then data updated for re-initialisation)
     // see https://gojs.net/latest/intro/react.html
@@ -1074,3 +1162,5 @@ export class GenogramTree extends React.Component {
                     )));
     }
   }
+
+export default withRouter(GenogramTree);

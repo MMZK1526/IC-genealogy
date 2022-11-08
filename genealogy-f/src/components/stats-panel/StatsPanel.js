@@ -104,5 +104,4 @@ export class StatsPanel extends React.Component {
         console.assert(filteredList.length === 1);
         return filteredList[0].value;
     }
-
 }
