@@ -828,8 +828,6 @@ class GenogramTree extends React.Component {
         }
         var filterdJSON = { targets: this.state.originalJSON.targets };
         filterdJSON.items = this.state.originalJSON.items.filter((i) => visited.contains(i.id));
-        console.log(visited.toArray());
-        console.log(filterdJSON.items.map((i) => i.id));
         filterdJSON.relations = this.state.originalJSON.relations.filter((r) => visited.contains(r.item1Id) && visited.contains(r.item2Id))
       }
       this.setState({
@@ -882,6 +880,10 @@ class GenogramTree extends React.Component {
 
   // Handle tree extension
   async handlePopupExtend() {
+    if (this.state.isLoading) {
+      alert('Please wait for the current expansion to finish');
+      return;
+    }
       this.setState({
           isLoading: true,
           isUpdated: false,
@@ -891,8 +893,7 @@ class GenogramTree extends React.Component {
 
   componentDidMount() {
     document.addEventListener('keydown', (event) => {
-      console.log(this.state.relationJSON);
-      if (event.key === ' ' && this.state.relationJSON != null) {
+      if (event.key === ' ' && this.state && this.state.relationJSON != null) {
         event.preventDefault();
         this.setState({ showBtns: !this.state.showBtns, isUpdated: false })
       }
@@ -903,11 +904,11 @@ class GenogramTree extends React.Component {
   render() {
     if (this.source == null) {
       alert('Invalid URL!');
-      return (this.state.showBtns ?? <div className='toolbar'>
+      return <div className='toolbar'>
       <Link to={'/'} className='blue-button'>
         <BiHomeAlt size={30}/>
       </Link>
-  </div>);
+  </div>;
     }
 
     if (this.state.relationJSON == null) {
