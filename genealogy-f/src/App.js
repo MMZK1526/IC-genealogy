@@ -56,23 +56,8 @@ class NameForm extends React.Component {
         this.initialState = JSON.parse(JSON.stringify(this.state));
         this.requests = new Requests();
 
-        this.handleChangeInitialName = this.handleChangeInitialName.bind(this);
-        this.handleChangeChosenId = this.handleChangeChosenId.bind(this);
-        this.handleChangeFrom = this.handleChangeFrom.bind(this);
-        this.handleChangeTo = this.handleChangeTo.bind(this);
-        this.handleChangeFamily = this.handleChangeFamily.bind(this);
-
-        this.handleSearchSubmit = this.handleSearchSubmit.bind(this);
-        this.handleDisambiguationClick = this.handleDisambiguationClick.bind(this);
         this.handleCustomUpload = this.handleCustomUpload.bind(this);
-        this.setRelationCalc = this.setRelationCalc.bind(this);
-        this.handleHomeButtonClick = this.handleHomeButtonClick.bind(this);
-        this.fetchRelations = this.fetchRelations.bind(this);
         this.handlePopupNew = this.handlePopupNew.bind(this);
-        // this.handlePopupExtend = this.handlePopupExtend.bind(this);
-        this.hideTree = this.hideTree.bind(this);
-        this.unhideTree = this.unhideTree.bind(this);
-        this.fetchRelationsAndRender = this.fetchRelationsAndRender.bind(this);
     }
 
     render() {
@@ -90,174 +75,92 @@ class NameForm extends React.Component {
             </div>
           );
 
-        return (
-            <div className='App'>
-                    {
-                        _.isEmpty(this.state.searchJsons) &&
-                        !this.state.showTree &&
-                        <NameSearch
-                            onChange={this.handleChangeInitialName}
-                            onClick={this.handleSearchSubmit}
-                        />
-                    }
-                    {
-                        this.state.showTree &&
-                        <Sidebar
-                            name={this.state.initialName}
-                            nameChange={this.handleChangeInitialName}
-                            yearFromChange={this.handleChangeFrom}
-                            yearToChange={this.handleChangeTo}
-                            familyChange={this.handleChangeFamily}
-                            onClick={this.handleSearchSubmit}
-                        />
-                    }
-                <div className='tree-box'>
-                    {
-                        this.state.showTree &&
-                            <GenogramTree
-                                rawJson={this.state.relationsJson}
-                                from={this.state.fromYear}
-                                to={this.state.toYear}
-                                familyName={this.state.familyName}
-                                homeClick={this.handleHomeButtonClick}
-                                editCount={this.state.editCount}
-                                onPopupNew={this.handlePopupNew}
-                                onPopupExtend={this.handlePopupExtend}
-                                personInfo={this.state.extendId}
-                                allowExtend={this.state.allowExtend}
-                            />
-                            // <Adapter data={this.state.relationsJson} />
-                    }
-                </div>
-                    {
-                        !_.isEmpty(this.state.searchJsons) &&
-                        _.isEmpty(this.state.relationsJson) &&
-                        !this.state.isLoading &&
-                        !this.state.showTree &&
-                        <div>
-                            <div className="toolbar">
-                                <button onClick={this.handleHomeButtonClick} className='blue-button'>
-                                    <BiHomeAlt size={30}/>
-                                </button>
-                            </div>
-                            <ResultPage
-                                state={this.state}
-                                onChange={this.handleChangeChosenId}
-                                onSubmit={this.handleDisambiguationClick}
-                            />
-                        </div>
-                    }
-                    {
-                        (this.state.isLoading ||
-                            this.state.isBeingExtended) &&
-                        <ClipLoader
-                            className={
-                                this.state.isBeingExtended ?
-                                    'top-spinner' :
-                                    'loading'
-                            }
-                            color='#0000ff'
-                            cssOverride={{
-                                display: 'block',
-                                margin: '0 auto',
-                            }}
-                            size={75}
-                        />
-                    }
-                    {
-                        _.isEmpty(this.state.relationsJson) &&
-                        !this.state.isLoading &&
-                        <CustomUpload onSubmit={this.handleCustomUpload}/>
-                    }
-            </div>
-        );
+        // return (
+        //     <div className='App'>
+        //             {
+        //                 _.isEmpty(this.state.searchJsons) &&
+        //                 !this.state.showTree &&
+        //                 <NameSearch
+        //                     onChange={this.handleChangeInitialName}
+        //                     onClick={this.handleSearchSubmit}
+        //                 />
+        //             }
+        //             {
+        //                 this.state.showTree &&
+        //                 <Sidebar
+        //                     name={this.state.initialName}
+        //                     nameChange={this.handleChangeInitialName}
+        //                     yearFromChange={this.handleChangeFrom}
+        //                     yearToChange={this.handleChangeTo}
+        //                     familyChange={this.handleChangeFamily}
+        //                     onClick={this.handleSearchSubmit}
+        //                 />
+        //             }
+        //         <div className='tree-box'>
+        //             {
+        //                 this.state.showTree &&
+        //                     <GenogramTree
+        //                         rawJson={this.state.relationsJson}
+        //                         from={this.state.fromYear}
+        //                         to={this.state.toYear}
+        //                         familyName={this.state.familyName}
+        //                         homeClick={this.handleHomeButtonClick}
+        //                         editCount={this.state.editCount}
+        //                         onPopupNew={this.handlePopupNew}
+        //                         onPopupExtend={this.handlePopupExtend}
+        //                         personInfo={this.state.extendId}
+        //                         allowExtend={this.state.allowExtend}
+        //                     />
+        //                     // <Adapter data={this.state.relationsJson} />
+        //             }
+        //         </div>
+        //             {
+        //                 !_.isEmpty(this.state.searchJsons) &&
+        //                 _.isEmpty(this.state.relationsJson) &&
+        //                 !this.state.isLoading &&
+        //                 !this.state.showTree &&
+        //                 <div>
+        //                     <div className="toolbar">
+        //                         <button onClick={this.handleHomeButtonClick} className='blue-button'>
+        //                             <BiHomeAlt size={30}/>
+        //                         </button>
+        //                     </div>
+        //                     <ResultPage
+        //                         state={this.state}
+        //                         onChange={this.handleChangeChosenId}
+        //                         onSubmit={this.handleDisambiguationClick}
+        //                     />
+        //                 </div>
+        //             }
+        //             {
+        //                 (this.state.isLoading ||
+        //                     this.state.isBeingExtended) &&
+        //                 <ClipLoader
+        //                     className={
+        //                         this.state.isBeingExtended ?
+        //                             'top-spinner' :
+        //                             'loading'
+        //                     }
+        //                     color='#0000ff'
+        //                     cssOverride={{
+        //                         display: 'block',
+        //                         margin: '0 auto',
+        //                     }}
+        //                     size={75}
+        //                 />
+        //             }
+        //             {
+        //                 _.isEmpty(this.state.relationsJson) &&
+        //                 !this.state.isLoading &&
+        //                 <CustomUpload onSubmit={this.handleCustomUpload}/>
+        //             }
+        //     </div>
+        // );
     }
 
     setStatePromise = util.promisify(this.setState);
 
-    handleChangeInitialName(event) {
-        this.setState({initialName: event.target.value});
-    }
-
-    handleChangeChosenId(id) {
-        this.setState({chosenId: id});
-    }
-
-    handleChangeFrom(event) {
-        const val = event.target.value;
-        this.setState((previous) => ({fromYear: val, editCount: previous.editCount + 1}));
-    }
-
-    handleChangeTo(event) {
-        const val = event.target.value;
-        this.setState((previous) => ({toYear: val, editCount: previous.editCount + 1}));
-    }
-
-    handleChangeFamily(event) {
-        const val = event.target.value;
-        this.setState((previous) => ({familyName: val, editCount: previous.editCount + 1}));
-    }
-
-    async handleSearchSubmit(event) {
-        if (this.state.initialName === '') {
-            alert("Please enter a name!");
-            return;
-        }
-        event.preventDefault();
-        this.setState({
-            isLoading: true,
-        });
-        if (Object.keys(this.state.relationsJson).length !== 0) {
-            console.log("Handle Filter: "+ Object.values(this.state.relationsJson));
-            let from = this.state.fromYear;
-            let to = this.state.toYear;
-            let familyName = this.state.familyName;
-            this.setState({
-                fromYear: from,
-                toYear: to,
-                familyName: familyName
-            });
-            return;
-        }
-        await this.requests.search(this.state.initialName).then(r => {
-            let from = this.state.fromYear;
-            let to = this.state.toYear;
-            let familyName = this.state.familyName;
-
-            if (Object.values(r).length === 0) {
-                alert("Person not found!");
-                this.setState({
-                    relationsJson: {},
-                    isLoading: false,
-                });
-                return;
-            }
-
-            r = Object.values(r).filter(function (v) {
-                let birth = v.dateOfBirth;
-                if (birth === null || birth === undefined) return true;
-                if (from !== '' && to !== '') {
-                    return (parseInt(birth.substring(0, 4)) >= parseInt(from) && parseInt(birth.substring(0, 4)) <= parseInt(to))
-                } else if (from !== '') {
-                    return parseInt(birth.substring(0, 4)) >= parseInt(from);
-                } else if (to !== '') {
-                    return parseInt(birth.substring(0, 4)) <= parseInt(to);
-                }
-                return true;
-            });
-            // console.log(JSON.stringify(r));
-            this.setState({
-                searchJsons: r,
-                chosenId: r[0].id,
-                fromYear : from,
-                toYear: to,
-                familyName: familyName,
-                relationsJson: {},
-                isLoading: false,
-            });
-        });
-    }
-
+    // TODO: move to [alternative place]
     async handleCustomUpload(data) {
         const chosenId = data.targets[0].id;
         await this.hideTree();
@@ -265,90 +168,9 @@ class NameForm extends React.Component {
         await this.unhideTree();
     }
 
+    // TODO: move to GenogramTree
     async handlePopupNew(id) {
         await this.fetchRelationsAndRender(id);
-    }
-
-    async handleDisambiguationClick(event) {
-        if (this.state.chosenId === '') {
-            alert("Haven't selected a person!");
-            return;
-        }
-        event.preventDefault();
-        await this.fetchRelationsAndRender(this.state.chosenId);
-    }
-
-    async fetchRelationsAndRender(id) {
-        await this.hideTree();
-        await this.fetchRelations(id);
-        await this.unhideTree();
-    }
-
-    async hideTree() {
-        await this.setStatePromise({showTree: false});
-    }
-
-    async unhideTree() {
-        await this.setStatePromise({showTree: true});
-    }
-
-    async fetchRelations(id) {
-        await this.setStatePromise({
-            isLoading: true,
-            chosenId: id,
-        });
-        const relations = await this.requests.relations({id: id});
-        await this.setRelationCalc(
-            id,
-            relations,
-        );
-    }
-
-    async setRelationCalc(id, relationsJson) {
-        const kinshipJson = await this.requests.relationCalc(
-            {start: id, relations: relationsJson.relations});
-        const newRelationsJson = this.integrateKinshipIntoRelationsJson(kinshipJson, relationsJson);
-        await this.setStatePromise({
-            kinshipJson: kinshipJson,
-            relationsJson: newRelationsJson,
-            isLoading: false,
-        });
-    }
-
-    integrateKinshipIntoRelationsJson(kinshipJson, relationsJson) {
-        const idItemMap = new Map();
-        for (const item of relationsJson.items) {
-            idItemMap.set(item.id, item);
-        }
-        for (const key of Object.keys(kinshipJson)) {
-            const kinshipStr = kinshipJson[key].map((arr) => {
-                arr.reverse();
-                return arr.join(' of the ');
-            }).join('; ');
-            const property = {
-                propertyId: 'PB-kinship',
-                name: 'relation to the searched person',
-                value: kinshipStr,
-                valueHash: null,
-            };
-            if (!idItemMap.has(key)) {
-                console.log(key);
-            }
-            console.assert(idItemMap.has(key));
-            const item = idItemMap.get(key);
-            const props = item.additionalProperties;
-            props.push(property);
-            item.additionalProperties = props;
-            idItemMap.set(key, item);
-        }
-        const newItems = Array.from(idItemMap.values());
-        const res = relationsJson;
-        res.items = newItems;
-        return res;
-    }
-
-    handleHomeButtonClick() {
-        this.setState(this.initialState);
     }
 }
 
