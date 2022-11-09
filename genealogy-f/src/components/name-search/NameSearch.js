@@ -47,7 +47,6 @@ export class NameSearch extends React.Component {
 
   render() {
     if (this.state.result) {
-      console.log(this.state.result);
       return (<Navigate to="/result" replace={true} state={{result: this.state.result}}/>);
     }
     return (

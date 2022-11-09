@@ -725,7 +725,6 @@ class GenogramTree extends React.Component {
           from: '',
           to: '',
           family: '',
-          isPopped: false,
           filters: new FilterModel(),
           showBtns: true,
         };
@@ -832,6 +831,7 @@ class GenogramTree extends React.Component {
       this.setState({
           kinshipJSON: kinshipJSON,
           originalJSON: newrelationJSON,
+          personInfo: id
       });
     }
 
@@ -867,6 +867,7 @@ class GenogramTree extends React.Component {
     async handlePopupExtend() {
         this.setState({
             isLoading: true,
+            isUpdated: false,
         });
 
         console.assert(!_.isEmpty(this.state.originalJSON)); // Which one - original or relations?
@@ -903,25 +904,28 @@ class GenogramTree extends React.Component {
     </div>);
       }
 
-      if (this.state.relationJSON == null || this.state.isLoading) {
+      if (this.state.relationJSON == null) {
         this.fetchRelations(this.source);
         
         return (
-          <div>
-            <div className='toolbar'>
-                <Link to={'/'} className='blue-button'>
-                  <BiHomeAlt size={30}/>
-                </Link>
-            </div><div><ClipLoader
-                          className={
-                            'spinner'
-                          }
-                          color='#0000ff'
-                          cssOverride={{
-                              display: 'block',
-                              margin: '0 auto',
-                          }}
-          size={75}/></div></div>
+            <div>
+                <div className='toolbar'>
+                    <Link to={'/'} className='blue-button'>
+                    <BiHomeAlt size={30}/>
+                    </Link>
+                </div>
+                <div className='first-time-loading'>
+                    <ClipLoader
+                        className='spinner'
+                        color='#0000ff'
+                        cssOverride={{
+                            display: 'block',
+                            margin: '0 auto',
+                        }}
+                        size={75}
+                    />
+                </div>
+            </div>
         );
       }
 
@@ -981,6 +985,23 @@ class GenogramTree extends React.Component {
                 Show stats
               </button>
             </div>
+            }
+            {
+                this.state.isLoading &&
+                <div className='loading-bar'>
+                    <ClipLoader
+                        className={
+                        'spinner'
+                        }
+                        color='#0000ff'
+                        cssOverride={{
+                            display: 'block',
+                            margin: '0 auto',
+                        }}
+                        size={40}
+                    />
+                    <label>Updating tree...</label>
+                </div>
             }
             {
               this.state.showStats &&

@@ -29,3 +29,27 @@
   z-index: 0;
   /* border: 2px dashed gray; */
 }
+
+.first-time-loading {
+  display: flex;
+  align-self: center;
+  justify-content: center;
+}
+
+.loading-bar {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  background-color: beige;
+
+  padding: 20px;
+  border-radius: 5px;
+
+  font-size: 20px; 
+  font-weight: normal; 
+}
