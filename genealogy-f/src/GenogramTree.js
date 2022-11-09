@@ -727,10 +727,11 @@ class GenogramTree extends React.Component {
           personInfo: null,
           isPopped: false,
           showStats: false,
+          showFilters: false,
           from: '',
           to: '',
           family: '',
-          filters: new FilterModel(),
+          filters: new FilterModel(true),
           showBtns: true,
         };
         this.componentRef = React.createRef();
@@ -938,6 +939,7 @@ class GenogramTree extends React.Component {
 
     var updateDiagram = false;
     if (this.state.isUpdated) {
+      console.log(this.state.family);
       this.state.isUpdated = false;
       this.relations = transform(this.state.relationJSON, this.state.from, this.state.to, this.state.family);
       updateDiagram = true;
@@ -961,10 +963,33 @@ class GenogramTree extends React.Component {
                 </div>
                 : ''
           }
-
+          {
+            this.state.showFilters &&
+            <Sidebar
+              // yearFromChange={() => {}}
+              // yearToChange={() => {}}
+              familyChange={e => {
+                this.setState({
+                  family: e.target.value,
+                  isUpdated: true
+                });
+              }}
+              // bloodlineOnly={this.state.filters.bloodline ? "on" : "off"}
+              onBloodlineChange={e => {
+                this.setState({
+                  filters: new FilterModel(e.target.value !== "on"),
+                  isUpdated: true
+                });
+              }}
+            />
+          }
           {
               this.state.showBtns &&
-              <button className='show-filters-button' onClick={() => {}}>
+              <button className='show-filters-button' onClick={() => { 
+                this.setState({
+                  showFilters: !this.state.showFilters
+                });
+               }}>
                   <AiFillFilter size={50}/>                     
               </button>
           }
