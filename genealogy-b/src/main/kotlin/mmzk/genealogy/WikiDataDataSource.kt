@@ -380,7 +380,7 @@ class WikiDataDataSource(
                 .toMap() + nextPeopleOnDifferentLevel.map { it.key to it.value.minOf { value -> frontier[value]!! } + 1 }
                 .filter { !visited.contains(it.first) && it.second <= depth }
             relations.addAll(newRelations.filter {
-                (oldVisited.contains(it.item1Id) || frontier.contains(it.item1Id)) && !(visited.contains(
+                (visited.contains(it.item1Id) || frontier.contains(it.item1Id)) && !(oldVisited.contains(
                     it.item1Id
                 ) && oldVisited.contains(it.item2Id))
             })
