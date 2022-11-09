@@ -47,6 +47,5 @@ export class Requests {
                 console.error(`Error: ${error}`);
             });
     }
-
 }
 
