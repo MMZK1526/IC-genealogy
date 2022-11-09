@@ -12,8 +12,8 @@ export class Requests {
             });
     }
 
-    relations({id = 'WD-Q152308', depth = 2} = {}) {
-        const url = `${this.baseUrl}/relations_wk?id=${id}&depth=${depth}`
+    relations({id = 'WD-Q152308', depth = 2, visitedItems = ""} = {}) {
+        const url = `${this.baseUrl}/relations_wk?id=${id}&depth=${depth}&visited_items=${visitedItems}`
         return fetch(url)
             .then(response => {
                 return response.json();

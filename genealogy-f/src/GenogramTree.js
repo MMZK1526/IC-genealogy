@@ -718,6 +718,7 @@ class GenogramTree extends React.Component {
           this.isLoading = true;
         }
         this.state = {
+          root: this.source,
           isUpdated: false,
           isLoading: this.isLoading,
           originalJSON: this.rawJSON,
@@ -799,11 +800,14 @@ class GenogramTree extends React.Component {
     }
 
     async fetchRelations(id) {
-      const relationJSON = await this.requests.relations({id: id});
+      const relationJSON = await this.requests.relations({id: id,
+            visitedItems: this.state.originalJSON ? this.state.originalJSON.items.map((i) => i.id).join() : ""});
       if (this.state.originalJSON == null) {
         this.state.originalJSON = JSON.parse(JSON.stringify(relationJSON));
+      } else {
+        this.mergeRelations(this.state.originalJSON, relationJSON);
       }
-      this.fetchKinships(id, this.state.originalJSON);
+      this.fetchKinships(this.state.root, this.state.originalJSON);
 
       // Use filter
       const filters = this.state.filters;
@@ -811,25 +815,27 @@ class GenogramTree extends React.Component {
         const visited = new go.Set();
         if (filters.bloodline) {
           console.log("血胤");
-          var frontier = [id];
+          var frontier = [this.state.root];
 
           while (frontier.length > 0) {
             var cur = frontier.shift();
-            var newElems = relationJSON.relations
+            var newElems = this.state.originalJSON.relations
                 .filter((r) => r.item2Id === cur && r.type !== "spouse" && !visited.contains(r.item1Id))
                 .map((r) => r.item1Id);
             visited.addAll(newElems);
             frontier.push(...newElems);
           }
         }
-
-        relationJSON.items = relationJSON.items.filter((i) => visited.contains(i.id));
-        relationJSON.relations = relationJSON.relations.filter((r) => visited.contains(r.item1Id) && visited.contains(r.item2Id))
+        var filterdJSON = { targets: this.state.originalJSON.targets };
+        filterdJSON.items = this.state.originalJSON.items.filter((i) => visited.contains(i.id));
+        console.log(visited.toArray());
+        console.log(filterdJSON.items.map((i) => i.id));
+        filterdJSON.relations = this.state.originalJSON.relations.filter((r) => visited.contains(r.item1Id) && visited.contains(r.item2Id))
       }
       this.setState({
         isLoading: false,
         isUpdated: true,
-        relationJSON: relationJSON,
+        relationJSON: filterdJSON,
       });
     }
 
@@ -843,200 +849,189 @@ class GenogramTree extends React.Component {
       });
     }
 
-    // Merge two relational JSONs
+    // Merge two relational JSONs, modifying the old one.
     mergeRelations(oldRel, newRel) {
-      const res = {};
-      res.targets = oldRel.targets;
-      const idItemMap = new Map();
-      for (const item of oldRel.items) {
-          idItemMap.set(item.id, item);
-      }
-      const idRelMap = new Map();
-      for (const rel of oldRel.relations) {
-          idRelMap.set(`${rel.item1Id} ${rel.item2Id}`, rel);
-      }
-      for (const item of newRel.items) {
-          if (!idItemMap.has(item.id)) {
-              idItemMap.set(item.id, item);
-          }
-      }
-      for (const rel of newRel.relations) {
-          const key = `${rel.item1Id} ${rel.item2Id}`;
-          if (!idRelMap.has(key)) {
-              idRelMap.set(key, rel);
-          }
-      }
-      res.items = Array.from(idItemMap.values());
-      res.relations = Array.from(idRelMap.values());
-      return res;
+      // const res = {};
+      oldRel.items.push(...newRel.items);
+      oldRel.relations.push(...newRel.relations);
+      // res.targets = oldRel.targets;
+      // const idItemMap = new Map();
+      // for (const item of oldRel.items) {
+      //     idItemMap.set(item.id, item);
+      // }
+      // const idRelMap = new Map();
+      // for (const rel of oldRel.relations) {
+      //     idRelMap.set(`${rel.item1Id} ${rel.item2Id}`, rel);
+      // }
+      // for (const item of newRel.items) {
+      //     if (!idItemMap.has(item.id)) {
+      //         idItemMap.set(item.id, item);
+      //     }
+      // }
+      // for (const rel of newRel.relations) {
+      //     const key = `${rel.item1Id} ${rel.item2Id}`;
+      //     if (!idRelMap.has(key)) {
+      //         idRelMap.set(key, rel);
+      //     }
+      // }
+      // res.items = Array.from(idItemMap.values());
+      // res.relations = Array.from(idRelMap.values());
+      // return res;
+      return oldRel;
   }
 
-    // Handle tree extension
-    async handlePopupExtend() {
-        this.setState({
-            isLoading: true,
-            isUpdated: false,
-        });
-
-        console.assert(!_.isEmpty(this.state.originalJSON)); // Which one - original or relations?
-        const oldRelationsJson = structuredClone(this.state.originalJSON);
-
-        await this.fetchRelations(this.state.personInfo);
-        const newRelationsJson = this.state.originalJSON;
-        const mergedRelationsJson = this.mergeRelations(oldRelationsJson, newRelationsJson);
-
-        this.setState({
-            isLoading: false,
-            isUpdated: true,
-            relationJSON: mergedRelationsJson,
-        });
-    }
-
-    componentDidMount() {
-      document.addEventListener('keydown', (event) => {
-        if (event.key === ' ' && this.state.relationJSON != null) {
-          event.preventDefault();
-          this.setState({ showBtns: !this.state.showBtns })
-        }
+  // Handle tree extension
+  async handlePopupExtend() {
+      this.setState({
+          isLoading: true,
+          isUpdated: false,
       });
+      await this.fetchRelations(this.state.personInfo);
+  }
+
+  componentDidMount() {
+    document.addEventListener('keydown', (event) => {
+      console.log(this.state.relationJSON);
+      if (event.key === ' ' && this.state.relationJSON != null) {
+        event.preventDefault();
+        this.setState({ showBtns: !this.state.showBtns, isUpdated: false })
+      }
+    });
+  }
+
+  // renders ReactDiagram
+  render() {
+    if (this.source == null) {
+      alert('Invalid URL!');
+      return (this.state.showBtns ?? <div className='toolbar'>
+      <Link to={'/'} className='blue-button'>
+        <BiHomeAlt size={30}/>
+      </Link>
+  </div>);
     }
 
-    // renders ReactDiagram
-    render() {
-      if (this.source == null) {
-        alert('Invalid URL!');
-        return (this.state.showBtns ?? <div className='toolbar'>
-        <Link to={'/'} className='blue-button'>
-          <BiHomeAlt size={30}/>
-        </Link>
-    </div>);
-      }
-
-      if (this.state.relationJSON == null) {
-        this.fetchRelations(this.source);
-        
-        return (
-            <div>
-                <div className='toolbar'>
-                    <Link to={'/'} className='blue-button'>
-                    <BiHomeAlt size={30}/>
-                    </Link>
-                </div>
-                <div className='first-time-loading'>
-                    <ClipLoader
-                        className='spinner'
-                        color='#0000ff'
-                        cssOverride={{
-                            display: 'block',
-                            margin: '0 auto',
-                        }}
-                        size={75}
-                    />
-                </div>
-            </div>
-        );
-      }
-
-      var updateDiagram = false;
-      if (this.state.isUpdated) {
-        this.state.isUpdated = false;
-        this.relations = transform(this.state.relationJSON, this.state.from, this.state.to, this.state.family);
-        updateDiagram = true;
-      }
-      this.personMap = getPersonMap(this.state.originalJSON.items);
-
-      return(
-          <div className='tree-box'>
-            {
-                this.state.isPopped &&
-                <div className='popup'>
-                    <PopupInfo
-                        closePopUp={this.closePopUp}
-                        info={this.personMap.get(this.state.personInfo)}
-                        onNew={this.fetchRelations.bind(null, this.state.personInfo)}
-                        // onExtend={() => null}
-                        onExtend={this.handlePopupExtend}
-                        allowExtend={this.props.allowExtend}
-                    >
-                    </PopupInfo>
-                </div>
-            }
-
-            {
-                // this.state.showBtns &&
-                <button className='show-filters-button' onClick={() => {}}>
-                    <AiFillFilter size={50}/>                     
-                </button>
-            }
-
-            <DiagramWrapper
-                updateDiagram={updateDiagram}
-                editCount={this.props.editCount}
-                nodeDataArray={this.relations}
-                onModelChange={this.handleModelChange}
-                onDiagramEvent={this.handleDiagramEvent}
-                yearFrom={this.props.from}
-                yearTo={this.props.to}
-                ref={this.componentRef}
-                getFocusPerson={this.getFocusPerson}
-            />
-
-            {
-                this.state.showBtns &&
-                <div className='toolbar'>
-                    <Link to={'/'} className='blue-button'>
-                        <BiHomeAlt size={30}/>
-                    </Link>
-                    <button className='blue-button' onClick={() => exportComponentAsPNG(this.componentRef)}>
-                        Export as PNG
-                    </button>
-                    <button className='blue-button' onClick={() => downloadJsonFile(this.rawJSON)}>
-                        Export as JSON
-                    </button>
-                    <button className='blue-button' onClick={() => {
-                        this.setState((prevState) => ({
-                        showStats: !prevState.showStats
-                        }));
-                    }}>
-                        Show stats
-                    </button>
-                </div>
-            }
-
-            {
-                this.state.isLoading &&
-                <div className='loading-bar'>
-                    <ClipLoader
-                        className={
-                        'spinner'
-                        }
-                        color='#0000ff'
-                        cssOverride={{
-                            display: 'block',
-                            margin: '0 auto',
-                        }}
-                        size={40}
-                    />
-                    <label>Updating tree...</label>
-                </div>
-            }
-
-            {
-              this.state.showStats &&
-              <EscapeCloseable className='popup'>
-                <StatsPanel data={this.state.relationJSON} onClick={this.handleStatsClick} />
-              </EscapeCloseable>
-            }
+    if (this.state.relationJSON == null) {
+      this.fetchRelations(this.source);
+      
+      return (
+          <div>
+              <div className='toolbar'>
+                  <Link to={'/'} className='blue-button'>
+                  <BiHomeAlt size={30}/>
+                  </Link>
+              </div>
+              <div className='first-time-loading'>
+                  <ClipLoader
+                      className='spinner'
+                      color='#0000ff'
+                      cssOverride={{
+                          display: 'block',
+                          margin: '0 auto',
+                      }}
+                      size={75}
+                  />
+              </div>
           </div>
       );
     }
-    // initialises tree (in theory should only be called once, diagram should be .clear() and then data updated for re-initialisation)
-    // see https://gojs.net/latest/intro/react.html
 
-    // majority of code below is from https://gojs.net/latest/samples/genogram.html
+    var updateDiagram = false;
+    if (this.state.isUpdated) {
+      this.state.isUpdated = false;
+      this.relations = transform(this.state.relationJSON, this.state.from, this.state.to, this.state.family);
+      updateDiagram = true;
+    }
+    this.personMap = getPersonMap(this.state.originalJSON.items);
 
+    return(
+        <div className='tree-box'>
+          {
+            this.state.isPopped
+                ? <div className='popup'>
+                  <PopupInfo
+                      closePopUp={this.closePopUp}
+                      info={this.personMap.get(this.state.personInfo)}
+                      onNew={this.fetchRelations.bind(null, this.state.personInfo)}
+                      // onExtend={() => null}
+                      onExtend={this.handlePopupExtend}
+                      allowExtend={this.props.allowExtend}
+                  >
+                  </PopupInfo>
+                </div>
+                : ''
+          }
 
+          {
+              this.state.showBtns &&
+              <button className='show-filters-button' onClick={() => {}}>
+                  <AiFillFilter size={50}/>                     
+              </button>
+          }
+
+          <DiagramWrapper
+              updateDiagram={updateDiagram}
+              editCount={this.props.editCount}
+              nodeDataArray={this.relations}
+              onModelChange={this.handleModelChange}
+              onDiagramEvent={this.handleDiagramEvent}
+              yearFrom={this.props.from}
+              yearTo={this.props.to}
+              ref={this.componentRef}
+              personInfo={this.state.personInfo} // TODO: from props directly?
+          />
+          {this.state.showBtns &&
+          <div className='toolbar'>
+              <Link to={'/'} className='blue-button'>
+                <BiHomeAlt size={30}/>
+              </Link>
+            <button className='blue-button' onClick={() => exportComponentAsPNG(this.componentRef)}>
+              Export as PNG
+            </button>
+            <button className='blue-button' onClick={() => downloadJsonFile(this.rawJSON)}>
+              Export as JSON
+            </button>
+            <button className='blue-button' onClick={() => {
+              this.setState((prevState) => ({
+                showStats: !prevState.showStats
+              }));
+            }}>
+              Show stats
+            </button>
+          </div>
+          }
+          {
+              this.state.isLoading &&
+              <div className='loading-bar'>
+                  <ClipLoader
+                      className={
+                      'spinner'
+                      }
+                      color='#0000ff'
+                      cssOverride={{
+                          display: 'block',
+                          margin: '0 auto',
+                      }}
+                      size={40}
+                  />
+                  <label>Updating tree...</label>
+              </div>
+          }
+          {
+            this.state.showStats &&
+            <EscapeCloseable className='popup'>
+              <StatsPanel data={this.state.relationJSON} onClick={this.handleStatsClick} />
+            </EscapeCloseable>
+          }
+        </div>
+    );
   }
+  // initialises tree (in theory should only be called once, diagram should be .clear() and then data updated for re-initialisation)
+  // see https://gojs.net/latest/intro/react.html
+
+  // majority of code below is from https://gojs.net/latest/samples/genogram.html
+
+
+}
 
   class GenogramLayout extends go.LayeredDigraphLayout {
     constructor() {
