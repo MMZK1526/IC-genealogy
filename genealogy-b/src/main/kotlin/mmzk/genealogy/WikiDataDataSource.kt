@@ -378,7 +378,11 @@ class WikiDataDataSource(
                 .filter { !visited.contains(it.first) && it.second <= depth }
                 .toMap() + nextPeopleOnDifferentLevel.map { it.key to it.value.minOf { value -> frontier[value]!! } + 1 }
                 .filter { !visited.contains(it.first) && it.second <= depth }
-            relations.addAll(newRelations.filter { visited.contains(it.item1Id) || frontier.contains(it.item1Id) })
+            relations.addAll(newRelations.filter {
+                (visited.contains(it.item1Id) || frontier.contains(it.item1Id)) && !(visited.contains(
+                    it.item1Id
+                ) && visited.contains(it.item2Id))
+            })
         }
 
         RelationsResponse(targets, people.map { it.key }.toList(), relations.toList())
