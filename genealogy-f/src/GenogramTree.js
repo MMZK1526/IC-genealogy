@@ -704,6 +704,7 @@ class GenogramTree extends React.Component {
         this.handleDiagramEvent = this.handleDiagramEvent.bind(this);
         this.closePopUp = this.closePopUp.bind(this);
         this.handleStatsClick = this.handleStatsClick.bind(this);
+        this.handlePopupExtend = this.handlePopupExtend.bind(this);
         this.requests = this.props.requests;
         if (this.rawJSON) {
           this.relations = transform(this.rawJSON, this.state.from, this.state.to, this.state.family);
@@ -834,6 +835,14 @@ class GenogramTree extends React.Component {
       });
     }
 
+    async handlePopupExtend() {
+      console.log("handle popup extend (genogram tree)");
+      
+      let cachedRelations = this.state.originalJSON;
+      console.log(this.state.personInfo)
+      this.props.onPopupExtend(this.state.personInfo, cachedRelations)
+    }
+
     componentDidMount() {
       document.addEventListener('keydown', (event) => {
         if (event.key === ' ' && this.state.relationJSON != null) {
@@ -893,8 +902,8 @@ class GenogramTree extends React.Component {
                         closePopUp={this.closePopUp}
                         info={this.personMap.get(this.state.personInfo)}
                         onNew={this.fetchRelations.bind(null, this.state.personInfo)}
-                        onExtend={() => null}
-                        // onExtend={this.props.onPopupExtend.bind(null, this.state.personInfo)}
+                        // onExtend={() => null}
+                        onExtend={this.handlePopupExtend}
                         allowExtend={this.props.allowExtend}
                     >
                     </PopupInfo>

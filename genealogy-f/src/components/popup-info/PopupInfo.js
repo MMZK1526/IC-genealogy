@@ -14,6 +14,7 @@ function PopupInfo(props) {
 
     const onExtend = (event) => {
         props.onExtend();
+        props.closePopUp();
     };
 
     return (
@@ -25,10 +26,10 @@ function PopupInfo(props) {
                 {/* <div class="row"> */}
                 {getAdditionalProperties(props.info)}
                 {/* </div> */}
-                <button className='new-search-button blue-button' onClick={onNew} disabled={!props.allowExtend}>
+                <button className='new-search-button blue-button' onClick={onNew}>
                     Search for this person
                 </button>
-                <button className='new-search-button blue-button' onClick={onExtend} disabled={!props.allowExtend}>
+                <button className='new-search-button blue-button' onClick={onExtend}>
                     Extend search
                 </button>
             </EscapeCloseable>

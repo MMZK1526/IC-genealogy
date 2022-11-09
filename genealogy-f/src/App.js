@@ -83,7 +83,7 @@ class NameForm extends React.Component {
                 <Routes>
                     <Route path="/" element={<Home requests={this.requests}/>} />
                     <Route path="/result" element={<ResultPage requests={this.requests}/>} />
-                    <Route path="/tree" element={<GenogramTree requests={this.requests}/>} />
+                    <Route path="/tree" element={<GenogramTree requests={this.requests} onPopupExtend={this.handlePopupExtend}/>} />
                 </Routes>
                 </div>
               </Router>
@@ -269,13 +269,15 @@ class NameForm extends React.Component {
         await this.fetchRelationsAndRender(id);
     }
 
-    async handlePopupExtend(id) {
-        console.assert(!_.isEmpty(this.state.relationsJson));
+    async handlePopupExtend(id, cachedRelations) {
+        console.log("handle popup extend (app)")
+
+        console.assert(!_.isEmpty(cachedRelations));
         await this.setStatePromise({
             isBeingExtended: true,
             allowExtend: false,
         });
-        const oldRelationsJson = structuredClone(this.state.relationsJson);
+        const oldRelationsJson = structuredClone(cachedRelations);
 
         // Update state to chosen node
         this.setState ({
@@ -283,6 +285,7 @@ class NameForm extends React.Component {
         });
 
         await this.hideTree();
+        console.log(id);
         await this.fetchRelations(id);
         const newRelationsJson = this.state.relationsJson;
         const mergedRelationsJson = this.mergeRelations(oldRelationsJson, newRelationsJson);
