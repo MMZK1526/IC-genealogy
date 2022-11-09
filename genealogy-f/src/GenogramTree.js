@@ -1,6 +1,6 @@
 import {FamilyTree} from './components/family-tree/FamilyTree';
 import {Sidebar} from './components/sidebar/Sidebar.js';
-import {Requests} from './requests';
+import {Requests} from './components/requests';
 import React from 'react';
 import ClipLoader from 'react-spinners/ClipLoader';
 import * as go from 'gojs';

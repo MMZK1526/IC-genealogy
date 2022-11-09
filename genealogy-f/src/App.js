@@ -1,6 +1,6 @@
 import _ from "lodash";
 import {Sidebar} from './components/sidebar/Sidebar.js';
-import {Requests} from './requests';
+import {Requests} from './components/requests';
 import {Home} from './Home';
 import './App.css';
 import './components/shared.css';
