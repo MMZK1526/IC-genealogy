@@ -650,10 +650,6 @@ export class DiagramWrapper extends React.Component {
           this.diagram.model.addLinkData({ from: father, to: mother, labelKeys: [mlab.key], category: 'hasChild' });
           link = this.findHasChild(diagram, father, mother);
         }
-
-        // link = this.findMarriage(diagram, father, mother);
-
-        // if (link == null) continue;
         
         const mdata = link.data;
         if (mdata.labelKeys === undefined || mdata.labelKeys[0] === undefined) {
@@ -661,7 +657,6 @@ export class DiagramWrapper extends React.Component {
           continue;
         } 
         const mlabkey = mdata.labelKeys[0];
-        console.log(`GOOD: ${key}`);
         const cdata = { from: mlabkey, to: key };
         this.diagram.model.addLinkData(cdata);
       }
@@ -669,7 +664,6 @@ export class DiagramWrapper extends React.Component {
   }
 
   render() {
-    console.log('UPDATE: ' + this.props.updateDiagram);
     if (this.state.isFirstRender || this.props.updateDiagram) {
       this.state.isFirstRender = false;
 
@@ -731,7 +725,8 @@ class GenogramTree extends React.Component {
           to: '',
           family: '',
           isPopped: false,
-          filters: new FilterModel()
+          filters: new FilterModel(),
+          showBtns: true,
         };
         this.componentRef = React.createRef();
       }
@@ -804,24 +799,25 @@ class GenogramTree extends React.Component {
 
       // Use filter
       const filters = this.state.filters;
-
-      const visited = new go.Set();
       if (filters.bloodline) {
-        console.log("血胤");
-        var frontier = [id];
+        const visited = new go.Set();
+        if (filters.bloodline) {
+          console.log("血胤");
+          var frontier = [id];
 
-        while (frontier.length > 0) {
-          var cur = frontier.shift();
-          var newElems = relationJSON.relations
-              .filter((r) => r.item2Id === cur && r.type !== "spouse" && !visited.contains(r.item1Id))
-              .map((r) => r.item1Id);
-          visited.addAll(newElems);
-          frontier.push(...newElems);
+          while (frontier.length > 0) {
+            var cur = frontier.shift();
+            var newElems = relationJSON.relations
+                .filter((r) => r.item2Id === cur && r.type !== "spouse" && !visited.contains(r.item1Id))
+                .map((r) => r.item1Id);
+            visited.addAll(newElems);
+            frontier.push(...newElems);
+          }
         }
-      }
 
-      relationJSON.items = relationJSON.items.filter((i) => visited.contains(i.id));
-      relationJSON.relations = relationJSON.relations.filter((r) => visited.contains(r.item1Id) && visited.contains(r.item2Id))
+        relationJSON.items = relationJSON.items.filter((i) => visited.contains(i.id));
+        relationJSON.relations = relationJSON.relations.filter((r) => visited.contains(r.item1Id) && visited.contains(r.item2Id))
+      }
       this.setState({
         isLoading: false,
         isUpdated: true,
@@ -838,18 +834,36 @@ class GenogramTree extends React.Component {
       });
     }
 
+    componentDidMount() {
+      document.addEventListener('keydown', (event) => {
+        if (event.key === ' ' && this.state.relationJSON != null) {
+          event.preventDefault();
+          this.setState({ showBtns: !this.state.showBtns })
+        }
+      });
+    }
+
     // renders ReactDiagram
     render() {
       if (this.source == null) {
         alert('Invalid URL!');
-        return;
+        return (this.state.showBtns ?? <div className='toolbar'>
+        <Link to={'/'} className='blue-button'>
+          <BiHomeAlt size={30}/>
+        </Link>
+    </div>);
       }
 
       if (this.state.relationJSON == null) {
         this.fetchRelations(this.source);
         
         return (
-          <div><ClipLoader
+          <div>
+            <div className='toolbar'>
+                <Link to={'/'} className='blue-button'>
+                  <BiHomeAlt size={30}/>
+                </Link>
+            </div><div><ClipLoader
                           className={
                             'spinner'
                           }
@@ -858,7 +872,7 @@ class GenogramTree extends React.Component {
                               display: 'block',
                               margin: '0 auto',
                           }}
-          size={75}/></div>
+          size={75}/></div></div>
         );
       }
 
@@ -899,7 +913,7 @@ class GenogramTree extends React.Component {
                 ref={this.componentRef}
                 personInfo={this.state.personInfo} // TODO: from props directly?
             />
-
+            {this.state.showBtns &&
             <div className='toolbar'>
                 <Link to={'/'} className='blue-button'>
                   <BiHomeAlt size={30}/>
@@ -917,8 +931,8 @@ class GenogramTree extends React.Component {
               }}>
                 Show stats
               </button>
-              
             </div>
+            }
             {
               this.state.showStats &&
               <EscapeCloseable className='popup'>
