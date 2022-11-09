@@ -324,7 +324,7 @@ export class DiagramWrapper extends React.Component {
     this.yearFrom = props.yearFrom;
     this.yearTo = props.yearTo;
     this.state = { diagram: undefined, isFirstRender: true };
-    this.personInfo = props.personInfo
+    this.getFocusPerson = props.getFocusPerson;
     this.init();
   }
 
@@ -352,7 +352,8 @@ export class DiagramWrapper extends React.Component {
 
       this.state.diagram = $(go.Diagram,
         {
-          initialAutoScale: go.Diagram.Uniform,
+          initialAutoScale: go.Diagram.initialAutoScale,
+          initialContentAlignment: go.Spot.Center,
           'undoManager.isEnabled': false,
           // when a node is selected, draw a big yellow circle behind it
           nodeSelectionAdornmentTemplate:
@@ -669,8 +670,9 @@ export class DiagramWrapper extends React.Component {
       this.state.isFirstRender = false;
 
       // From graph expand
-      if (this.personInfo !== '') {
-        this.setupDiagram(this.props.nodeDataArray, this.personInfo);
+      let focusId = this.getFocusPerson();
+      if (focusId !== null) {
+        this.setupDiagram(this.props.nodeDataArray, focusId);
       }
       else {
         this.setupDiagram(this.props.nodeDataArray, this.props.nodeDataArray[0].key);
@@ -706,6 +708,7 @@ class GenogramTree extends React.Component {
         this.closePopUp = this.closePopUp.bind(this);
         this.handleStatsClick = this.handleStatsClick.bind(this);
         this.handlePopupExtend = this.handlePopupExtend.bind(this);
+        this.getFocusPerson = this.getFocusPerson.bind(this);
         this.requests = this.props.requests;
         if (this.rawJSON) {
           this.relations = transform(this.rawJSON, this.state.from, this.state.to, this.state.family);
@@ -731,6 +734,10 @@ class GenogramTree extends React.Component {
         };
         this.componentRef = React.createRef();
       }
+    }
+
+    getFocusPerson() {
+        return this.state.personInfo;
     }
 
     closePopUp() {
@@ -971,7 +978,7 @@ class GenogramTree extends React.Component {
                 yearFrom={this.props.from}
                 yearTo={this.props.to}
                 ref={this.componentRef}
-                personInfo={this.state.personInfo} // TODO: from props directly?
+                getFocusPerson={this.getFocusPerson}
             />
 
             {
