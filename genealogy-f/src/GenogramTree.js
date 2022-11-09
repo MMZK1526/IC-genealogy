@@ -978,7 +978,6 @@ class GenogramTree extends React.Component {
               yearFrom={this.props.from}
               yearTo={this.props.to}
               ref={this.componentRef}
-              ref={this.componentRef}
               getFocusPerson={this.getFocusPerson}
           />
           {this.state.showBtns &&
