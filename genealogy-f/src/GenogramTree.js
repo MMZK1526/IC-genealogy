@@ -18,7 +18,8 @@ import { Link } from "react-router-dom";
 import './components/shared.css';
 import _ from 'lodash';
 
-import {BiHomeAlt} from "react-icons/bi"
+import { BiHomeAlt } from "react-icons/bi"
+import { AiFillFilter } from "react-icons/ai"
 import { FilterModel } from './filterModel';
 
 function withRouter(Component) {
@@ -940,8 +941,8 @@ class GenogramTree extends React.Component {
       return(
           <div className='tree-box'>
             {
-              this.state.isPopped
-                  ? <div className='popup'>
+                this.state.isPopped &&
+                <div className='popup'>
                     <PopupInfo
                         closePopUp={this.closePopUp}
                         info={this.personMap.get(this.state.personInfo)}
@@ -951,8 +952,14 @@ class GenogramTree extends React.Component {
                         allowExtend={this.props.allowExtend}
                     >
                     </PopupInfo>
-                  </div>
-                  : ''
+                </div>
+            }
+
+            {
+                // this.state.showBtns &&
+                <button className='show-filters-button' onClick={() => {}}>
+                    <AiFillFilter size={50}/>                     
+                </button>
             }
 
             <DiagramWrapper
@@ -966,26 +973,29 @@ class GenogramTree extends React.Component {
                 ref={this.componentRef}
                 personInfo={this.state.personInfo} // TODO: from props directly?
             />
-            {this.state.showBtns &&
-            <div className='toolbar'>
-                <Link to={'/'} className='blue-button'>
-                  <BiHomeAlt size={30}/>
-                </Link>
-              <button className='blue-button' onClick={() => exportComponentAsPNG(this.componentRef)}>
-                Export as PNG
-              </button>
-              <button className='blue-button' onClick={() => downloadJsonFile(this.rawJSON)}>
-                Export as JSON
-              </button>
-              <button className='blue-button' onClick={() => {
-                this.setState((prevState) => ({
-                  showStats: !prevState.showStats
-                }));
-              }}>
-                Show stats
-              </button>
-            </div>
+
+            {
+                this.state.showBtns &&
+                <div className='toolbar'>
+                    <Link to={'/'} className='blue-button'>
+                        <BiHomeAlt size={30}/>
+                    </Link>
+                    <button className='blue-button' onClick={() => exportComponentAsPNG(this.componentRef)}>
+                        Export as PNG
+                    </button>
+                    <button className='blue-button' onClick={() => downloadJsonFile(this.rawJSON)}>
+                        Export as JSON
+                    </button>
+                    <button className='blue-button' onClick={() => {
+                        this.setState((prevState) => ({
+                        showStats: !prevState.showStats
+                        }));
+                    }}>
+                        Show stats
+                    </button>
+                </div>
             }
+
             {
                 this.state.isLoading &&
                 <div className='loading-bar'>
@@ -1003,6 +1013,7 @@ class GenogramTree extends React.Component {
                     <label>Updating tree...</label>
                 </div>
             }
+
             {
               this.state.showStats &&
               <EscapeCloseable className='popup'>
