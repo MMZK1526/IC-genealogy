@@ -69,7 +69,7 @@ class NameForm extends React.Component {
         this.handleHomeButtonClick = this.handleHomeButtonClick.bind(this);
         this.fetchRelations = this.fetchRelations.bind(this);
         this.handlePopupNew = this.handlePopupNew.bind(this);
-        this.handlePopupExtend = this.handlePopupExtend.bind(this);
+        // this.handlePopupExtend = this.handlePopupExtend.bind(this);
         this.hideTree = this.hideTree.bind(this);
         this.unhideTree = this.unhideTree.bind(this);
         this.fetchRelationsAndRender = this.fetchRelationsAndRender.bind(this);
@@ -269,38 +269,6 @@ class NameForm extends React.Component {
         await this.fetchRelationsAndRender(id);
     }
 
-    // TODO (Max) - move into GenogramTree
-    async handlePopupExtend(id, cachedRelations) {
-        console.log("handle popup extend (app)");
-
-        console.assert(!_.isEmpty(cachedRelations));
-        // await this.setStatePromise({
-        //     isBeingExtended: true,
-        //     allowExtend: false,
-        // });
-        const oldRelationsJson = structuredClone(cachedRelations);
-
-        // Update state to chosen node
-        // this.setState ({
-        //     extendId: id
-        // });
-
-        // await this.hideTree();
-        await this.fetchRelations(id);
-        const newRelationsJson = this.state.relationsJson;
-        const mergedRelationsJson = this.mergeRelations(oldRelationsJson, newRelationsJson);
-        // await this.setRelationCalc(id, mergedRelationsJson);
-        // // await this.hideTree();
-        // await this.setStatePromise({
-        //     isBeingExtended: false,
-        // });
-        // await this.unhideTree();
-        // await this.setStatePromise({
-        //     allowExtend: true,
-        // });
-        return mergedRelationsJson;
-    }
-
     async handleDisambiguationClick(event) {
         if (this.state.chosenId === '') {
             alert("Haven't selected a person!");
@@ -308,33 +276,6 @@ class NameForm extends React.Component {
         }
         event.preventDefault();
         await this.fetchRelationsAndRender(this.state.chosenId);
-    }
-
-    mergeRelations(oldRel, newRel) {
-        const res = {};
-        res.targets = oldRel.targets;
-        const idItemMap = new Map();
-        for (const item of oldRel.items) {
-            idItemMap.set(item.id, item);
-        }
-        const idRelMap = new Map();
-        for (const rel of oldRel.relations) {
-            idRelMap.set(`${rel.item1Id} ${rel.item2Id}`, rel);
-        }
-        for (const item of newRel.items) {
-            if (!idItemMap.has(item.id)) {
-                idItemMap.set(item.id, item);
-            }
-        }
-        for (const rel of newRel.relations) {
-            const key = `${rel.item1Id} ${rel.item2Id}`;
-            if (!idRelMap.has(key)) {
-                idRelMap.set(key, rel);
-            }
-        }
-        res.items = Array.from(idItemMap.values());
-        res.relations = Array.from(idRelMap.values());
-        return res;
     }
 
     async fetchRelationsAndRender(id) {

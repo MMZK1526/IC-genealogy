@@ -835,14 +835,46 @@ class GenogramTree extends React.Component {
       });
     }
 
+    // Merge two relational JSONs
+    mergeRelations(oldRel, newRel) {
+      const res = {};
+      res.targets = oldRel.targets;
+      const idItemMap = new Map();
+      for (const item of oldRel.items) {
+          idItemMap.set(item.id, item);
+      }
+      const idRelMap = new Map();
+      for (const rel of oldRel.relations) {
+          idRelMap.set(`${rel.item1Id} ${rel.item2Id}`, rel);
+      }
+      for (const item of newRel.items) {
+          if (!idItemMap.has(item.id)) {
+              idItemMap.set(item.id, item);
+          }
+      }
+      for (const rel of newRel.relations) {
+          const key = `${rel.item1Id} ${rel.item2Id}`;
+          if (!idRelMap.has(key)) {
+              idRelMap.set(key, rel);
+          }
+      }
+      res.items = Array.from(idItemMap.values());
+      res.relations = Array.from(idRelMap.values());
+      return res;
+  }
+
+    // Handle tree extension
     async handlePopupExtend() {
         this.setState({
             isLoading: true,
         });
 
-        let cachedRelations = this.state.originalJSON;
-        let mergedRelationsJson = await this.props.onPopupExtend(this.state.personInfo, cachedRelations);
-        console.log(mergedRelationsJson);
+        console.assert(!_.isEmpty(this.state.originalJSON)); // Which one - original or relations?
+        const oldRelationsJson = structuredClone(this.state.originalJSON);
+
+        await this.fetchRelations(this.state.personInfo);
+        const newRelationsJson = this.state.originalJSON;
+        const mergedRelationsJson = this.mergeRelations(oldRelationsJson, newRelationsJson);
 
         this.setState({
             isLoading: false,
@@ -1133,7 +1165,6 @@ class GenogramTree extends React.Component {
     commitNodes() {
       super.commitNodes();
       const horiz = this.direction === 0.0 || this.direction === 180.0;
-      // console.log(horiz);
       // position regular nodes
       this.network.vertexes.each(v => {
         if (v.node !== null && !v.node.isLinkLabel) {
@@ -1306,7 +1337,6 @@ class GenogramTree extends React.Component {
       let fy = frompoint.y;
       let tx = topoint.x;
       let ty = topoint.y;
-      // console.log(fx + " " + fy + " " + tx + " " + ty);
       let slopeAngle = Math.atan2(ty - fy, tx - fx);
       let rotatedFromPoint = this.rotate(fx, fy, -slopeAngle);
       let rotatedToPoint = this.rotate(tx, ty, -slopeAngle);
