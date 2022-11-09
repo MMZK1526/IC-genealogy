@@ -711,15 +711,13 @@ class GenogramTree extends React.Component {
         this.getFocusPerson = this.getFocusPerson.bind(this);
         this.requests = this.props.requests;
         if (this.rawJSON) {
-          this.relations = transform(this.rawJSON, this.state.from, this.state.to, this.state.family);
-          this.personMap = getPersonMap(this.rawJSON.items);
           this.isLoading = false;
         } else {
           this.isLoading = true;
         }
         this.state = {
           root: this.source,
-          isUpdated: false,
+          isUpdated: !this.isLoading,
           isLoading: this.isLoading,
           originalJSON: this.rawJSON,
           relationJSON: this.rawJSON,
@@ -733,6 +731,9 @@ class GenogramTree extends React.Component {
           filters: new FilterModel(),
           showBtns: true,
         };
+        if (this.rawJSON) {
+          this.fetchRelations(null);
+        }
         this.componentRef = React.createRef();
       }
     }
@@ -799,8 +800,9 @@ class GenogramTree extends React.Component {
       return res;
     }
 
+    // If id is provided, we search this id. Otherwise it is a JSON provided by the user
     async fetchRelations(id) {
-      const relationJSON = await this.requests.relations({id: id,
+      const relationJSON = id == null || id === undefined ? this.state.originalJSON : await this.requests.relations({id: id,
             visitedItems: this.state.originalJSON ? this.state.originalJSON.items.map((i) => i.id).join() : ""});
       if (this.state.originalJSON == null) {
         this.state.originalJSON = JSON.parse(JSON.stringify(relationJSON));
@@ -808,7 +810,6 @@ class GenogramTree extends React.Component {
         this.mergeRelations(this.state.originalJSON, relationJSON);
       }
       this.fetchKinships(this.state.root, this.state.originalJSON);
-
       // Use filter
       const filters = this.state.filters;
       if (filters.bloodline) {
@@ -826,15 +827,21 @@ class GenogramTree extends React.Component {
             frontier.push(...newElems);
           }
         }
-        var filterdJSON = { targets: this.state.originalJSON.targets };
-        filterdJSON.items = this.state.originalJSON.items.filter((i) => visited.contains(i.id));
-        filterdJSON.relations = this.state.originalJSON.relations.filter((r) => visited.contains(r.item1Id) && visited.contains(r.item2Id))
+        var filteredJSON = { targets: this.state.originalJSON.targets };
+        filteredJSON.items = this.state.originalJSON.items.filter((i) => visited.contains(i.id));
+        filteredJSON.relations = this.state.originalJSON.relations.filter((r) => visited.contains(r.item1Id) && visited.contains(r.item2Id))
       }
-      this.setState({
-        isLoading: false,
-        isUpdated: true,
-        relationJSON: filterdJSON,
-      });
+      if (id == null || id === undefined) {
+        this.state.isLoading = false;
+        this.state.isUpdated = true;
+        this.state.relationJSON = filteredJSON;
+      } else {
+        this.setState({
+          isLoading: false,
+          isUpdated: true,
+          relationJSON: filteredJSON,
+        });
+      }
     }
 
     async fetchKinships(id, relationJSON) {
@@ -988,7 +995,7 @@ class GenogramTree extends React.Component {
             <button className='blue-button' onClick={() => exportComponentAsPNG(this.componentRef)}>
               Export as PNG
             </button>
-            <button className='blue-button' onClick={() => downloadJsonFile(this.rawJSON)}>
+            <button className='blue-button' onClick={() => downloadJsonFile(this.state.relationJSON)}>
               Export as JSON
             </button>
             <button className='blue-button' onClick={() => {
