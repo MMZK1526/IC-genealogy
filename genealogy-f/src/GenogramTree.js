@@ -112,6 +112,24 @@ function transformNewDoesNotWork(data, yearFrom, yearTo, familyName) {
 
 function transform(data, yearFrom, yearTo, familyName) {
   relMap = new Map();
+  // if this person has empty relation, add itself into nodeDataArray
+  if (data.relations.length === 0) {
+    var out = []
+    let singlePerson = new Map();
+    const person = data.targets[0];
+    // add gender from additionalProperties
+    for (let attr of person.additionalProperties) {
+      if (attr.name === "gender") {
+        singlePerson.set("gender", attr.value);
+      }
+    }
+
+    singlePerson.set("key", person.id);
+    singlePerson.set("name", person.name);
+    singlePerson.set("spouse", []);
+    out.push(Object.fromEntries(singlePerson));
+    return out;
+  }
 
   let target = data.targets[0]; // The root
 
