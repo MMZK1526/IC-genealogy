@@ -836,11 +836,19 @@ class GenogramTree extends React.Component {
     }
 
     async handlePopupExtend() {
-      console.log("handle popup extend (genogram tree)");
-      
-      let cachedRelations = this.state.originalJSON;
-      console.log(this.state.personInfo)
-      this.props.onPopupExtend(this.state.personInfo, cachedRelations)
+        this.setState({
+            isLoading: true,
+        });
+
+        let cachedRelations = this.state.originalJSON;
+        let mergedRelationsJson = await this.props.onPopupExtend(this.state.personInfo, cachedRelations);
+        console.log(mergedRelationsJson);
+
+        this.setState({
+            isLoading: false,
+            isUpdated: true,
+            relationJSON: mergedRelationsJson,
+        });
     }
 
     componentDidMount() {
@@ -863,7 +871,7 @@ class GenogramTree extends React.Component {
     </div>);
       }
 
-      if (this.state.relationJSON == null) {
+      if (this.state.relationJSON == null || this.state.isLoading) {
         this.fetchRelations(this.source);
         
         return (

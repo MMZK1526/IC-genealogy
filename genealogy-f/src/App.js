@@ -269,35 +269,36 @@ class NameForm extends React.Component {
         await this.fetchRelationsAndRender(id);
     }
 
+    // TODO (Max) - move into GenogramTree
     async handlePopupExtend(id, cachedRelations) {
-        console.log("handle popup extend (app)")
+        console.log("handle popup extend (app)");
 
         console.assert(!_.isEmpty(cachedRelations));
-        await this.setStatePromise({
-            isBeingExtended: true,
-            allowExtend: false,
-        });
+        // await this.setStatePromise({
+        //     isBeingExtended: true,
+        //     allowExtend: false,
+        // });
         const oldRelationsJson = structuredClone(cachedRelations);
 
         // Update state to chosen node
-        this.setState ({
-            extendId: id
-        });
+        // this.setState ({
+        //     extendId: id
+        // });
 
-        await this.hideTree();
-        console.log(id);
+        // await this.hideTree();
         await this.fetchRelations(id);
         const newRelationsJson = this.state.relationsJson;
         const mergedRelationsJson = this.mergeRelations(oldRelationsJson, newRelationsJson);
-        await this.setRelationCalc(id, mergedRelationsJson);
-        await this.hideTree();
-        await this.setStatePromise({
-            isBeingExtended: false,
-        });
-        await this.unhideTree();
-        await this.setStatePromise({
-            allowExtend: true,
-        });
+        // await this.setRelationCalc(id, mergedRelationsJson);
+        // // await this.hideTree();
+        // await this.setStatePromise({
+        //     isBeingExtended: false,
+        // });
+        // await this.unhideTree();
+        // await this.setStatePromise({
+        //     allowExtend: true,
+        // });
+        return mergedRelationsJson;
     }
 
     async handleDisambiguationClick(event) {
