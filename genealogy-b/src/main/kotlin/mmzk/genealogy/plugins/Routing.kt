@@ -38,7 +38,7 @@ fun Application.configureRouting() {
 
         post("/relations_wk") {
             val depth = call.request.queryParameters["depth"]?.toIntOrNull() ?: 0
-            val visitedItems = call.receive<String>().split(",")
+            val visitedItems = call.receive<List<String>>()
             call.request.queryParameters["id"]?.let { id ->
                 val homoStrata =
                     call.request.queryParameters["homo_strata"]?.split(",") ?: listOf("WD-P26")
@@ -56,7 +56,7 @@ fun Application.configureRouting() {
 
         post("/relations_db") {
             val depth = call.request.queryParameters["depth"]?.toIntOrNull() ?: 0
-            val visitedItems = call.receive<String>().split(",")
+            val visitedItems = call.receive<List<String>>()
             call.request.queryParameters["id"]?.let { id ->
                 val homoStrata =
                     call.request.queryParameters["homo_strata"]?.split(",") ?: listOf("WD-P26")
