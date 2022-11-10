@@ -752,7 +752,7 @@ class GenogramTree extends React.Component {
           showBtns: true,
         };
         if (this.rawJSON) {
-          this.fetchRelations(null);
+          this.fetchRelations(null, 3);
         }
         this.componentRef = React.createRef();
       }
@@ -821,8 +821,8 @@ class GenogramTree extends React.Component {
     }
 
     // If id is provided, we search this id. Otherwise it is a JSON provided by the user
-    async fetchRelations(id) {
-      const relationJSON = id == null || id === undefined ? this.state.originalJSON : await this.requests.relations({id: id,
+    async fetchRelations(id, depth) {
+      const relationJSON = id == null || id === undefined ? this.state.originalJSON : await this.requests.relations({id: id, depth: depth,
             visitedItems: this.state.originalJSON ? this.state.originalJSON.items.map((i) => i.id).join() : ''});
       if (this.state.originalJSON == null) {
         this.state.originalJSON = JSON.parse(JSON.stringify(relationJSON));
@@ -922,7 +922,7 @@ class GenogramTree extends React.Component {
           isLoading: true,
           isUpdated: false,
       });
-      await this.fetchRelations(this.state.personInfo);
+      await this.fetchRelations(this.state.personInfo, 2);
   }
 
   componentDidMount() {
@@ -946,7 +946,7 @@ class GenogramTree extends React.Component {
     }
 
     if (this.state.relationJSON == null) {
-      this.fetchRelations(this.source);
+      this.fetchRelations(this.source, 3);
       
       return (
           <div>
@@ -988,7 +988,7 @@ class GenogramTree extends React.Component {
                   <PopupInfo
                       closePopUp={this.closePopUp}
                       info={this.personMap.get(this.state.personInfo)}
-                      onNew={this.fetchRelations.bind(null, this.state.personInfo)}
+                      onNew={this.fetchRelations.bind(null, this.state.personInfo, 3)}
                       // onExtend={() => null}
                       onExtend={this.handlePopupExtend}
                       allowExtend={this.props.allowExtend}
