@@ -3,6 +3,6 @@ export class FilterModel {
     this.bloodline = bloodline;
     this.distance = 1;
     this.allFamilies = new Set();
-    this.families = [];
+    this.families = new Set();
   }
 }

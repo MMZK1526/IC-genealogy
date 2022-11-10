@@ -54,7 +54,7 @@ export class StatsPanel extends React.Component {
     }
 
     listCreator(propertyGetter, text) {
-        const arr = this.props.data.items.map((item) => propertyGetter(item));
+        const arr = Object.values(this.props.data.items).map((item) => propertyGetter(item));
         const nonNullArr = arr.filter((x) => x !== null);
         const counts = new Map();
         for (const x of nonNullArr) {

@@ -65,10 +65,6 @@ export class Utils {
     }
 
     addKinshipHelper = (kinshipJson, relationsJson) => {
-        const idItemMap = new Map();
-        for (const item of relationsJson.items) {
-            idItemMap.set(item.id, item);
-        }
         for (const key of Object.keys(kinshipJson)) {
             const kinshipStr = kinshipJson[key].map((arr) => {
                 arr.reverse();
@@ -80,20 +76,18 @@ export class Utils {
                 value: kinshipStr,
                 valueHash: null,
             };
-            if (!idItemMap.has(key)) {
+            if (!relationsJson.items[key]) {
                 console.log(key);
             }
-            console.assert(idItemMap.has(key));
-            const item = idItemMap.get(key);
+
+            const item = relationsJson.items[key];
             const props = item.additionalProperties;
             props.push(property);
             item.additionalProperties = props;
-            idItemMap.set(key, item);
+            relationsJson.items[key] = item;
         }
-        const newItems = Array.from(idItemMap.values());
-        const res = relationsJson;
-        res.items = newItems;
-        return res;
+
+        return relationsJson;
     }
 
     setStatePromise = (thisRef) => {

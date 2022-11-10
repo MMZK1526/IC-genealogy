@@ -1,20 +1,34 @@
 
-import {Form} from "react-bootstrap"
-import "./Sidebar.css"
+import {Form} from 'react-bootstrap'
+import Button from 'react-bootstrap/Button';
+import './Sidebar.css'
+import Multiselect from 'multiselect-react-dropdown';
 
 export function Sidebar(props) {
   return (
     <div className='sidebar'>
       <Form>
-        <Form.Group className="form-group" controlId="family-name-filter">
+        <Multiselect
+            options={Array.from(props.filters.allFamilies).map((v) => ({name: v, id: v}))} // Options to display in the dropdown
+            selectedValues={Array.from(props.filters.families).map((v) => ({name: v, id: v}))} // Preselected value to persist in dropdown
+            onSelect={(_, i) => props.filters.families.add(i.name)} // Function will trigger on select event
+            onRemove={(_, i) => props.filters.families.delete(i.name)} // Function will trigger on remove event
+            displayValue='name' // Property name to display in the dropdown options
+        />
+        <Form.Group className='form-group' controlId='family-name-filter'>
           <Form.Label>Family Name</Form.Label>
-          <Form.Control placeholder="e.g. Windsor" type="text" onChange={props.familyChange}/>
+          <Form.Control placeholder='e.g. Windsor' type='text' onChange={props.familyChange}/>
         </Form.Group>
-        <Form.Group className="form-group" controlId="bloodline-checkbox">
-          <Form.Check title="Bloodline" label="Bloodline Only" type="checkbox" defaultChecked 
-          onChange={props.onBloodlineChange}
+        <Form.Group className='form-group' controlId='bloodline-checkbox'>
+          <Form.Check title='Bloodline' label='Bloodline Only' type='checkbox' defaultChecked 
+          onChange={(e) => {
+            props.filters.bloodline = e.target.checked;
+          }}
           />
         </Form.Group>
+        <Button onClick={() => props.onChange()}>
+          Apply
+        </Button>
       </Form>
     </div>
   );

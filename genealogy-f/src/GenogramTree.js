@@ -115,25 +115,6 @@ function transform(data, filters) {
     return out;
   }
 
-  let target = data.targets[0]; // The root
-
-  // TODO: Back-end return a map of items
-  // let idPerson = new Map();
-  // let people = data.items;
-  // people.push(target);
-  // let targetId = target.id;
-  // // set up id map for getting attributes later
-  // idPerson.set(targetId, target);
-  // for (let x of data.items) {
-  //     idPerson.set(x.id, x);
-  //     console.log(x.additionalProperties.filter((p) => p.name == 'family').map((p) => p.value));
-  //     for(let f of x.additionalProperties.filter((p) => p.name == 'family').map((p) => p.value)) {
-  //       console.log(filters);
-  //       filters.allFamilies.add(f);
-  //     }
-  // }
-  // END TODO
-  console.log(data.items['WD-Q15031']);
   for (let relation of data.relations) {
     var key = relation['item2Id'];
     var sourceItem =  data.items[key];
@@ -141,11 +122,6 @@ function transform(data, filters) {
       console.log('------- ERROR -------- key :' + key + 'not found in data.items');
       continue;
     }
-
-    // if (applyDateOfBirthFilter(key, yearFrom, yearTo, idPerson) && applyFamilyFilter(key, familyName, idPerson)) {
-    //   // continue;
-    //   console.log('here')
-    // }
 
     // split select target into their additional properties (general, not predetermined)
     // need a filter here depending on which type of tree we are using.
@@ -334,7 +310,7 @@ export class DiagramWrapper extends React.Component {
 
       this.state.diagram = $(go.Diagram,
         {
-          initialAutoScale: go.Diagram.initialAutoScale,
+          // initialAutoScale: go.Diagram.initialAutoScale,
           initialContentAlignment: go.Spot.Center,
           'undoManager.isEnabled': false,
           // when a node is selected, draw a big yellow circle behind it
@@ -555,12 +531,6 @@ export class DiagramWrapper extends React.Component {
     const node = this.diagram.findNodeForKey(focusId);
     if (node !== null) {
       this.diagram.select(node);
-
-      console.log(node.actualBounds);
-      // console.log(this.diagram.transformDocToView(node.actualBounds));
-
-      console.log(this.diagram.documentBounds);
-      console.log(this.diagram.viewportBounds);
 
       // this.diagram.commandHandler.scrollToPart(node);
       this.diagram.centerRect(node.actualBounds);
@@ -804,7 +774,7 @@ class GenogramTree extends React.Component {
       } else {
         relationJSON = await this.requests.relations({
           id: id, depth: depth,
-          visitedItems: this.state.originalJSON ? Array.from(this.state.originalJSON.items[keys]) : []}
+          visitedItems: this.state.originalJSON ? Object.keys(this.state.originalJSON.items) : []}
           );
       }
       if (this.state.originalJSON == null) {
@@ -828,11 +798,20 @@ class GenogramTree extends React.Component {
     }
 
     applyFilterAndDrawTree() {
+      // Get filter options
+      // set up id map for getting attributes later
+      for (let x of Object.keys(this.state.originalJSON.items)) {
+          let people = this.state.originalJSON.items[x];
+          for(let f of people.additionalProperties.filter((p) => p.name == 'family').map((p) => p.value)) {
+            this.state.filters.allFamilies.add(f);
+          }
+      }
+
       // Use filter
       const filters = this.state.filters;
       var filteredJSON = { targets: this.state.originalJSON.targets };
-      if (filters.bloodline && filters.families.length === 0) {
-        const visited = new go.Set();
+      if (filters.bloodline || filters.families.size !== 0) {
+        let visited = new go.Set();
         if (filters.bloodline) {
           console.log('血胤');
           var frontier = [this.state.root];
@@ -858,10 +837,15 @@ class GenogramTree extends React.Component {
               descendants.push(...newElems);
             }
           }
+        } else {
+          visited.addAll(Object.keys(this.state.originalJSON.items));
         }
 
-        // Apply other filters
-        // visited = visited.filter((v) => this.state.originalJSON.items.);
+        if (filters.families.size !== 0) {
+          visited = visited.filter((v) => 
+              this.state.originalJSON.items[v].additionalProperties.filter((p) => p.name == 'family')
+                  .map((p) => p.value).some((f) => filters.families.has(f)));
+        }
 
         // Add outliers
         const outliers = new go.Set();
@@ -877,7 +861,7 @@ class GenogramTree extends React.Component {
         visited.each((v) => {
           filteredJSON.items[v] = this.state.originalJSON.items[v];
         });
-        console.log(filteredJSON.items);
+
         // filteredJSON.items = this.state.originalJSON.items.filter((i) => visited.contains(i.id));
         filteredJSON.relations = this.state.originalJSON.relations.filter((r) => visited.contains(r.item1Id) && visited.contains(r.item2Id));
         this.state.relationJSON = filteredJSON;
@@ -904,7 +888,7 @@ class GenogramTree extends React.Component {
           idRelMap.set(`${rel.item1Id} ${rel.item2Id}`, rel);
       }
       for (const rel of newRel.relations) {
-          const key = `${rel.item1Id} ${rel.item2Id}`;
+          idRelMap.set(`${rel.item1Id} ${rel.item2Id}`, rel);
       }
       oldRel.relations = Array.from(idRelMap.values());
       return oldRel;
@@ -970,7 +954,6 @@ class GenogramTree extends React.Component {
 
     var updateDiagram = false;
     if (this.state.isUpdated) {
-      console.log(this.state.family);
       this.state.isUpdated = false;
       this.applyFilterAndDrawTree();
       this.relations = transform(this.state.relationJSON, this.state.filters);
@@ -998,6 +981,7 @@ class GenogramTree extends React.Component {
           {
             this.state.showFilters &&
             <Sidebar
+              filters={this.state.filters}
               // yearFromChange={() => {}}
               // yearToChange={() => {}}
               familyChange={e => {
@@ -1006,12 +990,7 @@ class GenogramTree extends React.Component {
                   isUpdated: true
                 });
               }}
-              onBloodlineChange={e => {
-                this.setState({
-                  filters: this.state.filters = new FilterModel(e.target.checked),
-                  isUpdated: true
-                });
-              }}
+              onChange={() => this.setState({isUpdated: true})}
             />
           }
           {
@@ -1100,7 +1079,7 @@ class GenogramTree extends React.Component {
     constructor() {
       super();
       this.initializeOption = go.LayeredDigraphLayout.InitDepthFirstIn;
-      this.spouseSpacing = 5;  // minimum space between spouses
+      this.spouseSpacing = 10;  // minimum space between spouses
     }
 
     makeNetwork(coll) {
