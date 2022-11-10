@@ -111,11 +111,11 @@ function transformNewDoesNotWork(data, yearFrom, yearTo, familyName) {
   return res;
 }
 
-function transform(data, yearFrom, yearTo, familyName) {
+function transform(data, filters) {
   relMap = new Map();
   // if this person has empty relation, add itself into nodeDataArray
   if (data.relations.length === 0) {
-    var out = []
+    var out = [];
     let singlePerson = new Map();
     const person = data.targets[0];
     // add gender from additionalProperties
@@ -143,8 +143,12 @@ function transform(data, yearFrom, yearTo, familyName) {
   idPerson.set(targetId, target);
   for (let x of data.items) {
       idPerson.set(x.id, x);
+      console.log(x.additionalProperties.filter((p) => p.name == 'family').map((p) => p.value));
+      for(let f of x.additionalProperties.filter((p) => p.name == 'family').map((p) => p.value)) {
+        console.log(filters);
+        filters.allFamilies.add(f);
+      }
   }
-
   // END TODO
 
   for (let relation of data.relations) {
@@ -564,7 +568,6 @@ export class DiagramWrapper extends React.Component {
         });
     this.setupParents(this.diagram);
     this.setupMarriages(this.diagram);
-    console.log(array.length);
 
     const node = this.diagram.findNodeForKey(focusId);
     if (node !== null) {
@@ -855,7 +858,7 @@ class GenogramTree extends React.Component {
       var filteredJSON = { targets: this.state.originalJSON.targets };
       if (filters.bloodline) {
         const visited = new go.Set();
-        if (filters.bloodline) {
+        if (filters.bloodline && filters.families.length === 0) {
           console.log('血胤');
           var frontier = [this.state.root];
           var descendants = [];
@@ -882,15 +885,17 @@ class GenogramTree extends React.Component {
           }
         }
 
-        const outliers = new go.Set();
+        // Apply other filters
+        // visited = visited.filter((v) => this.state.originalJSON.items.);
 
+        // Add outliers
+        const outliers = new go.Set();
         visited.each((v) => {
           var newElems = this.state.originalJSON.relations
               .filter((r) => r.item2Id === v && (r.type === 'father' || r.type === 'mother') && !visited.contains(r.item1Id))
               .map((r) => r.item1Id);
           outliers.addAll(newElems);
         });
-
         visited.addAll(outliers);
 
         var filteredJSON = { targets: this.state.originalJSON.targets };
@@ -989,7 +994,7 @@ class GenogramTree extends React.Component {
       console.log(this.state.family);
       this.state.isUpdated = false;
       this.applyFilterAndDrawTree();
-      this.relations = transform(this.state.relationJSON, this.state.from, this.state.to, this.state.family);
+      this.relations = transform(this.state.relationJSON, this.state.filters);
       updateDiagram = true;
     }
     this.personMap = getPersonMap(this.state.originalJSON.items);
@@ -1254,8 +1259,6 @@ class GenogramTree extends React.Component {
       // console.log(this.network.edges.first().link.category);
       this.network.vertexes.each(v => {
         const lay = v.layer;
-        console.log("LAY");
-        console.log(lay);
         let max = maxsizes[lay];
         if (max === undefined) max = 0;
         const sz = (horiz ? v.width : v.height);

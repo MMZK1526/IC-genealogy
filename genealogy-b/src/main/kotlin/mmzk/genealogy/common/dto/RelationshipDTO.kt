@@ -43,10 +43,10 @@ data class RelationshipDTO(
 @Serializable
 data class RelationsResponse(
     val targets: List<ItemDTO>,
-    val items: List<ItemDTO>,
+    val items: Map<String, ItemDTO>,
     val relations: List<RelationshipDTO>
 ) {
     companion object {
-        val empty = RelationsResponse(listOf(), listOf(), listOf())
+        val empty = RelationsResponse(listOf(), mapOf(), listOf())
     }
 }
