@@ -354,7 +354,8 @@ class WikiDataDataSource(
         }
 
     suspend fun findRelatedPeople(id: String, visitedItems: List<String>, depth: Int = 2) = coroutineScope {
-        val visited = visitedItems.toMutableSet()
+        val oldVisited = visitedItems.toSet()
+        val visited = oldVisited.toMutableSet()
         var frontier = mapOf(id to 0)
         val homoStrataMap = searchPropertyNameByIDs(homoStrataFilters)
         val heteroStrataMap = searchPropertyNameByIDs(heteroStrataFilters)
@@ -378,7 +379,11 @@ class WikiDataDataSource(
                 .filter { !visited.contains(it.first) && it.second <= depth }
                 .toMap() + nextPeopleOnDifferentLevel.map { it.key to it.value.minOf { value -> frontier[value]!! } + 1 }
                 .filter { !visited.contains(it.first) && it.second <= depth }
-            relations.addAll(newRelations.filter { visited.contains(it.item1Id) || frontier.contains(it.item1Id) })
+            relations.addAll(newRelations.filter {
+                (visited.contains(it.item1Id) || frontier.contains(it.item1Id)) && !(oldVisited.contains(
+                    it.item1Id
+                ) && oldVisited.contains(it.item2Id))
+            })
         }
 
         RelationsResponse(targets, people.map { it.key }.toList(), relations.toList())

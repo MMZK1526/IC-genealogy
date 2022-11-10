@@ -109,7 +109,8 @@ object Database {
     private fun findRelatedItems(
         ids: Set<String>,
         homoStrata: Set<String>,
-        heteroStrata: Set<String>): Triple<Set<RelationshipDTO>, MutableMap<String, MutableList<String>>, MutableMap<String, MutableList<String>>> {
+        heteroStrata: Set<String>
+    ): Triple<Set<RelationshipDTO>, MutableMap<String, MutableList<String>>, MutableMap<String, MutableList<String>>> {
         val relationships = Relationship.find {
             RelationshipTable.item2.asStringColumn.inList(ids) and
                     type.asStringColumn.inList(homoStrata + heteroStrata)
@@ -128,7 +129,8 @@ object Database {
             if (homoStrata.contains(relation.type.id.value)) {
                 sameLevelNewItems.getOrPut(relation.item1.id.value) { mutableListOf() }.add(relation.item2.id.value)
             } else {
-                differentLevelNewItems.getOrPut(relation.item1.id.value) { mutableListOf() }.add(relation.item2.id.value)
+                differentLevelNewItems.getOrPut(relation.item1.id.value) { mutableListOf() }
+                    .add(relation.item2.id.value)
             }
         }
         differentLevelNewItems -= sameLevelNewItems.keys
@@ -147,6 +149,7 @@ object Database {
         visited: MutableSet<String>
     ) =
         transaction {
+            val oldVisited = visited.toSet()
             var frontier = mapOf(id to 0)
             val targets = Item.find {
                 ItemTable.id.asStringColumn.inList(frontier.keys)
@@ -160,13 +163,21 @@ object Database {
                 }.toDTOWithAdditionalProperties()
                 items.addAll(newPeople)
                 visited.addAll(newPeople.map { it.id })
-                val (newRelations, nextSameLevelItems, nextDifferentLevelItems) = findRelatedItems(frontier.keys, homoStrata, heteroStrata)
+                val (newRelations, nextSameLevelItems, nextDifferentLevelItems) = findRelatedItems(
+                    frontier.keys,
+                    homoStrata,
+                    heteroStrata
+                )
 
-                frontier = nextSameLevelItems.map {it.key to it.value.minOf { value -> frontier[value]!! }  }
+                frontier = nextSameLevelItems.map { it.key to it.value.minOf { value -> frontier[value]!! } }
                     .filter { !visited.contains(it.first) && it.second <= depth }
                     .toMap() + nextDifferentLevelItems.map { it.key to it.value.minOf { value -> frontier[value]!! } + 1 }
                     .filter { !visited.contains(it.first) && it.second <= depth }
-                relations.addAll(newRelations.filter { visited.contains(it.item1Id) || frontier.contains(it.item1Id) })
+                relations.addAll(newRelations.filter {
+                    (visited.contains(it.item1Id) || frontier.contains(it.item1Id)) && !(oldVisited.contains(
+                        it.item1Id
+                    ) && oldVisited.contains(it.item2Id))
+                })
             }
 
             RelationsResponse(targets, items.toList(), relations.toList())

@@ -1,14 +1,24 @@
 .sidebar {
-  position: absolute;
-  right: 0;
+  position: fixed;
+  right: 20px;
   display: flex;
   flex-direction: column;
   align-self: flex-end;
   align-items: flex-start;
-  height: 100vh;
-  width: 15vw;
+  top: 100px;
+  padding: 20px;
   z-index: 100;
   background-color: rgba(201, 220, 236, 1);
+}
+
+.sidebar .form-group{
+  margin-top: 20px;
+  font-family: "Avenir Next", sans-serif;
+  font-weight: 600;
+}
+
+.sidebar .form-label {
+  display: block;
 }
 
 .sidebar .name-field{

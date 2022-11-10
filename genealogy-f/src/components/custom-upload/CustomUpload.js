@@ -18,9 +18,12 @@ export class CustomUpload extends React.Component {
         return (
             <div className='custom-upload'>
                 <label id='label'>Or you can try...</label>
-                <button id='button' type='primary' onClick={this.handleClick}>
-                    Upload custom data
-                </button>
+                {
+                    !this.state.show &&
+                    <button id='button' type='primary' onClick={this.handleClick}>
+                        Upload custom data
+                    </button>
+                }
                 {
                     this.state.show &&
                     <form onSubmit={this.handleSubmit}>

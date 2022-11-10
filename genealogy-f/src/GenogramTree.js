@@ -323,8 +323,8 @@ export class DiagramWrapper extends React.Component {
     this.nodeDataArray = props.nodeDataArray;
     this.yearFrom = props.yearFrom;
     this.yearTo = props.yearTo;
-    this.state = { diagram: undefined, isFirstRender: true };
     this.getFocusPerson = props.getFocusPerson;
+    this.state = { diagram: undefined, isFirstRender: true };
     this.init();
   }
 
@@ -362,8 +362,19 @@ export class DiagramWrapper extends React.Component {
               $(go.Shape, 'Circle', {fill: '#c1cee3', stroke: null }),
               $(go.Placeholder, { margin: 0 })
             ),
+          scrollMargin: 200,
           layout:  // use a custom layout, defined below
-            $(GenogramLayout, { direction: 90, layerSpacing: 50, columnSpacing: 0 })
+            $(GenogramLayout, { direction: 90, layerSpacing: 50, columnSpacing: 0 }),
+          "InitialLayoutCompleted": e => {
+            // wait until initial layout and initial animation are finished,
+            // then select the node and scroll to it with its own animation
+            const node = this.diagram.findNodeForKey(this.getFocusPerson());
+            console.log(node.key);
+            if (node !== null) {
+              this.diagram.commandHandler.scrollToPart(node);
+              this.diagram.select(node);
+            }
+          }
         })
       this.diagram = this.state.diagram;
       // determine the color for each attribute shape
@@ -435,7 +446,6 @@ export class DiagramWrapper extends React.Component {
           default: return tlarc;
         }
       }
-
 
       // two different node templates, one for each sex,
       // named by the category value in the node data object
@@ -720,15 +730,13 @@ class GenogramTree extends React.Component {
         this.getFocusPerson = this.getFocusPerson.bind(this);
         this.requests = this.props.requests;
         if (this.rawJSON) {
-          this.relations = transform(this.rawJSON, this.state.from, this.state.to, this.state.family);
-          this.personMap = getPersonMap(this.rawJSON.items);
           this.isLoading = false;
         } else {
           this.isLoading = true;
         }
         this.state = {
           root: this.source,
-          isUpdated: false,
+          isUpdated: !this.isLoading,
           isLoading: this.isLoading,
           originalJSON: this.rawJSON,
           relationJSON: this.rawJSON,
@@ -736,12 +744,16 @@ class GenogramTree extends React.Component {
           personInfo: null,
           isPopped: false,
           showStats: false,
+          showFilters: false,
           from: '',
           to: '',
           family: '',
-          filters: new FilterModel(),
+          filters: new FilterModel(true),
           showBtns: true,
         };
+        if (this.rawJSON) {
+          this.fetchRelations(null);
+        }
         this.componentRef = React.createRef();
       }
     }
@@ -760,7 +772,7 @@ class GenogramTree extends React.Component {
         console.log('GoJS model changed!');
     }
 
-    handleDiagramEvent (event) {
+    handleDiagramEvent(event) {
       if (!this.personMap.has(event.subject.part.key)) {
           return;
       }
@@ -808,8 +820,9 @@ class GenogramTree extends React.Component {
       return res;
     }
 
+    // If id is provided, we search this id. Otherwise it is a JSON provided by the user
     async fetchRelations(id) {
-      const relationJSON = await this.requests.relations({id: id,
+      const relationJSON = id == null || id === undefined ? this.state.originalJSON : await this.requests.relations({id: id,
             visitedItems: this.state.originalJSON ? this.state.originalJSON.items.map((i) => i.id).join() : ""});
       if (this.state.originalJSON == null) {
         this.state.originalJSON = JSON.parse(JSON.stringify(relationJSON));
@@ -817,7 +830,6 @@ class GenogramTree extends React.Component {
         this.mergeRelations(this.state.originalJSON, relationJSON);
       }
       this.fetchKinships(this.state.root, this.state.originalJSON);
-
       // Use filter
       const filters = this.state.filters;
       if (filters.bloodline) {
@@ -835,15 +847,23 @@ class GenogramTree extends React.Component {
             frontier.push(...newElems);
           }
         }
-        var filterdJSON = { targets: this.state.originalJSON.targets };
-        filterdJSON.items = this.state.originalJSON.items.filter((i) => visited.contains(i.id));
-        filterdJSON.relations = this.state.originalJSON.relations.filter((r) => visited.contains(r.item1Id) && visited.contains(r.item2Id))
+        var filteredJSON = { targets: this.state.originalJSON.targets };
+        filteredJSON.items = this.state.originalJSON.items.filter((i) => visited.contains(i.id));
+        filteredJSON.relations = this.state.originalJSON.relations.filter((r) => visited.contains(r.item1Id) && visited.contains(r.item2Id))
       }
-      this.setState({
-        isLoading: false,
-        isUpdated: true,
-        relationJSON: filterdJSON,
-      });
+      if (id == null || id === undefined) {
+        this.state.isLoading = false;
+        this.state.isUpdated = true;
+        this.state.relationJSON = filteredJSON;
+        this.state.personInfo = this.state.root;
+      } else {
+        this.setState({
+          isLoading: false,
+          isUpdated: true,
+          relationJSON: filteredJSON,
+          personInfo: id,
+        });
+      }
     }
 
     async fetchKinships(id, relationJSON) {
@@ -851,8 +871,7 @@ class GenogramTree extends React.Component {
       const newrelationJSON = this.integrateKinshipIntorelationJSON(kinshipJSON, relationJSON);
       this.setState({
           kinshipJSON: kinshipJSON,
-          originalJSON: newrelationJSON,
-          personInfo: id
+          originalJSON: newrelationJSON
       });
     }
 
@@ -947,6 +966,7 @@ class GenogramTree extends React.Component {
 
     var updateDiagram = false;
     if (this.state.isUpdated) {
+      console.log(this.state.family);
       this.state.isUpdated = false;
       this.relations = transform(this.state.relationJSON, this.state.from, this.state.to, this.state.family);
       updateDiagram = true;
@@ -970,10 +990,33 @@ class GenogramTree extends React.Component {
                 </div>
                 : ''
           }
-
+          {
+            this.state.showFilters &&
+            <Sidebar
+              // yearFromChange={() => {}}
+              // yearToChange={() => {}}
+              familyChange={e => {
+                this.setState({
+                  family: e.target.value,
+                  isUpdated: true
+                });
+              }}
+              // bloodlineOnly={this.state.filters.bloodline ? "on" : "off"}
+              onBloodlineChange={e => {
+                this.setState({
+                  filters: new FilterModel(e.target.value !== "on"),
+                  isUpdated: true
+                });
+              }}
+            />
+          }
           {
               this.state.showBtns &&
-              <button className='show-filters-button' onClick={() => {}}>
+              <button className='show-filters-button' onClick={() => { 
+                this.setState({
+                  showFilters: !this.state.showFilters
+                });
+               }}>
                   <AiFillFilter size={50}/>                     
               </button>
           }
@@ -997,7 +1040,7 @@ class GenogramTree extends React.Component {
             <button className='blue-button' onClick={() => exportComponentAsPNG(this.componentRef)}>
               Export as PNG
             </button>
-            <button className='blue-button' onClick={() => downloadJsonFile(this.rawJSON)}>
+            <button className='blue-button' onClick={() => downloadJsonFile(this.state.relationJSON)}>
               Export as JSON
             </button>
             <button className='blue-button' onClick={() => {

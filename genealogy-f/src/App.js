@@ -8,7 +8,6 @@ import {NameSearch} from './components/name-search/NameSearch.js';
 
 import GenogramTree from "./GenogramTree";
 import ClipLoader from 'react-spinners/ClipLoader';
-import {CustomUpload} from "./components/custom-upload/CustomUpload";
 
 import ResultPage from "./components/result-page/ResultPage.js";
 import React from "react";

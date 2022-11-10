@@ -1,6 +1,6 @@
 export class FilterModel {
-  constructor() {
-    this.bloodline = true;
+  constructor(bloodline) {
+    this.bloodline = bloodline;
     this.distance = 1;
   }
 }
