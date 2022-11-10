@@ -831,9 +831,9 @@ class GenogramTree extends React.Component {
       // Use filter
       const filters = this.state.filters;
       var filteredJSON = { targets: this.state.originalJSON.targets };
-      if (false) {
+      if (filters.bloodline && filters.families.length === 0) {
         const visited = new go.Set();
-        if (filters.bloodline && filters.families.length === 0) {
+        if (filters.bloodline) {
           console.log('血胤');
           var frontier = [this.state.root];
           var descendants = [];
@@ -874,7 +874,10 @@ class GenogramTree extends React.Component {
         visited.addAll(outliers);
 
         var filteredJSON = { targets: this.state.originalJSON.targets, items: {} };
-        visited.each((v) => filteredJSON.items[v] = this.state.originalJSON.items[v]);
+        visited.each((v) => {
+          filteredJSON.items[v] = this.state.originalJSON.items[v];
+        });
+        console.log(filteredJSON.items);
         // filteredJSON.items = this.state.originalJSON.items.filter((i) => visited.contains(i.id));
         filteredJSON.relations = this.state.originalJSON.relations.filter((r) => visited.contains(r.item1Id) && visited.contains(r.item2Id));
         this.state.relationJSON = filteredJSON;
