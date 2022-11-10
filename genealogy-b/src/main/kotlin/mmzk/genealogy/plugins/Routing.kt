@@ -46,7 +46,7 @@ fun Application.configureRouting() {
                     call.request.queryParameters["hetero_strata"]?.split(",") ?: listOf("WD-P22", "WD-P25", "WD-P40")
                 val result = WikiDataDataSource(homoStrata, heteroStrata).findRelatedPeople(id, visitedItems, depth)
                 call.respond(result)
-                Database.insertItems(result.items)
+                Database.insertItems(result.items.values.toList())
                 Database.insertRelations(result.relations)
             } ?: call.respond(
                 HttpStatusCode.BadRequest,

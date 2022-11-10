@@ -44,7 +44,7 @@ export function applyDateOfBirthFilter(id, dateFrom, dateTo, idPerson) {
     return true;
   }
 
-  const target = idPerson.get(id);
+  const target = idPerson.id;
   if (target === null) {return false;}
   const addProps = target.additionalProperties;
   const father = addProps.filter(p => p.name == 'date of birth');
@@ -78,7 +78,7 @@ export function applyFamilyFilter(id, familyName, idPerson) {
   if (familyName == '') {
     return true;
   }
-  const target = idPerson.get(id);
+  const target = idPerson.id;
   if (target == null) {
     return false;
   }
@@ -93,23 +93,6 @@ export function applyFamilyFilter(id, familyName, idPerson) {
 
 // global map from id of person to their attributes, used to change opacity for filtering in the goJs diagram.
 var relMap = new Map();
-
-// ^^^^^^ SEE ABOVE transformed format helper function to transfrom JSON into goJS nodeDataArray format.
-function transformNewDoesNotWork(data, yearFrom, yearTo, familyName) {
-  const res = structuredClone(data);
-  res.targets = oldRel.targets;
-  const idItemMap = new Map();
-  for (const item of oldRel.items) {
-    idItemMap.set(item.id, item);
-  }
-  for (const item of newRel.items) {
-    if (!idItemMap.has(item.id)) {
-      idItemMap.set(item.id, item);
-    }
-  }
-  res.items = Array.from(idItemMap.values());
-  return res;
-}
 
 function transform(data, filters) {
   relMap = new Map();
@@ -135,25 +118,25 @@ function transform(data, filters) {
   let target = data.targets[0]; // The root
 
   // TODO: Back-end return a map of items
-  let idPerson = new Map();
-  let people = data.items;
-  people.push(target);
-  let targetId = target.id;
-  // set up id map for getting attributes later
-  idPerson.set(targetId, target);
-  for (let x of data.items) {
-      idPerson.set(x.id, x);
-      console.log(x.additionalProperties.filter((p) => p.name == 'family').map((p) => p.value));
-      for(let f of x.additionalProperties.filter((p) => p.name == 'family').map((p) => p.value)) {
-        console.log(filters);
-        filters.allFamilies.add(f);
-      }
-  }
+  // let idPerson = new Map();
+  // let people = data.items;
+  // people.push(target);
+  // let targetId = target.id;
+  // // set up id map for getting attributes later
+  // idPerson.set(targetId, target);
+  // for (let x of data.items) {
+  //     idPerson.set(x.id, x);
+  //     console.log(x.additionalProperties.filter((p) => p.name == 'family').map((p) => p.value));
+  //     for(let f of x.additionalProperties.filter((p) => p.name == 'family').map((p) => p.value)) {
+  //       console.log(filters);
+  //       filters.allFamilies.add(f);
+  //     }
+  // }
   // END TODO
-
+  console.log(data.items);
   for (let relation of data.relations) {
     var key = relation['item2Id'];
-    var sourceItem = idPerson.get(key);
+    var sourceItem =  data.items.key;
     if (sourceItem === undefined) {
       console.log('------- ERROR -------- key :' + key + 'not found in data.items');
       continue;
@@ -200,7 +183,7 @@ function transform(data, filters) {
     }
     relMap.set(key, motherfuckers);
     var targetKey = relation['item1Id'];
-    var targetItem = idPerson.get(targetKey);
+    var targetItem =  data.items.targetKey;
     if (!relMap.has(targetKey)) {
       var genderKey = targetItem.additionalProperties.filter(p => p.name == 'gender')[0]
       var gender = genderKey ? genderKey.value : undefined
@@ -805,20 +788,16 @@ class GenogramTree extends React.Component {
               value: kinshipStr,
               valueHash: null,
           };
-          // if (!idItemMap.has(key)) {
-          //     console.log(key);
-          // }
-          console.assert(idItemMap.has(key));
-          const item = idItemMap.get(key);
+
+          console.assert(relationJSON.items.key);
+          const item = relationJSON.items.key;
           const props = item.additionalProperties;
           props.push(property);
           item.additionalProperties = props;
-          idItemMap.set(key, item);
+          relationJSON.items.key = item;
       }
-      const newItems = Array.from(idItemMap.values());
-      const res = relationJSON;
-      res.items = newItems;
-      return res;
+
+      return relationJSON;
     }
 
     // If id is provided, we search this id. Otherwise it is a JSON provided by the user
@@ -829,7 +808,7 @@ class GenogramTree extends React.Component {
       } else {
         relationJSON = await this.requests.relations({
           id: id, depth: depth,
-          visitedItems: this.state.originalJSON ? this.state.originalJSON.items.map((i) => i.id) : []}
+          visitedItems: this.state.originalJSON ? Array.from(this.state.originalJSON.items.keys) : []}
           );
       }
       if (this.state.originalJSON == null) {
@@ -898,8 +877,9 @@ class GenogramTree extends React.Component {
         });
         visited.addAll(outliers);
 
-        var filteredJSON = { targets: this.state.originalJSON.targets };
-        filteredJSON.items = this.state.originalJSON.items.filter((i) => visited.contains(i.id));
+        var filteredJSON = { targets: this.state.originalJSON.targets, items: {} };
+        visited.each((v) => filteredJSON.items.v = this.state.originalJSON.items.v);
+        // filteredJSON.items = this.state.originalJSON.items.filter((i) => visited.contains(i.id));
         filteredJSON.relations = this.state.originalJSON.relations.filter((r) => visited.contains(r.item1Id) && visited.contains(r.item2Id));
         this.state.relationJSON = filteredJSON;
       } else {
@@ -918,8 +898,8 @@ class GenogramTree extends React.Component {
 
     // Merge two relational JSONs, modifying the old one.
     mergeRelations(oldRel, newRel) {
-      oldRel.items.push(...newRel.items);
-      oldRel.relations.push(...newRel.relations);
+      oldRel.items = {...oldRel.items, ...newRel.items};
+
       const idRelMap = new Map();
       for (const rel of oldRel.relations) {
           idRelMap.set(`${rel.item1Id} ${rel.item2Id}`, rel);
@@ -997,7 +977,7 @@ class GenogramTree extends React.Component {
       this.relations = transform(this.state.relationJSON, this.state.filters);
       updateDiagram = true;
     }
-    this.personMap = getPersonMap(this.state.originalJSON.items);
+    this.personMap = getPersonMap(Array.from(this.state.originalJSON.items.keys));
 
     return(
         <div className='tree-box'>
