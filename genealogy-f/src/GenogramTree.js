@@ -133,10 +133,10 @@ function transform(data, filters) {
   //     }
   // }
   // END TODO
-  console.log(data.items);
+  console.log(data.items['WD-Q15031']);
   for (let relation of data.relations) {
     var key = relation['item2Id'];
-    var sourceItem =  data.items.key;
+    var sourceItem =  data.items[key];
     if (sourceItem === undefined) {
       console.log('------- ERROR -------- key :' + key + 'not found in data.items');
       continue;
@@ -183,7 +183,7 @@ function transform(data, filters) {
     }
     relMap.set(key, motherfuckers);
     var targetKey = relation['item1Id'];
-    var targetItem =  data.items.targetKey;
+    var targetItem =  data.items[targetKey];
     if (!relMap.has(targetKey)) {
       var genderKey = targetItem.additionalProperties.filter(p => p.name == 'gender')[0]
       var gender = genderKey ? genderKey.value : undefined
@@ -773,10 +773,6 @@ class GenogramTree extends React.Component {
     }
 
     integrateKinshipIntorelationJSON(kinshipJson, relationJSON) {
-      const idItemMap = new Map();
-      for (const item of relationJSON.items) {
-          idItemMap.set(item.id, item);
-      }
       for (const key of Object.keys(kinshipJson)) {
           const kinshipStr = kinshipJson[key].map((arr) => {
               arr.reverse();
@@ -789,12 +785,12 @@ class GenogramTree extends React.Component {
               valueHash: null,
           };
 
-          console.assert(relationJSON.items.key);
-          const item = relationJSON.items.key;
+          console.assert(relationJSON.items[key]);
+          const item = relationJSON.items[key];
           const props = item.additionalProperties;
           props.push(property);
           item.additionalProperties = props;
-          relationJSON.items.key = item;
+          relationJSON.items[key] = item;
       }
 
       return relationJSON;
@@ -808,7 +804,7 @@ class GenogramTree extends React.Component {
       } else {
         relationJSON = await this.requests.relations({
           id: id, depth: depth,
-          visitedItems: this.state.originalJSON ? Array.from(this.state.originalJSON.items.keys) : []}
+          visitedItems: this.state.originalJSON ? Array.from(this.state.originalJSON.items[keys]) : []}
           );
       }
       if (this.state.originalJSON == null) {
@@ -835,7 +831,7 @@ class GenogramTree extends React.Component {
       // Use filter
       const filters = this.state.filters;
       var filteredJSON = { targets: this.state.originalJSON.targets };
-      if (filters.bloodline) {
+      if (false) {
         const visited = new go.Set();
         if (filters.bloodline && filters.families.length === 0) {
           console.log('血胤');
@@ -878,7 +874,7 @@ class GenogramTree extends React.Component {
         visited.addAll(outliers);
 
         var filteredJSON = { targets: this.state.originalJSON.targets, items: {} };
-        visited.each((v) => filteredJSON.items.v = this.state.originalJSON.items.v);
+        visited.each((v) => filteredJSON.items[v] = this.state.originalJSON.items[v]);
         // filteredJSON.items = this.state.originalJSON.items.filter((i) => visited.contains(i.id));
         filteredJSON.relations = this.state.originalJSON.relations.filter((r) => visited.contains(r.item1Id) && visited.contains(r.item2Id));
         this.state.relationJSON = filteredJSON;
@@ -977,7 +973,7 @@ class GenogramTree extends React.Component {
       this.relations = transform(this.state.relationJSON, this.state.filters);
       updateDiagram = true;
     }
-    this.personMap = getPersonMap(Array.from(this.state.originalJSON.items.keys));
+    this.personMap = getPersonMap(Object.values(this.state.originalJSON.items));
 
     return(
         <div className='tree-box'>
@@ -1236,7 +1232,6 @@ class GenogramTree extends React.Component {
       const horiz = this.direction === 0.0 || this.direction === 180.0;
       // for every vertex, record the maximum vertex width or height for the vertex'gender layer
       const maxsizes = [];
-      // console.log(this.network.edges.first().link.category);
       this.network.vertexes.each(v => {
         const lay = v.layer;
         let max = maxsizes[lay];
