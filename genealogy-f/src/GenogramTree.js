@@ -211,16 +211,10 @@ function transform(data, yearFrom, yearTo, familyName) {
 
   var newOutput = [];
 
-  // apply filters (add opacity to non-filtered)
-  // for (let key of relMap.keys()) {
-  //   let r = relMap.get(key);
-  //   if (applyDateOfBirthFilter(key, yearFrom, yearTo, idPerson) && applyFamilyFilter(key, familyName, idPerson)) {
-  //     r.opacity = r.opacity == null ? '0.9' : r.opacity;
-  //   } else {
-  //     r.opacity = '0.2';
-  //     relMap.delete(key);
-  //   }
-  // }
+  for (let key of relMap.keys()) {
+    let r = relMap.get(key);
+    r.opacity = '0.9';
+  }
 
   // add unknown nodes for unknown parent
   for (let key of relMap.keys()) {
@@ -1257,8 +1251,11 @@ class GenogramTree extends React.Component {
       const horiz = this.direction === 0.0 || this.direction === 180.0;
       // for every vertex, record the maximum vertex width or height for the vertex'gender layer
       const maxsizes = [];
+      // console.log(this.network.edges.first().link.category);
       this.network.vertexes.each(v => {
         const lay = v.layer;
+        console.log("LAY");
+        console.log(lay);
         let max = maxsizes[lay];
         if (max === undefined) max = 0;
         const sz = (horiz ? v.width : v.height);
@@ -1283,7 +1280,6 @@ class GenogramTree extends React.Component {
 
     commitLinks() {
       super.commitLinks();
-      console.log("!");
       var splitNode = this.splitNode;
       var mergeNode = this.mergeNode;
       if (splitNode === null || mergeNode === null || this.network === null) return;
