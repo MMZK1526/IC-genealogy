@@ -570,6 +570,7 @@ export class DiagramWrapper extends React.Component {
         });
     this.setupParents(this.diagram);
     this.setupMarriages(this.diagram);
+    console.log(array.length);
 
     const node = this.diagram.findNodeForKey(focusId);
     if (node !== null) {
@@ -878,13 +879,25 @@ class GenogramTree extends React.Component {
             } else {
               cur = descendants.shift();
               var newElems = this.state.originalJSON.relations
-                  .filter((r) => r.item2Id === cur && r.type !== 'spouse' && !visited.contains(r.item1Id))
+                  .filter((r) => r.item2Id === cur && r.type === 'child' && !visited.contains(r.item1Id))
+                  .map((r) => r.item1Id);
               var newDescendants = newElems.filter((r) => r.type === 'child').map((r) => r.item1Id);
-              visited.addAll(newElems.map((r) => r.item1Id));
-              descendants.push(...newDescendants);
+              visited.addAll(newElems);
+              descendants.push(...newElems);
             }
           }
         }
+
+        const outliers = new go.Set();
+
+        visited.each((v) => {
+          var newElems = this.state.originalJSON.relations
+              .filter((r) => r.item2Id === v && (r.type === 'father' || r.type === 'mother') && !visited.contains(r.item1Id))
+              .map((r) => r.item1Id);
+          outliers.addAll(newElems);
+        });
+
+        visited.addAll(outliers);
 
         var filteredJSON = { targets: this.state.originalJSON.targets };
         filteredJSON.items = this.state.originalJSON.items.filter((i) => visited.contains(i.id));
@@ -1070,7 +1083,7 @@ class GenogramTree extends React.Component {
             <button className='blue-button' onClick={() => exportComponentAsPNG(this.componentRef)}>
               Export as PNG
             </button>
-            <button className='blue-button' onClick={() => downloadJsonFile(this.state.relationJSON)}>
+            <button className='blue-button' onClick={() => downloadJsonFile(this.state.originalJSON)}>
               Export as JSON
             </button>
             <button className='blue-button' onClick={() => {
