@@ -12,7 +12,7 @@ export class Requests {
             });
     }
 
-    relations({id = 'WD-Q152308', depth = 2, visitedItems = ""} = {}) {
+    relations({id = 'WD-Q152308', depth = 2, visitedItems = []} = {}) {
         const url = `${this.baseUrl}/relations_wk?id=${id}&depth=${depth}`
         const headers = new Headers();
         headers.append('Content-Type', 'application/json');
@@ -21,7 +21,7 @@ export class Requests {
             {
                 method: 'POST',
                 headers: headers,
-                body: visitedItems,
+                body: JSON.stringify(visitedItems),
             }
         );
         return fetch(request)

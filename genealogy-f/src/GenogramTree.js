@@ -823,8 +823,15 @@ class GenogramTree extends React.Component {
 
     // If id is provided, we search this id. Otherwise it is a JSON provided by the user
     async fetchRelations(id, depth) {
-      const relationJSON = id == null || id === undefined ? this.state.originalJSON : await this.requests.relations({id: id, depth: depth,
-            visitedItems: this.state.originalJSON ? this.state.originalJSON.items.map((i) => i.id).join() : ''});
+      var relationJSON;
+      if (id == null || id === undefined) {
+        relationJSON = this.state.originalJSON;
+      } else {
+        relationJSON = await this.requests.relations({
+          id: id, depth: depth,
+          visitedItems: this.state.originalJSON ? this.state.originalJSON.items.map((i) => i.id) : []}
+          );
+      }
       if (this.state.originalJSON == null) {
         this.state.originalJSON = JSON.parse(JSON.stringify(relationJSON));
       } else {
