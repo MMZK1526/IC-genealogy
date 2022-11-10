@@ -1064,7 +1064,12 @@ class GenogramTree extends React.Component {
               <Link to={'/'} className='blue-button'>
                 <BiHomeAlt size={30}/>
               </Link>
-            <button className='blue-button' onClick={() => exportComponentAsPNG(this.componentRef)}>
+            <button className='blue-button' onClick={() => exportComponentAsPNG(
+                this.componentRef,
+                {
+                  fileName: 'family-tree',
+                }
+            )}>
               Export as PNG
             </button>
             <button className='blue-button' onClick={() => downloadJsonFile(this.state.originalJSON)}>
