@@ -1,5 +1,5 @@
 
-import {Form, Row} from "react-bootstrap"
+import {Form} from "react-bootstrap"
 import "./Sidebar.css"
 
 export function Sidebar(props) {

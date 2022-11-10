@@ -14,12 +14,12 @@ import {StatsPanel} from './components/stats-panel/StatsPanel';
 import {downloadJsonFile} from './components/custom-upload/exportAsJson';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import EscapeCloseable from './components/escape-closeable/EscapeCloseable';
-import { Link } from "react-router-dom";
+import { Link } from 'react-router-dom';
 import './components/shared.css';
 import _ from 'lodash';
 
-import { BiHomeAlt } from "react-icons/bi"
-import { AiFillFilter } from "react-icons/ai"
+import { BiHomeAlt } from 'react-icons/bi'
+import { AiFillFilter } from 'react-icons/ai'
 import { FilterModel } from './filterModel';
 
 function withRouter(Component) {
@@ -120,14 +120,14 @@ function transform(data, yearFrom, yearTo, familyName) {
     const person = data.targets[0];
     // add gender from additionalProperties
     for (let attr of person.additionalProperties) {
-      if (attr.name === "gender") {
-        singlePerson.set("gender", attr.value);
+      if (attr.name === 'gender') {
+        singlePerson.set('gender', attr.value);
       }
     }
 
-    singlePerson.set("key", person.id);
-    singlePerson.set("name", person.name);
-    singlePerson.set("spouse", []);
+    singlePerson.set('key', person.id);
+    singlePerson.set('name', person.name);
+    singlePerson.set('spouse', []);
     out.push(Object.fromEntries(singlePerson));
     return out;
   }
@@ -157,7 +157,7 @@ function transform(data, yearFrom, yearTo, familyName) {
 
     // if (applyDateOfBirthFilter(key, yearFrom, yearTo, idPerson) && applyFamilyFilter(key, familyName, idPerson)) {
     //   // continue;
-    //   console.log("here")
+    //   console.log('here')
     // }
 
     // split select target into their additional properties (general, not predetermined)
@@ -239,7 +239,7 @@ function transform(data, yearFrom, yearTo, familyName) {
 
 function addUnknown(mfs, relMap) {
   if (mfs.mother && !mfs.father) {
-    let newF = {key: "_" + mfs.mother, name: 'unknown', gender: 'male', opacity: '0.2'};
+    let newF = {key: '_' + mfs.mother, name: 'unknown', gender: 'male', opacity: '0.2'};
     // marry parent to unknown and set child parent to unknown
     newF.spouse = [mfs.mother];
     mfs.father = newF.key;
@@ -249,7 +249,7 @@ function addUnknown(mfs, relMap) {
 
   // case of unknown mother - temporarily replace with 'unknown' node
   if (!mfs.mother && mfs.father) {
-    let newM = {key: "_" + mfs.father, name: 'unknown', gender: 'female', opacity: '0.2'};
+    let newM = {key: '_' + mfs.father, name: 'unknown', gender: 'female', opacity: '0.2'};
     // marry parent to unknown and set child parent to unknown
     newM.spouse = [mfs.father];
     mfs.mother = newM.key;
@@ -365,7 +365,7 @@ export class DiagramWrapper extends React.Component {
           scrollMargin: 200,
           layout:  // use a custom layout, defined below
             $(GenogramLayout, { direction: 90, layerSpacing: 50, columnSpacing: 0 }),
-          "InitialLayoutCompleted": e => {
+          'InitialLayoutCompleted': e => {
             // wait until initial layout and initial animation are finished,
             // then select the node and scroll to it with its own animation
             const node = this.diagram.findNodeForKey(this.getFocusPerson());
@@ -674,7 +674,7 @@ export class DiagramWrapper extends React.Component {
         
         const mdata = link.data;
         if (mdata.labelKeys === undefined || mdata.labelKeys[0] === undefined) {
-          console.log("Should not happen");
+          console.log('Should not happen');
           continue;
         } 
         const mlabkey = mdata.labelKeys[0];
@@ -823,25 +823,41 @@ class GenogramTree extends React.Component {
     // If id is provided, we search this id. Otherwise it is a JSON provided by the user
     async fetchRelations(id) {
       const relationJSON = id == null || id === undefined ? this.state.originalJSON : await this.requests.relations({id: id,
-            visitedItems: this.state.originalJSON ? this.state.originalJSON.items.map((i) => i.id).join() : ""});
+            visitedItems: this.state.originalJSON ? this.state.originalJSON.items.map((i) => i.id).join() : ''});
       if (this.state.originalJSON == null) {
         this.state.originalJSON = JSON.parse(JSON.stringify(relationJSON));
       } else {
         this.mergeRelations(this.state.originalJSON, relationJSON);
       }
       this.fetchKinships(this.state.root, this.state.originalJSON);
+      this.applyFilterAndDrawTree();
+      if (id == null || id === undefined) {
+        this.state.isLoading = false;
+        this.state.isUpdated = true;
+        this.state.personInfo = this.state.root;
+      } else {
+        this.setState({
+          isLoading: false,
+          isUpdated: true,
+          personInfo: id,
+        });
+      }
+    }
+
+    applyFilterAndDrawTree() {
       // Use filter
       const filters = this.state.filters;
+      var filteredJSON = { targets: this.state.originalJSON.targets };
       if (filters.bloodline) {
         const visited = new go.Set();
         if (filters.bloodline) {
-          console.log("血胤");
+          console.log('血胤');
           var frontier = [this.state.root];
 
           while (frontier.length > 0) {
             var cur = frontier.shift();
             var newElems = this.state.originalJSON.relations
-                .filter((r) => r.item2Id === cur && r.type !== "spouse" && !visited.contains(r.item1Id))
+                .filter((r) => r.item2Id === cur && r.type !== 'spouse' && !visited.contains(r.item1Id))
                 .map((r) => r.item1Id);
             visited.addAll(newElems);
             frontier.push(...newElems);
@@ -849,20 +865,10 @@ class GenogramTree extends React.Component {
         }
         var filteredJSON = { targets: this.state.originalJSON.targets };
         filteredJSON.items = this.state.originalJSON.items.filter((i) => visited.contains(i.id));
-        filteredJSON.relations = this.state.originalJSON.relations.filter((r) => visited.contains(r.item1Id) && visited.contains(r.item2Id))
-      }
-      if (id == null || id === undefined) {
-        this.state.isLoading = false;
-        this.state.isUpdated = true;
+        filteredJSON.relations = this.state.originalJSON.relations.filter((r) => visited.contains(r.item1Id) && visited.contains(r.item2Id));
         this.state.relationJSON = filteredJSON;
-        this.state.personInfo = this.state.root;
       } else {
-        this.setState({
-          isLoading: false,
-          isUpdated: true,
-          relationJSON: filteredJSON,
-          personInfo: id,
-        });
+        this.state.relationJSON = JSON.parse(JSON.stringify(this.state.originalJSON));
       }
     }
 
@@ -968,6 +974,7 @@ class GenogramTree extends React.Component {
     if (this.state.isUpdated) {
       console.log(this.state.family);
       this.state.isUpdated = false;
+      this.applyFilterAndDrawTree();
       this.relations = transform(this.state.relationJSON, this.state.from, this.state.to, this.state.family);
       updateDiagram = true;
     }
@@ -1001,10 +1008,9 @@ class GenogramTree extends React.Component {
                   isUpdated: true
                 });
               }}
-              // bloodlineOnly={this.state.filters.bloodline ? "on" : "off"}
               onBloodlineChange={e => {
                 this.setState({
-                  filters: new FilterModel(e.target.value !== "on"),
+                  filters: this.state.filters = new FilterModel(e.target.checked),
                   isUpdated: true
                 });
               }}
