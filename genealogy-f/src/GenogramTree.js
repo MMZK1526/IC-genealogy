@@ -919,32 +919,16 @@ class GenogramTree extends React.Component {
 
     // Merge two relational JSONs, modifying the old one.
     mergeRelations(oldRel, newRel) {
-      // const res = {};
       oldRel.items.push(...newRel.items);
       oldRel.relations.push(...newRel.relations);
-      // res.targets = oldRel.targets;
-      // const idItemMap = new Map();
-      // for (const item of oldRel.items) {
-      //     idItemMap.set(item.id, item);
-      // }
-      // const idRelMap = new Map();
-      // for (const rel of oldRel.relations) {
-      //     idRelMap.set(`${rel.item1Id} ${rel.item2Id}`, rel);
-      // }
-      // for (const item of newRel.items) {
-      //     if (!idItemMap.has(item.id)) {
-      //         idItemMap.set(item.id, item);
-      //     }
-      // }
-      // for (const rel of newRel.relations) {
-      //     const key = `${rel.item1Id} ${rel.item2Id}`;
-      //     if (!idRelMap.has(key)) {
-      //         idRelMap.set(key, rel);
-      //     }
-      // }
-      // res.items = Array.from(idItemMap.values());
-      // res.relations = Array.from(idRelMap.values());
-      // return res;
+      const idRelMap = new Map();
+      for (const rel of oldRel.relations) {
+          idRelMap.set(`${rel.item1Id} ${rel.item2Id}`, rel);
+      }
+      for (const rel of newRel.relations) {
+          const key = `${rel.item1Id} ${rel.item2Id}`;
+      }
+      oldRel.relations = Array.from(idRelMap.values());
       return oldRel;
   }
 

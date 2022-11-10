@@ -115,13 +115,6 @@ object Database {
             RelationshipTable.item2.asStringColumn.inList(ids) and
                     type.asStringColumn.inList(homoStrata + heteroStrata)
         }
-        val items = relationships.mapNotNull {
-            if (it.item1.id.value in ids) {
-                null
-            } else {
-                it.item1
-            }
-        }
 
         val sameLevelNewItems = mutableMapOf<String, MutableList<String>>()
         val differentLevelNewItems = mutableMapOf<String, MutableList<String>>()
@@ -149,7 +142,6 @@ object Database {
         visited: MutableSet<String>
     ) =
         transaction {
-            val oldVisited = visited.toSet()
             var frontier = mapOf(id to 0)
             val targets = Item.find {
                 ItemTable.id.asStringColumn.inList(frontier.keys)
@@ -173,11 +165,7 @@ object Database {
                     .filter { !visited.contains(it.first) && it.second <= depth }
                     .toMap() + nextDifferentLevelItems.map { it.key to it.value.minOf { value -> frontier[value]!! } + 1 }
                     .filter { !visited.contains(it.first) && it.second <= depth }
-                relations.addAll(newRelations.filter {
-                    (visited.contains(it.item1Id) || frontier.contains(it.item1Id)) && !(oldVisited.contains(
-                        it.item1Id
-                    ) && oldVisited.contains(it.item2Id))
-                })
+                relations.addAll(newRelations.filter { (visited.contains(it.item1Id) || frontier.contains(it.item1Id)) })
             }
 
             RelationsResponse(targets, items.toList(), relations.toList())
