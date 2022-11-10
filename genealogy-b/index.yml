@@ -73,18 +73,15 @@ paths:
             - WD-P22
             - WD-P25
             - WD-P40
-      - name: visited_items
-        description: Do not search the relationships of these items
-        in: query
-        required: false
-        style: form
-        explode: false
-        schema:
-          type: array
-          items:
-            type: string
-    get:
+    post:
       summary: Finds items related to a given item on WikiData.
+      requestBody:
+        description: A comma-separated list of visited items. Will not return them again.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RelationCalculatorRequest'
       responses:
         200:
           description: A RelationsResponse object containing the relations, the target searched for, as well as the non-target items involved in the relations.
@@ -151,8 +148,10 @@ paths:
         type: array
         items:
           type: string
-    get:
+    post:
       summary: Finds items related to a given item in the database.
+      requestBody:
+        description: A comma-separated list of visited items. Will not return them again.
       responses:
         200:
           description: A RelationsResponse object containing the relations, the target searched for, as well as the non-target items involved in the relations.

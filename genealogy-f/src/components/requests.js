@@ -13,8 +13,39 @@ export class Requests {
     }
 
     relations({id = 'WD-Q152308', depth = 2, visitedItems = ""} = {}) {
-        const url = `${this.baseUrl}/relations_wk?id=${id}&depth=${depth}&visited_items=${visitedItems}`
-        return fetch(url)
+        const url = `${this.baseUrl}/relations_wk?id=${id}&depth=${depth}`
+        const headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+        const request = new Request(
+            url,
+            {
+                method: 'POST',
+                headers: headers,
+                body: visitedItems,
+            }
+        );
+        return fetch(request)
+            .then(response => {
+                return response.json();
+            })
+            .catch((error) => {
+                console.error(`Error: ${error}`);
+            });
+    }
+
+    relationsDb({id = 'WD-Q152308', depth = 2, visitedItems = ""} = {}) {
+        const url = `${this.baseUrl}/relations_db?id=${id}&depth=${depth}`
+        const headers = new Headers();
+        headers.append('Content-Type', 'application/json');
+        const request = new Request(
+            url,
+            {
+                method: 'POST',
+                headers: headers,
+                body: visitedItems,
+            }
+        );
+        return fetch(request)
             .then(response => {
                 return response.json();
             })
