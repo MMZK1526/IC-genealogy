@@ -89,7 +89,7 @@ private fun kinshipCalculator(primitives: List<String>): List<String> {
                 else -> if (risingLvl == fallingLvl) {
                     "${makeOrdinal(min(risingLvl, fallingLvl) - 1)} cousin"
                 } else {
-                    "${makeOrdinal(min(risingLvl, fallingLvl) - 1)} cousin" +
+                    "${makeOrdinal(min(risingLvl, fallingLvl) - 1)} cousin " +
                             "${makeTimes(abs(risingLvl - fallingLvl))} removed"
                 }
             }
