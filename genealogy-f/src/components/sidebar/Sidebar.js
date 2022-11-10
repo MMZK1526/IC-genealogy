@@ -15,10 +15,6 @@ export function Sidebar(props) {
             onRemove={(_, i) => props.filters.families.delete(i.name)} // Function will trigger on remove event
             displayValue='name' // Property name to display in the dropdown options
         />
-        <Form.Group className='form-group' controlId='family-name-filter'>
-          <Form.Label>Family Name</Form.Label>
-          <Form.Control placeholder='e.g. Windsor' type='text' onChange={props.familyChange}/>
-        </Form.Group>
         <Form.Group className='form-group' controlId='bloodline-checkbox'>
           <Form.Check title='Bloodline' label='Bloodline Only' type='checkbox' defaultChecked 
           onChange={(e) => {

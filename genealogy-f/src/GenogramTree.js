@@ -848,14 +848,16 @@ class GenogramTree extends React.Component {
         }
 
         // Add outliers
-        const outliers = new go.Set();
+        const outlierParents = new go.Set();
+        const outlierSpouses = new go.Set();
         visited.each((v) => {
           var newElems = this.state.originalJSON.relations
-              .filter((r) => r.item2Id === v && (r.type === 'father' || r.type === 'mother') && !visited.contains(r.item1Id))
-              .map((r) => r.item1Id);
-          outliers.addAll(newElems);
+              .filter((r) => r.item2Id === v && (r.type !== 'child') && !visited.contains(r.item1Id));
+          outlierParents.addAll(newElems.filter((r) => r.type !== 'spouse').map((r) => r.item1Id));
+          outlierSpouses.addAll(newElems.filter((r) => r.type === 'spouse').map((r) => r.item1Id));
         });
-        visited.addAll(outliers);
+
+        visited.addAll(outlierParents.retainAll(outlierSpouses));
 
         var filteredJSON = { targets: this.state.originalJSON.targets, items: {} };
         visited.each((v) => {
