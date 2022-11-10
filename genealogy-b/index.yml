@@ -84,7 +84,7 @@ paths:
               type: array
               items:
                 type: string
-              default: []
+              example: []
       responses:
         200:
           description: A RelationsResponse object containing the relations, the target searched for, as well as the non-target items involved in the relations.
@@ -152,7 +152,7 @@ paths:
               type: array
               items:
                 type: string
-              default: []
+              example: []
       responses:
         200:
           description: A RelationsResponse object containing the relations, the target searched for, as well as the non-target items involved in the relations.
