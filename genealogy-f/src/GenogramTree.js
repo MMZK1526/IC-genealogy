@@ -561,6 +561,15 @@ export class DiagramWrapper extends React.Component {
     const node = this.diagram.findNodeForKey(focusId);
     if (node !== null) {
       this.diagram.select(node);
+
+      console.log(node.actualBounds);
+      // console.log(this.diagram.transformDocToView(node.actualBounds));
+
+      console.log(this.diagram.documentBounds);
+      console.log(this.diagram.viewportBounds);
+
+      // this.diagram.commandHandler.scrollToPart(node);
+      this.diagram.centerRect(node.actualBounds);
     }
   }
 
