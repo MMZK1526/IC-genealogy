@@ -517,14 +517,14 @@ export class DiagramWrapper extends React.Component {
 
 
       this.diagram.linkTemplate =  // for parent-child relationships
-        $(MarginLink,
+        $(go.Link,
           {
             routing: go.Link.AvoidsNodes,
             fromSpot: go.Spot.Bottom,
             toSpot: go.Spot.Top,
             layerName: 'Background', selectable: false,
           },
-          $(go.Shape, { stroke: '#424242', strokeWidth: 0.5}, new go.Binding('opacity', 'opacity'))
+          $(go.Shape, {stroke: '#424242', strokeWidth: 0.5}, new go.Binding('opacity', 'opacity'))
         );
 
       this.diagram.linkTemplateMap.add('Marriage',  // for marriage relationships
@@ -1279,6 +1279,98 @@ class GenogramTree extends React.Component {
       // (other than the ones that are the widest or tallest in their respective layer).
     }
 
+    commitLinks() {
+      super.commitLinks();
+      console.log("!");
+      var splitNode = this.splitNode;
+      var mergeNode = this.mergeNode;
+      if (splitNode === null || mergeNode === null || this.network === null) return;
+      // set default link spots based on this.angle
+      var it = this.network.edges.iterator;
+      while (it.next()) {
+        var e = it.value;
+        var link = e.link;
+        if (!link) continue;
+        if (this.angle === 0) {
+          if (this.setsPortSpot) link.fromSpot = go.Spot.Right;
+          if (this.setsChildPortSpot) link.toSpot = go.Spot.Left;
+        } else if (this.angle === 90) {
+          if (this.setsPortSpot) link.fromSpot = go.Spot.Bottom;
+          if (this.setsChildPortSpot) link.toSpot = go.Spot.Top;
+        }
+      }
+      // Make sure links coming into and going out of a Split node come in the correct way
+      if (splitNode) {
+        // Handle links coming into the Split node
+        var cond = this.isConditional(splitNode);
+        var swtch = this.isSwitch(splitNode);
+        // Handle links going out of the Split node
+        var first = true;  // handle "If" nodes specially
+        var lit = splitNode.findLinksOutOf();
+        while (lit.next()) {
+          var link = lit.value;
+          if (this.angle === 0) {
+            if (this.setsPortSpot) link.fromSpot = cond ? (first ? go.Spot.Top : go.Spot.Bottom) : (swtch ? go.Spot.RightSide : go.Spot.Right);
+            if (this.setsChildPortSpot) link.toSpot = go.Spot.Left;
+          } else if (this.angle === 90) {
+            if (this.setsPortSpot) link.fromSpot = cond ? (first ? go.Spot.Left : go.Spot.Right) : (swtch ? go.Spot.BottomSide : go.Spot.Bottom);
+            if (this.setsChildPortSpot) link.toSpot = go.Spot.Top;
+          }
+          first = false;
+        }
+      }
+      if (mergeNode) {
+        // Handle links going into the Merge node
+        var it = mergeNode.findLinksInto();
+        while (it.next()) {
+          var link = it.value;
+          if (!this.isSplit(link.fromNode)) {  // if link connects Split with Merge directly, only set fromSpot once
+            if (this.angle === 0) {
+              if (this.setsPortSpot) link.fromSpot = go.Spot.Right;
+              if (this.setsChildPortSpot) link.toSpot = go.Spot.Left;
+            } else if (this.angle === 90) {
+              if (this.setsPortSpot) link.fromSpot = go.Spot.Bottom;
+              if (this.setsChildPortSpot) link.toSpot = go.Spot.Top;
+            }
+          }
+          if (!link.isOrthogonal) continue;
+          // have all of the links coming into the Merge node have segments
+          // that share a common X (or if angle==90, Y) coordinate
+          link.updateRoute();
+          if (link.pointsCount >= 6) {
+            var pts = link.points.copy();
+            var p2 = pts.elt(pts.length - 4);
+            var p3 = pts.elt(pts.length - 3);
+            if (this.angle === 0 && p2.x === p3.x) {
+              var x = mergeNode.position.x - this.layerSpacing / 2;
+              pts.setElt(pts.length - 4, new go.Point(x, p2.y));
+              pts.setElt(pts.length - 3, new go.Point(x, p3.y));
+            } else if (this.angle === 90 && p2.y === p3.y) {
+              var y = mergeNode.position.y - this.layerSpacing / 2;
+              pts.setElt(pts.length - 4, new go.Point(p2.x, y));
+              pts.setElt(pts.length - 3, new go.Point(p3.x, y));
+            }
+            link.points = pts;
+          }
+        }
+        // handle links coming out of the Merge node, looping back left/up
+        var it = mergeNode.findLinksOutOf();
+        while (it.next()) {
+          var link = it.value;
+          // if connects internal with external node, it isn't a loop-back link
+          if (link.toNode.containingGroup !== mergeNode.containingGroup) continue;
+          if (this.angle === 0) {
+            if (this.setsPortSpot) link.fromSpot = go.Spot.TopBottomSides;
+            if (this.setsChildPortSpot) link.toSpot = go.Spot.TopBottomSides;
+          } else if (this.angle === 90) {
+            if (this.setsPortSpot) link.fromSpot = go.Spot.LeftRightSides;
+            if (this.setsChildPortSpot) link.toSpot = go.Spot.LeftRightSides;
+          }
+          link.routing = go.Link.AvoidsNodes;
+        }
+      }
+    }
+
     commitNodes() {
       super.commitNodes();
       const horiz = this.direction === 0.0 || this.direction === 180.0;
@@ -1370,12 +1462,6 @@ class GenogramTree extends React.Component {
         if (name.isLinkLabel) return name;
       }
       return null;
-    }
-  }
-
-  class MarginLink extends go.Link {
-    computeThickness() {
-      return 10;
     }
   }
   
