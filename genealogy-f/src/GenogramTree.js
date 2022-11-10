@@ -517,12 +517,14 @@ export class DiagramWrapper extends React.Component {
 
 
       this.diagram.linkTemplate =  // for parent-child relationships
-        $(go.Link,
+        $(MarginLink,
           {
-            routing: go.Link.Orthogonal, corner: 0,
+            routing: go.Link.AvoidsNodes,
+            fromSpot: go.Spot.Bottom,
+            toSpot: go.Spot.Top,
             layerName: 'Background', selectable: false,
           },
-          $(go.Shape, { stroke: '#424242', strokeWidth: 1}, new go.Binding('opacity', 'opacity'))
+          $(go.Shape, { stroke: '#424242', strokeWidth: 0.5}, new go.Binding('opacity', 'opacity'))
         );
 
       this.diagram.linkTemplateMap.add('Marriage',  // for marriage relationships
@@ -1370,6 +1372,12 @@ class GenogramTree extends React.Component {
       return null;
     }
   }
+
+  class MarginLink extends go.Link {
+    computeThickness() {
+      return 10;
+    }
+  }
   
   class ArcLink extends go.Link {
     rotate(x, y, rad) {
@@ -1484,4 +1492,5 @@ class GenogramTree extends React.Component {
       return true;
     }
   }
+
 export default withRouter(GenogramTree);
