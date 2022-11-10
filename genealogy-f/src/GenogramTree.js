@@ -323,8 +323,8 @@ export class DiagramWrapper extends React.Component {
     this.nodeDataArray = props.nodeDataArray;
     this.yearFrom = props.yearFrom;
     this.yearTo = props.yearTo;
-    this.state = { diagram: undefined, isFirstRender: true };
     this.getFocusPerson = props.getFocusPerson;
+    this.state = { diagram: undefined, isFirstRender: true };
     this.init();
   }
 
@@ -362,8 +362,19 @@ export class DiagramWrapper extends React.Component {
               $(go.Shape, 'Circle', {fill: '#c1cee3', stroke: null }),
               $(go.Placeholder, { margin: 0 })
             ),
+          scrollMargin: 200,
           layout:  // use a custom layout, defined below
-            $(GenogramLayout, { direction: 90, layerSpacing: 50, columnSpacing: 0 })
+            $(GenogramLayout, { direction: 90, layerSpacing: 50, columnSpacing: 0 }),
+          "InitialLayoutCompleted": e => {
+            // wait until initial layout and initial animation are finished,
+            // then select the node and scroll to it with its own animation
+            const node = this.diagram.findNodeForKey(this.getFocusPerson());
+            console.log(node.key);
+            if (node !== null) {
+              this.diagram.commandHandler.scrollToPart(node);
+              this.diagram.select(node);
+            }
+          }
         })
       this.diagram = this.state.diagram;
       // determine the color for each attribute shape
@@ -435,7 +446,6 @@ export class DiagramWrapper extends React.Component {
           default: return tlarc;
         }
       }
-
 
       // two different node templates, one for each sex,
       // named by the category value in the node data object
@@ -559,9 +569,6 @@ export class DiagramWrapper extends React.Component {
     this.setupMarriages(this.diagram);
 
     const node = this.diagram.findNodeForKey(focusId);
-    if (node !== null) {
-      this.diagram.select(node);
-    }
   }
 
 
@@ -753,7 +760,7 @@ class GenogramTree extends React.Component {
         console.log('GoJS model changed!');
     }
 
-    handleDiagramEvent (event) {
+    handleDiagramEvent(event) {
       if (!this.personMap.has(event.subject.part.key)) {
           return;
       }
@@ -836,11 +843,13 @@ class GenogramTree extends React.Component {
         this.state.isLoading = false;
         this.state.isUpdated = true;
         this.state.relationJSON = filteredJSON;
+        this.state.personInfo = this.state.root;
       } else {
         this.setState({
           isLoading: false,
           isUpdated: true,
           relationJSON: filteredJSON,
+          personInfo: id,
         });
       }
     }
@@ -850,8 +859,7 @@ class GenogramTree extends React.Component {
       const newrelationJSON = this.integrateKinshipIntorelationJSON(kinshipJSON, relationJSON);
       this.setState({
           kinshipJSON: kinshipJSON,
-          originalJSON: newrelationJSON,
-          personInfo: id
+          originalJSON: newrelationJSON
       });
     }
 
