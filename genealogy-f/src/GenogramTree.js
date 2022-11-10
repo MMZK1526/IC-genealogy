@@ -323,6 +323,7 @@ export class DiagramWrapper extends React.Component {
     this.nodeDataArray = props.nodeDataArray;
     this.yearFrom = props.yearFrom;
     this.yearTo = props.yearTo;
+    this.root = props.root;
     this.getFocusPerson = props.getFocusPerson;
     this.state = { diagram: undefined, isFirstRender: true };
     this.init();
@@ -366,11 +367,11 @@ export class DiagramWrapper extends React.Component {
           layout:  // use a custom layout, defined below
             $(GenogramLayout, { direction: 90, layerSpacing: 50, columnSpacing: 0 }),
           'InitialLayoutCompleted': e => {
-            // wait until initial layout and initial animation are finished,
-            // then select the node and scroll to it with its own animation
-            const node = this.diagram.findNodeForKey(this.getFocusPerson());
-            console.log(node.key);
-            if (node !== null) {
+            var node = this.diagram.findNodeForKey(this.getFocusPerson());
+            if (node == null) {
+              node = this.diagram.findNodeForKey(this.root);
+            }
+            if (node != null) {
               this.diagram.commandHandler.scrollToPart(node);
               this.diagram.select(node);
             }
@@ -853,16 +854,29 @@ class GenogramTree extends React.Component {
         if (filters.bloodline) {
           console.log('血胤');
           var frontier = [this.state.root];
+          var descendants = [];
 
-          while (frontier.length > 0) {
+          while (frontier.length > 0 || descendants.length > 0) {
             var cur = frontier.shift();
-            var newElems = this.state.originalJSON.relations
-                .filter((r) => r.item2Id === cur && r.type !== 'spouse' && !visited.contains(r.item1Id))
-                .map((r) => r.item1Id);
-            visited.addAll(newElems);
-            frontier.push(...newElems);
+            if (cur) {
+              var newElems = this.state.originalJSON.relations
+                  .filter((r) => r.item2Id === cur && r.type !== 'spouse' && !visited.contains(r.item1Id));
+              var newFrontier = newElems.filter((r) => r.type !== 'child').map((r) => r.item1Id);
+              var newDescendants = newElems.filter((r) => r.type === 'child').map((r) => r.item1Id);
+              visited.addAll(newElems.map((r) => r.item1Id));
+              frontier.push(...newFrontier);
+              descendants.push(...newDescendants);
+            } else {
+              cur = descendants.shift();
+              var newElems = this.state.originalJSON.relations
+                  .filter((r) => r.item2Id === cur && r.type !== 'spouse' && !visited.contains(r.item1Id))
+              var newDescendants = newElems.filter((r) => r.type === 'child').map((r) => r.item1Id);
+              visited.addAll(newElems.map((r) => r.item1Id));
+              descendants.push(...newDescendants);
+            }
           }
         }
+        // console.log(visited.toArray());
         var filteredJSON = { targets: this.state.originalJSON.targets };
         filteredJSON.items = this.state.originalJSON.items.filter((i) => visited.contains(i.id));
         filteredJSON.relations = this.state.originalJSON.relations.filter((r) => visited.contains(r.item1Id) && visited.contains(r.item2Id));
@@ -1036,6 +1050,7 @@ class GenogramTree extends React.Component {
               yearFrom={this.props.from}
               yearTo={this.props.to}
               ref={this.componentRef}
+              root={this.state.root}
               getFocusPerson={this.getFocusPerson}
           />
           {this.state.showBtns &&
