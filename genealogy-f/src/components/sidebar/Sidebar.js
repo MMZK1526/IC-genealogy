@@ -1,8 +1,15 @@
 
-import {Form} from 'react-bootstrap'
+import { Form } from 'react-bootstrap';
+import { useState } from 'react';
 import Button from 'react-bootstrap/Button';
-import './Sidebar.css'
+import './Sidebar.css';
 import Multiselect from 'multiselect-react-dropdown';
+import { Autocomplete, TextField } from '@mui/material';
+
+const names = [
+    { label: "Josef" },
+    { label: "Vasily" },
+];
 
 export function Sidebar(props) {
   return (
@@ -15,6 +22,7 @@ export function Sidebar(props) {
             onRemove={(_, i) => props.filters.families.delete(i.name)} // Function will trigger on remove event
             displayValue='name' // Property name to display in the dropdown options
         />
+
         <Form.Group className='form-group' controlId='bloodline-checkbox'>
           <Form.Check title='Bloodline' label='Bloodline Only' type='checkbox' defaultChecked 
           onChange={(e) => {
@@ -22,6 +30,15 @@ export function Sidebar(props) {
           }}
           />
         </Form.Group>
+
+        <Autocomplete
+            disablePortal
+            id="combo-box-demo"
+            options={names}
+            sx={{ width: 300 }}
+            renderInput={(params) => <TextField {...params} label="Search for name" />}
+        />
+
         <Button onClick={() => props.onChange()}>
           Apply
         </Button>
