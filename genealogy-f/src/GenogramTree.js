@@ -692,7 +692,6 @@ class GenogramTree extends React.Component {
     }
 
     setFocusPerson(focusId) {
-        console.log('set focus person')
         this.setState({
           personInfo: focusId,
           isUpdated: true,
@@ -929,7 +928,7 @@ class GenogramTree extends React.Component {
     document.addEventListener('keydown', (event) => {
       if (event.key === ' ' && this.state && this.state.relationJSON != null) {
         event.preventDefault();
-        this.setState({ showBtns: !this.state.showBtns, isUpdated: false })
+        this.setState({ showBtns: !this.state.showBtns, isUpdated: false, isLoading: false })
       }
     });
   }
@@ -976,6 +975,7 @@ class GenogramTree extends React.Component {
       this.applyFilterAndDrawTree();
       this.relations = transform(this.state.relationJSON, this.state.filters);
       updateDiagram = true;
+      this.state.isLoading = false; // isLoading = ?
     }
     this.personMap = getPersonMap(Object.values(this.state.originalJSON.items));
 
@@ -1008,7 +1008,7 @@ class GenogramTree extends React.Component {
                   isUpdated: true
                 });
               }}
-              onChange={() => this.setState({isUpdated: true})}
+              onChange={() => this.setState({isUpdated: true, isLoading: true})}
               onPersonSelection={(_, v) => this.setFocusPerson(v.key)}
               getAllPersons={this.getAllPersons}
             />
