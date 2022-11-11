@@ -54,7 +54,7 @@ export function Sidebar(props) {
             <Autocomplete
                 // disablePortal
                 options={allPersons}
-                getOptionLabel={(option) => option.name}
+                getOptionLabel={(option) => `${option.name} (${option.key})`}
                 onChange={props.onPersonSelection}
                 sx={{ width: 300 }}
                 renderInput={(params) => <TextField {...params} />}
