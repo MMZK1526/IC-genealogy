@@ -12,9 +12,11 @@
 }
 
 .sidebar .form-group{
-  margin-top: 20px;
+  margin: 10px 0px;
   font-family: "Avenir Next", sans-serif;
-  font-weight: 600;
+  font-weight: bold;
+  color: darkslategray;
+  /* font-style: italic; */
 }
 
 .sidebar .form-label {
@@ -84,4 +86,20 @@
     display:block;
     margin:0.4em auto;
   }
+}
+
+.label {
+  display: flex;
+  font-size: large;
+  color: darkslategray;
+  margin-bottom: 10px;
+}
+
+.control {
+  display: inline;
+  font-size: large;
+  color: rgb(50, 50, 50);
+  background-color: transparent;
+  border: dashed #ccc 2px;
+  border-radius: 5px;
 }
