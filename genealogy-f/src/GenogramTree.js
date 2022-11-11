@@ -631,7 +631,7 @@ export class DiagramWrapper extends React.Component {
         this.diagram.commandHandler.scrollToPart(node);
         this.diagram.select(node);
       }
-    }
+    }    
     return (
           <ReactDiagram
             ref={this.diagramRef}
@@ -689,9 +689,6 @@ class GenogramTree extends React.Component {
           showBtns: true,
           recentre: false,
         };
-        if (this.rawJSON) {
-          this.fetchRelations(null, 3);
-        }
         this.componentRef = React.createRef();
       }
     }
@@ -765,19 +762,36 @@ class GenogramTree extends React.Component {
     }
 
     // If id is provided, we search this id. Otherwise it is a JSON provided by the user
-    async fetchRelations(id, depth) {
+    async fetchRelations(id, depth, fromCache = false) {
       var relationJSON;
       depth = 2; // TODO: Remove later
       if (id == null || id === undefined) {
         relationJSON = this.state.originalJSON;
-      } else {
+      } else if (fromCache) {
+        relationJSON = await this.requests.relationsDb({
+          id: id, depth: depth,
+          visitedItems: this.state.originalJSON ? Object.keys(this.state.originalJSON.items) : []}
+          );
+        console.log("Data fetched from cache!");
+      } else  {
         relationJSON = await this.requests.relations({
           id: id, depth: depth,
           visitedItems: this.state.originalJSON ? Object.keys(this.state.originalJSON.items) : []}
           );
+        console.log("Data fetched from WikiData!");
       }
+
+      if (!fromCache) {
+        let oldItems = Object.keys(this.state.originalJSON.items);
+        let newItems = Object.keys(relationJSON.items);
+        if ((oldItems.every(oldI => newItems.some(newI => oldI === newI)) && oldItems.length == newItems.length) ||
+            !confirm("New Data From Cache! Load?")) {
+              return;
+            }
+      }
+
       if (this.state.originalJSON == null) {
-        this.state.originalJSON = JSON.parse(JSON.stringify(relationJSON));
+        this.state.originalJSON = relationJSON;
       } else {
         this.mergeRelations(this.state.originalJSON, relationJSON);
       }
@@ -946,7 +960,7 @@ class GenogramTree extends React.Component {
       if (event.key === ' ' && this.state && this.state.relationJSON != null) {
         event.preventDefault();
         this.setState({ showBtns: !this.state.showBtns, isUpdated: false, isLoading: false })
-      }
+            }
     });
   }
 
@@ -962,7 +976,10 @@ class GenogramTree extends React.Component {
     }
 
     if (this.state.relationJSON == null) {
-      this.fetchRelations(this.source, 3);
+      Promise.allSettled([
+        this.fetchRelations(this.source, 3, true), 
+        this.fetchRelations(this.source, 3, false)]
+        );
       
       return (
           <div>

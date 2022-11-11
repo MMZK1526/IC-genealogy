@@ -42,7 +42,7 @@ export class Requests {
             {
                 method: 'POST',
                 headers: headers,
-                body: visitedItems,
+                body: JSON.stringify(visitedItems),
             }
         );
         return fetch(request)
