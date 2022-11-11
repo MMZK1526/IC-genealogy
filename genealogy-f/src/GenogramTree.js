@@ -159,7 +159,7 @@ function transform(data, filters) {
   for (let key of relMap.keys()) {
     newOutput.push(relMap.get(key));
   }
-
+  console.log(newOutput);
   return newOutput;
 
 }
@@ -811,6 +811,7 @@ class GenogramTree extends React.Component {
       var filteredJSON = { targets: this.state.originalJSON.targets };
       if (filters.bloodline || filters.families.size !== 0) {
         let visited = new go.Set();
+        visited.add(this.state.root);
         if (filters.bloodline) {
           // console.log('血胤');
           var frontier = [this.state.root];
@@ -850,6 +851,9 @@ class GenogramTree extends React.Component {
         } else {
           visited.addAll(Object.keys(this.state.originalJSON.items));
         }
+
+        // console.log("HERE");
+        // console.log(visited.toArray());
 
         if (filters.families.size !== 0) {
           visited = visited.filter((v) => 
