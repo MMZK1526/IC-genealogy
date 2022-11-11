@@ -14,19 +14,6 @@ export function Sidebar(props) {
             'border': '1px solid',
           },
     };
-    // const [person, setPerson] = React.useState<Map>(null);
-
-    // onApplyClick = () => {
-    //     const focusId = props.getFocusPerson();
-    //     const person = allPersons.find(person => person.id === focusId);
-
-    //     console.log(focusId);
-    //     console.log(person);
-
-    //     // setPerson(person);
-    //     props.onChange();
-    // };
-
 
     return (
         <div className='sidebar'>
@@ -50,13 +37,7 @@ export function Sidebar(props) {
                     />
                 </Form.Group>
 
-                <Button className='apply-button' onClick={() => {
-                    const focusId = props.getFocusPerson();
-                    const person = allPersons.find(person => person.key === focusId);
-
-                    // setPerson(person);
-                    props.onChange();
-                }}>
+                <Button className='apply-button' onClick={() => props.onChange()}>
                     Apply
                 </Button>
             </Form>
@@ -76,7 +57,12 @@ export function Sidebar(props) {
                 value={allPersons.find(person => person.key === props.getFocusPerson())}
                 onChange={props.onPersonSelection}
                 sx={{ width: 300 }}
-                renderInput={(params) => <TextField {...params} />}
+                renderInput={(params) => {
+                    params.inputProps.value = params.inputProps.value.split("(")[0];
+                    return (
+                      <TextField {...params}/>
+                    );
+                  }}
                 renderOption={(props, option) => <li component="li" {...props}>{option.name}</li>}
             />
         </div>
