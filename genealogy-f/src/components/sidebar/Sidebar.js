@@ -53,12 +53,12 @@ export function Sidebar(props) {
             <label className="form-label">Look for name in tree: </label>
             <Autocomplete
                 options={allPersons}
-                getOptionLabel={(option) => `${option.name} (${option.key})`}
+                getOptionLabel={(option) => `${option.name}@${option.key}`}
                 value={allPersons.find(person => person.key === props.getFocusPerson())}
                 onChange={props.onPersonSelection}
                 sx={{ width: 300 }}
                 renderInput={(params) => {
-                    params.inputProps.value = params.inputProps.value.split("(")[0];
+                    params.inputProps.value = params.inputProps.value.split("@")[0];
                     return (
                       <TextField {...params}/>
                     );
