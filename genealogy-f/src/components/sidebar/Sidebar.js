@@ -52,12 +52,12 @@ export function Sidebar(props) {
 
             <label className="form-label">Look for name in tree: </label>
             <Autocomplete
-                // disablePortal
                 options={allPersons}
                 getOptionLabel={(option) => `${option.name} (${option.key})`}
                 onChange={props.onPersonSelection}
                 sx={{ width: 300 }}
                 renderInput={(params) => <TextField {...params} />}
+                renderOption={(props, option) => <li component="li" {...props}>{option.name}</li>}
             />
         </div>
     );
