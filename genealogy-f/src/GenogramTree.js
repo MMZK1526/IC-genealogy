@@ -692,8 +692,10 @@ class GenogramTree extends React.Component {
     }
 
     setFocusPerson(focusId) {
+        console.log('set focus person')
         this.setState({
-          personInfo: focusId
+          personInfo: focusId,
+          isUpdated: true,
         });
     }
 
@@ -1007,6 +1009,7 @@ class GenogramTree extends React.Component {
                 });
               }}
               onChange={() => this.setState({isUpdated: true})}
+              onPersonSelection={(_, v) => this.setFocusPerson(v.key)}
               getAllPersons={this.getAllPersons}
             />
           }

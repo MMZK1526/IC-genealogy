@@ -47,6 +47,7 @@ export function Sidebar(props) {
                 id="combo-box-demo"
                 options={allPersons}
                 getOptionLabel={(option) => option.name}
+                onChange={props.onPersonSelection}
                 sx={{ width: 300 }}
                 renderInput={(params) => <TextField {...params} />}
             />
