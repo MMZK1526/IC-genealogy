@@ -293,7 +293,7 @@ export class DiagramWrapper extends React.Component {
           scrollMargin: 200,
           layout:  // use a custom layout, defined below
             $(GenogramLayout, { direction: 90, layerSpacing: 50, columnSpacing: 0 }),
-          'InitialLayoutCompleted': e => {
+          'InitialLayoutCompleted': _ => {
             var node = this.diagram.findNodeForKey(this.getFocusPerson());
             if (node == null) {
               node = this.diagram.findNodeForKey(this.root);
@@ -621,6 +621,17 @@ export class DiagramWrapper extends React.Component {
         this.setupDiagram(this.props.nodeDataArray, this.props.nodeDataArray[0].key);
       }
     }
+
+    if (this.props.recentre) {
+      var node = this.diagram.findNodeForKey(this.getFocusPerson());
+      if (node == null) {
+        node = this.diagram.findNodeForKey(this.root);
+      }
+      if (node != null) {
+        this.diagram.commandHandler.scrollToPart(node);
+        this.diagram.select(node);
+      }
+    }
     return (
           <ReactDiagram
             ref={this.diagramRef}
@@ -676,6 +687,7 @@ class GenogramTree extends React.Component {
           family: '',
           filters: new FilterModel(true),
           showBtns: true,
+          recentre: false,
         };
         if (this.rawJSON) {
           this.fetchRelations(null, 3);
@@ -694,7 +706,7 @@ class GenogramTree extends React.Component {
     setFocusPerson(focusId) {
         this.setState({
           personInfo: focusId,
-          isUpdated: true,
+          recentre: true,
         });
     }
 
@@ -755,6 +767,7 @@ class GenogramTree extends React.Component {
     // If id is provided, we search this id. Otherwise it is a JSON provided by the user
     async fetchRelations(id, depth) {
       var relationJSON;
+      depth = 2; // TODO: Remove later
       if (id == null || id === undefined) {
         relationJSON = this.state.originalJSON;
       } else {
@@ -975,7 +988,12 @@ class GenogramTree extends React.Component {
       this.applyFilterAndDrawTree();
       this.relations = transform(this.state.relationJSON, this.state.filters);
       updateDiagram = true;
-      this.state.isLoading = false; // isLoading = ?
+      this.state.isLoading = false;
+    }
+    var recentre = false;
+    if (this.state.recentre) {
+      recentre = true;
+      this.state.recentre = false;
     }
     this.personMap = getPersonMap(Object.values(this.state.originalJSON.items));
 
@@ -1026,6 +1044,7 @@ class GenogramTree extends React.Component {
 
           <DiagramWrapper
               updateDiagram={updateDiagram}
+              recentre={recentre}
               editCount={this.props.editCount}
               nodeDataArray={this.relations}
               onModelChange={this.handleModelChange}
