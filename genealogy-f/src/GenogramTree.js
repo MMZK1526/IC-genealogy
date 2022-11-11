@@ -651,6 +651,8 @@ class GenogramTree extends React.Component {
         this.closePopUp = this.closePopUp.bind(this);
         this.handleStatsClick = this.handleStatsClick.bind(this);
         this.handlePopupExtend = this.handlePopupExtend.bind(this);
+        this.getAllPersons = this.getAllPersons.bind(this);
+        this.setFocusPerson = this.setFocusPerson.bind(this);
         this.getFocusPerson = this.getFocusPerson.bind(this);
         this.requests = this.props.requests;
         if (this.rawJSON) {
@@ -680,6 +682,19 @@ class GenogramTree extends React.Component {
         }
         this.componentRef = React.createRef();
       }
+    }
+
+    // Returns map of nodes for persons in tree
+    getAllPersons() {
+      return this.relations.filter((person) => {
+        return person.name !== 'unknown' && person.gender !== "LinkLabel";
+      });
+    }
+
+    setFocusPerson(focusId) {
+        this.setState({
+          personInfo: focusId
+        });
     }
 
     getFocusPerson() {
@@ -783,7 +798,7 @@ class GenogramTree extends React.Component {
       if (filters.bloodline || filters.families.size !== 0) {
         let visited = new go.Set();
         if (filters.bloodline) {
-          console.log('血胤');
+          // console.log('血胤');
           var frontier = [this.state.root];
           var descendants = [];
 
@@ -992,6 +1007,7 @@ class GenogramTree extends React.Component {
                 });
               }}
               onChange={() => this.setState({isUpdated: true})}
+              getAllPersons={this.getAllPersons}
             />
           }
           {

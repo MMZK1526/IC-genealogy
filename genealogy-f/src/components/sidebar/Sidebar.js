@@ -5,12 +5,9 @@ import './Sidebar.css';
 import Multiselect from 'multiselect-react-dropdown';
 import { Autocomplete, TextField } from '@mui/material';
 
-const names = [
-    { label: "Josef" },
-    { label: "Vasily" },
-];
-
 export function Sidebar(props) {
+    const allPersons = props.getAllPersons();
+
     return (
         <div className='sidebar'>
             <Form>
@@ -44,11 +41,12 @@ export function Sidebar(props) {
                 margin: '20px 0px'
             }} />
 
-            <label className="label">Search for name in tree: </label>
+            <label className="label">Look for name in tree: </label>
             <Autocomplete
-                disablePortal
+                // disablePortal
                 id="combo-box-demo"
-                options={names}
+                options={allPersons}
+                getOptionLabel={(option) => option.name}
                 sx={{ width: 300 }}
                 renderInput={(params) => <TextField {...params} />}
             />
