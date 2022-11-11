@@ -96,12 +96,9 @@ var relMap = new Map();
 
 function transform(data, filters) {
   relMap = new Map();
-  // if this person has empty relation, add itself into nodeDataArray
-  if (data.relations.length === 0) {
-    var out = [];
+  
+  Object.values(data.items).forEach((person) => {
     let singlePerson = new Map();
-    const person = data.targets[0];
-    // add gender from additionalProperties
     for (let attr of person.additionalProperties) {
       if (attr.name === 'gender') {
         singlePerson.set('gender', attr.value);
@@ -111,9 +108,8 @@ function transform(data, filters) {
     singlePerson.set('key', person.id);
     singlePerson.set('name', person.name);
     singlePerson.set('spouse', []);
-    out.push(Object.fromEntries(singlePerson));
-    return out;
-  }
+    relMap.set(person.id, Object.fromEntries(singlePerson));
+  });
 
   for (let relation of data.relations) {
     var key = relation['item2Id'];
@@ -127,21 +123,7 @@ function transform(data, filters) {
     // need a filter here depending on which type of tree we are using.
     var addProps = sourceItem.additionalProperties;
 
-    var motherfuckers = {};
-
-    // create node for item1 key ('from' key)
-    if (relMap.has(key)) {
-        motherfuckers = relMap.get(key);
-    } else {
-      var genderKey = addProps.filter(p => p.name == 'gender')[0]
-      var gender = genderKey ? genderKey.value : undefined
-      motherfuckers = {
-        key: sourceItem.id,
-        name: sourceItem.name,
-        gender: gender,
-        spouse: []
-      };
-    }
+    var motherfuckers = relMap.get(key);
 
     // check each relationship if so update record accordingly
     if (relation.type === 'child') {
@@ -158,18 +140,6 @@ function transform(data, filters) {
       motherfuckers.spouse.push(relation.item1Id);
     }
     relMap.set(key, motherfuckers);
-    var targetKey = relation['item1Id'];
-    var targetItem =  data.items[targetKey];
-    if (!relMap.has(targetKey)) {
-      var genderKey = targetItem.additionalProperties.filter(p => p.name == 'gender')[0]
-      var gender = genderKey ? genderKey.value : undefined
-      relMap.set(targetKey, {
-        key: targetItem.id,
-        name: targetItem.name,
-        gender: gender,
-        spouse: []
-      });
-    }
   }
 
   var newOutput = [];
@@ -856,8 +826,10 @@ class GenogramTree extends React.Component {
           outlierParents.addAll(newElems.filter((r) => r.type !== 'spouse').map((r) => r.item1Id));
           outlierSpouses.addAll(newElems.filter((r) => r.type === 'spouse').map((r) => r.item1Id));
         });
-
+        // console.log(visited.toArray().map((v) => this.state.originalJSON.items[v].name));
         visited.addAll(outlierParents.retainAll(outlierSpouses));
+        // console.log(outlierParents.toArray().map((v) => this.state.originalJSON.items[v].name));
+        // console.log(outlierSpouses.toArray().map((v) => this.state.originalJSON.items[v].name));
 
         var filteredJSON = { targets: this.state.originalJSON.targets, items: {} };
         visited.each((v) => {
