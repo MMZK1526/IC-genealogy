@@ -79,9 +79,7 @@ export class NameSearch extends React.Component {
         const res = await this.utils.processRelations(data);
         this.id = res.id;
         this.relations = res.data;
-        this.setState({
-            showTree: true,
-        });
+        this.setState({showTree: true});
     }
 
     handleSearchSubmit = async (event) => {

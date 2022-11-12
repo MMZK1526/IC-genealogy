@@ -70,19 +70,21 @@ export class Utils {
                 arr.reverse();
                 return arr.join(' of the ');
             }).join('; ');
-            const property = {
+            console.assert(relationsJson.items[key]);
+            const item = relationsJson.items[key];
+            const props = item.additionalProperties;
+            const prop = props.find((p) => p.propertyId == 'PB-kinship');
+            if (prop) {
+                prop.value = kinshipStr;
+            } else {
+                const property = {
                 propertyId: 'PB-kinship',
                 name: 'relation to the searched person',
                 value: kinshipStr,
                 valueHash: null,
-            };
-            if (!relationsJson.items[key]) {
-                console.log(key);
-            }
-
-            const item = relationsJson.items[key];
-            const props = item.additionalProperties;
-            props.push(property);
+                };
+                props.push(property);
+          }
             item.additionalProperties = props;
             relationsJson.items[key] = item;
         }

@@ -15,37 +15,37 @@ data class RelationCalculatorRequest(
 fun calculateRelations(input: RelationCalculatorRequest): Map<String, List<List<String>>> {
     val relationsMap = input.relations.groupBy { it.item2Id }
     val result = mutableMapOf<String, MutableSet<List<RelationshipDTO>>>()
-    val queue = ArrayDeque(relationsMap[input.start] ?: listOf())
-    val visitedItems = mutableSetOf(input.start)
+    val frontier = ArrayDeque(listOf(input.start))
 
-    while (true) {
-        val currentRelation = queue.removeFirstOrNull() ?: break
-        if (currentRelation.item2Id == input.start) {
-            result.getOrPut(currentRelation.item1Id) { mutableSetOf() }.add(listOf(currentRelation))
-        } else {
-            val pathsToPreviousItem = result[currentRelation.item2Id]
-            if (pathsToPreviousItem != null) {
+    while (frontier.isNotEmpty()) {
+        val cur = frontier.removeFirst()
+        val relations = relationsMap[cur] ?: listOf()
+        for (relation in relations) {
+            val pathsToPreviousItem = result[cur]
+            if (pathsToPreviousItem == null) {
+                result.getOrPut(relation.item1Id) { mutableSetOf() }.add(listOf(relation))
+                frontier.add(relation.item1Id)
+            } else {
                 val pathsToPreviousItemWithoutTarget = pathsToPreviousItem.filter { path ->
                     path.all { edge ->
-                        edge.item1Id != currentRelation.item1Id &&
-                                edge.item2Id != currentRelation.item1Id
-                    } && !isPartOfPrunableTriangle(currentRelation, path, input.relations)
+                        edge.item1Id != relation.item1Id &&
+                                edge.item2Id != relation.item1Id
+                    } && !isPartOfPrunableTriangle(relation, path, input.relations)
                 }
-
-                result.getOrPut(currentRelation.item1Id) { mutableSetOf() }.addAll(
-                    pathsToPreviousItemWithoutTarget.map { it + currentRelation }
-                )
+                val oldSize = result.getOrPut(relation.item1Id) { mutableSetOf() }.size
+                val newSize = result[relation.item1Id]?.let { r ->
+                    r.addAll(pathsToPreviousItemWithoutTarget.map { it + relation })
+                    r.size
+                }
+                if (oldSize != newSize) {
+                    frontier.add(relation.item1Id)
+                }
             }
-        }
-
-        if (currentRelation.item1Id !in visitedItems) {
-            queue.addAll(relationsMap[currentRelation.item1Id] ?: listOf())
-            visitedItems.add(currentRelation.item1Id)
         }
     }
 
     return result.mapValues { (_, paths) ->
-        paths.map { path -> kinshipCalculator(path.map { it.typeId }) }.toSet().toList()
+        paths.map { path -> kinshipCalculator(path.map { it.typeId })}.toSet().toList()
     }
 }
 

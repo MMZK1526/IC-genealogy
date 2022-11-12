@@ -740,17 +740,22 @@ class GenogramTree extends React.Component {
               arr.reverse();
               return arr.join(' of the ');
           }).join('; ');
-          const property = {
-              propertyId: 'PB-kinship',
-              name: 'relation to the searched person',
-              value: kinshipStr,
-              valueHash: null,
-          };
 
           console.assert(relationJSON.items[key]);
           const item = relationJSON.items[key];
           const props = item.additionalProperties;
-          props.push(property);
+          const prop = props.find((p) => p.propertyId == 'PB-kinship');
+          if (prop) {
+            prop.value = kinshipStr;
+          } else {
+            const property = {
+              propertyId: 'PB-kinship',
+              name: 'relation to the searched person',
+              value: kinshipStr,
+              valueHash: null,
+            };
+            props.push(property);
+          }
           item.additionalProperties = props;
           relationJSON.items[key] = item;
       }
@@ -943,6 +948,7 @@ class GenogramTree extends React.Component {
 
     async fetchKinships(id, relationJSON) {
       const kinshipJSON = await this.requests.relationCalc({start: id, relations: Object.values(relationJSON.relations).flat()});
+      console.log(JSON.stringify(kinshipJSON));
       const newrelationJSON = this.integrateKinshipIntorelationJSON(kinshipJSON, relationJSON);
       this.setState({
           kinshipJSON: kinshipJSON,

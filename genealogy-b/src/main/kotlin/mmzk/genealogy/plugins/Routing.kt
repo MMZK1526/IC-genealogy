@@ -13,17 +13,6 @@ import mmzk.genealogy.common.calculateRelations
 fun Application.configureRouting() {
     Database.init()
     routing {
-
-        // The API endpoint for searching a name fragment. It will return results from both the database and WikiData,
-        // using an order of relevance.
-        //
-        // Params:
-        // q: Finds items whose name contains q
-        // Response:
-        // id: The ID of the item in the database
-        // name: The name of the item, usually from WikiData
-        // description: A one-liner description of the item, usually from WikiData
-        // additionalProperties: A list of JSON objects representing the properties of this item
         get("/search") {
             call.request.queryParameters["q"]?.let { name ->
                 val searchedItems = WikiDataDataSource().searchIndividualByName(name) // Search in WikiData
@@ -46,8 +35,8 @@ fun Application.configureRouting() {
                     call.request.queryParameters["hetero_strata"]?.split(",") ?: listOf("WD-P22", "WD-P25", "WD-P40")
                 val result = WikiDataDataSource(homoStrata, heteroStrata).findRelatedPeople(id, visitedItems, depth)
                 call.respond(result)
-                Database.insertItems(result.items.values.toList())
-                Database.insertRelations(result.relations.values.flatten())
+//                Database.insertItems(result.items.values.toList())
+//                Database.insertRelations(result.relations.values.flatten())
             } ?: call.respond(
                 HttpStatusCode.BadRequest,
                 mapOf("error" to "Missing query parameter \"q\"!")
@@ -73,15 +62,6 @@ fun Application.configureRouting() {
         post("/relation_calc") {
             val request = call.receive<RelationCalculatorRequest>()
             call.respond(calculateRelations(request))
-//            val result = WikiDataDataSource(listOf("WD-P22", "WD-P25", "WD-P26", "WD-P40")).findRelatedPeople(
-//                "WD-Q9682",
-//                3
-//            )
-//            call.respond(
-//                calculateRelations(
-//                    RelationCalculatorRequest("WD-Q9682", result.relations.toSet()),
-//                )
-//            )
         }
     }
 }
