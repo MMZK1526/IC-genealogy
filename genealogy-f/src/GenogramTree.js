@@ -759,7 +759,7 @@ class GenogramTree extends React.Component {
     }
 
     // If id is provided, we search this id. Otherwise it is a JSON provided by the user
-    async fetchRelations(id, depth, fromCache = false) {
+    async fetchRelations(id, depth, fromCache = false, checkCache = false) {
       var relationJSON;
       depth = 2; // TODO: Remove later
       if (id == null || id === undefined) {
@@ -778,12 +778,53 @@ class GenogramTree extends React.Component {
         console.log("Data fetched from WikiData!");
       }
 
-      if (!fromCache && this.state.originalJSON) {
+      if (!fromCache && checkCache) {
         let oldItems = Object.keys(this.state.originalJSON.items);
         let newItems = Object.keys(relationJSON.items);
         if (id === null || id === this.state.root) {
           if (oldItems.length === newItems.length || !confirm("New Data From Cache! Load?")) {
             return;
+          }
+        }
+      }
+
+      // Add reciprocal relations.
+      for (const [key, relations] of Object.entries(relationJSON.relations)) {
+        for (const relation of relations) {
+          if (relation.type === 'spouse') {
+            if (!relationJSON.relations[relation.item1Id]) {
+              relationJSON.relations[relation.item1Id] = [{item1Id: key, item2Id: relation.item1Id, type: 'spouse', typeId: 'WD-P26'}];
+            } else if (!relationJSON.relations[relation.item1Id].some((r) => r.type === 'spouse' && r.item1Id === key)) {
+              relationJSON.relations[relation.item1Id].push({item1Id: key, item2Id: relation.item1Id, type: 'spouse', typeId: 'WD-P26'});
+            }
+          } else if (relation.type === 'father' || relation.type === 'mother') {
+            if (!relationJSON.relations[relation.item1Id]) {
+              relationJSON.relations[relation.item1Id] = [{item1Id: key, item2Id: relation.item1Id, type: 'child', typeId: 'WD-P40'}];
+            } else if (!relationJSON.relations[relation.item1Id].some((r) => (r.type === 'child') && r.item1Id === key)) {
+              relationJSON.relations[relation.item1Id].push({item1Id: key, item2Id: relation.item1Id, type: 'child', typeId: 'WD-P40'});
+            }
+          } else if (relation.type === 'child') {
+            let gender = null;
+            for (let attr of relationJSON.items[key].additionalProperties) {
+              if (attr.name === 'gender') {
+                gender = attr.value;
+                break;
+              }
+            }
+
+            if (!relationJSON.relations[relation.item1Id]) {
+              if (gender === 'male') {
+                relationJSON.relations[relation.item1Id] = [{item1Id: key, item2Id: relation.item1Id, type: 'father', typeId: 'WD-P22'}];
+              } else if (gender === 'female') {
+                relationJSON.relations[relation.item1Id] = [{item1Id: key, item2Id: relation.item1Id, type: 'mother', typeId: 'WD-P25'}];
+              }
+            } else if (!relationJSON.relations[relation.item1Id].some((r) => (r.type === 'father' || r.type === 'mother') && r.item1Id === key)) {
+              if (gender === 'male') {
+                relationJSON.relations[relation.item1Id].push({item1Id: key, item2Id: relation.item1Id, type: 'father', typeId: 'WD-P22'});
+              } else if (gender === 'female') {
+                relationJSON.relations[relation.item1Id].push({item1Id: key, item2Id: relation.item1Id, type: 'mother', typeId: 'WD-P25'});
+              }
+            }
           }
         }
       }
@@ -817,7 +858,6 @@ class GenogramTree extends React.Component {
             this.state.filters.allFamilies.add(f);
           }
       }
-
       // Use filter
       const filters = this.state.filters;
       var filteredJSON = { targets: this.state.originalJSON.targets };
@@ -831,14 +871,16 @@ class GenogramTree extends React.Component {
 
           while (frontier.length > 0 || descendants.length > 0) {
             var cur = frontier.shift();
-            if (cur && this.state.originalJSON.relations[cur]) {
-              var newElems = this.state.originalJSON.relations[cur]
-                  .filter((r) => r.type !== 'spouse' && !visited.contains(r.item1Id));
-              var newFrontier = newElems.filter((r) => r.type !== 'child').map((r) => r.item1Id);
-              var newDescendants = newElems.filter((r) => r.type === 'child').map((r) => r.item1Id);
-              visited.addAll(newElems.map((r) => r.item1Id));
-              frontier.push(...newFrontier);
-              descendants.push(...newDescendants);
+            if (cur) {
+              if (this.state.originalJSON.relations[cur]) {
+                var newElems = this.state.originalJSON.relations[cur]
+                    .filter((r) => r.type !== 'spouse' && !visited.contains(r.item1Id));
+                var newFrontier = newElems.filter((r) => r.type !== 'child').map((r) => r.item1Id);
+                var newDescendants = newElems.filter((r) => r.type === 'child').map((r) => r.item1Id);
+                visited.addAll(newElems.map((r) => r.item1Id));
+                frontier.push(...newFrontier);
+                descendants.push(...newDescendants);
+              }
             } else {
               cur = descendants.shift();
               if (this.state.originalJSON.relations[cur]) {
@@ -847,13 +889,13 @@ class GenogramTree extends React.Component {
                 var newDescendants = newElems.filter((r) => r.type === 'child').map((r) => r.item1Id);
                 visited.addAll(newElems.map((r) => r.item1Id));
                 descendants.push(...newDescendants);
+                console.log(`IN: ${descendants.length}`);
               }
             }
           }
         } else {
           visited.addAll(Object.keys(this.state.originalJSON.items));
         }
-
         if (filters.families.size !== 0) {
           visited = visited.filter((v) => 
               this.state.originalJSON.items[v].additionalProperties.filter((p) => p.name == 'family')
@@ -976,8 +1018,8 @@ class GenogramTree extends React.Component {
 
     if (this.state.relationJSON == null) {
       Promise.allSettled([
-        this.fetchRelations(this.source, 3, true), 
-        this.fetchRelations(this.source, 3, false)]
+        this.fetchRelations(this.source, 3, true, true), 
+        this.fetchRelations(this.source, 3, false, true)]
         );
       
       return (
