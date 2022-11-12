@@ -84,3 +84,10 @@
   background-color: rgba(0, 0, 139, 1.0);
   color: beige;
 }
+
+.show-full-data-button {
+  position: fixed;
+  bottom: 20px;
+  right: 30px;
+  z-index: 3;
+}

@@ -1,5 +1,5 @@
 export class Requests {
-    baseUrl = 'https://intense-anchorage-84008.herokuapp.com/https://db-de-genealogie.herokuapp.com'
+    baseUrl = 'https://db-de-genealogie.herokuapp.com'
     // baseUrl = 'http://0.0.0.0:8080'
 
     search(name='silvia') {

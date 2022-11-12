@@ -17,6 +17,7 @@ import EscapeCloseable from './components/escape-closeable/EscapeCloseable';
 import { Link } from 'react-router-dom';
 import './components/shared.css';
 import _ from 'lodash';
+import Button from 'react-bootstrap/Button';
 
 import { BiHomeAlt } from 'react-icons/bi'
 import { AiFillFilter } from 'react-icons/ai'
@@ -685,6 +686,8 @@ class GenogramTree extends React.Component {
           filters: new FilterModel(true),
           showBtns: true,
           recentre: false,
+          newDataAvailable: false,
+          newData: null
         };
         this.componentRef = React.createRef();
       }
@@ -783,16 +786,26 @@ class GenogramTree extends React.Component {
         console.log("Data fetched from WikiData!");
       }
 
-      if (!fromCache && checkCache) {
+      if (!fromCache && checkCache && this.state.originalJSON) {
         let oldItems = Object.keys(this.state.originalJSON.items);
         let newItems = Object.keys(relationJSON.items);
         if (id === null || id === this.state.root) {
-          if (oldItems.length === newItems.length || !confirm("New Data From Cache! Load?")) {
-            return;
+          if (oldItems.length !== newItems.length) {
+            this.setState({
+              newDataAvailable: true,
+              newData: relationJSON
+            });
           }
         }
+        return;
+      } else if (fromCache && checkCache && Object.keys(relationJSON.relations).length == 0) {
+        return;
       }
+      this.loadRelations(relationJSON, id)
+    }
 
+    loadRelations(relationJSON, id) {
+      console.log("Loading relations!");
       // Add reciprocal relations.
       for (const [key, relations] of Object.entries(relationJSON.relations)) {
         for (const relation of relations) {
@@ -1110,6 +1123,16 @@ class GenogramTree extends React.Component {
                }}>
                   <AiFillFilter size={50}/>                     
               </button>
+          }
+          {
+              this.state.newDataAvailable &&
+              <Button className="show-full-data-button" variant="secondary" size="lg" onClick={() => {
+                console.log("Load Full Data!");
+                this.loadRelations(this.state.newData, this.state.newData.targets[0].id);
+                this.setState({
+                  newDataAvailable: false
+                });
+              }}>Load Full Data</Button>
           }
 
           <DiagramWrapper
