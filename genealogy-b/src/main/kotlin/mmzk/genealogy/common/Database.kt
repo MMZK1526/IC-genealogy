@@ -168,7 +168,7 @@ object Database {
                 relations.addAll(newRelations.filter { (visited.contains(it.item1Id) || frontier.contains(it.item1Id)) })
             }
 
-            RelationsResponse(targets, items.map { it.id to it }.toMap(), relations.toList())
+            RelationsResponse(targets, items.map { it.id to it }.toMap(), relations.toList().groupBy { it.item2Id })
         }
 
     private fun Iterable<Item>.toDTOWithAdditionalProperties(): List<ItemDTO> {

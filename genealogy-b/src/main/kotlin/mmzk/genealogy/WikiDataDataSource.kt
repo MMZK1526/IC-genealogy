@@ -381,7 +381,7 @@ class WikiDataDataSource(
             relations.addAll(newRelations.filter { (visited.contains(it.item1Id) || frontier.contains(it.item1Id)) })
         }
 
-        RelationsResponse(targets, people.map { it.key.id to it.key }.toMap(), relations.toList())
+        RelationsResponse(targets, people.map { it.key.id to it.key }.toMap(), relations.toList().groupBy { it.item2Id })
     }
 
     private object SPARQL {

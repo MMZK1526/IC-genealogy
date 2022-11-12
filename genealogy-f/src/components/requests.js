@@ -1,5 +1,6 @@
 export class Requests {
     baseUrl = 'https://intense-anchorage-84008.herokuapp.com/https://db-de-genealogie.herokuapp.com'
+    baseUrl = 'http://0.0.0.0:8080'
 
     search(name='silvia') {
         const url = `${this.baseUrl}/search?q=${name}`;

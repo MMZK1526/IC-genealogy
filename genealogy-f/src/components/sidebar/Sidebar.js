@@ -10,7 +10,7 @@ export function Sidebar(props) {
     const style = {
         searchBox: { // To change search box element look
             'height': '50px',
-            'font-size': '20px',
+            'fontSize': '20px',
             'border': '1px solid',
           },
     };

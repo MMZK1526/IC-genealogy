@@ -44,9 +44,9 @@ data class RelationshipDTO(
 data class RelationsResponse(
     val targets: List<ItemDTO>,
     val items: Map<String, ItemDTO>,
-    val relations: List<RelationshipDTO>
+    val relations: Map<String, List<RelationshipDTO>>
 ) {
     companion object {
-        val empty = RelationsResponse(listOf(), mapOf(), listOf())
+        val empty = RelationsResponse(listOf(), mapOf(), mapOf())
     }
 }

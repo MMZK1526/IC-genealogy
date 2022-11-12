@@ -94,7 +94,7 @@ export function applyFamilyFilter(id, familyName, idPerson) {
 // global map from id of person to their attributes, used to change opacity for filtering in the goJs diagram.
 var relMap = new Map();
 
-function transform(data, filters) {
+function transform(data) {
   relMap = new Map();
   
   Object.values(data.items).forEach((person) => {
@@ -111,35 +111,32 @@ function transform(data, filters) {
     relMap.set(person.id, Object.fromEntries(singlePerson));
   });
 
-  for (let relation of data.relations) {
-    var key = relation['item2Id'];
+  for (const [key, relations] of Object.entries(data.relations)) {
     var sourceItem =  data.items[key];
     if (sourceItem === undefined) {
       console.log('------- ERROR -------- key :' + key + 'not found in data.items');
       continue;
     }
 
-    // split select target into their additional properties (general, not predetermined)
-    // need a filter here depending on which type of tree we are using.
-    var addProps = sourceItem.additionalProperties;
-
-    var motherfuckers = relMap.get(key);
-
-    // check each relationship if so update record accordingly
-    if (relation.type === 'child') {
-      // motherfuckers.child;
-      // continue;
+    var personalRelation = relMap.get(key);
+    
+    for (const relation of relations) {
+      // check each relationship if so update record accordingly
+      if (relation.type === 'child') {
+        // personalRelation.child;
+        // continue;
+      }
+      if (relation.type === 'mother') {
+          personalRelation.mother = relation.item1Id;
+      }
+      if (relation.type === 'father') {
+          personalRelation.father = relation.item1Id;
+      }
+      if (relation.type === 'spouse') {
+        personalRelation.spouse.push(relation.item1Id);
+      }
+      relMap.set(key, personalRelation);
     }
-    if (relation.type === 'mother') {
-        motherfuckers.mother = relation.item1Id;
-    }
-    if (relation.type === 'father') {
-        motherfuckers.father = relation.item1Id;
-    }
-    if (relation.type === 'spouse') {
-      motherfuckers.spouse.push(relation.item1Id);
-    }
-    relMap.set(key, motherfuckers);
   }
 
   var newOutput = [];
@@ -507,7 +504,6 @@ export class DiagramWrapper extends React.Component {
     }
   }
 
-
   findMarriage(diagram, a, b) {  // A and B are node keys
     const nodeA = diagram.findNodeForKey(a);
     const nodeB = diagram.findNodeForKey(b);
@@ -595,7 +591,7 @@ export class DiagramWrapper extends React.Component {
           this.diagram.model.addLinkData({ from: father, to: mother, labelKeys: [mlab.key], category: 'hasChild' });
           link = this.findHasChild(diagram, father, mother);
         }
-        
+
         const mdata = link.data;
         if (mdata.labelKeys === undefined || mdata.labelKeys[0] === undefined) {
           console.log('Should not happen');
@@ -654,9 +650,10 @@ export class DiagramWrapper extends React.Component {
 class GenogramTree extends React.Component {
     constructor(props) {
       super(props);
+      let rawJSON = null;
       this.source = props.router.location.state ? props.router.location.state.source : null;
       if (this.source) {
-        this.rawJSON = props.router.location.state.relations;
+        rawJSON = props.router.location.state.relations;
         this.handleModelChange = this.handleModelChange.bind(this);
         this.handleDiagramEvent = this.handleDiagramEvent.bind(this);
         this.closePopUp = this.closePopUp.bind(this);
@@ -666,7 +663,7 @@ class GenogramTree extends React.Component {
         this.setFocusPerson = this.setFocusPerson.bind(this);
         this.getFocusPerson = this.getFocusPerson.bind(this);
         this.requests = this.props.requests;
-        if (this.rawJSON) {
+        if (rawJSON) {
           this.isLoading = false;
         } else {
           this.isLoading = true;
@@ -675,8 +672,8 @@ class GenogramTree extends React.Component {
           root: this.source,
           isUpdated: !this.isLoading,
           isLoading: this.isLoading,
-          originalJSON: this.rawJSON,
-          relationJSON: this.rawJSON,
+          originalJSON: rawJSON,
+          relationJSON: rawJSON,
           kinshipJSON: null,
           personInfo: null,
           isPopped: false,
@@ -781,7 +778,7 @@ class GenogramTree extends React.Component {
         console.log("Data fetched from WikiData!");
       }
 
-      if (!fromCache) {
+      if (!fromCache && this.state.originalJSON) {
         let oldItems = Object.keys(this.state.originalJSON.items);
         let newItems = Object.keys(relationJSON.items);
         if (id === null || id === this.state.root) {
@@ -828,47 +825,34 @@ class GenogramTree extends React.Component {
         let visited = new go.Set();
         visited.add(this.state.root);
         if (filters.bloodline) {
-          // console.log('血胤');
+          console.log('血胤');
           var frontier = [this.state.root];
           var descendants = [];
 
           while (frontier.length > 0 || descendants.length > 0) {
             var cur = frontier.shift();
-            if (cur) {
-              var newElems1 = this.state.originalJSON.relations
-                  .filter((r) => r.item2Id === cur && r.type !== 'spouse' && !visited.contains(r.item1Id));
-              var newFrontier1 = newElems1.filter((r) => r.type !== 'child').map((r) => r.item1Id);
-              var newDescendants1 = newElems1.filter((r) => r.type === 'child').map((r) => r.item1Id);
-              visited.addAll(newElems1.map((r) => r.item1Id));
-              frontier.push(...newFrontier1);
-              descendants.push(...newDescendants1);
-              var newElems2 = this.state.originalJSON.relations
-                  .filter((r) => r.item1Id === cur && r.type !== 'spouse' && !visited.contains(r.item2Id));
-              var newFrontier2 = newElems2.filter((r) => r.type === 'child').map((r) => r.item2Id);
-              var newDescendants2 = newElems2.filter((r) => r.type !== 'child').map((r) => r.item2Id);
-              visited.addAll(newElems2.map((r) => r.item2Id));
-              frontier.push(...newFrontier2);
-              descendants.push(...newDescendants2);
+            if (cur && this.state.originalJSON.relations[cur]) {
+              var newElems = this.state.originalJSON.relations[cur]
+                  .filter((r) => r.type !== 'spouse' && !visited.contains(r.item1Id));
+              var newFrontier = newElems.filter((r) => r.type !== 'child').map((r) => r.item1Id);
+              var newDescendants = newElems.filter((r) => r.type === 'child').map((r) => r.item1Id);
+              visited.addAll(newElems.map((r) => r.item1Id));
+              frontier.push(...newFrontier);
+              descendants.push(...newDescendants);
             } else {
               cur = descendants.shift();
-              var newElems1 = this.state.originalJSON.relations
-                  .filter((r) => r.item2Id === cur && r.type !== 'spouse' && !visited.contains(r.item1Id));
-              var newDescendants1 = newElems1.filter((r) => r.type === 'child').map((r) => r.item1Id);
-              visited.addAll(newElems1.map((r) => r.item1Id));
-              descendants.push(...newDescendants1);
-              var newElems2 = this.state.originalJSON.relations
-                  .filter((r) => r.item1Id === cur && r.type !== 'spouse' && !visited.contains(r.item2Id));
-              var newDescendants2 = newElems2.filter((r) => r.type !== 'child').map((r) => r.item2Id);
-              visited.addAll(newElems2.map((r) => r.item1Id));
-              descendants.push(...newDescendants2);
+              if (this.state.originalJSON.relations[cur]) {
+                var newElems = this.state.originalJSON.relations[cur]
+                    .filter((r) => r.type !== 'spouse' && !visited.contains(r.item1Id));
+                var newDescendants = newElems.filter((r) => r.type === 'child').map((r) => r.item1Id);
+                visited.addAll(newElems.map((r) => r.item1Id));
+                descendants.push(...newDescendants);
+              }
             }
           }
         } else {
           visited.addAll(Object.keys(this.state.originalJSON.items));
         }
-
-        // console.log("HERE");
-        // console.log(visited.toArray());
 
         if (filters.families.size !== 0) {
           visited = visited.filter((v) => 
@@ -880,39 +864,35 @@ class GenogramTree extends React.Component {
         let outlierVisited = (new go.Set()).addAll(visited);
         var frontier = (new go.Set()).addAll(visited);
         while (outlierVisited.size > 0 && frontier.size > 0) {
-          let outlierParents1 = new go.Set();
-          let outlierSpouses1 = new go.Set();
-          let outlierParents2 = new go.Set();
-          let outlierSpouses2 = new go.Set();
+          let outlierParents = new go.Set();
+          let outlierSpouses = new go.Set();
           let remover = new go.Set();
           frontier.each((v) => {
-            var newElems1 = this.state.originalJSON.relations
-                .filter((r) => r.item2Id === v && (r.type !== 'child') && !visited.contains(r.item1Id));
-            var newElems2 = this.state.originalJSON.relations
-                .filter((r) => r.item1Id === v && (r.type !== 'father' && r.type !== 'mother') && !visited.contains(r.item2Id));
-            if (newElems1.length === 0 && newElems2.length === 0) {
-              remover.add(v);
-            } else {
-              outlierParents1.addAll(newElems1.filter((r) => r.type !== 'spouse').map((r) => r.item1Id));
-              outlierSpouses1.addAll(newElems1.filter((r) => r.type === 'spouse').map((r) => r.item1Id));
-              outlierParents2.addAll(newElems2.filter((r) => r.type === 'child').map((r) => r.item2Id));
-              outlierSpouses2.addAll(newElems2.filter((r) => r.type === 'spouse').map((r) => r.item2Id));
+            if (this.state.originalJSON.relations[v]) {
+              var newElems = this.state.originalJSON.relations[v]
+                  .filter((r) => (r.type !== 'child') && !visited.contains(r.item1Id));
+              if (newElems.length === 0) {
+                remover.add(v);
+              } else {
+                outlierParents.addAll(newElems.filter((r) => r.type !== 'spouse').map((r) => r.item1Id));
+                outlierSpouses.addAll(newElems.filter((r) => r.type === 'spouse').map((r) => r.item1Id));
+              }
             }
           });
           frontier.removeAll(remover);
-          outlierVisited = outlierParents1.addAll(outlierParents2).retainAll(outlierSpouses1.addAll(outlierSpouses2));
+          outlierVisited = outlierParents.retainAll(outlierSpouses);
           // console.log(outlierVisited.toArray().map((i) => this.state.originalJSON.items[i].name));
           frontier.addAll(outlierVisited);
           visited.addAll(outlierVisited);
         }
 
-        var filteredJSON = { targets: this.state.originalJSON.targets, items: {} };
+        var filteredJSON = { targets: this.state.originalJSON.targets, items: {}, relations: {} };
         visited.each((v) => {
           filteredJSON.items[v] = this.state.originalJSON.items[v];
+          if (this.state.originalJSON.relations[v]) {
+            filteredJSON.relations[v] = this.state.originalJSON.relations[v].filter((r) => visited.contains(r.item1Id));
+          }
         });
-
-        // filteredJSON.items = this.state.originalJSON.items.filter((i) => visited.contains(i.id));
-        filteredJSON.relations = this.state.originalJSON.relations.filter((r) => visited.contains(r.item1Id) && visited.contains(r.item2Id));
         this.state.relationJSON = filteredJSON;
       } else {
         this.state.relationJSON = JSON.parse(JSON.stringify(this.state.originalJSON));
@@ -920,7 +900,7 @@ class GenogramTree extends React.Component {
     }
 
     async fetchKinships(id, relationJSON) {
-      const kinshipJSON = await this.requests.relationCalc({start: id, relations: relationJSON.relations});
+      const kinshipJSON = await this.requests.relationCalc({start: id, relations: Object.values(relationJSON.relations).flat()});
       const newrelationJSON = this.integrateKinshipIntorelationJSON(kinshipJSON, relationJSON);
       this.setState({
           kinshipJSON: kinshipJSON,
@@ -933,13 +913,31 @@ class GenogramTree extends React.Component {
       oldRel.items = {...oldRel.items, ...newRel.items};
 
       const idRelMap = new Map();
-      for (const rel of oldRel.relations) {
-          idRelMap.set(`${rel.item1Id} ${rel.item2Id}`, rel);
+
+      for (const [key, relations] of Object.entries(oldRel.relations)) {
+        let curRelations = idRelMap.get(key);
+        if (curRelations) {
+          relations.forEach((r) => curRelations.add(r));
+        } else {
+          curRelations = new Set();
+          relations.forEach((r) => curRelations.add(r));
+          idRelMap.set(key, curRelations);
+        }
       }
-      for (const rel of newRel.relations) {
-          idRelMap.set(`${rel.item1Id} ${rel.item2Id}`, rel);
+
+      for (const [key, relations] of Object.entries(newRel.relations)) {
+        let curRelations = idRelMap.get(key);
+        if (curRelations) {
+          relations.forEach((r) => curRelations.add(r));
+        } else {
+          curRelations = new Set();
+          relations.forEach((r) => curRelations.add(r));
+          idRelMap.set(key, curRelations);
+        }
       }
-      oldRel.relations = Array.from(idRelMap.values());
+      console.log(Array.from(idRelMap));
+      oldRel.relations = {};
+      idRelMap.forEach((v, k) => oldRel.relations[k] = Array.from(v));
       return oldRel;
   }
 
@@ -1008,7 +1006,7 @@ class GenogramTree extends React.Component {
     if (this.state.isUpdated) {
       this.state.isUpdated = false;
       this.applyFilterAndDrawTree();
-      this.relations = transform(this.state.relationJSON, this.state.filters);
+      this.relations = transform(this.state.relationJSON);
       updateDiagram = true;
       this.state.isLoading = false;
     }

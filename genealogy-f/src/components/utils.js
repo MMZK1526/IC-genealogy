@@ -60,7 +60,7 @@ export class Utils {
 
     addKinship = async (id, relationsJson) => {
         const kinshipJson = await this.requests.relationCalc(
-            {start: id, relations: relationsJson.relations});
+            {start: id, relations: Object.values(relationsJson.relations).flat()});
         return this.addKinshipHelper(kinshipJson, relationsJson);
     }
 
