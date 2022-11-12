@@ -35,8 +35,8 @@ fun Application.configureRouting() {
                     call.request.queryParameters["hetero_strata"]?.split(",") ?: listOf("WD-P22", "WD-P25", "WD-P40")
                 val result = WikiDataDataSource(homoStrata, heteroStrata).findRelatedPeople(id, visitedItems, depth)
                 call.respond(result)
-//                Database.insertItems(result.items.values.toList())
-//                Database.insertRelations(result.relations.values.flatten())
+                Database.insertItems(result.items.values.toList())
+                Database.insertRelations(result.relations.values.flatten())
             } ?: call.respond(
                 HttpStatusCode.BadRequest,
                 mapOf("error" to "Missing query parameter \"q\"!")
