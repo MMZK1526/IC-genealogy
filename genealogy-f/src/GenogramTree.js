@@ -784,10 +784,11 @@ class GenogramTree extends React.Component {
       if (!fromCache) {
         let oldItems = Object.keys(this.state.originalJSON.items);
         let newItems = Object.keys(relationJSON.items);
-        if ((oldItems.every(oldI => newItems.some(newI => oldI === newI)) && oldItems.length == newItems.length) ||
-            !confirm("New Data From Cache! Load?")) {
-              return;
-            }
+        if (id === null || id === this.state.root) {
+          if (oldItems.length === newItems.length || !confirm("New Data From Cache! Load?")) {
+            return;
+          }
+        }
       }
 
       if (this.state.originalJSON == null) {
