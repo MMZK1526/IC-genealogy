@@ -156,7 +156,7 @@ function transform(data) {
   for (let key of relMap.keys()) {
     newOutput.push(relMap.get(key));
   }
-  console.log(newOutput);
+  // console.log(newOutput);
   return newOutput;
 
 }
@@ -894,7 +894,6 @@ class GenogramTree extends React.Component {
                 var newDescendants = newElems.filter((r) => r.type === 'child').map((r) => r.item1Id);
                 visited.addAll(newElems.map((r) => r.item1Id));
                 descendants.push(...newDescendants);
-                console.log(`IN: ${descendants.length}`);
               }
             }
           }
@@ -948,7 +947,6 @@ class GenogramTree extends React.Component {
 
     async fetchKinships(id, relationJSON) {
       const kinshipJSON = await this.requests.relationCalc({start: id, relations: Object.values(relationJSON.relations).flat()});
-      console.log(JSON.stringify(kinshipJSON));
       const newrelationJSON = this.integrateKinshipIntorelationJSON(kinshipJSON, relationJSON);
       this.setState({
           kinshipJSON: kinshipJSON,
@@ -983,7 +981,7 @@ class GenogramTree extends React.Component {
           idRelMap.set(key, curRelations);
         }
       }
-      console.log(Array.from(idRelMap));
+
       oldRel.relations = {};
       idRelMap.forEach((v, k) => oldRel.relations[k] = Array.from(v));
       return oldRel;
@@ -1073,7 +1071,10 @@ class GenogramTree extends React.Component {
                   <PopupInfo
                       closePopUp={this.closePopUp}
                       info={this.personMap.get(this.state.personInfo)}
-                      onNew={this.fetchRelations.bind(null, this.state.personInfo, 3)}
+                      onNew={() => {
+                        this.state.root = this.state.personInfo;
+                        this.fetchKinships(this.state.root, this.state.originalJSON);
+                      }}
                       // onExtend={() => null}
                       onExtend={this.handlePopupExtend}
                       allowExtend={this.props.allowExtend}

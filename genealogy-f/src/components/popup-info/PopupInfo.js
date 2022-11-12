@@ -7,6 +7,7 @@ import EscapeCloseable from "../escape-closeable/EscapeCloseable";
 function PopupInfo(props) {
     const onNew = (_) => {
         props.onNew();
+        props.closePopUp();
     };
 
     const onExtend = (_) => {
@@ -26,7 +27,7 @@ function PopupInfo(props) {
                         Extend tree from this person
                     </button>
                     <button className='new-search-button blue-button' onClick={onNew}>
-                        Search for this person
+                        Use this person as root
                     </button>
                 </div>
             </EscapeCloseable>
