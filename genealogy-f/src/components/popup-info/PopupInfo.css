@@ -1,8 +1,7 @@
 .popup-inner {
     position: relative;
     padding: 40px;
-    width: 70%;
-    max-width: 700px;
+    max-width: 100vh;
     /* background-color: #F5F5DC; */
     background-color: rgba(255, 255, 255, 0.99);
     /* height: fit-content */
@@ -18,57 +17,6 @@
     background-color: transparent;
 }
 
-.new-search-button {
-    display: block;
-    margin: 00px 10px;
-    
-    font-size: 16pt;
-
-    width: 100%;
-}
-
-.col {
-    display: flex;
-    flex-direction: column;
-}
-
-.row {
-    display: flex;
-    flex-direction: row;
-    height: 6vh;
-    /* max-height: 10; */
-}
-
-.desc {
-    font-style: italic;
-    padding-bottom: 100px;
-}
-
-
-#col_key {
-    display: flex;
-    flex-direction: column;
-    width: 30%;
-}
-
-#col_val {
-    display: flex;
-    flex-direction: column;
-    width: 90%;
-}
-
-#key {
-    margin: 5px;
-    height: 50px;
-    color: darkslategray;
-}
-
-#val {
-    margin: 5px;
-    height: 50px;
-}
-
-.extend-search {
-    display: flex;
-    flex-direction: row;
+.additional-properties-container {
+    max-height: 400px;
 }

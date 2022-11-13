@@ -3,6 +3,10 @@ import {AiOutlineClose} from "react-icons/ai"
 import "./PopupInfo.css"
 import '../shared.css';
 import EscapeCloseable from "../escape-closeable/EscapeCloseable";
+import Button from 'react-bootstrap/Button';
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
 
 function PopupInfo(props) {
     const onNew = (_) => {
@@ -22,14 +26,14 @@ function PopupInfo(props) {
                     <AiOutlineClose size={30} color='red'/>
                 </button>
                 {getAdditionalProperties(props.info)}
-                <div className='extend-search'>
-                    <button className='new-search-button blue-button' onClick={onExtend}>
+                <Container className="text-center">
+                    <Button variant="primary" onClick={onExtend} className="m-1">
                         Extend tree from this person
-                    </button>
-                    <button className='new-search-button blue-button' onClick={onNew}>
+                    </Button>
+                    <Button variant="primary" onClick={onNew}>
                         Use this person as root
-                    </button>
-                </div>
+                    </Button>
+                </Container>
             </EscapeCloseable>
         </div>
     );
@@ -37,36 +41,42 @@ function PopupInfo(props) {
 
 function getAdditionalProperties(data) {
     return (
-        
-        <div> 
-            <h2>{data.get("Name")}</h2>
-            {
-                data.has("Description") &&
-                <label className="desc">
-                    {capitalizeFirstLetter(data.get("Description"))}
-                    <br></br>
-                    <br></br>
-                </label>
-            }
-            {getAllAttr(data)}
-            <br></br>
-        </div> 
-    )
+        <Container>
+            <Row>
+                <Col>
+                <h2>{data.get("Name")}</h2>
+                </Col>
+            </Row>
+            <Row>
+                <Col>
+                    {data.has("Description") &&
+                        <p className="fst-italic">
+                            {capitalizeFirstLetter(data.get("Description"))}
+                        </p>}
+                </Col>
+            </Row>
+            <Row>
+                <Container className="overflow-auto additional-properties-container">
+                    {getAllAttr(data)}
+                </Container>
+            </Row>
+        </Container>
+    );
 }
 
 function getAllAttr(data) {
     return Object.keys(Object.fromEntries(data)).filter(function (k) {
         return k !== "Name" && k !== "Description";
       }).map((k) => (
-        <div className="row" key={k}>
-            <div id='col_key'>
+        <Row>
+            <Col xs={4} key={k}>
                 <p>{k}</p>
-            </div>
-            <div id='col_val'>
+            </Col>
+            <Col>
                 <p>{data.get(k)}</p>
-            </div>
-        </div>
-    ))
+            </Col>
+        </Row>
+    ));
 }
 
 export default PopupInfo
