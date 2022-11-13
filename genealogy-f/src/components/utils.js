@@ -91,12 +91,12 @@ export class Utils {
 
         return relationsJson;
     }
-
-    setStatePromise = (thisRef) => {
-        return util.promisify(thisRef.setState);
-    }
 }
 
-function getIds(relationsJson) {
+export function setStatePromise(thisRef) {
+    return util.promisify(thisRef.setState);
+}
+
+export function getIds(relationsJson) {
     return Array.from(relationsJson.items.map(x => x.id));
 }

@@ -18,10 +18,12 @@ import { Link } from 'react-router-dom';
 import './components/shared.css';
 import _ from 'lodash';
 import Button from 'react-bootstrap/Button';
+import {setStatePromise} from './components/utils';
 
 import { BiHomeAlt } from 'react-icons/bi'
 import { AiFillFilter } from 'react-icons/ai'
 import { FilterModel } from './filterModel';
+import util from "util";
 
 function withRouter(Component) {
   function ComponentWithRouterProp(props) {
@@ -660,7 +662,10 @@ export class DiagramWrapper extends React.Component {
         this.diagram.commandHandler.scrollToPart(node);
         this.diagram.select(node);
       }
-    }    
+    }
+    if (this.props.zoomToDefault) {
+      this.diagram.scale = 1;
+    }
     return (
           <ReactDiagram
             ref={this.diagramRef}
@@ -719,7 +724,8 @@ class GenogramTree extends React.Component {
           showBtns: true,
           recentre: false,
           newDataAvailable: false,
-          newData: null
+          newData: null,
+          zoomToDefault: false,
         };
         this.componentRef = React.createRef();
       }
@@ -1061,7 +1067,19 @@ class GenogramTree extends React.Component {
     });
   }
 
+  zoomToDefault = async () => {
+      return;
+    const foo = setStatePromise(this);
+    await foo({
+      zoomToDefault: true,
+    });
+    await foo({
+      zoomToDefault: false,
+    });
+  };
+
   // renders ReactDiagram
+
   render() {
     if (this.source == null) {
       alert('Invalid URL!');
@@ -1117,7 +1135,7 @@ class GenogramTree extends React.Component {
 
     return(
         <div className='tree-box'>
-          {
+        {
             this.state.isPopped
                 ? <div className='popup'>
                   <PopupInfo
@@ -1196,6 +1214,7 @@ class GenogramTree extends React.Component {
               ref={this.componentRef}
               root={this.state.root}
               getFocusPerson={this.getFocusPerson}
+              zoomToDefault={this.state.zoomToDefault}
           />
           {this.state.showBtns &&
           <div className='toolbar'>
@@ -1219,6 +1238,9 @@ class GenogramTree extends React.Component {
               }));
             }}>
               Show stats
+            </button>
+            <button className='blue-button' onClick={this.zoomToDefault}>
+              Default zoom
             </button>
           </div>
           }
