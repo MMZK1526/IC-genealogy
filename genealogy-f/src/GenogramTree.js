@@ -1109,6 +1109,15 @@ class GenogramTree extends React.Component {
                 });
               }}
               onChange={() => this.setState({isUpdated: true, isLoading: true})}
+              onPrune={() => {
+                this.state.originalJSON.relations = JSON.parse(JSON.stringify(this.state.relationJSON.relations));
+                for (const key of Object.keys(this.state.originalJSON.items)) {
+                  if (!this.state.relationJSON.items[key]) {
+                    delete this.state.originalJSON.items[key];
+                  }
+                }
+                this.setState({isUpdated: true, isLoading: true});
+              }}
               onPersonSelection={(_, v) => this.setFocusPerson(v.key)}
               getAllPersons={this.getAllPersons}
               getFocusPerson={this.getFocusPerson}

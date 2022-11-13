@@ -28,7 +28,6 @@ export function Sidebar(props) {
                     displayValue='name' // Property name to display in the dropdown options
                     style={style}
                 />
-
                 <Form.Group className='form-group' controlId='bloodline-checkbox'>
                     <Form.Check title='Bloodline' label='Bloodline only' type='checkbox' defaultChecked 
                         onChange={(e) => {
@@ -36,10 +35,15 @@ export function Sidebar(props) {
                         }}
                     />
                 </Form.Group>
-
+                <div>
                 <Button className='apply-button' onClick={() => props.onChange()}>
                     Apply
                 </Button>
+                </div><div>
+                <Button className='apply-button' onClick={() => props.onPrune()}>
+                    Prune
+                </Button>
+                </div>
             </Form>
 
             <hr style={{
