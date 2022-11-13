@@ -260,6 +260,7 @@ export class DiagramWrapper extends React.Component {
     if (diagram instanceof go.Diagram) {
       diagram.addDiagramListener('ObjectSingleClicked', this.props.onDiagramEvent);
     }
+    document.getElementById("svgButton").addEventListener("click", this.makeSvg);
   }
 
   componentWillUnmount() {
@@ -477,6 +478,36 @@ export class DiagramWrapper extends React.Component {
       ));
 
     return this.diagram;
+  }
+
+  downloadSvg = (blob) => {
+    const url = window.URL.createObjectURL(blob);
+    const filename = "family-tree.svg";
+
+    const a = document.createElement("a");
+    a.style = "display: none";
+    a.href = url;
+    a.download = filename;
+
+    // IE 11
+    if (window.navigator.msSaveBlob !== undefined) {
+      window.navigator.msSaveBlob(blob, filename);
+      return;
+    }
+
+    document.body.appendChild(a);
+    requestAnimationFrame(() => {
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    });
+  }
+
+  makeSvg = () => {
+    const svg = this.state.diagram.makeSvg({scale: 1, background: "white"});
+    const svgstr = new XMLSerializer().serializeToString(svg);
+    const blob = new Blob([svgstr], {type: "image/svg+xml"});
+    this.downloadSvg(blob);
   }
 
   // create and initialize the Diagram.model given an array of node data representing people
@@ -1162,13 +1193,13 @@ class GenogramTree extends React.Component {
               <Link to={'/'} className='blue-button'>
                 <BiHomeAlt size={30}/>
               </Link>
-            <button className='blue-button' onClick={() => exportComponentAsPNG(
-                this.componentRef,
-                {
-                  fileName: 'family-tree',
-                }
-            )}>
-              Export as PNG
+            <button className='blue-button'
+                    id='svgButton'
+                //     onClick={() => exportComponentAsPNG(
+                // this.componentRef,
+                // {fileName: 'family-tree'})}
+            >
+              Export as SVG
             </button>
             <button className='blue-button' onClick={() => downloadJsonFile(this.state.originalJSON)}>
               Export as JSON
