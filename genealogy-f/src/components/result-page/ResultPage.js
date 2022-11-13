@@ -4,6 +4,9 @@ import React from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Link, Navigate } from "react-router-dom";
 import {BiHomeAlt} from "react-icons/bi"
+import Button from "react-bootstrap/Button";
+import Toolbar from "../../toolbar";
+import Card from "react-bootstrap/Card";
 
 function withRouter(Component) {
   function ComponentWithRouterProp(props) {
@@ -36,48 +39,41 @@ class ResultPage extends React.Component {
         return (<Navigate to="/tree" replace={true} state={{source: this.id, relations: null}}/>);
       }
       return (
-          <form className='result-page' onSubmit={async (event) => {
-            event.preventDefault();
-            if (this.id == null) {
-              alert("Haven't selected a person!");
-              return;
-            }
-
-            this.setState({showTree: true});
-          }}>
-              <div className="toolbar">
-                <Link to={'/'} className='blue-button'>
-                    <BiHomeAlt size={30}/>
-                </Link>
-            </div>
+          <form className='result-page'>
+              <Toolbar onlyHome={true}/>
               <div id='title'>
                   {'Are you looking for... '}
               </div>
               <ScrollMenu>
                   {this.rawJSON && this.rawJSON.map((x) => {
-                      return <Card
+                      return <PersonCard
                           itemId={x.id}
                           title={x.name}
                           key={x.id}
                           desc={x.description}
-                          onClick={() => this.id = x.id}
+                          onClick={() => {
+                            this.id = x.id;
+                            this.setState({showTree: true});
+                          }}
                       />
                   })}
               </ScrollMenu>
-              <input className='apply-button' type="submit" value="Show tree" />
           </form>
       );
     }
 }
 
-function Card({ onClick, selected, title, itemId, desc }) {
-    const visibility = React.useContext(VisibilityContext);
+function PersonCard({ onClick, selected, title, itemId, desc }) {
   
     return (
-        <div className="card" onClick={() => onClick(visibility)} tabIndex="1">
-            <div id="name">{title}</div>
-            <div id="desc">{desc}</div>
-        </div>
+      <Card style={{ width: '18rem', cursor: 'pointer' }} className="m-3" onClick={onClick}>
+        <Card.Body>
+          <Card.Title className="mb-2">{title}</Card.Title>
+          <Card.Text>
+            {desc}
+          </Card.Text>
+        </Card.Body>
+      </Card>
     );
   }
 

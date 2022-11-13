@@ -11,7 +11,6 @@ import './GenogramTree.css';
 import { MdFolderShared, MdPadding } from 'react-icons/md';
 import {exportComponentAsPNG} from 'react-component-export-image';
 import {StatsPanel} from './components/stats-panel/StatsPanel';
-import {downloadJsonFile} from './components/custom-upload/exportAsJson';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import EscapeCloseable from './components/escape-closeable/EscapeCloseable';
 import { Link } from 'react-router-dom';
@@ -20,10 +19,11 @@ import _ from 'lodash';
 import Button from 'react-bootstrap/Button';
 import {setStatePromise} from './components/utils';
 
-import { BiHomeAlt } from 'react-icons/bi'
+import Toolbar from './toolbar';
 import { AiFillFilter } from 'react-icons/ai'
 import { FilterModel } from './filterModel';
 import util from "util";
+
 
 function withRouter(Component) {
   function ComponentWithRouterProp(props) {
@@ -1083,11 +1083,7 @@ class GenogramTree extends React.Component {
   render() {
     if (this.source == null) {
       alert('Invalid URL!');
-      return <div className='toolbar'>
-      <Link to={'/'} className='blue-button'>
-        <BiHomeAlt size={30}/>
-      </Link>
-  </div>;
+      return <p>Invalid URL!</p>
     }
 
     if (this.state.relationJSON == null) {
@@ -1098,11 +1094,7 @@ class GenogramTree extends React.Component {
       
       return (
           <div>
-              <div className='toolbar'>
-                  <Link to={'/'} className='blue-button'>
-                  <BiHomeAlt size={30}/>
-                  </Link>
-              </div>
+              <Toolbar onlyHome={true}/>
               <div className='first-time-loading'>
                   <ClipLoader
                       className='spinner'
@@ -1217,32 +1209,7 @@ class GenogramTree extends React.Component {
               zoomToDefault={this.state.zoomToDefault}
           />
           {this.state.showBtns &&
-          <div className='toolbar'>
-              <Link to={'/'} className='blue-button'>
-                <BiHomeAlt size={30}/>
-              </Link>
-            <button className='blue-button'
-                    id='svgButton'
-                //     onClick={() => exportComponentAsPNG(
-                // this.componentRef,
-                // {fileName: 'family-tree'})}
-            >
-              Export as SVG
-            </button>
-            <button className='blue-button' onClick={() => downloadJsonFile(this.state.originalJSON)}>
-              Export as JSON
-            </button>
-            <button className='blue-button' onClick={() => {
-              this.setState((prevState) => ({
-                showStats: !prevState.showStats
-              }));
-            }}>
-              Show stats
-            </button>
-            <button className='blue-button' onClick={this.zoomToDefault}>
-              Default zoom
-            </button>
-          </div>
+          <Toolbar genogramTree={this}/>
           }
           {
               this.state.isLoading &&

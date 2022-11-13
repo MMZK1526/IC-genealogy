@@ -1,13 +1,6 @@
 .result-page {
-  display: flex;
-  flex-direction: column;
   /* background-color: beige; */
   margin: 5em 7em;
-  width: 100%;
-
-  /* font-size: 20px; 
-  font-weight: normal; 
-  line-height: 48px;  */
 }
 
 .result-page #title {
@@ -17,36 +10,6 @@
   /* font-size: 20px; 
   font-weight: normal; 
   line-height: 48px;  */
-}
-
-.result-page .apply-button{
-  display: inline-block;
-  border: 0.1em solid darkgray;
-  border-radius: 5px;
-  padding: 10px;
-  margin-top: 10px;
-  margin-bottom: 10px;
-  align-self: stretch;
-  text-align: start;
-  /* font-family: 'Helvetica Neue', sans-serif;  */
-  font-size: 20px; 
-  color: white;
-  background-color:darkblue;
-  transition: all 0.15s;
-  width: 10em;
-}
-
-.result-page .apply-button:hover{
-  text-shadow: 0 0 2em rgba(255,255,255,1);
-  color:#FFFFFF;
-  border-color:#FFFFFF;
-}
-  
-@media all and (max-width:30em){
-  .topbar .apply-button{
-    display:block;
-    margin:0.4em auto;
-  }
 }
 
 
@@ -65,16 +28,6 @@
   margin-bottom: 20px;
 }
 
-.card {
-  border: 1px darkslateblue solid;
-  border-radius: 5px;
-  height: 300px;
-  width: 200px;
-  margin: 0px 20px 20px 0px;
-  background-color: rgba(201, 220, 236, 0.3);
-  /* background-color: beige; */
-}
-
 .card:hover{
   background-color:lavender;
   border-color:#FFFFFF;
@@ -82,14 +35,4 @@
 
 .card:focus{
   background-color: rgba(72, 61, 139, 0.3);
-}
-
-.card #name {
-  font-size: 20px;
-  margin: 5px;
-  color: darkslategray;
-}
-
-.card #desc {
-  margin: 5px;
 }

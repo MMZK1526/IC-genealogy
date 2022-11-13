@@ -17,7 +17,7 @@ export function Sidebar(props) {
 
     return (
         <div className='sidebar'>
-            <Form>
+            <Form className="w-100">
                 <Form.Label className="form-label">Family: </Form.Label>
                 <Multiselect
                     id='family-select'
@@ -29,18 +29,18 @@ export function Sidebar(props) {
                     style={style}
                 />
                 <Form.Group className='form-group' controlId='bloodline-checkbox'>
-                    <Form.Check title='Bloodline' label='Bloodline only' type='checkbox' defaultChecked={props.filters.bloodline} 
+                    <Form.Check className="mt-3 mb-3" title='Bloodline' label='Bloodline only' type='checkbox' defaultChecked={props.filters.bloodline} 
                         onChange={(e) => {
                             props.filters.bloodline = e.target.checked;
                         }}
                     />
                 </Form.Group>
                 <div>
-                <Button className='apply-button' onClick={() => props.onChange()}>
+                <Button className='m-1 text-center w-100' variant="primary" onClick={() => props.onChange()}>
                     Apply
                 </Button>
                 </div><div>
-                <Button className='apply-button' onClick={() => props.onPrune()}>
+                <Button className='m-1 text-center w-100' variant="danger" onClick={() => props.onPrune()}>
                     Prune
                 </Button>
                 </div>

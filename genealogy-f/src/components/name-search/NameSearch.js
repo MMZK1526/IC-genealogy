@@ -45,8 +45,8 @@ export class NameSearch extends React.Component {
                         />
                         {!this.state.isLoading
                             ? <Button
-                                className='search-button'
                                 type='primary'
+                                size='lg'
                                 onClick={this.handleSearchSubmit}>
                                 Search</Button>
                             : <div><ClipLoader

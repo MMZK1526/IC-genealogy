@@ -19,25 +19,3 @@
     font-size: 20pt;
     color: darkslategray;
 }
-
-.custom-upload #button {
-    text-align: start;
-    display: inline-block;
-    border: 0.1em solid darkgray;
-    border-radius: 5px;
-    padding: 10px;
-    margin: 10px;
-    align-self: stretch;
-    /* font-family: 'Helvetica Neue', sans-serif;  */
-    font-size: 20px; 
-    color: white;
-    background-color:darkblue;
-    transition: all 0.15s;
-    width: 12em;
-}
-
-.custom-upload #button:hover{
-    text-shadow: 0 0 2em rgba(255,255,255,1);
-    color:#FFFFFF;
-    border-color:#FFFFFF;
-}

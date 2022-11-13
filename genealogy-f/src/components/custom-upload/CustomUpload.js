@@ -1,6 +1,7 @@
 import React from 'react';
 import css from './CustomUpload.css';
 import _ from "lodash";
+import Button from 'react-bootstrap/Button';
 
 export class CustomUpload extends React.Component {
     constructor(props) {
@@ -20,9 +21,9 @@ export class CustomUpload extends React.Component {
                 <label id='label'>Or you can try...</label>
                 {
                     !this.state.show &&
-                    <button id='button' type='primary' onClick={this.handleClick}>
+                    <Button variant='secondary' onClick={this.handleClick}>
                         Upload custom data
-                    </button>
+                    </Button>
                 }
                 {
                     this.state.show &&

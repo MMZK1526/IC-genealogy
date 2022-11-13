@@ -29,25 +29,3 @@
   margin: 10px;
   width: 30vw;
 }
-
-.welcome .search-button{
-  display: inline-block;
-  border: 0.1em solid darkgray;
-  border-radius: 5px;
-  margin: 10px;
-  padding: 10px 20px 10px 20px;
-  align-self: stretch;
-  text-align: center;
-  /* font-family: 'Helvetica Neue', sans-serif;  */
-  font-size: 20px; 
-  color: white;
-  background-color: darkblue;
-  transition: all 0.15s;
-  width: 7em;
-}
-
-.welcome .search-button:hover{
-  text-shadow: 0 0 2em rgba(255,255,255,1);
-  color:#FFFFFF;
-  border-color:#FFFFFF;
-}
