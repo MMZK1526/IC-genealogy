@@ -301,7 +301,8 @@ export class DiagramWrapper extends React.Component {
               this.diagram.commandHandler.scrollToPart(node);
               this.diagram.select(node);
             }
-          }
+          },
+          'toolManager.dragSelectingTool': null,
         })
       this.diagram = this.state.diagram;
       // determine the color for each attribute shape

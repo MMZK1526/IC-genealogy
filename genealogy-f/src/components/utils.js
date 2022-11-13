@@ -96,3 +96,7 @@ export class Utils {
         return util.promisify(thisRef.setState);
     }
 }
+
+function getIds(relationsJson) {
+    return Array.from(relationsJson.items.map(x => x.id));
+}
