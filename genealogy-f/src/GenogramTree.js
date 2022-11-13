@@ -898,15 +898,22 @@ class GenogramTree extends React.Component {
       }
     }
 
-    applyFilterAndDrawTree() {
+    calculateFilter() {
       // Get filter options
+      let tempMap = new Set();
       // set up id map for getting attributes later
       for (let x of Object.keys(this.state.originalJSON.items)) {
-          let people = this.state.originalJSON.items[x];
-          for(let f of people.additionalProperties.filter((p) => p.name == 'family').map((p) => p.value)) {
-            this.state.filters.allFamilies.add(f);
-          }
+        let people = this.state.originalJSON.items[x];
+        for (let f of people.additionalProperties.filter((p) => p.name == 'family').map((p) => p.value)) {
+          tempMap.add(f);
+        }
       }
+      this.state.filters.allFamilies = tempMap;
+    }
+
+    applyFilterAndDrawTree() {
+      this.calculateFilter();
+
       // Use filter
       const filters = this.state.filters;
       var filteredJSON = { targets: this.state.originalJSON.targets };
@@ -1143,10 +1150,11 @@ class GenogramTree extends React.Component {
               onPrune={() => {
                 this.state.originalJSON.relations = JSON.parse(JSON.stringify(this.state.relationJSON.relations));
                 for (const key of Object.keys(this.state.originalJSON.items)) {
-                  if (!this.state.relationJSON.items[key]) {
+                  if (!this.state.relationJSON.items[key] && key !== this.state.root) {
                     delete this.state.originalJSON.items[key];
                   }
                 }
+                this.calculateFilter();
                 this.setState({isUpdated: true, isLoading: true});
               }}
               onPersonSelection={(_, v) => this.setFocusPerson(v.key)}
