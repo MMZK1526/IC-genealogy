@@ -29,7 +29,7 @@ export function Sidebar(props) {
                     style={style}
                 />
                 <Form.Group className='form-group' controlId='bloodline-checkbox'>
-                    <Form.Check title='Bloodline' label='Bloodline only' type='checkbox' defaultChecked 
+                    <Form.Check title='Bloodline' label='Bloodline only' type='checkbox' defaultChecked={props.filters.bloodline} 
                         onChange={(e) => {
                             props.filters.bloodline = e.target.checked;
                         }}
