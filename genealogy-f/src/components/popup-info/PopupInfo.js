@@ -7,6 +7,7 @@ import Button from 'react-bootstrap/Button';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
+import {FaWikipediaW} from 'react-icons/fa'
 
 function PopupInfo(props) {
     const onNew = (_) => {
@@ -40,30 +41,33 @@ function PopupInfo(props) {
 }
 
 function getAdditionalProperties(data) {
+    const openInWikipedia = url => {
+        window.open(url, '_blank', 'noopener,noreferrer');
+    };
+
+    const openSearch = name => {
+        window.open("http://www.google.com/search?q=" + name, '_blank', 'noopener,noreferrer');
+    };
+
     return (
         <Container>
-            <Row>
+            <Row className='name-row'>
                 <Col key={"Name"}>
-                <h2>{data.get("Name")}</h2>
+                    <h2>{data.get("Name")}</h2>
+                </Col>
+
+                <Col key={"Search"}>
+                    <Button variant="primary" className="search" onClick={() => openSearch(data.get("Name"))}>
+                        <FaWikipediaW size={30}/>
+                    </Button>
                 </Col>
 
                 <Col key={"WikiLink"}>
-                    <Button variant="primary" className="wikilink" href={data.get("Wikipedia link")}>
-                            Wikipedia Link
+                    <Button variant="light" className="wikilink" onClick={() => openInWikipedia(data.get("Wikipedia link"))}>
+                        <FaWikipediaW size={30}/>
                     </Button>
-                </Col>
-                
+                </Col>                
             </Row>
-            {/* <Row>
-                <Col key="Wikipedia link">
-                    {data.has("Wikipedia link") &&
-                        <a className="fst-italic"
-                            href={data.get("Wikipedia link")}>
-                                Click here to visit Wikipedia link
-                        </a>
-                    }
-                </Col>
-            </Row> */}
             <Row>
                 <Col key="Description">
                     {data.has("Description") &&
