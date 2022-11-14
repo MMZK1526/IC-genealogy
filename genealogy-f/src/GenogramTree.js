@@ -917,9 +917,8 @@ class GenogramTree extends React.Component {
 
       // Use filter
       const filters = this.state.filters;
-      console.log(filters)
       var filteredJSON = { targets: this.state.originalJSON.targets };
-      if (filters.bloodline || filters.families.size !== 0) {
+      if (filters.bloodline || filters.families.size !== 0 || filters.fromYear !== '' || filters.toYear !== '') {
         let visited = new go.Set();
         visited.add(this.state.root);
         if (filters.bloodline) {
@@ -953,12 +952,35 @@ class GenogramTree extends React.Component {
         } else {
           visited.addAll(Object.keys(this.state.originalJSON.items));
         }
+
         if (filters.families.size !== 0) {
           visited = visited.filter((v) => 
-              this.state.originalJSON.items[v].additionalProperties.filter((p) => p.name == 'family')
-                  .map((p) => p.value).some((f) => filters.families.has(f)));
+          this.state.originalJSON.items[v].additionalProperties.filter((p) => p.name == 'family')
+          .map((p) => p.value).some((f) => filters.families.has(f)));
         }
-
+                
+        if (filters.fromYear !== '') {
+          visited = visited.filter((k) => {
+            let dob = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'date of birth')[0];
+            let yearOnly;
+            if (dob !== undefined) {
+              yearOnly = parseInt(dob.value.split("-")[0], 10)
+            }
+            return dob === undefined || yearOnly >= parseInt(filters.fromYear, 10);
+          });
+        }
+        
+        if (filters.toYear !== '') {
+          visited = visited.filter((k) => {
+            let dob = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'date of birth')[0];
+            let yearOnly;
+            if (dob !== undefined) {
+              yearOnly = parseInt(dob.value.split("-")[0], 10)
+            }
+            return dob === undefined || yearOnly <= parseInt(filters.toYear, 10);
+          });
+        }
+        
         // Add outliers
         let outlierVisited = (new go.Set()).addAll(visited);
         var frontier = (new go.Set()).addAll(visited);
@@ -1057,7 +1079,7 @@ class GenogramTree extends React.Component {
     document.addEventListener('keydown', (event) => {
       if (event.key === ' ' && this.state && this.state.relationJSON != null) {
         event.preventDefault();
-        this.setState({ showBtns: !this.state.showBtns, isUpdated: false, isLoading: false })
+        this.setState({ showBtns: !this.state.showBtns, isUpdated: false, isLoading: false });
             }
     });
   }
