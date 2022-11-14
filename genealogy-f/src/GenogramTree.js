@@ -370,6 +370,27 @@ export class DiagramWrapper extends React.Component {
           default: return tlarc;
         }
       }
+      function mouseEnter(e, obj) {
+        // var shape = obj.findObject("SHAPE");
+        // shape.fill = "#6DAB80";
+        // shape.stroke = "#A6E6A1";
+        // var text = obj.findObject("TEXT");
+        // text.stroke = "white";
+      };
+      
+      function mouseLeave(e, obj) {
+        // var shape = obj.findObject("SHAPE");
+        // console.log("got here");
+        // // Return the Shape's fill and stroke to the defaults
+        // // shape.fill = obj.data.color;
+        // // shape.stroke = null;
+        // shape.fill = "#7ec2d7"
+        // shape.stroke = '#919191'
+        // Return the TextBlock's stroke to its default
+        // var text = obj.findObject("TEXT");
+        // text.stroke = "black";
+      };
+
 
       // two different node templates, one for each sex,
       // named by the category value in the node data object
@@ -377,14 +398,32 @@ export class DiagramWrapper extends React.Component {
         $(go.Node, 'Vertical',
         // TODO can make this non-selectable with selectable: false, but we want clickable but not movable?
         // see this for how to do stuff on click? - https://gojs.net/latest/extensions/Robot.html
-          {movable: true, locationSpot: go.Spot.Center, locationObjectName: 'ICON', selectionObjectName: 'ICON'},
-          new go.Binding('opacity', 'hide', h => h ? 0 : 1),
-          new go.Binding('pickable', 'hide', h => !h),
+          {movable: true, locationSpot: go.Spot.Center, locationObjectName: 'ICON', selectionObjectName: 'ICON',
+        mouseEnter: mouseEnter, mouseLeave: mouseLeave,
+        click: function(e, node) {
+          console.log("clicking something")
+          // highlight all Links and Nodes coming out of a given Node
+          var diagram = node.diagram;
+          // node.shape.fill = "#7ec2d7"
+          diagram.startTransaction("highlight");
+          // remove any previous highlighting
+          diagram.clearHighlighteds();
+          node.isHighlighted = true;
+          // for each Link coming out of the Node, set Link.isHighlighted
+          node.findLinksOutOf().each(function(l) { l.isHighlighted = true; });
+          node.findLinksInto().each(function(l) { l.isHighlighted = true; });
+          // for each Node destination for the Node, set Node.isHighlighted
+          // node.findNodesOutOf().each(function(n) { n.isHighlighted = true; });
+          diagram.commitTransaction("highlight");
+        }},
+          // new go.Binding('opacity', 'hide', h => h ? 0 : 1),
+          // new go.Binding('pickable', 'hide', h => !h),
           $(go.Panel,
             { name: 'ICON' },
             $(go.Shape, 'Square',
-              {width: 40, height: 40, strokeWidth: 2, fill: '#7ec2d7', stroke: '#919191', portId: '' },
-              new go.Binding('fill', 'fill'),
+              {width: 40, height: 40, strokeWidth: 2, fill: '#7ec2d7', stroke: '#919191', portId: '' , name: "SHAPE"},
+              new go.Binding('fill', "color"),
+              new go.Binding('stroke', 'isHighlighted', function(h) { return h ? "green" : "#919191";}).ofObject(),
               new go.Binding('opacity', 'opacity')),
             $(go.Panel,
               { // for each attribute show a Shape at a particular place in the overall square
@@ -404,7 +443,11 @@ export class DiagramWrapper extends React.Component {
             { textAlign: 'center', maxSize: new go.Size(80, NaN), background: 'rgba(255,255,255,0.5)' },
             new go.Binding('text', 'name'), new go.Binding('opacity', 'opacity'))
         ));
-
+      // remove highlighting form all nodes, when user clicks on background
+      this.diagram.click = function(e) {
+        // console.log("clearing stuff")
+          e.diagram.commit(function(d) { d.clearHighlighteds(); }, "no highlighteds");
+        };
       this.diagram.nodeTemplateMap.add('female',  // female
         $(go.Node, 'Vertical',
           { movable: true, locationSpot: go.Spot.Center, locationObjectName: 'ICON', selectionObjectName: 'ICON' },
@@ -447,7 +490,15 @@ export class DiagramWrapper extends React.Component {
             toSpot: go.Spot.Top,
             layerName: 'Background', selectable: false,
           },
-          $(go.Shape, {stroke: '#424242', strokeWidth: 0.5}, new go.Binding('opacity', 'opacity'))
+          $(go.Shape, {stroke: '#424242', strokeWidth: 0.5},
+          new go.Binding('opacity', 'opacity'),
+          // shape stroke and width depend on whether Link.isHighlighted is true
+          new go.Binding("stroke", "isHighlighted", function(h) { return h ? "green" : "#424242"; })
+          .ofObject(),
+          new go.Binding('strokeWidth', "isHighlighted", function(h) { return h ? 5 : 0.5;}).ofObject(),
+          )
+          // new go.Binding("strokeWidth", "isHighlighted", function(h) { return h ? 1 : 0.5; })
+          // .ofObject())
         );
 
       this.diagram.linkTemplateMap.add('Marriage',  // for marriage relationships
@@ -459,7 +510,8 @@ export class DiagramWrapper extends React.Component {
             selectable: false,
             layerName: 'Background'
           },
-          $(go.Shape, { strokeWidth: 1, stroke: '#5d8cc1' /* blue */}, new go.Binding('opacity', 'opacity'))
+          $(go.Shape, { strokeWidth: 1, stroke: '#5d8cc1' /* blue */}, new go.Binding('opacity', 'opacity'),
+          new go.Binding('strokeWidth', "isHighlighted", function(h) { return h ? 5 : 0.5;}).ofObject(),)
         ));
 
       this.diagram.linkTemplateMap.add('hasChild',  // between parents
@@ -471,7 +523,8 @@ export class DiagramWrapper extends React.Component {
           selectable: false,
           layerName: 'Background'
         },
-        $(go.Shape, { strokeWidth: 1, stroke: '#ff0000' /* red */}, new go.Binding('opacity', 'opacity'))
+        $(go.Shape, { strokeWidth: 1, stroke: '#ff0000' /* red */}, new go.Binding('opacity', 'opacity'),
+        new go.Binding('strokeWidth', "isHighlighted", function(h) { return h ? 5 : 0.5;}).ofObject(),)
       ));
 
     return this.diagram;
