@@ -20,7 +20,7 @@ export function Sidebar(props) {
             <Form className="w-100">
                 <Form.Group className="form-group"  controlId='Name-control'>
                     <Form.Label>Personal Name</Form.Label>
-                    <Form.Control type="name" placeholder="Charles" 
+                    <Form.Control type='text' placeholder="e.g. Charles" 
                     onChange={(e) => {
                         props.filters.personalName = e.target.value;
                     }}
@@ -39,7 +39,7 @@ export function Sidebar(props) {
                 />
 
                 <Form.Group className='form-group' controlId='bloodline-checkbox'>
-                    <Form.Check className="mt-1 mb-1" title='Bloodline' label='Bloodline only' type='checkbox' defaultChecked={props.filters.bloodline} 
+                    <Form.Check className="mb-1" title='Bloodline' label='Bloodline only' type='checkbox' defaultChecked={props.filters.bloodline} 
                         onChange={(e) => {
                             props.filters.bloodline = e.target.checked;
                         }}
@@ -48,7 +48,7 @@ export function Sidebar(props) {
 
                 <Form.Group className="mb-1" controlId='fromYear-control'>
                     <Form.Label>From</Form.Label>
-                    <Form.Control type="fromYear" placeholder="Year of Birth, e.g. 1900" 
+                    <Form.Control type='text' placeholder="Year of Birth, e.g. 1900" 
                     onChange={(e) => {
                         props.filters.fromYear = e.target.value;
                     }}
@@ -57,7 +57,7 @@ export function Sidebar(props) {
 
                 <Form.Group className="mb-1"  controlId='toYear-control'>
                     <Form.Label>To</Form.Label>
-                    <Form.Control type="toYear" placeholder="Year of Birth, e.g. 1990" 
+                    <Form.Control type='text' placeholder="Year of Birth, e.g. 1990" 
                     onChange={(e) => {
                         props.filters.toYear = e.target.value;
                     }}
@@ -66,7 +66,7 @@ export function Sidebar(props) {
 
                 <Form.Group className="mb-1" controlId='birthPlace-control'>
                     <Form.Label>Place of Birth</Form.Label>
-                    <Form.Control type="fromYear" placeholder="Place of Birth, e.g. London" 
+                    <Form.Control type='text' placeholder="Place of Birth, e.g. London" 
                     onChange={(e) => {
                         props.filters.birthPlace = e.target.value;
                     }}
@@ -75,7 +75,7 @@ export function Sidebar(props) {
 
                 <Form.Group className="mb-1"  controlId='DeathPlace-control'>
                     <Form.Label>Place of Death</Form.Label>
-                    <Form.Control type="toYear" placeholder="Place of Death, e.g. Windsor" 
+                    <Form.Control type='text' placeholder="Place of Death, e.g. Windsor" 
                     onChange={(e) => {
                         props.filters.deathPlace = e.target.value;
                     }}
@@ -93,13 +93,13 @@ export function Sidebar(props) {
                 </Button>
                 </div>
             </Form>
-
-            {/* <hr style={{
+{/* 
+            <hr style={{
                 background: 'darkgrey',
                 height: '2px',
                 width: '100%',
                 border: 'none',
-                margin: '20px 0px'
+                margin: '0px 0px'
             }} /> */}
 
             <label className="form-label">Look for name in tree: </label>
