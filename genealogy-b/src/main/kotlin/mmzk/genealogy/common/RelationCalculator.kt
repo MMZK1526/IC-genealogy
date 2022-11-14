@@ -32,6 +32,9 @@ fun calculateRelations(input: RelationCalculatorRequest): Map<String, List<List<
                                 edge.item2Id != relation.item1Id
                     } && !isPartOfPrunableTriangle(relation, path, input.relations)
                 }
+                if (result[relation.item1Id]?.any { it -> it.lastOrNull()?.item2Id == cur } == true) {
+                    continue
+                }
                 val oldSize = result.getOrPut(relation.item1Id) { mutableSetOf() }.size
                 val newSize = result[relation.item1Id]?.let { r ->
                     r.addAll(pathsToPreviousItemWithoutTarget.map { it + relation })
