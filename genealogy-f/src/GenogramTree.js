@@ -1,6 +1,4 @@
-import {FamilyTree} from './components/family-tree/FamilyTree';
 import {Sidebar} from './components/sidebar/Sidebar.js';
-import {Requests} from './components/requests';
 import React from 'react';
 import ClipLoader from 'react-spinners/ClipLoader';
 import * as go from 'gojs';
@@ -8,12 +6,9 @@ import {ReactDiagram} from 'gojs-react';
 import './App.css';
 import PopupInfo from './components/popup-info/PopupInfo.js'
 import './GenogramTree.css';
-import { MdFolderShared, MdPadding } from 'react-icons/md';
-import {exportComponentAsPNG} from 'react-component-export-image';
 import {StatsPanel} from './components/stats-panel/StatsPanel';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import EscapeCloseable from './components/escape-closeable/EscapeCloseable';
-import { Link } from 'react-router-dom';
 import './components/shared.css';
 import _ from 'lodash';
 import Button from 'react-bootstrap/Button';
@@ -22,7 +17,6 @@ import {setStatePromise} from './components/utils';
 import Toolbar from './toolbar';
 import { AiFillFilter } from 'react-icons/ai'
 import { FilterModel } from './filterModel';
-import util from "util";
 
 
 function withRouter(Component) {
