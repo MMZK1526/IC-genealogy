@@ -8,6 +8,8 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import {FaWikipediaW} from 'react-icons/fa'
+import {FcGoogle} from 'react-icons/fc'
+import { ButtonGroup } from 'react-bootstrap';
 
 function PopupInfo(props) {
     const onNew = (_) => {
@@ -56,17 +58,20 @@ function getAdditionalProperties(data) {
                     <h2>{data.get("Name")}</h2>
                 </Col>
 
-                <Col key={"Search"}>
-                    <Button variant="primary" className="search" onClick={() => openSearch(data.get("Name"))}>
-                        <FaWikipediaW size={30}/>
-                    </Button>
-                </Col>
+                <Col key={"Links"}>
+                    <ButtonGroup aria-label="LinksGroup">
+                        <Button variant="light" className="search" onClick={() => openSearch(data.get("Name"))}>
+                            <FcGoogle size={30}/>
+                        </Button>
 
-                <Col key={"WikiLink"}>
-                    <Button variant="light" className="wikilink" onClick={() => openInWikipedia(data.get("Wikipedia link"))}>
-                        <FaWikipediaW size={30}/>
-                    </Button>
-                </Col>                
+                        {
+                            data.has("Wikipedia link") &&
+                            <Button variant="light" className="wikilink" onClick={() => openInWikipedia(data.get("Wikipedia link"))}>
+                                <FaWikipediaW size={30}/>
+                            </Button>
+                        }
+                    </ButtonGroup>
+                </Col>
             </Row>
             <Row>
                 <Col key="Description">
