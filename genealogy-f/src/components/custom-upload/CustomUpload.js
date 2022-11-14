@@ -1,7 +1,8 @@
 import React from 'react';
-import css from './CustomUpload.css';
 import _ from "lodash";
 import Button from 'react-bootstrap/Button';
+import Form from 'react-bootstrap/Form';
+import InputGroup from 'react-bootstrap/InputGroup';
 
 export class CustomUpload extends React.Component {
     constructor(props) {
@@ -18,19 +19,23 @@ export class CustomUpload extends React.Component {
     render() {
         return (
             <div className='custom-upload'>
-                <label id='label'>Or you can try...</label>
                 {
                     !this.state.show &&
-                    <Button variant='secondary' onClick={this.handleClick}>
-                        Upload custom data
-                    </Button>
+                    <>
+                        <label>Or you can try...</label>
+                        <Button className="m-1" variant='secondary' onClick={this.handleClick}>
+                            Upload custom data
+                        </Button>
+                    </>
                 }
                 {
                     this.state.show &&
-                    <form onSubmit={this.handleSubmit}>
-                        <input id='button' type='file' name='filename' onChange={this.handleChange}/>
-                        <input id='button' type='submit'/>
-                    </form>
+                    <Form onSubmit={this.handleSubmit} className="w-50 m-auto">
+                        <InputGroup>
+                            <Form.Control type="file" name='filename' onChange={this.handleChange}/>
+                            <Button type='submit' variant="link">Submit</Button>
+                        </InputGroup>
+                    </Form>
                 }
             </div>
         );

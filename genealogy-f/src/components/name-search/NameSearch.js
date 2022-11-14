@@ -1,12 +1,13 @@
 import React from "react";
-import {Button, Form} from "react-bootstrap"
+import {Button, Form, InputGroup} from "react-bootstrap"
 import {MdOutlinePersonSearch} from "react-icons/md"
-import ClipLoader from 'react-spinners/ClipLoader';
 import {Navigate} from "react-router-dom";
 import './NameSearch.css'
 import _ from "lodash";
 import {CustomUpload} from "../custom-upload/CustomUpload";
 import {Utils} from '../utils';
+import Stack from 'react-bootstrap/Stack';
+import Spinner from 'react-bootstrap/Spinner';
 
 export class NameSearch extends React.Component {
     constructor(props) {
@@ -31,42 +32,46 @@ export class NameSearch extends React.Component {
             return (<Navigate to="/tree" replace={true} state={{source: this.id, relations: this.relations}}/>);
         }
         return (
-            <div>
-                <form className='welcome' onSubmit={this.handleChangeInitialName}>
-                    <div id='title'>Ancesta - Genealogy Project</div>
-                    <br></br>
-                    <div id='search'>
+            <div className="m-5">
+            <Stack gap={5} className="text-center justify-content-center">
+                <h1 className='mt-5'>Ancesta - Genealogy Project</h1>
+                <Form onSubmit={this.handleChangeInitialName} className="w-50 m-auto">
+                    <InputGroup>
                         <MdOutlinePersonSearch size={50} color='darkslategray'/>
                         <Form.Control
+                            aria-label="Example text with button addon"
+                            aria-describedby="search-button"
                             id='search-bar'
                             type="text"
+                            className="fs-3"
                             placeholder="Search a name to start..."
                             onChange={this.handleChangeInitialName}
                         />
-                        {!this.state.isLoading
-                            ? <Button
-                                type='primary'
-                                size='lg'
-                                onClick={this.handleSearchSubmit}>
-                                Search</Button>
-                            : <div><ClipLoader
-                                className={
-                                    'spinner'
-                                }
-                                color='#0000ff'
-                                cssOverride={{
-                                    display: 'block',
-                                    margin: '0 auto',
-                                }}
-                                size={75}
-                            /></div>
-                        }
-                    </div>
-                </form>
+                        <Button 
+                            variant="primary" 
+                            id="search-button" 
+                            disabled={this.state.isLoading} 
+                            onClick={this.handleSearchSubmit}
+                            className="fs-4">
+                            {this.state.isLoading &&
+                                <Spinner
+                                as="span"
+                                animation="border"
+                                size="sm"
+                                role="status"
+                                aria-hidden="true"
+                              />
+                            }
+                            Search
+                        </Button>
+                        
+                    </InputGroup>
+                </Form>
                 {
                     !this.state.isLoading &&
                     <CustomUpload onSubmit={this.handleCustomUpload}/>
                 }
+            </Stack>
             </div>
         );
     }
