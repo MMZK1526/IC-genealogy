@@ -1,5 +1,4 @@
 import { capitalizeFirstLetter } from '../../GenogramTree.js';
-import {AiOutlineClose} from "react-icons/ai"
 import "./PopupInfo.css"
 import '../shared.css';
 import EscapeCloseable from "../escape-closeable/EscapeCloseable";
@@ -10,6 +9,7 @@ import Col from 'react-bootstrap/Col';
 import {FaWikipediaW} from 'react-icons/fa'
 import {FcGoogle} from 'react-icons/fc'
 import { ButtonGroup } from 'react-bootstrap';
+import CloseButton from 'react-bootstrap/CloseButton';
 
 function PopupInfo(props) {
     const onNew = (_) => {
@@ -25,9 +25,7 @@ function PopupInfo(props) {
     return (
         <div className='popup-inner'>
             <EscapeCloseable onClick={props.closePopUp}>
-                <button className='close-btn' onClick={props.closePopUp}>
-                    <AiOutlineClose size={30} color='red'/>
-                </button>
+                <CloseButton className='close-btn' onClick={props.closePopUp}/>
                 {getAdditionalProperties(props.info)}
                 <Container className="text-center">
                     <Button variant="primary" onClick={onExtend} className="m-1">
