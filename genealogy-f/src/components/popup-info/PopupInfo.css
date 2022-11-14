@@ -1,10 +1,8 @@
 .popup-inner {
     position: relative;
-    padding: 40px;
-    max-width: 100vh;
-    /* background-color: #F5F5DC; */
+    padding: 30px 30px 20px 30px;
+    max-width: 70vw;
     background-color: rgba(255, 255, 255, 0.99);
-    /* height: fit-content */
     block-size: fit-content;
     border-radius: 5px;
 }
@@ -28,4 +26,8 @@
     justify-content: center;
 
     margin-bottom: 10px;
+}
+
+.text-center {
+    margin-top: 10px;
 }
