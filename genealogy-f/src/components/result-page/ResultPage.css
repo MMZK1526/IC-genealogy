@@ -1,38 +1,4 @@
-.result-page {
-  /* background-color: beige; */
-  margin: 5em 7em;
-}
-
-.result-page #title {
-  font-size: 40px;
-  color: black;
-  margin-bottom: 30px;
-  /* font-size: 20px; 
-  font-weight: normal; 
-  line-height: 48px;  */
-}
-
-
-.result-page #select{
-  display: inline;
-  font-size: large;
-  color: rgb(50, 50, 50);
-  width: 30vw;
-  height: 40px;
-  border: 1px solid #999;
-  font-size: 18px;
-  background-color: transparent;
-  border-radius: 5px;
-
-  margin-top: 20px;
-  margin-bottom: 20px;
-}
-
-.card:hover{
-  background-color:lavender;
-  border-color:#FFFFFF;
-}
-
-.card:focus{
-  background-color: rgba(72, 61, 139, 0.3);
+.result:hover {
+    background-color:lavender;
+    border-color:#FFFFFF;
 }
