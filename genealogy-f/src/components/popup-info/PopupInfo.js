@@ -10,6 +10,7 @@ import {FaWikipediaW} from 'react-icons/fa'
 import {FcGoogle} from 'react-icons/fc'
 import { ButtonGroup } from 'react-bootstrap';
 import CloseButton from 'react-bootstrap/CloseButton';
+import {TbMapSearch} from 'react-icons/tb'
 
 function PopupInfo(props) {
     const onNew = (_) => {
@@ -97,7 +98,14 @@ function getAllAttr(data) {
                 <p>{k}</p>
             </Col>
             <Col key={data.get(k)}>
-                <p>{data.get(k)}</p>
+                {
+                    k === "Place of birth" || k === "Place of death"
+                    ? <a href={"http://www.google.com/maps?q="+data.get(k)} target="_blank" rel="noopener noreferrer">
+                        <TbMapSearch/>
+                        {" " + data.get(k)}
+                    </a>
+                    : <p>{data.get(k)}</p>
+                }
             </Col>
         </Row>
     ));
