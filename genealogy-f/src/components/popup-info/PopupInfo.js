@@ -43,12 +43,29 @@ function getAdditionalProperties(data) {
     return (
         <Container>
             <Row>
-                <Col>
+                <Col key={"Name"}>
                 <h2>{data.get("Name")}</h2>
                 </Col>
+
+                <Col key={"WikiLink"}>
+                    <Button variant="primary" className="wikilink" href={data.get("Wikipedia link")}>
+                            Wikipedia Link
+                    </Button>
+                </Col>
+                
             </Row>
+            {/* <Row>
+                <Col key="Wikipedia link">
+                    {data.has("Wikipedia link") &&
+                        <a className="fst-italic"
+                            href={data.get("Wikipedia link")}>
+                                Click here to visit Wikipedia link
+                        </a>
+                    }
+                </Col>
+            </Row> */}
             <Row>
-                <Col>
+                <Col key="Description">
                     {data.has("Description") &&
                         <p className="fst-italic">
                             {capitalizeFirstLetter(data.get("Description"))}
@@ -66,13 +83,13 @@ function getAdditionalProperties(data) {
 
 function getAllAttr(data) {
     return Object.keys(Object.fromEntries(data)).filter(function (k) {
-        return k !== "Name" && k !== "Description";
+        return k !== "Name" && k !== "Description" && k !== "Wikipedia link";
       }).map((k) => (
-        <Row>
+        <Row key={"Row "+k}>
             <Col xs={4} key={k}>
                 <p>{k}</p>
             </Col>
-            <Col>
+            <Col key={data.get(k)}>
                 <p>{data.get(k)}</p>
             </Col>
         </Row>
