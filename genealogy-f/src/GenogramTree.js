@@ -917,8 +917,10 @@ class GenogramTree extends React.Component {
 
       // Use filter
       const filters = this.state.filters;
+      console.log(filters)
       var filteredJSON = { targets: this.state.originalJSON.targets };
-      if (filters.bloodline || filters.families.size !== 0 || filters.fromYear !== '' || filters.toYear !== '') {
+      if (filters.bloodline || filters.families.size !== 0 || filters.fromYear !== '' || filters.toYear !== '' ||
+      filters.birthPlace !== '' || filters.deathPlace !== '' || filters.personalName !== '') {
         let visited = new go.Set();
         visited.add(this.state.root);
         if (filters.bloodline) {
@@ -952,13 +954,21 @@ class GenogramTree extends React.Component {
         } else {
           visited.addAll(Object.keys(this.state.originalJSON.items));
         }
-
+        // filter on personal name
+        if (filters.personalName !== '') {
+          visited = visited.filter((k) => {
+            let name = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'personal name')[0];
+            if (name === undefined) return false;
+            return String(name.value).toLowerCase().includes(filters.personalName.toLowerCase());
+          });
+        }
+        // filter on Family
         if (filters.families.size !== 0) {
           visited = visited.filter((v) => 
           this.state.originalJSON.items[v].additionalProperties.filter((p) => p.name == 'family')
           .map((p) => p.value).some((f) => filters.families.has(f)));
         }
-                
+        // filter on From birth year
         if (filters.fromYear !== '') {
           visited = visited.filter((k) => {
             let dob = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'date of birth')[0];
@@ -969,7 +979,7 @@ class GenogramTree extends React.Component {
             return dob === undefined || yearOnly >= parseInt(filters.fromYear, 10);
           });
         }
-        
+        // filter on To birth year
         if (filters.toYear !== '') {
           visited = visited.filter((k) => {
             let dob = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'date of birth')[0];
@@ -978,6 +988,22 @@ class GenogramTree extends React.Component {
               yearOnly = parseInt(dob.value.split("-")[0], 10)
             }
             return dob === undefined || yearOnly <= parseInt(filters.toYear, 10);
+          });
+        }
+        // filter on Birth Place
+        if (filters.birthPlace !== '') {
+          visited = visited.filter((k) => {
+            let birthPlace = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.propertyId == 'SW-P2')[0];
+            if (birthPlace === undefined) return false;
+            return String(birthPlace.value).toLowerCase().includes(filters.birthPlace.toLowerCase());
+          });
+        }
+        // filter on To Death Place
+        if (filters.deathPlace !== '') {
+          visited = visited.filter((k) => {
+            let deathPlace = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.propertyId == 'SW-P3')[0];
+            if (deathPlace === undefined) return false;
+            return String(deathPlace.valaue).toLowerCase().includes(filters.deathPlace.toLowerCase());
           });
         }
         
@@ -1207,7 +1233,7 @@ class GenogramTree extends React.Component {
                   showFilters: !this.state.showFilters
                 });
                }}>
-                  <AiFillFilter size={50}/>                     
+                  <AiFillFilter size={35}/>                     
               </button>
           }
           {

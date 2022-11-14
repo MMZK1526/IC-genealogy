@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form } from 'react-bootstrap';
+import { Form, Modal } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 import './Sidebar.css';
 import Multiselect from 'multiselect-react-dropdown';
@@ -12,12 +12,21 @@ export function Sidebar(props) {
             'height': '50px',
             'fontSize': '20px',
             'border': '1px solid',
-          },
+        },
     };
 
     return (
         <div className='sidebar'>
             <Form className="w-100">
+                <Form.Group className="form-group"  controlId='Name-control'>
+                    <Form.Label>Personal Name</Form.Label>
+                    <Form.Control type="name" placeholder="Charles" 
+                    onChange={(e) => {
+                        props.filters.personalName = e.target.value;
+                    }}
+                    />
+                </Form.Group>
+
                 <Form.Label className="form-label">Family: </Form.Label>
                 <Multiselect
                     id='family-select'
@@ -28,6 +37,7 @@ export function Sidebar(props) {
                     displayValue='name' // Property name to display in the dropdown options
                     style={style}
                 />
+
                 <Form.Group className='form-group' controlId='bloodline-checkbox'>
                     <Form.Check className="mt-1 mb-1" title='Bloodline' label='Bloodline only' type='checkbox' defaultChecked={props.filters.bloodline} 
                         onChange={(e) => {
@@ -36,7 +46,7 @@ export function Sidebar(props) {
                     />
                 </Form.Group>
 
-                <Form.Group className='form-group2' controlId='fromYear-control'>
+                <Form.Group className="mb-1" controlId='fromYear-control'>
                     <Form.Label>From</Form.Label>
                     <Form.Control type="fromYear" placeholder="Year of Birth, e.g. 1900" 
                     onChange={(e) => {
@@ -45,14 +55,33 @@ export function Sidebar(props) {
                     />
                 </Form.Group>
 
-                <Form.Group className='form-group3' controlId='toYear-control'>
+                <Form.Group className="mb-1"  controlId='toYear-control'>
                     <Form.Label>To</Form.Label>
-                    <Form.Control type="fromYear" placeholder="Year of Birth, e.g. 1990" 
+                    <Form.Control type="toYear" placeholder="Year of Birth, e.g. 1990" 
                     onChange={(e) => {
                         props.filters.toYear = e.target.value;
                     }}
                     />
                 </Form.Group>
+
+                <Form.Group className="mb-1" controlId='birthPlace-control'>
+                    <Form.Label>Place of Birth</Form.Label>
+                    <Form.Control type="fromYear" placeholder="Place of Birth, e.g. London" 
+                    onChange={(e) => {
+                        props.filters.birthPlace = e.target.value;
+                    }}
+                    />
+                </Form.Group>
+
+                <Form.Group className="mb-1"  controlId='DeathPlace-control'>
+                    <Form.Label>Place of Death</Form.Label>
+                    <Form.Control type="toYear" placeholder="Place of Death, e.g. Windsor" 
+                    onChange={(e) => {
+                        props.filters.deathPlace = e.target.value;
+                    }}
+                    />
+                </Form.Group>
+
 
                 <div>
                 <Button className='m-1 text-center w-100' variant="primary" onClick={() => props.onChange()}>
@@ -65,13 +94,13 @@ export function Sidebar(props) {
                 </div>
             </Form>
 
-            <hr style={{
+            {/* <hr style={{
                 background: 'darkgrey',
                 height: '2px',
                 width: '100%',
                 border: 'none',
                 margin: '20px 0px'
-            }} />
+            }} /> */}
 
             <label className="form-label">Look for name in tree: </label>
             <Autocomplete
@@ -88,6 +117,7 @@ export function Sidebar(props) {
                   }}
                 renderOption={(props, option) => <li component="li" {...props}>{option.name}</li>}
             />
+
         </div>
     );
 }
