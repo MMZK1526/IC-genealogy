@@ -1,6 +1,6 @@
 import {Sidebar} from './components/sidebar/Sidebar.js';
+import Container from 'react-bootstrap/Container';
 import React from 'react';
-import ClipLoader from 'react-spinners/ClipLoader';
 import * as go from 'gojs';
 import {ReactDiagram} from 'gojs-react';
 import './App.css';
@@ -13,11 +13,9 @@ import './components/shared.css';
 import _ from 'lodash';
 import Button from 'react-bootstrap/Button';
 import {setStatePromise} from './components/utils';
-
-import Toolbar from './toolbar';
-import { AiFillFilter } from 'react-icons/ai'
+import ModalSpinner from './ModalSpinner';
+import Toolbar from './Toolbar';
 import { FilterModel } from './filterModel';
-
 
 function withRouter(Component) {
   function ComponentWithRouterProp(props) {
@@ -710,7 +708,6 @@ class GenogramTree extends React.Component {
           personInfo: null,
           isPopped: false,
           showStats: false,
-          showFilters: false,
           from: '',
           to: '',
           family: '',
@@ -1136,20 +1133,12 @@ class GenogramTree extends React.Component {
         );
       
       return (
-          <div>
+          <>
               <Toolbar onlyHome={true}/>
-              <div className='first-time-loading'>
-                  <ClipLoader
-                      className='spinner'
-                      color='#0000ff'
-                      cssOverride={{
-                          display: 'block',
-                          margin: '0 auto',
-                      }}
-                      size={75}
-                  />
-              </div>
-          </div>
+              <Container style={{height: "100vh" }} className="d-flex justify-content-center">
+              <ModalSpinner/>
+              </Container>
+          </>
       );
     }
 
@@ -1169,6 +1158,10 @@ class GenogramTree extends React.Component {
     this.personMap = getPersonMap(Object.values(this.state.originalJSON.items));
 
     return(
+      <>
+        {this.state.showBtns &&
+          <Toolbar genogramTree={this}/>
+        }
         <div className='tree-box'>
         {
             this.state.isPopped
@@ -1227,16 +1220,6 @@ class GenogramTree extends React.Component {
             />
           }
           {
-              this.state.showBtns &&
-              <button className='show-filters-button' onClick={() => { 
-                this.setState({
-                  showFilters: !this.state.showFilters
-                });
-               }}>
-                  <AiFillFilter size={35}/>                     
-              </button>
-          }
-          {
               this.state.newDataAvailable &&
               <Button className="show-full-data-button" variant="secondary" size="lg" onClick={() => {
                 console.log("Load Full Data!");
@@ -1246,7 +1229,6 @@ class GenogramTree extends React.Component {
                 });
               }}>Load Full Data</Button>
           }
-
           <DiagramWrapper
               updateDiagram={updateDiagram}
               recentre={recentre}
@@ -1261,24 +1243,10 @@ class GenogramTree extends React.Component {
               getFocusPerson={this.getFocusPerson}
               zoomToDefault={this.state.zoomToDefault}
           />
-          {this.state.showBtns &&
-          <Toolbar genogramTree={this}/>
-          }
           {
               this.state.isLoading &&
               <div className='loading-bar'>
-                  <ClipLoader
-                      className={
-                      'spinner'
-                      }
-                      color='#0000ff'
-                      cssOverride={{
-                          display: 'block',
-                          margin: '0 auto',
-                      }}
-                      size={40}
-                  />
-                  <label>Updating tree...</label>
+                  <ModalSpinner/>
               </div>
           }
           {
@@ -1288,6 +1256,7 @@ class GenogramTree extends React.Component {
             </EscapeCloseable>
           }
         </div>
+      </>
     );
   }
   // initialises tree (in theory should only be called once, diagram should be .clear() and then data updated for re-initialisation)

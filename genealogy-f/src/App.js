@@ -1,13 +1,10 @@
 import _ from "lodash";
-import {Sidebar} from './components/sidebar/Sidebar.js';
 import {Requests} from './components/requests';
 import {Home} from './Home';
 import './App.css';
 import './components/shared.css';
-import {NameSearch} from './components/name-search/NameSearch.js';
 
 import GenogramTree from "./GenogramTree";
-import ClipLoader from 'react-spinners/ClipLoader';
 
 import ResultPage from "./components/result-page/ResultPage.js";
 import React from "react";

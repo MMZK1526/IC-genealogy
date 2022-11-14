@@ -17,7 +17,7 @@ export function Sidebar(props) {
 
     return (
         <div className='sidebar'>
-            <Form className="w-100">
+            <Form className="w-100 mb-3" style={{ overflow: "auto", maxHeight: "90%" }}>
                 <Form.Group className="form-group"  controlId='Name-control'>
                     <Form.Label>Personal Name</Form.Label>
                     <Form.Control type='text' placeholder="e.g. Charles" 
@@ -81,20 +81,15 @@ export function Sidebar(props) {
                     }}
                     />
                 </Form.Group>
-
-
-                <div>
-                <Button className='m-1 text-center w-100' variant="primary" onClick={() => props.onChange()}>
-                    Apply
-                </Button>
-                </div><div>
-                <Button className='m-1 text-center w-100' variant="danger" onClick={() => props.onPrune()}>
-                    Prune
-                </Button>
-                </div>
             </Form>
-{/* 
-            <hr style={{
+
+            <Button className='m-1 text-center w-100' variant="primary" onClick={() => props.onChange()}>
+                Apply
+            </Button>
+            <Button className='m-1 text-center w-100' variant="danger" onClick={() => props.onPrune()}>
+                Prune
+            </Button>
+            {/* <hr style={{
                 background: 'darkgrey',
                 height: '2px',
                 width: '100%',

@@ -1,12 +1,11 @@
 import './ResultPage.css'
-import { ScrollMenu, VisibilityContext  } from "react-horizontal-scrolling-menu";
+import { ScrollMenu  } from "react-horizontal-scrolling-menu";
 import React from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Link, Navigate } from "react-router-dom";
-import {BiHomeAlt} from "react-icons/bi"
-import Button from "react-bootstrap/Button";
-import Toolbar from "../../toolbar";
+import { Navigate } from "react-router-dom";
+import Toolbar from "../../Toolbar";
 import Card from "react-bootstrap/Card";
+import Container from 'react-bootstrap/Container';
 
 function withRouter(Component) {
   function ComponentWithRouterProp(props) {
@@ -39,12 +38,13 @@ class ResultPage extends React.Component {
         return (<Navigate to="/tree" replace={true} state={{source: this.id, relations: null}}/>);
       }
       return (
-          <form className='result-page'>
-              <Toolbar onlyHome={true}/>
-              <div id='title'>
-                  {'Are you looking for... '}
-              </div>
-              <ScrollMenu>
+        <>
+        <Toolbar onlyHome={true}/>
+          <Container className="m-5">
+              <h2 className="ml-5">
+                  Are you looking for...
+              </h2>
+              <ScrollMenu className="ml-5">
                   {this.rawJSON && this.rawJSON.map((x) => {
                       return <PersonCard
                           itemId={x.id}
@@ -58,7 +58,8 @@ class ResultPage extends React.Component {
                       />
                   })}
               </ScrollMenu>
-          </form>
+          </Container>
+          </>
       );
     }
 }
@@ -66,7 +67,7 @@ class ResultPage extends React.Component {
 function PersonCard({ onClick, selected, title, itemId, desc }) {
   
     return (
-      <Card style={{ width: '18rem', cursor: 'pointer' }} className="m-3" onClick={onClick}>
+      <Card style={{ width: '18rem', cursor: 'pointer' }} className="m-3 result" onClick={onClick}>
         <Card.Body>
           <Card.Title className="mb-2">{title}</Card.Title>
           <Card.Text>
