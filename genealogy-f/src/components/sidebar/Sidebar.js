@@ -29,12 +29,31 @@ export function Sidebar(props) {
                     style={style}
                 />
                 <Form.Group className='form-group' controlId='bloodline-checkbox'>
-                    <Form.Check className="mt-3 mb-3" title='Bloodline' label='Bloodline only' type='checkbox' defaultChecked={props.filters.bloodline} 
+                    <Form.Check className="mt-1 mb-1" title='Bloodline' label='Bloodline only' type='checkbox' defaultChecked={props.filters.bloodline} 
                         onChange={(e) => {
                             props.filters.bloodline = e.target.checked;
                         }}
                     />
                 </Form.Group>
+
+                <Form.Group className='form-group2' controlId='fromYear-control'>
+                    <Form.Label>From</Form.Label>
+                    <Form.Control type="fromYear" placeholder="Year of Birth, e.g. 1900" 
+                    onChange={(e) => {
+                        props.filters.fromYear = e.target.value;
+                    }}
+                    />
+                </Form.Group>
+
+                <Form.Group className='form-group3' controlId='toYear-control'>
+                    <Form.Label>To</Form.Label>
+                    <Form.Control type="fromYear" placeholder="Year of Birth, e.g. 1990" 
+                    onChange={(e) => {
+                        props.filters.toYear = e.target.value;
+                    }}
+                    />
+                </Form.Group>
+
                 <div>
                 <Button className='m-1 text-center w-100' variant="primary" onClick={() => props.onChange()}>
                     Apply

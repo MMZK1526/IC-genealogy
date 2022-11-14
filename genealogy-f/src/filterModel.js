@@ -4,5 +4,7 @@ export class FilterModel {
     this.distance = 1;
     this.allFamilies = new Set();
     this.families = new Set();
+    this.fromYear = 'k'
+    this.toYear = 'k'
   }
 }

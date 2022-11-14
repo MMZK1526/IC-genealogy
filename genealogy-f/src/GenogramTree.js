@@ -917,6 +917,7 @@ class GenogramTree extends React.Component {
 
       // Use filter
       const filters = this.state.filters;
+      console.log(filters)
       var filteredJSON = { targets: this.state.originalJSON.targets };
       if (filters.bloodline || filters.families.size !== 0) {
         let visited = new go.Set();
@@ -1143,8 +1144,18 @@ class GenogramTree extends React.Component {
             this.state.showFilters &&
             <Sidebar
               filters={this.state.filters}
-              // yearFromChange={() => {}}
-              // yearToChange={() => {}}
+              yearFromChange={e => {
+                this.setState({
+                  from: e.target.value,
+                  isUpdated: true
+                });
+              }}
+              yearToChange={e => {
+                this.setState({
+                  to: e.target.value,
+                  isUpdated: true
+                });
+              }}
               familyChange={e => {
                 this.setState({
                   family: e.target.value,
