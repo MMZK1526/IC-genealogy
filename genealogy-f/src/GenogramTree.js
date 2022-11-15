@@ -801,8 +801,9 @@ export class DiagramWrapper extends React.Component {
 
 // class encapsulating the tree initialisation and rendering
 class GenogramTree extends React.Component {
-    constructor(props) {
+  constructor(props) {
       super(props);
+      this.treeCache = {};
       let rawJSON = null;
       this.source = props.router.location.state ? props.router.location.state.source : null;
       if (this.source) {
@@ -816,11 +817,7 @@ class GenogramTree extends React.Component {
         this.setFocusPerson = this.setFocusPerson.bind(this);
         this.getFocusPerson = this.getFocusPerson.bind(this);
         this.requests = this.props.requests;
-        if (rawJSON) {
-          this.isLoading = false;
-        } else {
-          this.isLoading = true;
-        }
+        this.isLoading = !rawJSON;
         this.state = {
           root: this.source,
           isUpdated: !this.isLoading,
@@ -889,14 +886,17 @@ class GenogramTree extends React.Component {
       }));
     }
 
-    integrateKinshipIntorelationJSON(kinshipJson, relationJSON) {
+    integrateKinshipIntoRelationJSON(kinshipJson, relationJSON) {
       for (const key of Object.keys(kinshipJson)) {
           const kinshipStr = kinshipJson[key].map((arr) => {
               arr.reverse();
               return arr.join(' of the ');
           }).join('; ');
 
-          console.assert(relationJSON.items[key]);
+          // console.assert(relationJSON.items[key]);
+          if (!relationJSON.items[key]) {
+            continue;
+          }
           const item = relationJSON.items[key];
           const props = item.additionalProperties;
           const prop = props.find((p) => p.propertyId == 'PB-kinship');
@@ -918,43 +918,44 @@ class GenogramTree extends React.Component {
       return relationJSON;
     }
 
-    // If id is provided, we search this id. Otherwise it is a JSON provided by the user
-    async fetchRelations(id, depth, fromCache = false, checkCache = false) {
-      var relationJSON;
-      depth = 2; // TODO: Remove later
-      if (id == null || id === undefined) {
-        relationJSON = this.state.originalJSON;
-      } else if (fromCache) {
-        relationJSON = await this.requests.relationsDb({
-          id: id, depth: depth,
-          visitedItems: this.state.originalJSON ? Object.keys(this.state.originalJSON.items) : []}
-          );
-        console.log("Data fetched from cache!");
-      } else  {
-        relationJSON = await this.requests.relations({
-          id: id, depth: depth,
-          visitedItems: this.state.originalJSON ? Object.keys(this.state.originalJSON.items) : []}
-          );
-        console.log("Data fetched from WikiData!");
-      }
-
-      if (!fromCache && checkCache && this.state.originalJSON) {
-        let oldItems = Object.keys(this.state.originalJSON.items);
-        let newItems = Object.keys(relationJSON.items);
-        if (id === null || id === this.state.root) {
-          if (oldItems.length !== newItems.length) {
-            this.setState({
-              newDataAvailable: true,
-              newData: relationJSON
-            });
+  // If id is provided, we search this id. Otherwise, it is a JSON provided by the user
+  async fetchRelations(id, depth, fromCache = false, checkCache = false) {
+    var relationJSON;
+    if (id == null || id === undefined) {
+      relationJSON = this.state.originalJSON;
+    } else if (fromCache) {
+      relationJSON = await this.requests.relationsDb({
+            id: id, depth: depth,
+            visitedItems: this.state.originalJSON ? Object.keys(this.state.originalJSON.items) : []
           }
-        }
-        return;
-      } else if (fromCache && checkCache && Object.keys(relationJSON.relations).length == 0) {
-        return;
-      }
-      this.loadRelations(relationJSON, id)
+      );
+      console.log("Data fetched from cache!");
+    } else {
+      relationJSON = await this.requests.relations({
+            id: id, depth: depth,
+            visitedItems: this.state.originalJSON ? Object.keys(this.state.originalJSON.items) : []
+          }
+      );
+      console.log("Data fetched from WikiData!");
     }
+
+    if (!fromCache && checkCache && this.state.originalJSON) {
+      let oldItems = Object.keys(this.state.originalJSON.items);
+      let newItems = Object.keys(relationJSON.items);
+      if (id === null || id === this.state.root) {
+        if (oldItems.length !== newItems.length) {
+          this.setState({
+            newDataAvailable: true,
+            newData: relationJSON
+          });
+        }
+      }
+      return;
+    } else if (fromCache && checkCache && Object.keys(relationJSON.relations).length == 0) {
+      return;
+    }
+    this.loadRelations(relationJSON, id)
+  }
 
     loadRelations(relationJSON, id) {
       console.log("Loading relations!");
@@ -1155,8 +1156,9 @@ class GenogramTree extends React.Component {
 
         var filteredJSON = { targets: this.state.originalJSON.targets, items: {}, relations: {} };
         visited.each((v) => {
+          console.assert(Object.hasOwn(this.state.originalJSON.items, v));
           filteredJSON.items[v] = this.state.originalJSON.items[v];
-          if (this.state.originalJSON.relations[v]) {
+          if (Object.hasOwn(this.state.originalJSON.relations, v)) {
             filteredJSON.relations[v] = this.state.originalJSON.relations[v].filter((r) => visited.contains(r.item1Id));
           }
         });
@@ -1167,15 +1169,21 @@ class GenogramTree extends React.Component {
     }
 
     async fetchKinships(id, relationJSON) {
-      const kinshipJSON = await this.requests.relationCalc({start: id, relations: Object.values(relationJSON.relations).flat()});
-      const newrelationJSON = this.integrateKinshipIntorelationJSON(kinshipJSON, relationJSON);
+      const newRelationJSON = await this.injectKinship(id, relationJSON);
       this.setState({
-          kinshipJSON: kinshipJSON,
-          originalJSON: newrelationJSON
+          originalJSON: newRelationJSON
       });
     }
 
-    // Merge two relational JSONs, modifying the old one.
+  async injectKinship(id, relationJSON) {
+    const kinshipJSON = await this.requests.relationCalc({
+      start: id,
+      relations: Object.values(relationJSON.relations).flat(),
+    });
+    return this.integrateKinshipIntoRelationJSON(kinshipJSON, relationJSON);
+  }
+
+// Merge two relational JSONs, modifying the old one.
     mergeRelations(oldRel, newRel) {
       oldRel.items = {...oldRel.items, ...newRel.items};
 
@@ -1218,7 +1226,7 @@ class GenogramTree extends React.Component {
           isLoading: true,
           isUpdated: false,
       });
-      await this.fetchRelations(this.state.personInfo, 2);
+      await this.fetchFromCacheOrBackend(this.state.personInfo, 2);
   }
 
   zoomToDefault = async () => {
@@ -1241,10 +1249,7 @@ class GenogramTree extends React.Component {
     }
 
     if (this.state.relationJSON == null) {
-      Promise.allSettled([
-        this.fetchRelations(this.source, 3, true, true), 
-        this.fetchRelations(this.source, 3, false, true)]
-        );
+      this.fetchFromCacheOrBackend(this.source, 2);
       
       return (
           <>
@@ -1373,12 +1378,98 @@ class GenogramTree extends React.Component {
       </>
     );
   }
-  // initialises tree (in theory should only be called once, diagram should be .clear() and then data updated for re-initialisation)
+
+  fetchFromCacheOrBackend = async (id, depth) => {
+    if (this.state.relationJSON && this.extendInCache(id)) {
+      await this.extendFromCache(id);
+    } else {
+      await this.fetchRelations(id, depth, true, true);
+      await this.fetchRelations(id, depth, false, true);
+    }
+    const relationsPromise = this.requests.relationsCacheOrWiki({id: id, depth: 3});
+    await this.updateTreeCache(relationsPromise);
+  }
+
+  updateTreeCache = async (relationsPromise) => {
+    const relations = await relationsPromise;
+    if (_.isEmpty(this.treeCache)) {
+      this.treeCache = relations;
+      return;
+    }
+    const newTree = this.mergeRelations(this.treeCache, relations);
+    this.treeCache = await this.injectKinship(this.state.root, newTree);
+  }
+
+
+// initialises tree (in theory should only be called once, diagram should be .clear() and then data updated for re-initialisation)
   // see https://gojs.net/latest/intro/react.html
 
   // majority of code below is from https://gojs.net/latest/samples/genogram.html
 
 
+  extendInCache = (id) => {
+    const curTree = this.state.relationJSON;
+    const cachedTree = this.treeCache;
+    if (_.isEmpty(cachedTree)) {
+      return false;
+    }
+
+    const curNeighbors = curTree.relations[id];
+    if (!Object.hasOwn(cachedTree.relations, id)) {
+      return false;
+    }
+    const cachedNeighbors = cachedTree.relations[id];
+    return cachedNeighbors.length > curNeighbors.length;
+  }
+
+  extendFromCache = async (id) => {
+    const curTree = this.state.originalJSON;
+    const cachedTree = this.treeCache;
+    const firstNeighbors = new Set(cachedTree
+        .relations[id]
+        .map(x => x.item1Id)
+    );
+    const secondNeighbors = new Set(
+        Object.keys(cachedTree.relations)
+            .filter(id => firstNeighbors.has(id))
+            .map(id => cachedTree.relations[id])
+            .flat()
+            .map(x => x.item1Id)
+    );
+    const neighbors = [...firstNeighbors, ...secondNeighbors];
+    console.assert(neighbors.length > 0);
+    let newItems = {};
+    for (const id of neighbors) {
+      newItems[id] = cachedTree.items[id];
+    }
+    let newRelations = {};
+    for (const id of Object.keys(newItems)) {
+      newRelations[id] = cachedTree.relations[id];
+    }
+    const neighborTree = {
+      items: newItems,
+      relations: newRelations,
+    };
+    const newTree = this.mergeRelations(curTree, neighborTree);
+    const kinshipTree = await this.injectKinship(this.state.root, newTree);
+    const itemIds = new Set(Object.keys(kinshipTree.items));
+    const relationIds = new Set(Object.values(kinshipTree.relations).flat().map(x => x.item1Id));
+    const prunedRelations = {};
+    for (const [id, arr] of Object.entries(kinshipTree.relations)) {
+      if (!itemIds.has(id)) {
+        continue;
+      }
+      prunedRelations[id] = arr.filter(x => itemIds.has(x.item1Id));
+    }
+    const prunedRelationsIds = new Set(Object.values(prunedRelations).flat().map(x => x.item1Id));
+    console.assert(_.isEqual(itemIds, prunedRelationsIds));
+    kinshipTree.relations = prunedRelations;
+    this.setState({
+      originalJSON: kinshipTree,
+      isLoading: false,
+      isUpdated: true,
+    });
+  }
 }
 
   class GenogramLayout extends go.LayeredDigraphLayout {

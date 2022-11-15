@@ -1,66 +1,51 @@
 export class Requests {
-    baseUrl = 'https://db-de-genealogie.herokuapp.com'
-    // baseUrl = 'http://0.0.0.0:8080'
+    baseUrl = 'https://db-de-genealogie.herokuapp.com';
+    // baseUrl = 'http://0.0.0.0:8080';
 
-    search = (name='silvia') => {
+    search = async (name='silvia') => {
         const url = `${this.baseUrl}/search?q=${name}`;
-        return fetch(url)
-            .then(response => {
-                return response.json();
-            })
-            .catch((error) => {
-                console.error(`Error: ${error}`);
-            });
+        return await this.genericRequest(url);
     }
 
-    relations = ({id = 'WD-Q152308', depth = 2, visitedItems = []} = {}) => {
-        const url = `${this.baseUrl}/relations_wk?id=${id}&depth=${depth}`
-        const headers = new Headers();
-        headers.append('Content-Type', 'application/json');
-        const request = new Request(
-            url,
-            {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify(visitedItems),
-            }
-        );
-        return fetch(request)
-            .then(response => {
-                return response.json();
-            })
-            .catch((error) => {
-                console.error(`Error: ${error}`);
-            });
+    relationsCacheOrWiki = async ({id = 'WD-Q152308', depth = 2, visitedItems = []} = {}) => {
+        const params = {id: id, depth: depth, visitedItems: visitedItems};
+        try {
+            return await Promise.any([
+                this.relationsDb(params),
+                this.relations(params),
+            ]);
+        } catch (e) {
+            throw new Error(
+                `Error executing Promise.any - ${e.constructor.name}.
+Individual errors:
+Error from db fetch:
+${e.errors[0]}
+Error from wiki fetch:
+${e.errors[1]}`
+            );
+        }
     }
 
-    relationsDb = ({id = 'WD-Q152308', depth = 2, visitedItems = ""} = {}) => {
-        const url = `${this.baseUrl}/relations_db?id=${id}&depth=${depth}`
-        const headers = new Headers();
-        headers.append('Content-Type', 'application/json');
-        const request = new Request(
-            url,
-            {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify(visitedItems),
-            }
-        );
-        return fetch(request)
-            .then(response => {
-                return response.json();
-            })
-            .catch((error) => {
-                console.error(`Error: ${error}`);
-            });
+    relations = async ({id = 'WD-Q152308', depth = 2, visitedItems = []} = {}) => {
+        const url = `${this.baseUrl}/relations_wk?id=${id}&depth=${depth}`;
+        return await this.genericPost(url, visitedItems, id, depth);
     }
 
-    relationCalc = ({start, relations}) => {
+    relationsDb = async ({id = 'WD-Q152308', depth = 2, visitedItems = []} = {}) => {
+        const url = `${this.baseUrl}/relations_db?id=${id}&depth=${depth}`;
+        return await this.genericPost(url, visitedItems, id, depth);
+    }
+
+    relationCalc = async ({start, relations}) => {
         const url = `${this.baseUrl}/relation_calc`;
         const body = {
             start: start,
             relations: relations,
         };
+        return await this.genericPost(url, body);
+    }
+
+    async genericPost(url, body, id=null, depth=null) {
         const headers = new Headers();
         headers.append('Content-Type', 'application/json');
         const request = new Request(
@@ -71,18 +56,24 @@ export class Requests {
                 body: JSON.stringify(body),
             }
         );
-        return fetch(request)
-            .then(response => {
-                return response.json();
-            })
-            .catch((error) => {
-                console.error(`Error: ${error}`);
-            });
+        return await this.genericRequest(request, id, depth);
     }
 
-    relationsBulk = (ids) => {
-        const promises = Array.from(ids.map(x => this.relations({id: x})));
-        return Promise.all(promises);
+    async genericRequest(requestOrUrl, id=null, depth=null) {
+        const response = await fetch(requestOrUrl);
+        const ok = response.ok;
+        if (!ok) {
+            const activity = (id !== null && depth !== null) ?
+                `fetching id ${id} with depth ${depth}` :
+                'performing http request';
+            throw new Error(`Error when ${activity} - status: ${response.status}\n${response.statusText}`);
+        }
+        const resText = await response.text();
+        try {
+            return JSON.parse(resText);
+        } catch {
+            throw new Error(`Error while JSON-parsing the following text response:\n${resText}`);
+        }
     }
 }
 
