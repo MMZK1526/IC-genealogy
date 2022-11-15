@@ -1057,7 +1057,7 @@ class GenogramTree extends React.Component {
           isLoading: true,
           isUpdated: false,
       });
-      await this.fetchFromCacheOrBackend(this.state.personInfo, 1);
+      await this.fetchFromCacheOrBackend(this.state.personInfo, 2);
   }
 
   componentDidMount() {
@@ -1093,7 +1093,7 @@ class GenogramTree extends React.Component {
     }
 
     if (this.state.relationJSON == null) {
-      this.fetchFromCacheOrBackend(this.source, 1);
+      this.fetchFromCacheOrBackend(this.source, 2);
       
       return (
           <div>
@@ -1277,7 +1277,7 @@ class GenogramTree extends React.Component {
       await this.fetchRelations(id, depth, true, true);
       await this.fetchRelations(id, depth, false, true);
     }
-    const relationsPromise = this.requests.relationsCacheOrWiki({id: id, depth: 2});
+    const relationsPromise = this.requests.relationsCacheOrWiki({id: id, depth: 3});
     await this.updateTreeCache(relationsPromise);
   }
 

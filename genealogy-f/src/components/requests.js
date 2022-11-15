@@ -64,7 +64,7 @@ ${e.errors[1]}`
         const ok = response.ok;
         if (!ok) {
             const activity = (id !== null && depth !== null) ?
-                'fetching id ${id} with depth ${depth}' :
+                `fetching id ${id} with depth ${depth}` :
                 'performing http request';
             throw new Error(`Error when ${activity} - status: ${response.status}\n${response.statusText}`);
         }
