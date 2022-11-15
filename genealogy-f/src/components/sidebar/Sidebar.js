@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Modal } from 'react-bootstrap';
+import { Form } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 import './Sidebar.css';
 import Multiselect from 'multiselect-react-dropdown';
@@ -17,10 +17,10 @@ export function Sidebar(props) {
 
     return (
         <div className='sidebar'>
-            <Form className="w-100">
+            <Form className="w-100 mb-3" style={{ overflow: "auto", maxHeight: "90%" }}>
                 <Form.Group className="form-group"  controlId='Name-control'>
                     <Form.Label>Personal Name</Form.Label>
-                    <Form.Control type="name" placeholder="Charles" 
+                    <Form.Control type='text' placeholder="e.g. Charles" 
                     onChange={(e) => {
                         props.filters.personalName = e.target.value;
                     }}
@@ -30,7 +30,7 @@ export function Sidebar(props) {
                 <Form.Label className="form-label">Family: </Form.Label>
                 <Multiselect
                     id='family-select'
-                    options={Array.from(props.filters.allFamilies).map((v) => ({name: v, id: v}))} // Options to display in the dropdown
+                    options={Array.from(props.filters.allFamilies).sort().map((v) => ({name: v, id: v}))} // Options to display in the dropdown
                     selectedValues={Array.from(props.filters.families).map((v) => ({name: v, id: v}))} // Preselected value to persist in dropdown
                     onSelect={(_, i) => props.filters.families.add(i.name)} // Function will trigger on select event
                     onRemove={(_, i) => props.filters.families.delete(i.name)} // Function will trigger on remove event
@@ -39,7 +39,7 @@ export function Sidebar(props) {
                 />
 
                 <Form.Group className='form-group' controlId='bloodline-checkbox'>
-                    <Form.Check className="mt-1 mb-1" title='Bloodline' label='Bloodline only' type='checkbox' defaultChecked={props.filters.bloodline} 
+                    <Form.Check className="mb-1" title='Bloodline' label='Bloodline only' type='checkbox' defaultChecked={props.filters.bloodline} 
                         onChange={(e) => {
                             props.filters.bloodline = e.target.checked;
                         }}
@@ -48,7 +48,7 @@ export function Sidebar(props) {
 
                 <Form.Group className="mb-1" controlId='fromYear-control'>
                     <Form.Label>From</Form.Label>
-                    <Form.Control type="fromYear" placeholder="Year of Birth, e.g. 1900" 
+                    <Form.Control type='text' placeholder="Year of Birth, e.g. 1900" 
                     onChange={(e) => {
                         props.filters.fromYear = e.target.value;
                     }}
@@ -57,7 +57,7 @@ export function Sidebar(props) {
 
                 <Form.Group className="mb-1"  controlId='toYear-control'>
                     <Form.Label>To</Form.Label>
-                    <Form.Control type="toYear" placeholder="Year of Birth, e.g. 1990" 
+                    <Form.Control type='text' placeholder="Year of Birth, e.g. 1990" 
                     onChange={(e) => {
                         props.filters.toYear = e.target.value;
                     }}
@@ -66,7 +66,7 @@ export function Sidebar(props) {
 
                 <Form.Group className="mb-1" controlId='birthPlace-control'>
                     <Form.Label>Place of Birth</Form.Label>
-                    <Form.Control type="fromYear" placeholder="Place of Birth, e.g. London" 
+                    <Form.Control type='text' placeholder="Place of Birth, e.g. London" 
                     onChange={(e) => {
                         props.filters.birthPlace = e.target.value;
                     }}
@@ -75,31 +75,26 @@ export function Sidebar(props) {
 
                 <Form.Group className="mb-1"  controlId='DeathPlace-control'>
                     <Form.Label>Place of Death</Form.Label>
-                    <Form.Control type="toYear" placeholder="Place of Death, e.g. Windsor" 
+                    <Form.Control type='text' placeholder="Place of Death, e.g. Windsor" 
                     onChange={(e) => {
                         props.filters.deathPlace = e.target.value;
                     }}
                     />
                 </Form.Group>
-
-
-                <div>
-                <Button className='m-1 text-center w-100' variant="primary" onClick={() => props.onChange()}>
-                    Apply
-                </Button>
-                </div><div>
-                <Button className='m-1 text-center w-100' variant="danger" onClick={() => props.onPrune()}>
-                    Prune
-                </Button>
-                </div>
             </Form>
 
+            <Button className='m-1 text-center w-100' variant="primary" onClick={() => props.onChange()}>
+                Apply
+            </Button>
+            <Button className='m-1 text-center w-100' variant="danger" onClick={() => props.onPrune()}>
+                Prune
+            </Button>
             {/* <hr style={{
                 background: 'darkgrey',
                 height: '2px',
                 width: '100%',
                 border: 'none',
-                margin: '20px 0px'
+                margin: '0px 0px'
             }} /> */}
 
             <label className="form-label">Look for name in tree: </label>

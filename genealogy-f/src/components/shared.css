@@ -1,9 +1,0 @@
-.toolbar {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-
-    display: flex;
-    flex-direction: row;
-    background-color: rgb(255, 255, 255);
-}

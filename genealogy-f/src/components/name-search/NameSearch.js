@@ -57,12 +57,12 @@ export class NameSearch extends React.Component {
                                 <Spinner
                                 as="span"
                                 animation="border"
-                                size="sm"
+                                className="me-2 align-middle"
                                 role="status"
                                 aria-hidden="true"
                               />
                             }
-                            Search
+                            <span className="align-middle">Search</span>
                         </Button>
                         
                     </InputGroup>

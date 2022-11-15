@@ -22,8 +22,8 @@ export class CustomUpload extends React.Component {
                 {
                     !this.state.show &&
                     <>
-                        <label>Or you can try...</label>
-                        <Button className="m-1" variant='secondary' onClick={this.handleClick}>
+                        <label className="align-middle">Or you can try...</label>
+                        <Button className="m-1 align-middle" variant='secondary' onClick={this.handleClick}>
                             Upload custom data
                         </Button>
                     </>
