@@ -7,7 +7,7 @@ import './App.css';
 import PopupInfo from './components/popup-info/PopupInfo.js'
 import './GenogramTree.css';
 import {StatsPanel} from './components/stats-panel/StatsPanel';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import EscapeCloseable from './components/escape-closeable/EscapeCloseable';
 import './components/shared.css';
 import _ from 'lodash';
@@ -78,7 +78,7 @@ export function applyFamilyFilter(id, familyName, idPerson) {
   const target = idPerson.id;
   if (target == null) {
     return false;
-  }
+  }toLin
   const addProps = target.additionalProperties;
   // can we make this generic in the future // TODO: WE WILL
   const family = addProps.filter(p => p.name == 'family');
@@ -386,26 +386,33 @@ export class DiagramWrapper extends React.Component {
         diagram.clearHighlighteds();
         // node.isHighlighted = true;
         // for each Link coming out of the Node, set Link.isHighlighted
+        node.isHighlighted = true;
         node.findLinksConnected().each(function(l) { 
           l.isHighlighted = true;
           if (l.isLabeledLink) {
             let it = l.labelNodes;
             let result = it.next();
-            console.log(it)
-            while (result.done) {
-              if (result.value == undefined) {
-                continue
-              }
-              // result.isHighlighted = true;
-              console.log(typeof result.value)
-              result = it.next()
-            }
+            it.ra.value.findLinksConnected().each(function(l) { 
+              l.isHighlighted = true;
+              l.toNode.isHighlighted = true;
+            });
+            // while (!result.done) {
+            //   console.log(typeof result.node);
+            //   // result.isHighlighted = true;
+            //   console.log(typeof result.value);
+            //   result = it.next();
+            //   break
+            // }
           }
         });
         node.findNodesConnected().each(function(n) { 
+          n.isHighlighted = true;
           let link = n.labeledLink;
           if (link != null) {
+            console.log(n)
             link.isHighlighted = true;
+            link.fromNode.isHighlighted = true;
+            link.toNode.isHighlighted = true;
           }
           
         });
@@ -425,8 +432,6 @@ export class DiagramWrapper extends React.Component {
         // see this for how to do stuff on click? - https://gojs.net/latest/extensions/Robot.html
           {movable: true, locationSpot: go.Spot.Center, locationObjectName: 'ICON', selectionObjectName: 'ICON', name: "NODE2",
         mouseEnter: mouseEnter, mouseLeave: mouseLeave,
-        click: function(e, node) {
-        },
       },
           // new go.Binding('opacity', 'hide', h => h ? 0 : 1),
           // new go.Binding('pickable', 'hide', h => !h),
@@ -435,7 +440,8 @@ export class DiagramWrapper extends React.Component {
             $(go.Shape, 'Square',
               {width: 40, height: 40, strokeWidth: 2, fill: '#7ec2d7', stroke: '#919191', portId: '' , name: "SHAPE"},
               new go.Binding('fill', "color"),
-              new go.Binding('stroke', 'isHighlighted', function(h) { return h ? "green" : "#919191";}).ofObject(),
+              new go.Binding('fill', 'isHighlighted', function(h) { return h ? "#FFD700" : "#7ec2d7";}).ofObject(),
+              new go.Binding('strokeWidth', 'isHighlighted', function(h) { return h ? 2: 2;}).ofObject(),
               new go.Binding('opacity', 'opacity')),
             $(go.Panel,
               { // for each attribute show a Shape at a particular place in the overall square
@@ -462,32 +468,19 @@ export class DiagramWrapper extends React.Component {
         };
       this.diagram.nodeTemplateMap.add('female',  // female
         $(go.Node, 'Vertical',
-          { movable: true, locationSpot: go.Spot.Center, locationObjectName: 'ICON', selectionObjectName: 'ICON',
-          click: function(e, node) {
-            console.log("clicking something")
-            // highlight all Links and Nodes coming out of a given Node
-            var diagram = node.diagram;
-            // node.shape.fill = "#7ec2d7"
-            diagram.startTransaction("highlight");
-            // remove any previous highlighting
-            diagram.clearHighlighteds();
-            node.isHighlighted = true;
-            // for each Link coming out of the Node, set Link.isHighlighted
-            node.findLinksOutOf().each(function(l) { l.isHighlighted = true; });
-            node.findLinksInto().each(function(l) { l.isHighlighted = true; });
-            // for each Node destination for the Node, set Node.isHighlighted
-            // node.findNodesOutOf().each(function(n) { n.isHighlighted = true; });
-            diagram.commitTransaction("highlight");
-          }
+          { movable: true, locationSpot: go.Spot.Center, locationObjectName: 'ICON', selectionObjectName: 'ICON', name: "NODE2",
+          mouseEnter: mouseEnter, mouseLeave: mouseLeave,
         },
-          new go.Binding('opacity', 'hide', h => h ? 0 : 1),
-          new go.Binding('pickable', 'hide', h => !h),
+          // new go.Binding('opacity', 'hide', h => h ? 0 : 1),
+          // new go.Binding('pickable', 'hide', h => !h),
           $(go.Panel,
             { name: 'ICON' },
             $(go.Shape, 'Circle',
               { width: 40, height: 40, strokeWidth: 2, fill: '#ff99a8', stroke: '#a1a1a1', portId: '' , name:"SHAPE"},
-              new go.Binding('opacity', 'opacity')),
-              new go.Binding('stroke', 'isHighlighted', function(h) { return h ? "green" : "#919191";}).ofObject(),
+              new go.Binding('fill', "color"),
+              new go.Binding('opacity', 'opacity'),
+              new go.Binding('strokeWidth', 'isHighlighted', function(h) { return h ? 2 : 2;}).ofObject(),
+              new go.Binding('fill', 'isHighlighted', function(h) { return h ? "#FFD700" : "#ff99a8";}).ofObject()),
             $(go.Panel,
               { // for each attribute show a Shape at a particular place in the overall circle
                 itemTemplate:
@@ -510,11 +503,11 @@ export class DiagramWrapper extends React.Component {
       // the representation of each label node -- nothing shows on a Marriage Link
       this.diagram.nodeTemplateMap.add('LinkLabel',
         $(go.Node, { selectable: false, width: 1, height: 1, fromEndSegmentLength: 20,avoidable: false, layerName: "Foreground"},
-        $("Shape", "Ellipse",
-            {
-              width: 5, height: 5, stroke: null,
-              portId: "", fromLinkable: true, toLinkable: true, cursor: "pointer", fill: "black",
-            })
+        // $("Shape", "Ellipse",
+        //     {
+        //       width: 5, height: 5, stroke: null,
+        //       portId: "", fromLinkable: true, toLinkable: true, cursor: "pointer", fill: "black",
+        //     })
         ));
 
 
@@ -529,8 +522,8 @@ export class DiagramWrapper extends React.Component {
           $(go.Shape, {stroke: '#424242', strokeWidth: 0.5},
           new go.Binding('opacity', 'opacity'),
           // shape stroke and width depend on whether Link.isHighlighted is true
-          new go.Binding("stroke", "isHighlighted", function(h) { return h ? "green" : "#424242"; })
-          .ofObject(),
+          // new go.Binding("stroke", "isHighlighted", function(h) { return h ? "90EE90" : "#424242"; })
+          // .ofObject(),
           new go.Binding('strokeWidth', "isHighlighted", function(h) { return h ? 5 : 0.5;}).ofObject(),
           )
           // new go.Binding("strokeWidth", "isHighlighted", function(h) { return h ? 1 : 0.5; })
