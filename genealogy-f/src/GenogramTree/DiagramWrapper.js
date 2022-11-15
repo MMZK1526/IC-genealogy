@@ -68,6 +68,8 @@ export class DiagramWrapper extends React.Component {
                     }
                 },
                 'toolManager.dragSelectingTool': null,
+                minScale: 0.1,
+                maxScale: 5,
             })
         this.diagram = this.state.diagram;
 
