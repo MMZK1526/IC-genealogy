@@ -113,6 +113,7 @@ function transform(data) {
         singlePerson.set('key', person.id);
         singlePerson.set('name', person.name);
         singlePerson.set('spouse', []);
+        singlePerson.set('opacity', person.opacity);
         relMap.set(person.id, Object.fromEntries(singlePerson));
     });
 
@@ -146,16 +147,11 @@ function transform(data) {
 
     var newOutput = [];
 
-    for (let key of relMap.keys()) {
-        let r = relMap.get(key);
-        r.opacity = '0.9';
-    }
-
-    // add unknown nodes for unknown parent
-    for (let key of relMap.keys()) {
-        let r = relMap.get(key);
-        relMap = addUnknown(r, relMap);
-    }
+  // add unknown nodes for unknown parent
+  for (let key of relMap.keys()) {
+    let r = relMap.get(key);
+    relMap = addUnknown(r, relMap);
+  }
 
     // convert map into array
     for (let key of relMap.keys()) {
@@ -1197,144 +1193,140 @@ class GenogramTree extends React.Component {
     }
 
     applyFilterAndDrawTree() {
-        this.calculateFilter();
+      this.calculateFilter();
 
-        // Use filter
-        const filters = this.state.filters;
-        console.log(filters)
-        var filteredJSON = {targets: this.state.originalJSON.targets};
-        if (filters.bloodline || filters.families.size !== 0 || filters.fromYear !== '' || filters.toYear !== '' ||
-            filters.birthPlace !== '' || filters.deathPlace !== '' || filters.personalName !== '') {
-            let visited = new go.Set();
-            visited.add(this.state.root);
-            if (filters.bloodline) {
-                console.log('血胤');
-                var frontier = [this.state.root];
-                var descendants = [];
+      // Use filter
+      const filters = this.state.filters;
+      var filteredJSON = { targets: this.state.originalJSON.targets };
+      if (filters.bloodline || filters.families.size !== 0 || filters.fromYear !== '' || filters.toYear !== '' ||
+      filters.birthPlace !== '' || filters.deathPlace !== '' || filters.personalName !== '') {
+        // Map from item ID to opacity
+        let visited = {};
+        visited[this.state.root] = '0.9';
+        if (filters.bloodline) {
+          console.log('血胤');
+          var frontier = [this.state.root];
+          var descendants = [];
 
-                while (frontier.length > 0 || descendants.length > 0) {
-                    var cur = frontier.shift();
-                    if (cur) {
-                        if (this.state.originalJSON.relations[cur]) {
-                            var newElems = this.state.originalJSON.relations[cur]
-                                .filter((r) => r.type !== 'spouse' && !visited.contains(r.item1Id));
-                            var newFrontier = newElems.filter((r) => r.type !== 'child').map((r) => r.item1Id);
-                            var newDescendants = newElems.filter((r) => r.type === 'child').map((r) => r.item1Id);
-                            visited.addAll(newElems.map((r) => r.item1Id));
-                            frontier.push(...newFrontier);
-                            descendants.push(...newDescendants);
-                        }
-                    } else {
-                        cur = descendants.shift();
-                        if (this.state.originalJSON.relations[cur]) {
-                            var newElems = this.state.originalJSON.relations[cur]
-                                .filter((r) => r.type !== 'spouse' && !visited.contains(r.item1Id));
-                            var newDescendants = newElems.filter((r) => r.type === 'child').map((r) => r.item1Id);
-                            visited.addAll(newElems.map((r) => r.item1Id));
-                            descendants.push(...newDescendants);
-                        }
-                    }
-                }
+          while (frontier.length > 0 || descendants.length > 0) {
+            var cur = frontier.shift();
+            if (cur) {
+              if (this.state.originalJSON.relations[cur]) {
+                var newElems = this.state.originalJSON.relations[cur]
+                    .filter((r) => r.type !== 'spouse' && visited[r.item1Id] !== '0.9');
+                var newFrontier = newElems.filter((r) => r.type !== 'child').map((r) => r.item1Id);
+                var newDescendants = newElems.filter((r) => r.type === 'child').map((r) => r.item1Id);
+                newElems.map((r) => r.item1Id).forEach((id) => visited[id] = '0.9');
+                frontier.push(...newFrontier);
+                descendants.push(...newDescendants);
+              }
             } else {
-                visited.addAll(Object.keys(this.state.originalJSON.items));
-            }
-            // filter on personal name
-            if (filters.personalName !== '') {
-                visited = visited.filter((k) => {
-                    let name = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'personal name')[0];
-                    if (name === undefined) return false;
-                    return String(name.value).toLowerCase().includes(filters.personalName.toLowerCase());
+              cur = descendants.shift();
+              if (this.state.originalJSON.relations[cur]) {
+                var newElems = this.state.originalJSON.relations[cur]
+                    .filter((r) => r.type !== 'spouse' && visited[r.item1Id] !== '0.9');
+                var newDescendants = newElems.filter((r) => r.type === 'child').map((r) => r.item1Id);
+                newDescendants.forEach((id) => visited[id] = '0.9');
+                newElems.filter((r) => !visited[r.item1Id]).map((r) => r.item1Id).forEach((id) => {
+                  visited[id] = '0.2';
                 });
+                descendants.push(...newDescendants);
+              }
             }
-            // filter on Family
-            if (filters.families.size !== 0) {
-                visited = visited.filter((v) =>
-                    this.state.originalJSON.items[v].additionalProperties.filter((p) => p.name == 'family')
-                        .map((p) => p.value).some((f) => filters.families.has(f)));
-            }
-            // filter on From birth year
-            if (filters.fromYear !== '') {
-                visited = visited.filter((k) => {
-                    let dob = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'date of birth')[0];
-                    let yearOnly;
-                    if (dob !== undefined) {
-                        yearOnly = parseInt(dob.value.split("-")[0], 10)
-                    }
-                    return dob === undefined || yearOnly >= parseInt(filters.fromYear, 10);
-                });
-            }
-            // filter on To birth year
-            if (filters.toYear !== '') {
-                visited = visited.filter((k) => {
-                    let dob = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'date of birth')[0];
-                    let yearOnly;
-                    if (dob !== undefined) {
-                        yearOnly = parseInt(dob.value.split("-")[0], 10)
-                    }
-                    return dob === undefined || yearOnly <= parseInt(filters.toYear, 10);
-                });
-            }
-            // filter on Birth Place
-            if (filters.birthPlace !== '') {
-                visited = visited.filter((k) => {
-                    let birthPlace = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.propertyId == 'SW-P2')[0];
-                    if (birthPlace === undefined) return false;
-                    return String(birthPlace.value).toLowerCase().includes(filters.birthPlace.toLowerCase());
-                });
-            }
-            // filter on To Death Place
-            if (filters.deathPlace !== '') {
-                visited = visited.filter((k) => {
-                    let deathPlace = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.propertyId == 'SW-P3')[0];
-                    if (deathPlace === undefined) return false;
-                    return String(deathPlace.valaue).toLowerCase().includes(filters.deathPlace.toLowerCase());
-                });
-            }
-
-            // Add outliers
-            let outlierVisited = (new go.Set()).addAll(visited);
-            var frontier = (new go.Set()).addAll(visited);
-            while (outlierVisited.size > 0 && frontier.size > 0) {
-                let outlierParents = new go.Set();
-                let outlierSpouses = new go.Set();
-                let remover = new go.Set();
-                frontier.each((v) => {
-                    if (this.state.originalJSON.relations[v]) {
-                        var newElems = this.state.originalJSON.relations[v]
-                            .filter((r) => (r.type !== 'child') && !visited.contains(r.item1Id));
-                        if (newElems.length === 0) {
-                            remover.add(v);
-                        } else {
-                            outlierParents.addAll(newElems.filter((r) => r.type !== 'spouse').map((r) => r.item1Id));
-                            outlierSpouses.addAll(newElems.filter((r) => r.type === 'spouse').map((r) => r.item1Id));
-                        }
-                    }
-                });
-                frontier.removeAll(remover);
-                outlierVisited = outlierParents.retainAll(outlierSpouses);
-                // console.log(outlierVisited.toArray().map((i) => this.state.originalJSON.items[i].name));
-                frontier.addAll(outlierVisited);
-                visited.addAll(outlierVisited);
-            }
-
-            var filteredJSON = {targets: this.state.originalJSON.targets, items: {}, relations: {}};
-            visited.each((v) => {
-                console.assert(Object.hasOwn(this.state.originalJSON.items, v));
-                filteredJSON.items[v] = this.state.originalJSON.items[v];
-                if (Object.hasOwn(this.state.originalJSON.relations, v)) {
-                    filteredJSON.relations[v] = this.state.originalJSON.relations[v].filter((r) => visited.contains(r.item1Id));
-                }
-            });
-            this.state.relationJSON = filteredJSON;
+          }
         } else {
-            this.state.relationJSON = JSON.parse(JSON.stringify(this.state.originalJSON));
+          Object.keys(this.state.originalJSON.items).forEach((id) => visited[id] = '0.9');
+        }
+
+        // filter on personal name
+        if (filters.personalName !== '') {
+          for (const [k, _] of Object.entries(visited)) {
+            const name = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'personal name')[0];
+            if (name === undefined) delete visited[k];
+            if (!String(name.value).toLowerCase().includes(filters.personalName.toLowerCase())) delete visited[k];
+          }
+        }
+        // filter on Family
+        if (filters.families.size !== 0) {
+          for (const [k, _] of Object.entries(visited)) {
+            const criteria = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'family')
+            .map((p) => p.value).some((f) => filters.families.has(f));
+            if (!criteria) delete visited[k];
+          }
+        }
+        // filter on From birth year
+        if (filters.fromYear !== '') {
+          for (const [k, _] of Object.entries(visited)) {
+            let dob = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'date of birth')[0];
+            if (dob === undefined) delete visited[k];
+            let yearOnly = parseInt(dob.value.split("-")[0], 10);
+            if (!yearOnly || yearOnly < parseInt(filters.fromYear, 10)) delete visited[k];
+          }
+        }
+        // filter on To birth year
+        if (filters.toYear !== '') {
+          for (const [k, _] of Object.entries(visited)) {
+            let dob = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'date of birth')[0];
+            if (dob === undefined) delete visited[k];
+            let yearOnly = parseInt(dob.value.split("-")[0], 10);
+            if (!yearOnly || yearOnly > parseInt(filters.toYear, 10)) delete visited[k];
+          }
+        }
+        // filter on Birth Place
+        if (filters.birthPlace !== '') {
+          for (const [k, _] of Object.entries(visited)) {
+            const birthPlace = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.propertyId == 'SW-P2')[0];
+            if (birthPlace === undefined) delete visited[k];
+            if (!String(birthPlace.value).toLowerCase().includes(filters.birthPlace.toLowerCase())) delete visited[k];
+          }
+        }
+        // filter on To Death Place
+        if (filters.deathPlace !== '') {
+          for (const [k, _] of Object.entries(visited)) {
+            const deathPlace = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.propertyId == 'SW-P3')[0];
+            if (deathPlace === undefined) delete visited[k];
+            if (!String(deathPlace.value).toLowerCase().includes(filters.deathPlace.toLowerCase())) delete visited[k];
+          }
+        }
+        
+        // Add outliers
+        let outlierVisited = (new go.Set()).addAll(Object.keys(visited));
+        var frontier = (new go.Set()).addAll(Object.keys(visited));
+        while (outlierVisited.size > 0 && frontier.size > 0) {
+          let outlierParents = new go.Set();
+          let outlierSpouses = new go.Set();
+          let remover = new go.Set();
+          frontier.each((v) => {
+            if (this.state.originalJSON.relations[v]) {
+              var newElems = this.state.originalJSON.relations[v]
+                  .filter((r) => (r.type !== 'child') && !visited[r.item1Id]);
+              if (newElems.length === 0) {
+                remover.add(v);
+              } else {
+                outlierParents.addAll(newElems.filter((r) => r.type !== 'spouse').map((r) => r.item1Id));
+                outlierSpouses.addAll(newElems.filter((r) => r.type === 'spouse').map((r) => r.item1Id));
+              }
+            }
+          });
+          frontier.removeAll(remover);
+          outlierVisited = outlierParents.retainAll(outlierSpouses);
+          // console.log(outlierVisited.toArray().map((i) => this.state.originalJSON.items[i].name));
+          frontier.addAll(outlierVisited);
+          outlierVisited.each((ov) => {
+            if (!visited[ov]) {
+              visited[ov] = '0.2';
+            }
+          })
         }
     }
 
-    async fetchKinships(id, relationJSON) {
-        const newRelationJSON = await this.injectKinship(id, relationJSON);
-        this.setState({
-            originalJSON: newRelationJSON
+        var filteredJSON = { targets: this.state.originalJSON.targets, items: {}, relations: {} };
+        Object.keys(visited).forEach((v) => {
+          filteredJSON.items[v] = this.state.originalJSON.items[v];
+          filteredJSON.items[v].opacity = visited[v];
+          if (this.state.originalJSON.relations[v]) {
+            filteredJSON.relations[v] = this.state.originalJSON.relations[v].filter((r) => visited[r.item1Id]);
+          }
         });
     }
 
