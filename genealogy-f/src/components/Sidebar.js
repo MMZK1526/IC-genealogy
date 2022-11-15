@@ -1,7 +1,7 @@
 import React from 'react';
 import { Form } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
-import './Sidebar.css';
+import './stylesheets/Sidebar.css';
 import Multiselect from 'multiselect-react-dropdown';
 import { Autocomplete, TextField } from '@mui/material';
 

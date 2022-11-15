@@ -2,7 +2,7 @@ import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button'
 import { BiHomeAlt } from 'react-icons/bi';
-import {downloadJsonFile} from './components/custom-upload/exportAsJson';
+import {downloadJsonFile} from './components/exportAsJson';
 import { AiFillFilter } from 'react-icons/ai';
 
 function Toolbar(props) {

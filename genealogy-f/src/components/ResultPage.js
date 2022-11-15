@@ -1,9 +1,9 @@
-import './ResultPage.css'
+import './stylesheets/ResultPage.css'
 import { ScrollMenu  } from "react-horizontal-scrolling-menu";
 import React from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Navigate } from "react-router-dom";
-import Toolbar from "../../Toolbar";
+import Toolbar from "../Toolbar";
 import Card from "react-bootstrap/Card";
 import Container from 'react-bootstrap/Container';
 

@@ -2124,4 +2124,4 @@ class ArcLink extends go.Link {
     }
 }
 
-export default withRouter(GenogramTree);
+// export default withRouter(GenogramTree);
