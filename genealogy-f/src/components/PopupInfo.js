@@ -1,4 +1,3 @@
-import { capitalizeFirstLetter } from '../GenogramTree.js';
 import "./stylesheets/PopupInfo.css"
 import './stylesheets/shared.css';
 import EscapeCloseable from "./EscapeCloseable";
@@ -11,6 +10,7 @@ import {FcGoogle} from 'react-icons/fc'
 import { ButtonGroup } from 'react-bootstrap';
 import CloseButton from 'react-bootstrap/CloseButton';
 import {TbMapSearch} from 'react-icons/tb'
+import {capitalizeFirstLetter} from "../GenogramTree/utilFunctions";
 
 function PopupInfo(props) {
     const onNew = (_) => {

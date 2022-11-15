@@ -4,8 +4,6 @@ import {Home} from './Home';
 import './stylesheets/App.css';
 import './components/stylesheets/shared.css';
 
-import GenogramTree from "./GenogramTree";
-
 import ResultPage from "./components/ResultPage.js";
 import React from "react";
 import {
@@ -16,6 +14,7 @@ import {
 import * as util from 'util';
 
 import {BiHomeAlt} from "react-icons/bi"
+import GenogramTree from "./GenogramTree/GenogramTree";
 
 class App extends React.Component {
     componentDidMount(){
