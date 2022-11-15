@@ -1,15 +1,15 @@
-import {Sidebar} from './components/sidebar/Sidebar.js';
+import {Sidebar} from './components/Sidebar.js';
 import Container from 'react-bootstrap/Container';
 import React from 'react';
 import * as go from 'gojs';
 import {ReactDiagram} from 'gojs-react';
-import './App.css';
-import PopupInfo from './components/popup-info/PopupInfo.js'
-import './GenogramTree.css';
-import {StatsPanel} from './components/stats-panel/StatsPanel';
+import './stylesheets/App.css';
+import PopupInfo from './components/PopupInfo.js'
+import './stylesheets/GenogramTree.css';
+import {StatsPanel} from './components/StatsPanel';
 import {Link, useLocation, useNavigate, useParams} from 'react-router-dom';
-import EscapeCloseable from './components/escape-closeable/EscapeCloseable';
-import './components/shared.css';
+import EscapeCloseable from './components/EscapeCloseable';
+import './components/stylesheets/shared.css';
 import _ from 'lodash';
 import Button from 'react-bootstrap/Button';
 import {setStatePromise} from './components/utils';

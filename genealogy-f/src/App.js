@@ -1,12 +1,12 @@
 import _ from "lodash";
 import {Requests} from './components/requests';
 import {Home} from './Home';
-import './App.css';
-import './components/shared.css';
+import './stylesheets/App.css';
+import './components/stylesheets/shared.css';
 
 import GenogramTree from "./GenogramTree";
 
-import ResultPage from "./components/result-page/ResultPage.js";
+import ResultPage from "./components/ResultPage.js";
 import React from "react";
 import {
     BrowserRouter as Router,

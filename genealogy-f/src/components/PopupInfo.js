@@ -1,7 +1,7 @@
-import { capitalizeFirstLetter } from '../../GenogramTree.js';
-import "./PopupInfo.css"
-import '../shared.css';
-import EscapeCloseable from "../escape-closeable/EscapeCloseable";
+import { capitalizeFirstLetter } from '../GenogramTree.js';
+import "./stylesheets/PopupInfo.css"
+import './stylesheets/shared.css';
+import EscapeCloseable from "./EscapeCloseable";
 import Button from 'react-bootstrap/Button';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';

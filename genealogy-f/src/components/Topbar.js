@@ -1,4 +1,4 @@
-import './Topbar.css'
+import './stylesheets/Topbar.css'
 
 export function Topbar(props) {
     return (
