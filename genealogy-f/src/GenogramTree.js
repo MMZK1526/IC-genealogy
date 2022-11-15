@@ -987,8 +987,9 @@ class GenogramTree extends React.Component {
 
         var filteredJSON = { targets: this.state.originalJSON.targets, items: {}, relations: {} };
         visited.each((v) => {
+          console.assert(Object.hasOwn(this.state.originalJSON.items, v));
           filteredJSON.items[v] = this.state.originalJSON.items[v];
-          if (this.state.originalJSON.relations[v]) {
+          if (Object.hasOwn(this.state.originalJSON.relations, v)) {
             filteredJSON.relations[v] = this.state.originalJSON.relations[v].filter((r) => visited.contains(r.item1Id));
           }
         });
@@ -1342,8 +1343,20 @@ class GenogramTree extends React.Component {
     };
     const newTree = this.mergeRelations(curTree, neighborTree);
     const kinshipTree = await this.injectKinship(this.state.root, newTree);
+    const itemIds = new Set(Object.keys(kinshipTree.items));
+    const relationIds = new Set(Object.values(kinshipTree.relations).flat().map(x => x.item1Id));
+    const prunedRelations = {};
+    for (const [id, arr] of Object.entries(kinshipTree.relations)) {
+      if (!itemIds.has(id)) {
+        continue;
+      }
+      prunedRelations[id] = arr.filter(x => itemIds.has(x.item1Id));
+    }
+    const prunedRelationsIds = new Set(Object.values(prunedRelations).flat().map(x => x.item1Id));
+    console.assert(_.isEqual(itemIds, prunedRelationsIds));
+    kinshipTree.relations = prunedRelations;
     this.setState({
-      relationJSON: kinshipTree,
+      originalJSON: kinshipTree,
       isLoading: false,
       isUpdated: true,
     });
