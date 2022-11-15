@@ -371,24 +371,49 @@ export class DiagramWrapper extends React.Component {
         }
       }
       function mouseEnter(e, obj) {
+        var node = obj.findObject("NODE2")
         // var shape = obj.findObject("SHAPE");
         // shape.fill = "#6DAB80";
         // shape.stroke = "#A6E6A1";
         // var text = obj.findObject("TEXT");
         // text.stroke = "white";
+        console.log("clicking something")
+        // highlight all Links and Nodes coming out of a given Node
+        var diagram = node.diagram;
+        // node.shape.fill = "#7ec2d7"
+        diagram.startTransaction("highlight");
+        // remove any previous highlighting
+        diagram.clearHighlighteds();
+        // node.isHighlighted = true;
+        // for each Link coming out of the Node, set Link.isHighlighted
+        node.findLinksConnected().each(function(l) { 
+          l.isHighlighted = true;
+          if (l.isLabeledLink) {
+            let it = l.labelNodes;
+            let result = it.next();
+            console.log(it)
+            while (result.done) {
+              if (result.value == undefined) {
+                continue
+              }
+              // result.isHighlighted = true;
+              console.log(typeof result.value)
+              result = it.next()
+            }
+          }
+        });
+        node.findNodesConnected().each(function(n) { 
+          let link = n.labeledLink;
+          if (link != null) {
+            link.isHighlighted = true;
+          }
+          
+        });
+        diagram.commitTransaction("highlight");
       };
       
       function mouseLeave(e, obj) {
-        // var shape = obj.findObject("SHAPE");
-        // console.log("got here");
-        // // Return the Shape's fill and stroke to the defaults
-        // // shape.fill = obj.data.color;
-        // // shape.stroke = null;
-        // shape.fill = "#7ec2d7"
-        // shape.stroke = '#919191'
-        // Return the TextBlock's stroke to its default
-        // var text = obj.findObject("TEXT");
-        // text.stroke = "black";
+        e.diagram.commit(function(d) { d.clearHighlighteds(); }, "no highlighteds");
       };
 
 
@@ -398,24 +423,11 @@ export class DiagramWrapper extends React.Component {
         $(go.Node, 'Vertical',
         // TODO can make this non-selectable with selectable: false, but we want clickable but not movable?
         // see this for how to do stuff on click? - https://gojs.net/latest/extensions/Robot.html
-          {movable: true, locationSpot: go.Spot.Center, locationObjectName: 'ICON', selectionObjectName: 'ICON',
+          {movable: true, locationSpot: go.Spot.Center, locationObjectName: 'ICON', selectionObjectName: 'ICON', name: "NODE2",
         mouseEnter: mouseEnter, mouseLeave: mouseLeave,
         click: function(e, node) {
-          console.log("clicking something")
-          // highlight all Links and Nodes coming out of a given Node
-          var diagram = node.diagram;
-          // node.shape.fill = "#7ec2d7"
-          diagram.startTransaction("highlight");
-          // remove any previous highlighting
-          diagram.clearHighlighteds();
-          node.isHighlighted = true;
-          // for each Link coming out of the Node, set Link.isHighlighted
-          node.findLinksOutOf().each(function(l) { l.isHighlighted = true; });
-          node.findLinksInto().each(function(l) { l.isHighlighted = true; });
-          // for each Node destination for the Node, set Node.isHighlighted
-          // node.findNodesOutOf().each(function(n) { n.isHighlighted = true; });
-          diagram.commitTransaction("highlight");
-        }},
+        },
+      },
           // new go.Binding('opacity', 'hide', h => h ? 0 : 1),
           // new go.Binding('pickable', 'hide', h => !h),
           $(go.Panel,
@@ -446,18 +458,36 @@ export class DiagramWrapper extends React.Component {
       // remove highlighting form all nodes, when user clicks on background
       this.diagram.click = function(e) {
         // console.log("clearing stuff")
-          e.diagram.commit(function(d) { d.clearHighlighteds(); }, "no highlighteds");
+
         };
       this.diagram.nodeTemplateMap.add('female',  // female
         $(go.Node, 'Vertical',
-          { movable: true, locationSpot: go.Spot.Center, locationObjectName: 'ICON', selectionObjectName: 'ICON' },
+          { movable: true, locationSpot: go.Spot.Center, locationObjectName: 'ICON', selectionObjectName: 'ICON',
+          click: function(e, node) {
+            console.log("clicking something")
+            // highlight all Links and Nodes coming out of a given Node
+            var diagram = node.diagram;
+            // node.shape.fill = "#7ec2d7"
+            diagram.startTransaction("highlight");
+            // remove any previous highlighting
+            diagram.clearHighlighteds();
+            node.isHighlighted = true;
+            // for each Link coming out of the Node, set Link.isHighlighted
+            node.findLinksOutOf().each(function(l) { l.isHighlighted = true; });
+            node.findLinksInto().each(function(l) { l.isHighlighted = true; });
+            // for each Node destination for the Node, set Node.isHighlighted
+            // node.findNodesOutOf().each(function(n) { n.isHighlighted = true; });
+            diagram.commitTransaction("highlight");
+          }
+        },
           new go.Binding('opacity', 'hide', h => h ? 0 : 1),
           new go.Binding('pickable', 'hide', h => !h),
           $(go.Panel,
             { name: 'ICON' },
             $(go.Shape, 'Circle',
-              { width: 40, height: 40, strokeWidth: 2, fill: '#ff99a8', stroke: '#a1a1a1', portId: '' },
+              { width: 40, height: 40, strokeWidth: 2, fill: '#ff99a8', stroke: '#a1a1a1', portId: '' , name:"SHAPE"},
               new go.Binding('opacity', 'opacity')),
+              new go.Binding('stroke', 'isHighlighted', function(h) { return h ? "green" : "#919191";}).ofObject(),
             $(go.Panel,
               { // for each attribute show a Shape at a particular place in the overall circle
                 itemTemplate:
@@ -479,7 +509,13 @@ export class DiagramWrapper extends React.Component {
 
       // the representation of each label node -- nothing shows on a Marriage Link
       this.diagram.nodeTemplateMap.add('LinkLabel',
-        $(go.Node, { selectable: false, width: 1, height: 1, fromEndSegmentLength: 20 }));
+        $(go.Node, { selectable: false, width: 1, height: 1, fromEndSegmentLength: 20,avoidable: false, layerName: "Foreground"},
+        $("Shape", "Ellipse",
+            {
+              width: 5, height: 5, stroke: null,
+              portId: "", fromLinkable: true, toLinkable: true, cursor: "pointer", fill: "black",
+            })
+        ));
 
 
       this.diagram.linkTemplate =  // for parent-child relationships
@@ -488,7 +524,7 @@ export class DiagramWrapper extends React.Component {
             routing: go.Link.AvoidsNodes,
             fromSpot: go.Spot.Bottom,
             toSpot: go.Spot.Top,
-            layerName: 'Background', selectable: false,
+            layerName: 'Background', selectable: true,
           },
           $(go.Shape, {stroke: '#424242', strokeWidth: 0.5},
           new go.Binding('opacity', 'opacity'),
@@ -521,7 +557,23 @@ export class DiagramWrapper extends React.Component {
           fromSpot: go.Spot.Bottom,
           toSpot: go.Spot.Bottom,
           selectable: false,
-          layerName: 'Background'
+          layerName: 'Background',
+          click: function(e, link) {
+            console.log("clicking something")
+            // highlight all Links and Nodes coming out of a given Node
+            var diagram = link.diagram;
+            // node.shape.fill = "#7ec2d7"
+            diagram.startTransaction("highlight");
+            // remove any previous highlighting
+            diagram.clearHighlighteds();
+            link.isHighlighted = true;
+            // for each Link coming out of the Node, set Link.isHighlighted
+            link.findLinksOutOf().each(function(l) { l.isHighlighted = true; });
+            link.findLinksInto().each(function(l) { l.isHighlighted = true; });
+            // for each Node destination for the Node, set Node.isHighlighted
+            // node.findNodesOutOf().each(function(n) { n.isHighlighted = true; });
+            diagram.commitTransaction("highlight");
+          }
         },
         $(go.Shape, { strokeWidth: 1, stroke: '#ff0000' /* red */}, new go.Binding('opacity', 'opacity'),
         new go.Binding('strokeWidth', "isHighlighted", function(h) { return h ? 5 : 0.5;}).ofObject(),)
