@@ -1548,14 +1548,14 @@ class GenogramTree extends React.Component {
     fetchFromCacheOrBackend = async (id, depth) => {
         if (this.state.relationJSON && this.extendInCache(id)) {
             this.extendFromCache(id).then(
-                () => console.error('Cache was used for rendering')
+                () => console.log('Cache was used for rendering')
             );
         } else {
             this.fetchRelations({id: id, depth: depth});
         }
         const relationsPromise = this.requests.relationsCacheOrWiki({id: id, depth: 3});
         this.updateTreeCache(relationsPromise).then(
-            () => console.error('Cache has been updated')
+            () => console.log('Cache has been updated')
         );
     }
 

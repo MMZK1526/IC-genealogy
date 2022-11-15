@@ -15,7 +15,7 @@ export class Requests {
                 this.relations(params),
             ]).then(
                 (x) => {
-                    console.error(`${x.source} used to fetch data`);
+                    console.log(`${x.source} used to fetch data`);
                     return x.data;
                 }
             );
