@@ -13,7 +13,12 @@ export class Requests {
             return await Promise.any([
                 this.relationsDb(params),
                 this.relations(params),
-            ]);
+            ]).then(
+                (x) => {
+                    console.error(`${x.source} used to fetch data`);
+                    return x.data;
+                }
+            );
         } catch (e) {
             throw new Error(
                 `Error executing Promise.any - ${e.constructor.name}.
@@ -28,12 +33,16 @@ ${e.errors[1]}`
 
     relations = async ({id = 'WD-Q152308', depth = 2, visitedItems = []} = {}) => {
         const url = `${this.baseUrl}/relations_wk?id=${id}&depth=${depth}`;
-        return await this.genericPost(url, visitedItems, id, depth);
+        return await this.genericPost(url, visitedItems, id, depth).then(
+            (x) => ({data: x, source: 'WikiData'})
+        );
     }
 
     relationsDb = async ({id = 'WD-Q152308', depth = 2, visitedItems = []} = {}) => {
         const url = `${this.baseUrl}/relations_db?id=${id}&depth=${depth}`;
-        return await this.genericPost(url, visitedItems, id, depth);
+        return await this.genericPost(url, visitedItems, id, depth).then(
+            (x) => ({data: x, source: 'Database'})
+        );
     }
 
     relationCalc = async ({start, relations}) => {
