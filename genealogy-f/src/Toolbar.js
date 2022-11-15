@@ -10,7 +10,9 @@ function Toolbar(props) {
     <div className="d-flex m-2 justify-content-between pe-auto">
       <ButtonToolbar>
         <ButtonGroup className="me-2">
-          <Button href={'/'} variant="primary" as="a">
+          <Button href={'/'} variant="primary" as="a" onClick={() => {
+              props.genogramTree.treeCache = {};
+          }}>
             <BiHomeAlt size={30}/>
           </Button>
         </ButtonGroup>
