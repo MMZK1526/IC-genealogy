@@ -763,6 +763,8 @@ class GenogramTree extends React.Component {
             originalJSON: kinshipTree,
             isLoading: false,
             isUpdated: true,
+            newDataAvailable: true,
+            newData: kinshipTree,
         });
     }
 }
