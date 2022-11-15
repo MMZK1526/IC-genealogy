@@ -423,7 +423,7 @@ export class DiagramWrapper extends React.Component {
       };
       
       function mouseLeave(e, obj) {
-        e.diagram.commit(function(d) { d.clearHighlighteds(); }, "no highlighteds");
+        // e.diagram.commit(function(d) { d.clearHighlighteds(); }, "no highlighteds");
       };
 
 
@@ -466,6 +466,7 @@ export class DiagramWrapper extends React.Component {
         ));
       // remove highlighting form all nodes, when user clicks on background
       this.diagram.click = function(e) {
+        e.diagram.commit(function(d) { d.clearHighlighteds(); }, "no highlighteds");
         // console.log("clearing stuff")
 
         };
