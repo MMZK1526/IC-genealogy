@@ -52,7 +52,7 @@ function getAdditionalProperties(data) {
 
     return (
         <Container>
-            <Row className='name-row'>
+            <Row className='mb-1 justify-content-center'>
                 <Col key={"Name"}>
                     <h2>{data.get("Name")}</h2>
                 </Col>

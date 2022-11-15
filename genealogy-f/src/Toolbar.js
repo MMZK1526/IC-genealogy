@@ -4,12 +4,10 @@ import Button from 'react-bootstrap/Button'
 import { BiHomeAlt } from 'react-icons/bi';
 import {downloadJsonFile} from './components/custom-upload/exportAsJson';
 import { AiFillFilter } from 'react-icons/ai';
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
-import { Sidebar } from './components/sidebar/Sidebar';
 
 function Toolbar(props) {
   return (
-    <div className="d-flex justify-content-between m-2">
+    <div className="d-flex m-2 justify-content-between pe-auto">
       <ButtonToolbar>
         <ButtonGroup className="me-2">
           <Button href={'/'} variant="primary" as="a">
@@ -19,10 +17,10 @@ function Toolbar(props) {
         {!props.onlyHome &&
           <>
             <ButtonGroup className="me-2">
-              <Button variant="outline-primary" id="svgButton">
+              <Button variant="info" id="svgButton">
                 Export as SVG
               </Button>
-              <Button variant="outline-primary" onClick={() => downloadJsonFile(props.genogramTree.state.originalJSON)}>
+              <Button variant="info" onClick={() => downloadJsonFile(props.genogramTree.state.originalJSON)}>
                 Export as JSON
               </Button>
             </ButtonGroup>
@@ -35,27 +33,35 @@ function Toolbar(props) {
                 Show stats
               </Button>
             </ButtonGroup>
-            <ButtonGroup>
+            <ButtonGroup className="me-2">
               <Button variant='secondary' onClick={props.genogramTree.zoomToDefault}>
                 Default zoom
               </Button>
             </ButtonGroup>
+            {
+              props.genogramTree.state.newDataAvailable &&
+              <ButtonGroup className="me-2">
+                <Button className="show-full-data-button" variant="secondary" onClick={() => {
+                  console.log("Load Full Data!");
+                  props.genogramTree.loadRelations(props.genogramTree.state.newData, props.genogramTree.state.newData.targets[0].id);
+                  props.genogramTree.setState({
+                    newDataAvailable: false
+                  });
+                }}>Load Full Data</Button>
+              </ButtonGroup>
+            }
           </>
         }
       </ButtonToolbar>
       {!props.onlyHome &&
-        <ButtonToolbar>
-          <ButtonGroup className="me-2">
-            <Button variant='outline-primary' onClick={() => { 
-              props.genogramTree.setState({
-                showFilters: !props.genogramTree.state.showFilters
-              });
-              }}>
-                <AiFillFilter size={30} className="align-middle"/>
-                <span className="align-middle">Filter</span>
-            </Button>
-          </ButtonGroup>
-        </ButtonToolbar>
+          <Button className="me-4" variant='warning' onClick={() => { 
+            props.genogramTree.setState({
+              showFilters: !props.genogramTree.state.showFilters
+            });
+            }}>
+              <AiFillFilter size={30} className="align-middle"/>
+              <span className="align-middle">Filter</span>
+          </Button>
       }
     </div>
   );

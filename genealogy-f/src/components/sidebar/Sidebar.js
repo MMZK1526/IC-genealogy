@@ -9,15 +9,14 @@ export function Sidebar(props) {
     const allPersons = props.getAllPersons();
     const style = {
         searchBox: { // To change search box element look
-            'height': '50px',
             'fontSize': '20px',
             'border': '1px solid',
         },
     };
 
     return (
-        <div className='sidebar'>
-            <Form className="w-100 mb-3" style={{ overflow: "auto", maxHeight: "90%" }}>
+        <div className='sidebar pe-auto'>
+            <Form className="w-100 mb-3 overflow-auto" style={{ maxHeight: "44vh" }}>
                 <Form.Group className="form-group"  controlId='Name-control'>
                     <Form.Label>Personal Name</Form.Label>
                     <Form.Control type='text' placeholder="e.g. Charles" 
