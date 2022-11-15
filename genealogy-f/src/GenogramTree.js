@@ -96,7 +96,12 @@ function transform(data) {
     let singlePerson = new Map();
     for (let attr of person.additionalProperties) {
       if (attr.name === 'gender') {
-        singlePerson.set('gender', attr.value);
+        // assumption that someone with unknown gender will always be at the boundary of a graph as otherwise their gender can be determined.
+        if (attr.value == "http://www.wikidata.org/.well-known/genid/beb45cfe6120c68b9a361c0339e27365") {
+          singlePerson.set('gender', "unknown")
+        } else {
+          singlePerson.set('gender', attr.value);
+        }
       }
     }
 
@@ -492,6 +497,26 @@ export class DiagramWrapper extends React.Component {
               },
               new go.Binding('itemArray', 'a')
             )
+          ),
+          $(go.TextBlock,
+            { textAlign: 'center', maxSize: new go.Size(80, NaN), background: 'rgba(255,255,255,0.5)' },
+            new go.Binding('text', 'name'), new go.Binding('opacity', 'opacity'))
+        ));
+
+        this.diagram.nodeTemplateMap.add('unknown',  // female
+        $(go.Node, 'Vertical',
+          { movable: true, locationSpot: go.Spot.Center, locationObjectName: 'ICON', selectionObjectName: 'ICON', name: "NODE2",
+          mouseEnter: mouseEnter, mouseLeave: mouseLeave,
+        },
+          // new go.Binding('opacity', 'hide', h => h ? 0 : 1),
+          // new go.Binding('pickable', 'hide', h => !h),
+          $(go.Panel,
+            { name: 'ICON' },
+            $(go.Shape, 'Triangle',
+              { width: 40, height: 40, strokeWidth: 2, fill: '#a1a1a1', stroke: '#a1a1a1', portId: '' , name:"SHAPE"},
+              new go.Binding('opacity', 'opacity'),
+              new go.Binding('strokeWidth', 'isHighlighted', function(h) { return h ? 2 : 2;}).ofObject(),
+              new go.Binding('fill', 'isHighlighted', function(h) { return h ? "#FFD700" : "#a1a1a1";}).ofObject()),
           ),
           $(go.TextBlock,
             { textAlign: 'center', maxSize: new go.Size(80, NaN), background: 'rgba(255,255,255,0.5)' },
