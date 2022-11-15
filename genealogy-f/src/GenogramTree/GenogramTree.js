@@ -160,7 +160,6 @@ class GenogramTree extends React.Component {
                     newData: relationJSON
                 });
             }
-            return;
         }
 
         this.loadRelations(relationJSON, id)
