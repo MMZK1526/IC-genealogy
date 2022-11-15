@@ -150,10 +150,6 @@ class GenogramTree extends React.Component {
                 visitedItems: this.state.originalJSON ? Object.keys(this.state.originalJSON.items) : []
             });
 
-        if (Object.keys(relationJSON.relations).length === 0) {
-            return;
-        }
-
         if (this.state.originalJSON) {
             let oldItems = Object.keys(this.state.originalJSON.items);
             let newItems = Object.keys(relationJSON.items);

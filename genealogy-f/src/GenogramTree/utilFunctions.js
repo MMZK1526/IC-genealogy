@@ -110,11 +110,6 @@ export function transform(data) {
 
     var newOutput = [];
 
-    for (let key of relMap.keys()) {
-        let r = relMap.get(key);
-        r.opacity = '0.9';
-    }
-
     // add unknown nodes for unknown parent
     for (let key of relMap.keys()) {
         let r = relMap.get(key);

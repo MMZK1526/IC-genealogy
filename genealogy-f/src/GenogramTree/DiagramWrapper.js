@@ -236,9 +236,9 @@ export class DiagramWrapper extends React.Component {
         }
 
         function mouseLeave(e, obj) {
-            e.diagram.commit(function (d) {
-                d.clearHighlighteds();
-            }, "no highlighteds");
+            // e.diagram.commit(function (d) {
+            //     d.clearHighlighteds();
+            // }, "no highlighteds");
         }
 
 
