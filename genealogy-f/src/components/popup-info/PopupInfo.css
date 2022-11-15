@@ -16,18 +16,5 @@
 }
 
 .additional-properties-container {
-    max-height: 63vh;
-}
-
-.name-row {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-
-    margin-bottom: 10px;
-}
-
-.text-center {
-    margin-top: 10px;
+    max-height: calc(90vh - 250px);
 }

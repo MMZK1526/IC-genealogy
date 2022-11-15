@@ -5,7 +5,7 @@ import Container from 'react-bootstrap/Container';
 function ModalSpinner() {
   return (
     <>
-      <Card className="my-auto">
+      <Card className="my-auto pe-auto">
           <Card.Body>
               <Spinner
                   as="span"

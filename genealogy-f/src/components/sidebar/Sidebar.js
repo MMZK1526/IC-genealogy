@@ -16,8 +16,8 @@ export function Sidebar(props) {
     };
 
     return (
-        <div className='sidebar'>
-            <Form className="w-100 mb-3" style={{ overflow: "auto", maxHeight: "90%" }}>
+        <div className='sidebar pe-auto'>
+            <Form className="w-100 mb-3 overflow-auto" style={{ maxHeight: "44vh" }}>
                 <Form.Group className="form-group"  controlId='Name-control'>
                     <Form.Label>Personal Name</Form.Label>
                     <Form.Control type='text' placeholder="e.g. Charles" 

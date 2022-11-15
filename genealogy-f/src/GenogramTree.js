@@ -16,6 +16,8 @@ import {setStatePromise} from './components/utils';
 import ModalSpinner from './ModalSpinner';
 import Toolbar from './Toolbar';
 import { FilterModel } from './filterModel';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
 
 function withRouter(Component) {
   function ComponentWithRouterProp(props) {
@@ -1278,10 +1280,66 @@ class GenogramTree extends React.Component {
 
     return(
       <>
-        {this.state.showBtns &&
-          <Toolbar genogramTree={this}/>
-        }
-        <div className='tree-box'>
+        <Container fluid className="pe-none p-0 h-100 justify-content-between" style={{
+          position: "fixed",
+          zIndex: 1
+        }}>
+          <Row>
+          {this.state.showBtns &&
+            <Toolbar genogramTree={this}/>
+          }
+          </Row>
+          <Row className="me-4 mh-50 justify-content-end">
+            <Col xs="4">
+              {this.state.showFilters &&
+                <Sidebar
+                  filters={this.state.filters}
+                  yearFromChange={e => {
+                    this.setState({
+                      from: e.target.value,
+                      isUpdated: true
+                    });
+                  }}
+                  yearToChange={e => {
+                    this.setState({
+                      to: e.target.value,
+                      isUpdated: true
+                    });
+                  }}
+                  familyChange={e => {
+                    this.setState({
+                      family: e.target.value,
+                      isUpdated: true
+                    });
+                  }}
+                  onChange={() => this.setState({isUpdated: true, isLoading: true})}
+                  onPrune={() => {
+                    this.state.originalJSON.relations = JSON.parse(JSON.stringify(this.state.relationJSON.relations));
+                    for (const key of Object.keys(this.state.originalJSON.items)) {
+                      if (!this.state.relationJSON.items[key] && key !== this.state.root) {
+                        delete this.state.originalJSON.items[key];
+                      }
+                    }
+                    this.calculateFilter();
+                    this.setState({isUpdated: true, isLoading: true});
+                  }}
+                  onPersonSelection={(_, v) => this.setFocusPerson(v.key)}
+                  getAllPersons={this.getAllPersons}
+                  getFocusPerson={this.getFocusPerson}
+                />
+              }
+            </Col>
+          </Row>
+          <Row>
+            <Col xs="2">
+              {this.state.isLoading &&
+                <div className='pe-auto'>
+                    <ModalSpinner/>
+                </div>
+              }
+            </Col>
+          </Row>
+        </Container>
         {
             this.state.isPopped
                 ? <div className='popup'>
@@ -1300,54 +1358,7 @@ class GenogramTree extends React.Component {
                 </div>
                 : ''
           }
-          {
-            this.state.showFilters &&
-            <Sidebar
-              filters={this.state.filters}
-              yearFromChange={e => {
-                this.setState({
-                  from: e.target.value,
-                  isUpdated: true
-                });
-              }}
-              yearToChange={e => {
-                this.setState({
-                  to: e.target.value,
-                  isUpdated: true
-                });
-              }}
-              familyChange={e => {
-                this.setState({
-                  family: e.target.value,
-                  isUpdated: true
-                });
-              }}
-              onChange={() => this.setState({isUpdated: true, isLoading: true})}
-              onPrune={() => {
-                this.state.originalJSON.relations = JSON.parse(JSON.stringify(this.state.relationJSON.relations));
-                for (const key of Object.keys(this.state.originalJSON.items)) {
-                  if (!this.state.relationJSON.items[key] && key !== this.state.root) {
-                    delete this.state.originalJSON.items[key];
-                  }
-                }
-                this.calculateFilter();
-                this.setState({isUpdated: true, isLoading: true});
-              }}
-              onPersonSelection={(_, v) => this.setFocusPerson(v.key)}
-              getAllPersons={this.getAllPersons}
-              getFocusPerson={this.getFocusPerson}
-            />
-          }
-          {
-              this.state.newDataAvailable &&
-              <Button className="show-full-data-button" variant="secondary" size="lg" onClick={() => {
-                console.log("Load Full Data!");
-                this.loadRelations(this.state.newData, this.state.newData.targets[0].id);
-                this.setState({
-                  newDataAvailable: false
-                });
-              }}>Load Full Data</Button>
-          }
+        <div className='tree-box'>
           <DiagramWrapper
               updateDiagram={updateDiagram}
               recentre={recentre}
@@ -1362,19 +1373,14 @@ class GenogramTree extends React.Component {
               getFocusPerson={this.getFocusPerson}
               zoomToDefault={this.state.zoomToDefault}
           />
-          {
-              this.state.isLoading &&
-              <div className='loading-bar'>
-                  <ModalSpinner/>
-              </div>
-          }
-          {
+          
+        </div>
+        {
             this.state.showStats &&
             <EscapeCloseable className='popup'>
               <StatsPanel data={this.state.relationJSON} onClick={this.handleStatsClick} />
             </EscapeCloseable>
           }
-        </div>
       </>
     );
   }

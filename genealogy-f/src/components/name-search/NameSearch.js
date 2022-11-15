@@ -50,6 +50,7 @@ export class NameSearch extends React.Component {
                         <Button 
                             variant="primary" 
                             id="search-button" 
+                            type="submit"
                             disabled={this.state.isLoading} 
                             onClick={this.handleSearchSubmit}
                             className="fs-4">
