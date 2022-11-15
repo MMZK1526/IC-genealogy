@@ -9,7 +9,6 @@ export function Sidebar(props) {
     const allPersons = props.getAllPersons();
     const style = {
         searchBox: { // To change search box element look
-            'height': '50px',
             'fontSize': '20px',
             'border': '1px solid',
         },
