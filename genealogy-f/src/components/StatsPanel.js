@@ -1,5 +1,5 @@
 import React from 'react';
-import './StatsPanel.css';
+import './stylesheets/StatsPanel.css';
 import {AiOutlineClose} from "react-icons/ai"
 
 export class StatsPanel extends React.Component {

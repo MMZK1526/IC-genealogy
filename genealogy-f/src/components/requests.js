@@ -1,10 +1,12 @@
+import {wait} from "./utils";
+
 export class Requests {
     baseUrl = 'https://db-de-genealogie.herokuapp.com';
     // baseUrl = 'http://0.0.0.0:8080';
 
     search = async (name='silvia') => {
         const url = `${this.baseUrl}/search?q=${name}`;
-        return await this.genericRequest(url);
+        return await this.genericRequest({requestOrUrl: url});
     }
 
     relationsCacheOrWiki = async ({id = 'WD-Q152308', depth = 2, visitedItems = []} = {}) => {
@@ -65,12 +67,18 @@ ${e.errors[1]}`
                 body: JSON.stringify(body),
             }
         );
-        return await this.genericRequest(request, id, depth);
+        return await this.genericRequest({requestOrUrl: request, id, depth});
     }
 
-    async genericRequest(requestOrUrl, id=null, depth=null) {
+    async genericRequest({requestOrUrl, id = null, depth = null, allowRetry = true} = {}) {
         const response = await fetch(requestOrUrl);
         const ok = response.ok;
+        const status = response.status;
+        if (status === 503 && allowRetry) {
+            await wait(5_000);
+            await this.genericRequest({requestOrUrl, id, depth, allowRetry: false});
+            return;
+        }
         if (!ok) {
             const activity = (id !== null && depth !== null) ?
                 `fetching id ${id} with depth ${depth}` :

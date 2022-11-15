@@ -100,3 +100,7 @@ export function setStatePromise(thisRef) {
 export function getIds(relationsJson) {
     return Array.from(relationsJson.items.map(x => x.id));
 }
+
+export async function wait(ms) {
+    return await new Promise(resolve => setTimeout(resolve, ms));
+}

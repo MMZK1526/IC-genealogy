@@ -2,10 +2,10 @@ import React from "react";
 import {Button, Form, InputGroup} from "react-bootstrap"
 import {MdOutlinePersonSearch} from "react-icons/md"
 import {Navigate} from "react-router-dom";
-import './NameSearch.css'
+import '../stylesheets/NameSearch.css'
 import _ from "lodash";
-import {CustomUpload} from "../custom-upload/CustomUpload";
-import {Utils} from '../utils';
+import {CustomUpload} from "./CustomUpload";
+import {Utils} from './utils';
 import Stack from 'react-bootstrap/Stack';
 import Spinner from 'react-bootstrap/Spinner';
 
