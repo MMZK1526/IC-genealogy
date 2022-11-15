@@ -286,12 +286,12 @@ class GenogramTree extends React.Component {
 
         // Use filter
         const filters = this.state.filters;
-        console.log(filters)
-        var filteredJSON = {targets: this.state.originalJSON.targets};
+        var filteredJSON = { targets: this.state.originalJSON.targets };
         if (filters.bloodline || filters.families.size !== 0 || filters.fromYear !== '' || filters.toYear !== '' ||
             filters.birthPlace !== '' || filters.deathPlace !== '' || filters.personalName !== '') {
-            let visited = new go.Set();
-            visited.add(this.state.root);
+            // Map from item ID to opacity
+            let visited = {};
+            visited[this.state.root] = '0.9';
             if (filters.bloodline) {
                 console.log('血胤');
                 var frontier = [this.state.root];
@@ -302,10 +302,10 @@ class GenogramTree extends React.Component {
                     if (cur) {
                         if (this.state.originalJSON.relations[cur]) {
                             var newElems = this.state.originalJSON.relations[cur]
-                                .filter((r) => r.type !== 'spouse' && !visited.contains(r.item1Id));
+                                .filter((r) => r.type !== 'spouse' && visited[r.item1Id] !== '0.9');
                             var newFrontier = newElems.filter((r) => r.type !== 'child').map((r) => r.item1Id);
                             var newDescendants = newElems.filter((r) => r.type === 'child').map((r) => r.item1Id);
-                            visited.addAll(newElems.map((r) => r.item1Id));
+                            newElems.map((r) => r.item1Id).forEach((id) => visited[id] = '0.9');
                             frontier.push(...newFrontier);
                             descendants.push(...newDescendants);
                         }
@@ -313,72 +313,107 @@ class GenogramTree extends React.Component {
                         cur = descendants.shift();
                         if (this.state.originalJSON.relations[cur]) {
                             var newElems = this.state.originalJSON.relations[cur]
-                                .filter((r) => r.type !== 'spouse' && !visited.contains(r.item1Id));
+                                .filter((r) => r.type !== 'spouse' && visited[r.item1Id] !== '0.9');
                             var newDescendants = newElems.filter((r) => r.type === 'child').map((r) => r.item1Id);
-                            visited.addAll(newElems.map((r) => r.item1Id));
+                            newDescendants.forEach((id) => visited[id] = '0.9');
+                            newElems.filter((r) => !visited[r.item1Id]).map((r) => r.item1Id).forEach((id) => {
+                                visited[id] = '0.2';
+                            });
                             descendants.push(...newDescendants);
                         }
                     }
                 }
             } else {
-                visited.addAll(Object.keys(this.state.originalJSON.items));
+                Object.keys(this.state.originalJSON.items).forEach((id) => visited[id] = '0.9');
             }
+
             // filter on personal name
             if (filters.personalName !== '') {
-                visited = visited.filter((k) => {
-                    let name = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'personal name')[0];
-                    if (name === undefined) return false;
-                    return String(name.value).toLowerCase().includes(filters.personalName.toLowerCase());
-                });
+                for (const [k, _] of Object.entries(visited)) {
+                    const name = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'personal name')[0];
+                    if (name === undefined) {
+                        delete visited[k];
+                        continue;
+                    }
+                    if (!String(name.value).toLowerCase().includes(filters.personalName.toLowerCase())) {
+                        delete visited[k];
+                        continue;
+                    }
+                }
             }
             // filter on Family
             if (filters.families.size !== 0) {
-                visited = visited.filter((v) =>
-                    this.state.originalJSON.items[v].additionalProperties.filter((p) => p.name == 'family')
-                        .map((p) => p.value).some((f) => filters.families.has(f)));
+                for (const [k, _] of Object.entries(visited)) {
+                    const criteria = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'family')
+                        .map((p) => p.value).some((f) => filters.families.has(f));
+                    if (!criteria) {
+                        delete visited[k];
+                        continue;
+                    }
+                }
             }
             // filter on From birth year
             if (filters.fromYear !== '') {
-                visited = visited.filter((k) => {
+                for (const [k, _] of Object.entries(visited)) {
                     let dob = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'date of birth')[0];
-                    let yearOnly;
-                    if (dob !== undefined) {
-                        yearOnly = parseInt(dob.value.split("-")[0], 10)
+                    if (dob === undefined) {
+                        delete visited[k];
+                        continue;
                     }
-                    return dob === undefined || yearOnly >= parseInt(filters.fromYear, 10);
-                });
+                    let yearOnly = parseInt(dob.value.split("-")[0], 10);
+                    if (!yearOnly || yearOnly < parseInt(filters.fromYear, 10)) {
+                        delete visited[k];
+                        continue;
+                    }
+                }
             }
             // filter on To birth year
             if (filters.toYear !== '') {
-                visited = visited.filter((k) => {
+                for (const [k, _] of Object.entries(visited)) {
                     let dob = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'date of birth')[0];
-                    let yearOnly;
-                    if (dob !== undefined) {
-                        yearOnly = parseInt(dob.value.split("-")[0], 10)
+                    if (dob === undefined) {
+                        delete visited[k];
+                        continue;
                     }
-                    return dob === undefined || yearOnly <= parseInt(filters.toYear, 10);
-                });
+                    let yearOnly = parseInt(dob.value.split("-")[0], 10);
+                    if (!yearOnly || yearOnly > parseInt(filters.toYear, 10)) {
+                        delete visited[k];
+                        continue;
+                    }
+                }
             }
             // filter on Birth Place
             if (filters.birthPlace !== '') {
-                visited = visited.filter((k) => {
-                    let birthPlace = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.propertyId == 'SW-P2')[0];
-                    if (birthPlace === undefined) return false;
-                    return String(birthPlace.value).toLowerCase().includes(filters.birthPlace.toLowerCase());
-                });
+                for (const [k, _] of Object.entries(visited)) {
+                    const birthPlace = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.propertyId == 'SW-P2')[0];
+                    if (birthPlace === undefined) {
+                        delete visited[k];
+                        continue;
+                    }
+                    if (!String(birthPlace.value).toLowerCase().includes(filters.birthPlace.toLowerCase())) {
+                        delete visited[k];
+                        continue;
+                    }
+                }
             }
             // filter on To Death Place
             if (filters.deathPlace !== '') {
-                visited = visited.filter((k) => {
-                    let deathPlace = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.propertyId == 'SW-P3')[0];
-                    if (deathPlace === undefined) return false;
-                    return String(deathPlace.valaue).toLowerCase().includes(filters.deathPlace.toLowerCase());
-                });
+                for (const [k, _] of Object.entries(visited)) {
+                    const deathPlace = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.propertyId == 'SW-P3')[0];
+                    if (deathPlace === undefined) {
+                        delete visited[k];
+                        continue;
+                    }
+                    if (!String(deathPlace.value).toLowerCase().includes(filters.deathPlace.toLowerCase())) {
+                        delete visited[k];
+                        continue;
+                    }
+                }
             }
 
             // Add outliers
-            let outlierVisited = (new go.Set()).addAll(visited);
-            var frontier = (new go.Set()).addAll(visited);
+            let outlierVisited = (new go.Set()).addAll(Object.keys(visited));
+            var frontier = (new go.Set()).addAll(Object.keys(visited));
             while (outlierVisited.size > 0 && frontier.size > 0) {
                 let outlierParents = new go.Set();
                 let outlierSpouses = new go.Set();
@@ -386,7 +421,7 @@ class GenogramTree extends React.Component {
                 frontier.each((v) => {
                     if (this.state.originalJSON.relations[v]) {
                         var newElems = this.state.originalJSON.relations[v]
-                            .filter((r) => (r.type !== 'child') && !visited.contains(r.item1Id));
+                            .filter((r) => (r.type !== 'child') && !visited[r.item1Id]);
                         if (newElems.length === 0) {
                             remover.add(v);
                         } else {
@@ -399,15 +434,19 @@ class GenogramTree extends React.Component {
                 outlierVisited = outlierParents.retainAll(outlierSpouses);
                 // console.log(outlierVisited.toArray().map((i) => this.state.originalJSON.items[i].name));
                 frontier.addAll(outlierVisited);
-                visited.addAll(outlierVisited);
+                outlierVisited.each((ov) => {
+                    if (!visited[ov]) {
+                        visited[ov] = '0.2';
+                    }
+                })
             }
 
-            var filteredJSON = {targets: this.state.originalJSON.targets, items: {}, relations: {}};
-            visited.each((v) => {
-                console.assert(Object.hasOwn(this.state.originalJSON.items, v));
+            var filteredJSON = { targets: this.state.originalJSON.targets, items: {}, relations: {} };
+            Object.keys(visited).forEach((v) => {
                 filteredJSON.items[v] = this.state.originalJSON.items[v];
-                if (Object.hasOwn(this.state.originalJSON.relations, v)) {
-                    filteredJSON.relations[v] = this.state.originalJSON.relations[v].filter((r) => visited.contains(r.item1Id));
+                filteredJSON.items[v].opacity = visited[v];
+                if (this.state.originalJSON.relations[v]) {
+                    filteredJSON.relations[v] = this.state.originalJSON.relations[v].filter((r) => visited[r.item1Id]);
                 }
             });
             this.state.relationJSON = filteredJSON;

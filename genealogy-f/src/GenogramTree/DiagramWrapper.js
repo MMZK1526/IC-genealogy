@@ -299,8 +299,8 @@ export class DiagramWrapper extends React.Component {
             ));
         // remove highlighting form all nodes, when user clicks on background
         this.diagram.click = function (e) {
+            e.diagram.commit(function(d) { d.clearHighlighteds(); }, "no highlighteds");
             // console.log("clearing stuff")
-
         };
         this.diagram.nodeTemplateMap.add('female',  // female
             $(go.Node, 'Vertical',

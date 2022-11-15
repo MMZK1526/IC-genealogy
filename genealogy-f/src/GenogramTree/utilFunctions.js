@@ -77,6 +77,7 @@ export function transform(data) {
         singlePerson.set('key', person.id);
         singlePerson.set('name', person.name);
         singlePerson.set('spouse', []);
+        singlePerson.set('opacity', person.opacity);
         relMap.set(person.id, Object.fromEntries(singlePerson));
     });
 
