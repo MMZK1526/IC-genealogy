@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Modal } from 'react-bootstrap';
+import { Form } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 import './Sidebar.css';
 import Multiselect from 'multiselect-react-dropdown';
@@ -30,7 +30,7 @@ export function Sidebar(props) {
                 <Form.Label className="form-label">Family: </Form.Label>
                 <Multiselect
                     id='family-select'
-                    options={Array.from(props.filters.allFamilies).map((v) => ({name: v, id: v}))} // Options to display in the dropdown
+                    options={Array.from(props.filters.allFamilies).sort().map((v) => ({name: v, id: v}))} // Options to display in the dropdown
                     selectedValues={Array.from(props.filters.families).map((v) => ({name: v, id: v}))} // Preselected value to persist in dropdown
                     onSelect={(_, i) => props.filters.families.add(i.name)} // Function will trigger on select event
                     onRemove={(_, i) => props.filters.families.delete(i.name)} // Function will trigger on remove event

@@ -1098,15 +1098,6 @@ class GenogramTree extends React.Component {
       await this.fetchRelations(this.state.personInfo, 2);
   }
 
-  componentDidMount() {
-    document.addEventListener('keydown', (event) => {
-      if (event.key === ' ' && this.state && this.state.relationJSON != null) {
-        event.preventDefault();
-        this.setState({ showBtns: !this.state.showBtns, isUpdated: false, isLoading: false });
-            }
-    });
-  }
-
   zoomToDefault = async () => {
       return;
     const foo = setStatePromise(this);
