@@ -327,7 +327,7 @@ class GenogramTree extends React.Component {
         this.loadRelations(this.state.originalJSON, null);
     }
 
-    loadRelations = (relationJSON, id) => {
+    loadRelations = async (relationJSON, id) => {
         console.log("Loading relations!");
         // Add reciprocal relations.
         for (const [key, relations] of Object.entries(relationJSON.relations)) {
@@ -415,8 +415,8 @@ class GenogramTree extends React.Component {
         } else {
             this.mergeRelations(this.state.originalJSON, relationJSON);
         }
-        this.fetchKinships(this.state.root, this.state.originalJSON);
-        this.applyFilterAndDrawTree();
+        await this.fetchKinships(this.state.root, this.state.originalJSON);
+        await this.applyFilterAndDrawTree();
         if (id == null || id === undefined) {
             this.state.isLoading = false;
             this.state.isUpdated = true;
@@ -428,6 +428,7 @@ class GenogramTree extends React.Component {
                 personInfo: id,
             });
         }
+        console.error('Render data loaded');
     }
 
     calculateFilter() {
@@ -700,11 +701,15 @@ class GenogramTree extends React.Component {
             this.extendFromCache(id);
         }
         this.extensionId = id;
+        this.handleCache(id);
+    }
+
+    async handleCache(id) {
         const [dbPromise, wikiDataPromise] = this.requests.relationsCacheAndWiki({id: id, depth: 3});
         const dbRes = await dbPromise;
         if (this.requests.dbResEmpty(dbRes)) {
             const wikiDataRes = await wikiDataPromise;
-            this.updateTreeCache(wikiDataRes);
+            await this.updateTreeCache(wikiDataRes);
             return;
         }
         this.updateTreeCache(dbRes);

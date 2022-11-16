@@ -102,5 +102,5 @@ export function getIds(relationsJson) {
 }
 
 export async function wait(ms) {
-    return await new Promise(resolve => setTimeout(resolve, ms));
+    return await new Promise((resolve, reject) => setTimeout(resolve, ms));
 }
