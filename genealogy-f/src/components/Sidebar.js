@@ -3,7 +3,7 @@ import { Form } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 import './stylesheets/Sidebar.css';
 import Multiselect from 'multiselect-react-dropdown';
-import { Autocomplete, TextField } from '@mui/material';
+import { Autocomplete, TextField, Divider } from '@mui/material';
 
 export function Sidebar(props) {
     const allPersons = props.getAllPersons();
@@ -95,6 +95,8 @@ export function Sidebar(props) {
                 border: 'none',
                 margin: '0px 0px'
             }} /> */}
+
+            {/* <Divider sx={{ borderBottomWidth: 5, bgcolor: "black" }} /> */}
 
             <label className="form-label">Look for name in tree: </label>
             <Autocomplete
