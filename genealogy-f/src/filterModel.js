@@ -6,8 +6,10 @@ export class FilterModel {
     this.families = new Set();
     this.fromYear = '';
     this.toYear = '';
-    this.birthPlace = '';
-    this.deathPlace = '';
+    this.allBirthPlaces = new Set();
+    this.birthPlaces = new Set();
+    this.allDeathPlaces = new Set();
+    this.deathPlaces = new Set();
     this.personalName = '';
   }
 }
