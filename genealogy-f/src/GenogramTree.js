@@ -757,6 +757,7 @@ export class DiagramWrapper extends React.Component {
 
     // create and initialize the Diagram.model given an array of node data representing people
     setupDiagram(array, focusId) {
+        idPos = []
         globalDiagram = this.diagram;
         this.diagram.model =
             new go.GraphLinksModel(
@@ -1981,15 +1982,14 @@ class GenogramLayout extends go.LayeredDigraphLayout {
                 }
             }
         });
-        idPos = [];
         this.network.vertexes.each(v => {
             if (v.node != null) {
                 if (v.node.isLinkLabel) {
                     const link = v.node.labeledLink;
                     const spouseA = link.fromNode;
                     const spouseB = link.toNode;
-                    idPos.push({x : spouseA.location.x, y : spouseA.location.y, key: spouseA.key}); //  or spouseA.x
-                    idPos.push({x : spouseB.location.x, y : spouseB.location.y, key: spouseB.key}); //  or spouseA.x
+                    idPos.push({x : spouseA.location.x, y : spouseA.location.y - 21, key: spouseA.key}); //  or spouseA.x
+                    idPos.push({x : spouseB.location.x, y : spouseB.location.y - 21, key: spouseB.key}); //  or spouseA.x
                     // idPosMap.set(spouseA.key, {x : spouseA.x, y : spouseB.y}); //  or spouseA.x
                     // idPosMap.set(spouseB.key, {x : spouseB.x, y : spouseB.y}); //  or spouseA.x
                 } else {
@@ -2001,14 +2001,17 @@ class GenogramLayout extends go.LayeredDigraphLayout {
     }
 
     addRecs(diagram, numRecs, itemtemplates) {
+        // sort lowest to highest based on y co-ordinates
+        let startYs = [...new Set(idPos.map(p => p.y))].sort();
+        console.log(startYs);
         let n = 5;
         let sizeEach = 158; // remove this hard code
         let c = 0;
         // console.log("got here");
         console.log(globalPersonMap.keys());
-        while (c < n) {
+        for (let startY of startYs) {
             // for each section filter which nodes fall within the y co-ordinates then get the nodes with the highest and lowest date to determine the range of this "layer"
-            let pos2 = idPos.filter(p => c * sizeEach <= p.y && p.y <= (c + 1) * sizeEach);
+            let pos2 = idPos.filter(p => p.y == startY);
             if (pos2.length == 0) {
                 // no nodes in this region
                 break
@@ -2021,11 +2024,11 @@ class GenogramLayout extends go.LayeredDigraphLayout {
             let startDate = pos2.length < 1 ? "*" : (new Date(pos2[0])).getFullYear();
             let endDate = pos2.length < 1 ? "*" : (new Date(pos2[pos2.length - 1])).getFullYear();
             console.log("start", startDate, "end", endDate);
-            let part = $(go.Part, "Horizontal", {position: new go.Point(-80,c * sizeEach)},
-                            $(go.Shape,"Rectangle",
-                                {width : 40, height: sizeEach - 10, margin: 0, fill: "#b5651d"}),
+            let part = $(go.Part, "Horizontal", {position: new go.Point(-80, startY)},
+                            // $(go.Shape,"Rectangle",
+                            //     {width : 40, height: sizeEach - 10, margin: 0, fill: "#b5651d"}),
                             $(go.TextBlock,
-                                { position: new go.Point(-80,c * sizeEach), font: "Italic 24pt sans-serif", text: startDate + " - " + endDate, stroke: "red"},
+                                { position: new go.Point(-80, startY), font: "Italic 24pt sans-serif", text: startDate + " - " + endDate, stroke: "red"},
                                 ),
                         );
             // add to mapping so can be determined later
