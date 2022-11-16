@@ -1997,6 +1997,7 @@ class GenogramLayout extends go.LayeredDigraphLayout {
                 }
             }
         })
+        globalDiagram.removeParts((globalDiagram.findLayer("Grid")).parts);
         this.addRecs(globalDiagram);
     }
 
@@ -2026,13 +2027,14 @@ class GenogramLayout extends go.LayeredDigraphLayout {
             let endDate = pos2dob.length < 1 ? "*" : (new Date(pos2dob[pos2dob.length - 1])).getFullYear();
             // let endDate = pos2dod.length < 1 ? "*" : (new Date(pos2dod[pos2dod.length - 1])).getFullYear();
             console.log("start", startDate, "end", endDate);
-            let part = $(go.Part, "Horizontal", {selectable: false, position: new go.Point(startX, startY - 45)},
+            let part = $(go.Part, "Position", {selectable: false, position: new go.Point(startX, startY - 45), layerName: "Grid"},
                             $(go.Shape,"Rectangle",
-                                {width : endX - startX, height: endY - startY, margin: 0, fill: i % 2 == 0 ? "yellow" : "blue", opacity: 0.12, stroke: null}),
+                                {width : endX - startX, height: endY - startY, margin: 0, fill: i % 2 == 0 ? "#FFFFE0" : "#ADD8E6", opacity: 0.15, stroke: null}),
                             $(go.TextBlock,
-                                {font: "Italic 24pt sans-serif", text: startDate + " - " + endDate, stroke: "red"},
+                                {font: "Italic 24pt calligraphy", text: startDate + " - " + endDate, stroke: "black"},
                                 ),
                         );
+            let shape = 
             // add to mapping so can be determined later
             diagram.add(part);
         }
