@@ -75,7 +75,7 @@ function PersonCard({ onClick, title, desc }) {
   const height = portrait.height;
   const width = portrait.width;
 
-  const displayHeight = 200
+  const displayHeight = 200;
 
   return (
     <Card style={{ width: '16rem', cursor: 'pointer', height: '22rem' }} className="m-3 result" onClick={onClick}>
