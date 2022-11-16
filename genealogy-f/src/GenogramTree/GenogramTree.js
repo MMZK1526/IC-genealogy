@@ -29,6 +29,7 @@ class GenogramTree extends React.Component {
     constructor(props) {
         super(props);
         this.treeCache = {};
+        this.wikiTreeCache = {};
         this.extensionId = null;
         let rawJSON = null;
         this.source = props.router.location.state ? props.router.location.state.source : null;
@@ -67,6 +68,150 @@ class GenogramTree extends React.Component {
             this.componentRef = React.createRef();
         }
     }
+
+    render() {
+        if (this.source == null) {
+            alert('Invalid URL!');
+            return <p>Invalid URL!</p>
+        }
+
+        if (this.state.relationJSON == null) {
+            this.fetchFromCacheOrBackend(this.source, 2);
+
+            return (
+                <>
+                    <Toolbar onlyHome={true}/>
+                    <Container style={{height: "100vh"}} className="d-flex justify-content-center">
+                        <ModalSpinner/>
+                    </Container>
+                </>
+            );
+        }
+
+        var updateDiagram = false;
+        if (this.state.isUpdated) {
+            this.state.isUpdated = false;
+            this.applyFilterAndDrawTree();
+            this.relations = transform(this.state.relationJSON);
+            updateDiagram = true;
+            this.state.isLoading = false;
+        }
+        var recentre = false;
+        if (this.state.recentre) {
+            recentre = true;
+            this.state.recentre = false;
+        }
+        this.personMap = getPersonMap(Object.values(this.state.originalJSON.items));
+
+        return (
+            <>
+                <Container fluid className="pe-none p-0 h-100 justify-content-between" style={{
+                    position: "fixed",
+                    zIndex: 1
+                }}>
+                    <Row>
+                        {this.state.showBtns &&
+                            <Toolbar genogramTree={this}/>
+                        }
+                    </Row>
+                    <Row className="me-4 mh-50 justify-content-end">
+                        <Col xs="4">
+                            {this.state.showFilters &&
+                                <Sidebar
+                                    filters={this.state.filters}
+                                    yearFromChange={e => {
+                                        this.setState({
+                                            from: e.target.value,
+                                            isUpdated: true
+                                        });
+                                    }}
+                                    yearToChange={e => {
+                                        this.setState({
+                                            to: e.target.value,
+                                            isUpdated: true
+                                        });
+                                    }}
+                                    familyChange={e => {
+                                        this.setState({
+                                            family: e.target.value,
+                                            isUpdated: true
+                                        });
+                                    }}
+                                    onChange={() => this.setState({isUpdated: true, isLoading: true})}
+                                    onPrune={() => {
+                                        this.state.originalJSON.relations = JSON.parse(JSON.stringify(this.state.relationJSON.relations));
+                                        for (const key of Object.keys(this.state.originalJSON.items)) {
+                                            if (!this.state.relationJSON.items[key] && key !== this.state.root) {
+                                                delete this.state.originalJSON.items[key];
+                                            }
+                                        }
+                                        this.calculateFilter();
+                                        this.setState({isUpdated: true, isLoading: true});
+                                    }}
+                                    onPersonSelection={(_, v) => this.setFocusPerson(v.key)}
+                                    getAllPersons={this.getAllPersons}
+                                    getFocusPerson={this.getFocusPerson}
+                                />
+                            }
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Col xs="2">
+                            {this.state.isLoading &&
+                                <div className='pe-auto'>
+                                    <ModalSpinner/>
+                                </div>
+                            }
+                        </Col>
+                    </Row>
+                </Container>
+                {
+                    this.state.isPopped
+                        ? <div className='popup'>
+                            <PopupInfo
+                                closePopUp={this.closePopUp}
+                                info={this.personMap.get(this.state.personInfo)}
+                                onNew={() => {
+                                    this.state.root = this.state.personInfo;
+                                    this.fetchKinships(this.state.root, this.state.originalJSON);
+                                }}
+                                // onExtend={() => null}
+                                onExtend={this.handlePopupExtend}
+                                allowExtend={this.props.allowExtend}
+                            >
+                            </PopupInfo>
+                        </div>
+                        : ''
+                }
+                <div className='tree-box'>
+                    <DiagramWrapper
+                        updateDiagram={updateDiagram}
+                        recentre={recentre}
+                        editCount={this.props.editCount}
+                        nodeDataArray={this.relations}
+                        onModelChange={this.handleModelChange}
+                        onDiagramEvent={this.handleDiagramEvent}
+                        yearFrom={this.props.from}
+                        yearTo={this.props.to}
+                        ref={this.componentRef}
+                        root={this.state.root}
+                        getFocusPerson={this.getFocusPerson}
+                        zoomToDefault={this.state.zoomToDefault}
+                    />
+
+                </div>
+
+                {
+                    this.state.showStats &&
+                    <EscapeCloseable className='popup'>
+                        <StatsPanel data={this.state.relationJSON} onClick={this.handleStatsClick}/>
+                    </EscapeCloseable>
+                }
+
+            </>
+        );
+    }
+
     // Returns map of nodes for persons in tree
 
     getAllPersons() {
@@ -116,7 +261,6 @@ class GenogramTree extends React.Component {
             showStats: !state.showStats,
         }));
     }
-
     integrateKinshipIntoRelationJSON(kinshipJson, relationJSON) {
         for (const key of Object.keys(kinshipJson)) {
             const kinshipStr = kinshipJson[key].map((arr) => {
@@ -148,32 +292,49 @@ class GenogramTree extends React.Component {
 
         return relationJSON;
     }
+
     // If id is provided, we search this id. Otherwise, it is a JSON provided by the user
 
-    async fetchRelations({ id = null, depth = null, customUpload = false } = {}) {
-        const relationJSON = (id === null) ?
-            this.state.originalJSON :
-            await this.requests.relationsCacheOrWiki({
-                id: id, depth: depth,
-                visitedItems: this.state.originalJSON ? Object.keys(this.state.originalJSON.items) : []
-            });
-
-        if (this.state.originalJSON) {
-            let oldItems = Object.keys(this.state.originalJSON.items);
-            let newItems = Object.keys(relationJSON.items);
-            if ((id === null || id === this.state.root)
-                && oldItems.length !== newItems.length) {
-                this.setState({
-                    newDataAvailable: true,
-                    newData: relationJSON
-                });
-            }
+    fetchRelations = async ({ id = null, depth = null, customUpload = false } = {}) => {
+        if (id === null) {
+            this.loadCustomData();
+            return;
         }
-
-        this.loadRelations(relationJSON, id)
+        const [dbPromise, wikiDataPromise] = this.requests.relationsCacheAndWiki({
+            id: id, depth: depth,
+            visitedItems: this.state.originalJSON ? Object.keys(this.state.originalJSON.items) : []
+        });
+        const dbRes = await dbPromise;
+        if (this.requests.dbResEmpty(dbRes)) {
+            const wikiDataRes = await wikiDataPromise;
+            this.loadRelations(wikiDataRes, id);
+            return;
+        }
+        this.loadRelations(dbRes, id);
+        const wikiDataRes = await wikiDataPromise;
+        if (this.containsMoreData(wikiDataRes, dbRes)) {
+            this.setState({
+                newDataAvailable: true,
+                newData: wikiDataRes,
+            });
+        }
     }
 
-    loadRelations(relationJSON, id) {
+    containsMoreData = (tree, other) => {
+        return [tree, other].map(x =>
+            Object.entries(x)
+                .filter(([k, v]) => k !== 'items')
+                .map(([k, v]) => v)
+                .map(x => Object.keys(x))
+                .map(x => x.length)
+        ).reduce((t, o) => t[0] > o[0] && t[1] > o[1])[0];
+    }
+
+    loadCustomData = async () => {
+        this.loadRelations(this.state.originalJSON, null);
+    }
+
+    loadRelations = (relationJSON, id) => {
         console.log("Loading relations!");
         // Add reciprocal relations.
         for (const [key, relations] of Object.entries(relationJSON.relations)) {
@@ -480,15 +641,15 @@ class GenogramTree extends React.Component {
         });
     }
 
-    async injectKinship(id, relationJSON) {
+    injectKinship = async (id, relationJSON) => {
         const kinshipJSON = await this.requests.relationCalc({
             start: id,
             relations: Object.values(relationJSON.relations).flat(),
         });
         return this.integrateKinshipIntoRelationJSON(kinshipJSON, relationJSON);
     }
-    // Merge two relational JSONs, modifying the old one.
 
+// Merge two relational JSONs, modifying the old one.
     mergeRelations(oldRel, newRel) {
         oldRel.items = { ...oldRel.items, ...newRel.items };
 
@@ -520,6 +681,7 @@ class GenogramTree extends React.Component {
         idRelMap.forEach((v, k) => oldRel.relations[k] = Array.from(v));
         return oldRel;
     }
+
     // Handle tree extension
 
     async handlePopupExtend() {
@@ -721,16 +883,42 @@ class GenogramTree extends React.Component {
             this.extendFromCache(id);
         }
         this.extensionId = id;
-        const cachePromise = this.requests.relationsCacheOrWiki({
+        const [dbPromise, wikiDataPromise] = this.requests.relationsCacheAndWiki({
             id: id, depth: 3
             , outlierVisited: this.state.originalJSON ? Object.keys(this.state.originalJSON.items) : []
         });
-        this.updateTreeCache(cachePromise).then(
-            () => {
-                console.log('Cache has been updated');
-                this.tryExtendFromCache();
-            }
-        );
+        const dbRes = await dbPromise;
+        if (this.requests.dbResEmpty(dbRes)) {
+            const wikiDataRes = await wikiDataPromise;
+            this.updateTreeCache(wikiDataRes);
+            return;
+        }
+        this.updateTreeCache(dbRes);
+        const wikiDataRes = await wikiDataPromise;
+        if (this.containsMoreData(
+            this.neighborTree(wikiDataRes, id),
+            this.neighborTree(dbRes, id)
+        )) {
+            this.updateWikiTreeCache(wikiDataRes, id);
+        }
+    }
+
+    /**
+     * Adds additional wiki data to last extended node.
+     * Assumes db data is less complete than wiki data.
+     * Doesn't modify previous extensions.
+     * @param wikiDataRes
+     * @param id
+     */
+    updateWikiTreeCache = (wikiDataRes, id) => {
+        this.wikiTreeCache = this.mergeRelations(this.wikiTreeCache, this.treeCache);
+        this.wikiTreeCache = this.mergeRelations(this.wikiTreeCache, wikiDataRes);
+        const wikiTree = this.getRenderTreeUsingCache(id, this.state.originalJSON, this.wikiTreeCache);
+        this.setState({
+            newDataAvailable: true,
+            newData: wikiTree,
+        });
+        console.error('Wiki cache has been updated');
     }
 
     tryExtendFromCache = async () => {
@@ -741,14 +929,16 @@ class GenogramTree extends React.Component {
         await this.extendFromCache(id);
     }
 
-    updateTreeCache = async (relationsPromise) => {
-        const relations = await relationsPromise;
+    updateTreeCache = async (relations) => {
         if (_.isEmpty(this.treeCache)) {
             this.treeCache = relations;
+            console.error('Cache has been updated');
             return;
         }
         const newTree = this.mergeRelations(this.treeCache, relations);
         this.treeCache = await this.injectKinship(this.state.root, newTree);
+        await this.tryExtendFromCache();
+        console.error('Cache has been updated');
     }
     // initialises tree (in theory should only be called once, diagram should be .clear() and then data updated for re-initialisation)
 
@@ -771,34 +961,24 @@ class GenogramTree extends React.Component {
         const cachedNeighbors = cachedTree.relations[id];
         return cachedNeighbors.length > curNeighbors.length;
     }
+
     extendFromCache = async (id) => {
         const curTree = this.state.originalJSON;
         const cachedTree = this.treeCache;
-        const firstNeighbors = new Set(cachedTree
-            .relations[id]
-            .map(x => x.item1Id)
-        );
-        const secondNeighbors = new Set(
-            Object.keys(cachedTree.relations)
-                .filter(id => firstNeighbors.has(id))
-                .map(id => cachedTree.relations[id])
-                .flat()
-                .map(x => x.item1Id)
-        );
-        const neighbors = [...firstNeighbors, ...secondNeighbors];
-        console.assert(neighbors.length > 0);
-        let newItems = {};
-        for (const id of neighbors) {
-            newItems[id] = cachedTree.items[id];
-        }
-        let newRelations = {};
-        for (const id of Object.keys(newItems)) {
-            newRelations[id] = cachedTree.relations[id];
-        }
-        const neighborTree = {
-            items: newItems,
-            relations: newRelations,
-        };
+        const kinshipTree = await this.getRenderTreeUsingCache(id, curTree, cachedTree);
+        this.extensionId = null;
+        this.setState({
+            originalJSON: kinshipTree,
+            isLoading: false,
+            isUpdated: true,
+            newDataAvailable: true,
+            newData: kinshipTree,
+        });
+        console.error('Cache was used for rendering');
+    }
+
+    getRenderTreeUsingCache = async (extendId, curTree, cachedTree) => {
+        const neighborTree = this.neighborTree(cachedTree, extendId);
         const newTree = this.mergeRelations(curTree, neighborTree);
         const kinshipTree = await this.injectKinship(this.state.root, newTree);
         const itemIds = new Set(Object.keys(kinshipTree.items));
@@ -813,15 +993,35 @@ class GenogramTree extends React.Component {
         const prunedRelationsIds = new Set(Object.values(prunedRelations).flat().map(x => x.item1Id));
         console.assert(_.isEqual(itemIds, prunedRelationsIds));
         kinshipTree.relations = prunedRelations;
-        this.extensionId = null;
-        this.setState({
-            originalJSON: kinshipTree,
-            isLoading: false,
-            isUpdated: true,
-            newDataAvailable: true,
-            newData: kinshipTree,
-        });
-        console.log('Cache was used for rendering');
+        return kinshipTree;
+    }
+
+    neighborTree = (tree, id) => {
+        const firstNeighbors = new Set(tree
+            .relations[id]
+            .map(x => x.item1Id)
+        );
+        const secondNeighbors = new Set(
+            Object.keys(tree.relations)
+                .filter(id => firstNeighbors.has(id))
+                .map(id => tree.relations[id])
+                .flat()
+                .map(x => x.item1Id)
+        );
+        const neighbors = [...firstNeighbors, ...secondNeighbors];
+        console.assert(neighbors.length > 0);
+        let newItems = {};
+        for (const id of neighbors) {
+            newItems[id] = tree.items[id];
+        }
+        let newRelations = {};
+        for (const id of Object.keys(newItems)) {
+            newRelations[id] = tree.relations[id];
+        }
+        return {
+            items: newItems,
+            relations: newRelations,
+        };
     }
 }
 
