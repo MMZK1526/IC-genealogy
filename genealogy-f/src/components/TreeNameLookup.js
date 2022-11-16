@@ -13,7 +13,7 @@ export function TreeNameLookup(props) {
                 getOptionLabel={(option) => `${option.name}@${option.key}`}
                 value={allPersons.find(person => person.key === props.getFocusPerson())}
                 onChange={props.onPersonSelection}
-                sx={{ width: 300 }}
+                sx={{ width: '100%', backgroundColor: "white" }}
                 renderInput={(params) => {
                     params.inputProps.value = params.inputProps.value.split("@")[0];
                     return (

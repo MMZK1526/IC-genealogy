@@ -3,10 +3,8 @@ import { Form } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 import './stylesheets/Sidebar.css';
 import Multiselect from 'multiselect-react-dropdown';
-import { Autocomplete, TextField, Divider } from '@mui/material';
 
 export function Sidebar(props) {
-    const allPersons = props.getAllPersons();
     const style = {
         searchBox: { // To change search box element look
             'fontSize': '20px',
@@ -88,32 +86,6 @@ export function Sidebar(props) {
             <Button className='m-1 text-center w-100' variant="danger" onClick={() => props.onPrune()}>
                 Prune
             </Button>
-            {/* <hr style={{
-                background: 'darkgrey',
-                height: '2px',
-                width: '100%',
-                border: 'none',
-                margin: '0px 0px'
-            }} /> */}
-
-            {/* <Divider sx={{ borderBottomWidth: 5, bgcolor: "black" }} /> */}
-
-            <label className="form-label">Look for name in tree: </label>
-            <Autocomplete
-                options={allPersons}
-                getOptionLabel={(option) => `${option.name}@${option.key}`}
-                value={allPersons.find(person => person.key === props.getFocusPerson())}
-                onChange={props.onPersonSelection}
-                sx={{ width: 300 }}
-                renderInput={(params) => {
-                    params.inputProps.value = params.inputProps.value.split("@")[0];
-                    return (
-                      <TextField {...params}/>
-                    );
-                  }}
-                renderOption={(props, option) => <li component="li" {...props}>{option.name}</li>}
-            />
-
         </div>
     );
 }

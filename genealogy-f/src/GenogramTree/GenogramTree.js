@@ -610,9 +610,6 @@ class GenogramTree extends React.Component {
                                 this.calculateFilter();
                                 this.setState({isUpdated: true, isLoading: true});
                             }}
-                            onPersonSelection={(_, v) => this.setFocusPerson(v.key)}
-                            getAllPersons={this.getAllPersons}
-                            getFocusPerson={this.getFocusPerson}
                         />
                         }
                         {

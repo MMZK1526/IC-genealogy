@@ -57,7 +57,7 @@ function Toolbar(props) {
         }
       </ButtonToolbar>
       <ButtonToolbar className="me-4">
-      {!props.onlyHome &&
+        {!props.onlyHome &&
           <Button className="me-2" variant='warning' onClick={() => { 
             props.genogramTree.setState({
               showLookup: !props.genogramTree.state.showLookup,
@@ -68,8 +68,8 @@ function Toolbar(props) {
               
               <span className="align-middle">Lookup</span>
           </Button>
-      }
-      {!props.onlyHome &&
+        }
+        {!props.onlyHome &&
           <Button className="me-0" variant='warning' onClick={() => { 
             props.genogramTree.setState({
               showFilters: !props.genogramTree.state.showFilters,
@@ -79,7 +79,7 @@ function Toolbar(props) {
               <AiFillFilter size={30} className="align-middle"/>
               <span className="align-middle">Filter</span>
           </Button>
-      }
+        }
       </ButtonToolbar>
     </div>
   );
