@@ -4,6 +4,7 @@ import Button from 'react-bootstrap/Button'
 import { BiHomeAlt } from 'react-icons/bi';
 import {downloadJsonFile} from './components/exportAsJson';
 import { AiFillFilter } from 'react-icons/ai';
+import { MdPersonSearch } from 'react-icons/md';
 
 function Toolbar(props) {
   return (
@@ -55,16 +56,31 @@ function Toolbar(props) {
           </>
         }
       </ButtonToolbar>
+      <ButtonToolbar className="me-4">
       {!props.onlyHome &&
-          <Button className="me-4" variant='warning' onClick={() => { 
+          <Button className="me-2" variant='warning' onClick={() => { 
             props.genogramTree.setState({
-              showFilters: !props.genogramTree.state.showFilters
+              showLookup: !props.genogramTree.state.showLookup,
+              showFilters: false,
+            });
+            }}>
+              <MdPersonSearch size={30} className="align-middle"/>
+              
+              <span className="align-middle">Lookup</span>
+          </Button>
+      }
+      {!props.onlyHome &&
+          <Button className="me-0" variant='warning' onClick={() => { 
+            props.genogramTree.setState({
+              showFilters: !props.genogramTree.state.showFilters,
+              showLookup: false,
             });
             }}>
               <AiFillFilter size={30} className="align-middle"/>
               <span className="align-middle">Filter</span>
           </Button>
       }
+      </ButtonToolbar>
     </div>
   );
 }

@@ -17,6 +17,7 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import {DiagramWrapper} from "./DiagramWrapper";
 import {getPersonMap, transform, withRouter} from "./utilFunctions";
+import { TreeNameLookup } from '../components/TreeNameLookup.js';
 
 // optional parameter passed to <ReactDiagram onModelChange = {handleModelChange}>
 // called whenever model is changed
@@ -613,7 +614,15 @@ class GenogramTree extends React.Component {
                             getAllPersons={this.getAllPersons}
                             getFocusPerson={this.getFocusPerson}
                         />
-                    }
+                        }
+                        {
+                            this.state.showLookup &&
+                            <TreeNameLookup
+                                onPersonSelection={(_, v) => this.setFocusPerson(v.key)}
+                                getAllPersons={this.getAllPersons}
+                                getFocusPerson={this.getFocusPerson}
+                            />
+                        }  
                     </Col>
           </Row>
           <Row>
