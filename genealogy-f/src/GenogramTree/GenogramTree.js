@@ -679,7 +679,6 @@ class GenogramTree extends React.Component {
         }
         if (this.extendInCache(id)) {
             this.extendFromCache(id);
-            return;
         }
         this.extensionId = id;
         const cachePromise = this.requests.relationsCacheOrWiki({id: id, depth: 3});
