@@ -1,22 +1,22 @@
-import {Sidebar} from '../components/Sidebar.js';
+import { Sidebar } from '../components/Sidebar.js';
 import Container from 'react-bootstrap/Container';
 import React from 'react';
 import * as go from 'gojs';
 import '../stylesheets/App.css';
 import PopupInfo from '../components/PopupInfo.js'
 import '../stylesheets/GenogramTree.css';
-import {StatsPanel} from '../components/StatsPanel';
+import { StatsPanel } from '../components/StatsPanel';
 import EscapeCloseable from '../components/EscapeCloseable';
 import '../components/stylesheets/shared.css';
 import _ from 'lodash';
-import {setStatePromise} from '../components/utils';
+import { setStatePromise } from '../components/utils';
 import ModalSpinner from '../ModalSpinner';
 import Toolbar from '../Toolbar';
-import {FilterModel} from '../filterModel';
+import { FilterModel } from '../filterModel';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import {DiagramWrapper} from "./DiagramWrapper";
-import {getPersonMap, transform, withRouter} from "./utilFunctions";
+import { DiagramWrapper } from "./DiagramWrapper";
+import { getPersonMap, transform, withRouter } from "./utilFunctions";
 import { TreeNameLookup } from '../components/TreeNameLookup.js';
 
 // optional parameter passed to <ReactDiagram onModelChange = {handleModelChange}>
@@ -144,7 +144,7 @@ class GenogramTree extends React.Component {
     }
     // If id is provided, we search this id. Otherwise, it is a JSON provided by the user
 
-    async fetchRelations({id = null, depth = null, customUpload = false} = {}) {
+    async fetchRelations({ id = null, depth = null, customUpload = false } = {}) {
         const relationJSON = (id === null) ?
             this.state.originalJSON :
             await this.requests.relationsCacheOrWiki({
@@ -330,7 +330,7 @@ class GenogramTree extends React.Component {
                             var newDescendants = newElems.filter((r) => r.type === 'child').map((r) => r.item1Id);
                             newDescendants.forEach((id) => visited[id] = '0.9');
                             newElems.filter((r) => !visited[r.item1Id]).map((r) => r.item1Id).forEach((id) => {
-                                visited[id] = '0.2';
+                                visited[id] = '0.5';
                             });
                             descendants.push(...newDescendants);
                         }
@@ -443,7 +443,7 @@ class GenogramTree extends React.Component {
                 frontier.addAll(outlierVisited);
                 outlierVisited.each((ov) => {
                     if (!visited[ov]) {
-                        visited[ov] = '0.2';
+                        visited[ov] = '0.5';
                     }
                 })
             }
@@ -476,10 +476,10 @@ class GenogramTree extends React.Component {
         });
         return this.integrateKinshipIntoRelationJSON(kinshipJSON, relationJSON);
     }
-// Merge two relational JSONs, modifying the old one.
+    // Merge two relational JSONs, modifying the old one.
 
     mergeRelations(oldRel, newRel) {
-        oldRel.items = {...oldRel.items, ...newRel.items};
+        oldRel.items = { ...oldRel.items, ...newRel.items };
 
         const idRelMap = new Map();
 
@@ -547,9 +547,9 @@ class GenogramTree extends React.Component {
 
             return (
                 <>
-                    <Toolbar onlyHome={true}/>
-                    <Container style={{height: "100vh"}} className="d-flex justify-content-center">
-                        <ModalSpinner/>
+                    <Toolbar onlyHome={true} />
+                    <Container style={{ height: "100vh" }} className="d-flex justify-content-center">
+                        <ModalSpinner />
                     </Container>
                 </>
             );
@@ -574,88 +574,88 @@ class GenogramTree extends React.Component {
             <>
                 <Container fluid className="pe-none p-0 h-100 justify-content-between" style={{
                     position: "fixed",
-                        zIndex: 1
-                            }}>
-                                <Row>
-                                        {this.state.showBtns &&
-                                    <Toolbar genogramTree={this}/>
-                                    }
-                            </Row>
-                    <Row className="me-4 mh-50 justify-content-end">
-                    <Col xs="4">
-                        {this.state.showFilters &&
-                        <Sidebar
-                            filters={this.state.filters}
-                            yearFromChange={e => {
-                                this.setState({
-                                    from: e.target.value,
-                                    isUpdated: true
-                                });
-                            }}
-                            yearToChange={e => {
-                                this.setState({
-                                    to: e.target.value,
-                                    isUpdated: true
-                                });
-                            }}
-                            familyChange={e => {
-                                this.setState({
-                                    family: e.target.value,
-                                    isUpdated: true
-                                });
-                            }}
-                            onChange={() => this.setState({isUpdated: true, isLoading: true})}
-                            onPrune={() => {
-                                this.state.originalJSON.relations = JSON.parse(JSON.stringify(this.state.relationJSON.relations));
-                                for (const key of Object.keys(this.state.originalJSON.items)) {
-                                    if (!this.state.relationJSON.items[key] && key !== this.state.root) {
-                                        delete this.state.originalJSON.items[key];
-                                    }
-                                }
-                                this.calculateFilter();
-                                this.setState({isUpdated: true, isLoading: true});
-                            }}
-                        />
+                    zIndex: 1
+                }}>
+                    <Row>
+                        {this.state.showBtns &&
+                            <Toolbar genogramTree={this} />
                         }
-                        {
-                            this.state.showLookup &&
-                            <TreeNameLookup
-                                onPersonSelection={(_, v) => this.setFocusPerson(v.key)}
-                                getAllPersons={this.getAllPersons}
-                                getFocusPerson={this.getFocusPerson}
-                            />
-                        }  
-                    </Col>
-          </Row>
-          <Row>
-            <Col xs="2">
-                        {this.state.isLoading &&
-                        <div className='pe-auto'>
-                    <ModalSpinner/>
-                </div>
-              }
-            </Col>
-          </Row>
-                            </Container>
-        {
-                            this.state.isPopped
-                ? <div className='popup'>
-                  <PopupInfo
-                      closePopUp={this.closePopUp}
-                      info={this.personMap.get(this.state.personInfo)}
-                      onNew={() => {
-                        this.state.root = this.state.personInfo;
-                            this.fetchKinships(this.state.root, this.state.originalJSON);
+                    </Row>
+                    <Row className="me-4 mh-50 justify-content-end">
+                        <Col xs="4">
+                            {this.state.showFilters &&
+                                <Sidebar
+                                    filters={this.state.filters}
+                                    yearFromChange={e => {
+                                        this.setState({
+                                            from: e.target.value,
+                                            isUpdated: true
+                                        });
+                                    }}
+                                    yearToChange={e => {
+                                        this.setState({
+                                            to: e.target.value,
+                                            isUpdated: true
+                                        });
+                                    }}
+                                    familyChange={e => {
+                                        this.setState({
+                                            family: e.target.value,
+                                            isUpdated: true
+                                        });
+                                    }}
+                                    onChange={() => this.setState({ isUpdated: true, isLoading: true })}
+                                    onPrune={() => {
+                                        this.state.originalJSON.relations = JSON.parse(JSON.stringify(this.state.relationJSON.relations));
+                                        for (const key of Object.keys(this.state.originalJSON.items)) {
+                                            if (!this.state.relationJSON.items[key] && key !== this.state.root) {
+                                                delete this.state.originalJSON.items[key];
+                                            }
+                                        }
+                                        this.calculateFilter();
+                                        this.setState({ isUpdated: true, isLoading: true });
+                                    }}
+                                />
+                            }
+                            {
+                                this.state.showLookup &&
+                                <TreeNameLookup
+                                    onPersonSelection={(_, v) => this.setFocusPerson(v.key)}
+                                    getAllPersons={this.getAllPersons}
+                                    getFocusPerson={this.getFocusPerson}
+                                />
+                            }
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Col xs="2">
+                            {this.state.isLoading &&
+                                <div className='pe-auto'>
+                                    <ModalSpinner />
+                                </div>
+                            }
+                        </Col>
+                    </Row>
+                </Container>
+                {
+                    this.state.isPopped
+                        ? <div className='popup'>
+                            <PopupInfo
+                                closePopUp={this.closePopUp}
+                                info={this.personMap.get(this.state.personInfo)}
+                                onNew={() => {
+                                    this.state.root = this.state.personInfo;
+                                    this.fetchKinships(this.state.root, this.state.originalJSON);
                                 }}
-                            // onExtend={() => null}
-                        onExtend={this.handlePopupExtend}
-                    allowExtend={this.props.allowExtend}
-                  >
-                  </PopupInfo>
-                </div>
-                : ''
-          }
-        <div className='tree-box'>
+                                // onExtend={() => null}
+                                onExtend={this.handlePopupExtend}
+                                allowExtend={this.props.allowExtend}
+                            >
+                            </PopupInfo>
+                        </div>
+                        : ''
+                }
+                <div className='tree-box'>
                     <DiagramWrapper
                         updateDiagram={updateDiagram}
                         recentre={recentre}
@@ -671,16 +671,16 @@ class GenogramTree extends React.Component {
                         zoomToDefault={this.state.zoomToDefault}
                     />
 
-                        </div>
+                </div>
 
-                    {
-                        this.state.showStats &&
-                        <div className='popup'>
-                            <EscapeCloseable className='popup'>
-                                <StatsPanel data={this.state.relationJSON} onClick={this.handleStatsClick}/>
-                            </EscapeCloseable>
-                        </div>
-                    }
+                {
+                    this.state.showStats &&
+                    <div className='popup'>
+                        <EscapeCloseable className='popup'>
+                            <StatsPanel data={this.state.relationJSON} onClick={this.handleStatsClick} />
+                        </EscapeCloseable>
+                    </div>
+                }
 
             </>
         );
@@ -688,13 +688,13 @@ class GenogramTree extends React.Component {
 
     fetchFromCacheOrBackend = async (id, depth) => {
         if (this.state.relationJSON == null) {
-            this.fetchRelations({id: id, depth: depth});
+            this.fetchRelations({ id: id, depth: depth });
         }
         if (this.extendInCache(id)) {
             this.extendFromCache(id);
         }
         this.extensionId = id;
-        const cachePromise = this.requests.relationsCacheOrWiki({id: id, depth: 3});
+        const cachePromise = this.requests.relationsCacheOrWiki({ id: id, depth: 3 });
         this.updateTreeCache(cachePromise).then(
             () => {
                 console.log('Cache has been updated');
@@ -720,7 +720,7 @@ class GenogramTree extends React.Component {
         const newTree = this.mergeRelations(this.treeCache, relations);
         this.treeCache = await this.injectKinship(this.state.root, newTree);
     }
-// initialises tree (in theory should only be called once, diagram should be .clear() and then data updated for re-initialisation)
+    // initialises tree (in theory should only be called once, diagram should be .clear() and then data updated for re-initialisation)
 
     // see https://gojs.net/latest/intro/react.html
 
