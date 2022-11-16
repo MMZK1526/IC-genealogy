@@ -34,7 +34,11 @@ function withRouter(Component) {
 
     return ComponentWithRouterProp;
 }
-
+// global map to get the position of nodes based off key after they have been placed by the algorithm
+// is there not better ways to design this : (
+var idPosMap = new Map();
+var globalDiagram;
+var globalPersonMap;
 // comparing date using js inbuilt date
 export function applyDateOfBirthFilter(id, dateFrom, dateTo, idPerson) {
     if (dateFrom == '' && dateTo == '') {
@@ -239,6 +243,7 @@ function getPersonMap(data) {
 
         personMap.set(personId, attributes)
     }
+    globalPersonMap = personMap;
     return personMap;
 }
 
@@ -428,12 +433,6 @@ export class DiagramWrapper extends React.Component {
 
         function mouseEnter(e, obj) {
             var node = obj.findObject("NODE2")
-            // var shape = obj.findObject("SHAPE");
-            // shape.fill = "#6DAB80";
-            // shape.stroke = "#A6E6A1";
-            // var text = obj.findObject("TEXT");
-            // text.stroke = "white";
-            console.log("clicking something")
             // highlight all Links and Nodes coming out of a given Node
             var diagram = node.diagram;
             // node.shape.fill = "#7ec2d7"
@@ -452,20 +451,12 @@ export class DiagramWrapper extends React.Component {
                         l.isHighlighted = true;
                         l.toNode.isHighlighted = true;
                     });
-                    // while (!result.done) {
-                    //   console.log(typeof result.node);
-                    //   // result.isHighlighted = true;
-                    //   console.log(typeof result.value);
-                    //   result = it.next();
-                    //   break
-                    // }
                 }
             });
             node.findNodesConnected().each(function (n) {
                 n.isHighlighted = true;
                 let link = n.labeledLink;
                 if (link != null) {
-                    console.log(n)
                     link.isHighlighted = true;
                     link.fromNode.isHighlighted = true;
                     link.toNode.isHighlighted = true;
@@ -481,6 +472,7 @@ export class DiagramWrapper extends React.Component {
             // }, "no highlighteds");
         }
 
+        // used for templating the timeline, as it needs to be generated based on the nodes
 
         // two different node templates, one for each sex,
         // named by the category value in the node data object
@@ -724,8 +716,12 @@ export class DiagramWrapper extends React.Component {
                     }).ofObject(),)
             ));
 
+            // part.add(new go.Shape("Rectangle", {width : 40, height: 750 / 5, margin: 0}));
+            // addRecs(part)
+
         return this.diagram;
     }
+
 
     downloadSvg = (blob) => {
         const url = window.URL.createObjectURL(blob);
@@ -757,8 +753,10 @@ export class DiagramWrapper extends React.Component {
         this.downloadSvg(blob);
     }
 
+
     // create and initialize the Diagram.model given an array of node data representing people
     setupDiagram(array, focusId) {
+        globalDiagram = this.diagram;
         this.diagram.model =
             new go.GraphLinksModel(
                 { // declare support for link label nodes
@@ -781,7 +779,9 @@ export class DiagramWrapper extends React.Component {
             // this.diagram.commandHandler.scrollToPart(node);
             this.diagram.centerRect(node.actualBounds);
         }
+        // add timeline which is seperate to nodes
     }
+
 
     findMarriage(diagram, a, b) {  // A and B are node keys
         const nodeA = diagram.findNodeForKey(a);
@@ -931,7 +931,6 @@ export class DiagramWrapper extends React.Component {
 
 // optional parameter passed to <ReactDiagram onModelChange = {handleModelChange}>
 // called whenever model is changed
-
 // class encapsulating the tree initialisation and rendering
 class GenogramTree extends React.Component {
     constructor(props) {
@@ -1897,15 +1896,16 @@ class GenogramLayout extends go.LayeredDigraphLayout {
             }
         }
     }
-
     commitNodes() {
         super.commitNodes();
         const horiz = this.direction === 0.0 || this.direction === 180.0;
         // position regular nodes
         this.network.vertexes.each(v => {
+
             if (v.node !== null && !v.node.isLinkLabel) {
                 v.node.moveTo(v.x, v.y);
             }
+            // at this point we can calculate the 
         });
         // position the spouses of each marriage vertex
         this.network.vertexes.each(v => {
@@ -1980,7 +1980,60 @@ class GenogramLayout extends go.LayeredDigraphLayout {
                 }
             }
         });
+        idPosMap = new Map();
+        this.network.vertexes.each(v => {
+            if (v.node != null) {
+                if (v.node.isLinkLabel) {
+                    const link = v.node.labeledLink;
+                    const spouseA = link.fromNode;
+                    const spouseB = link.toNode;
+                    idPosMap.set({x : spouseA.location.x, y : spouseA.location.y}, spouseA.key); //  or spouseA.x
+                    idPosMap.set({x : spouseB.location.x, y : spouseB.location.y}, spouseB.key); //  or spouseA.x
+                    // idPosMap.set(spouseA.key, {x : spouseA.x, y : spouseB.y}); //  or spouseA.x
+                    // idPosMap.set(spouseB.key, {x : spouseB.x, y : spouseB.y}); //  or spouseA.x
+                } else {
+                    idPosMap.set({x : v.x, y : v.y}, v.node.key);
+                }
+            }
+        })
+        this.addRecs(globalDiagram);
     }
+
+    addRecs(diagram, numRecs, itemtemplates) {
+        let maxH = 790;
+        let n = 5;
+        let sizeEach = maxH / n;
+        let c = 0;
+        // console.log("got here");
+        let it = idPosMap.keys();
+        let result = it.next();
+        let pos = [];
+        while (!result.done) {
+            pos.push(result.value);
+            result = it.next();
+        }
+        console.log(this.personMap.keys);
+        while (c < n) {
+            // for each section filter which nodes fall within the y co-ordinates then get the nodes with the highest and lowest date to determine the range of this "layer"
+            let pos2 = pos.filter(p => c * sizeEach <= p.y && p.y <= (c + 1) * sizeEach);
+            // sort ascending by dates
+            pos2 = pos2.map(p => )
+            // pos2 = pos2.sort();
+            let startDate = pos2[0];
+            let endDate = pos2[pos2.length - 1];
+            console.log("start", startDate, "end", endDate);
+            let part = $(go.Part, "Horizontal", {position: new go.Point(-80,c * sizeEach)},
+                            $(go.Shape,"Rectangle",
+                                {width : 40, height: sizeEach - 10, margin: 0}),
+                            $(go.TextBlock,
+                                { position: new go.Point(-80,c * sizeEach), font: "8pt sans-serif", text: "1950", stroke: "red"},
+                                ),
+                        );
+            // add to mapping so can be determined later
+            diagram.add(part);
+            c += 1;
+        }
+    };
 
     findParentsMarriageLabelNode(node) {
         const it = node.findNodesInto();
