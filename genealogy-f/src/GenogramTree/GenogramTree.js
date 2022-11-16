@@ -271,15 +271,25 @@ class GenogramTree extends React.Component {
 
     calculateFilter() {
         // Get filter options
-        let tempMap = new Set();
+        let famMap = new Set();
+        let pobMap = new Set();
+        let podMap = new Set();
         // set up id map for getting attributes later
         for (let x of Object.keys(this.state.originalJSON.items)) {
             let people = this.state.originalJSON.items[x];
             for (let f of people.additionalProperties.filter((p) => p.name == 'family').map((p) => p.value)) {
-                tempMap.add(f);
+                famMap.add(f);
+            }
+            for (let f of people.additionalProperties.filter((p) => p.propertyId == 'SW-P2').map((p) => p.value)) {
+                pobMap.add(f);
+            }
+            for (let f of people.additionalProperties.filter((p) => p.propertyId == 'SW-P3').map((p) => p.value)) {
+                podMap.add(f);
             }
         }
-        this.state.filters.allFamilies = tempMap;
+        this.state.filters.allFamilies = famMap;
+        this.state.filters.allBirthPlaces = pobMap;
+        this.state.filters.allDeathPlaces = podMap;
     }
 
     applyFilterAndDrawTree() {
@@ -287,6 +297,7 @@ class GenogramTree extends React.Component {
 
         // Use filter
         const filters = this.state.filters;
+        console.log(filters)
         var filteredJSON = { targets: this.state.originalJSON.targets };
         if (filters.bloodline || filters.families.size !== 0 || filters.fromYear !== '' || filters.toYear !== '' ||
             filters.birthPlace !== '' || filters.deathPlace !== '' || filters.personalName !== '') {
@@ -384,28 +395,22 @@ class GenogramTree extends React.Component {
                 }
             }
             // filter on Birth Place
-            if (filters.birthPlace !== '') {
+            if (filters.birthPlaces.size !== 0) {
                 for (const [k, _] of Object.entries(visited)) {
-                    const birthPlace = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.propertyId == 'SW-P2')[0];
-                    if (birthPlace === undefined) {
-                        delete visited[k];
-                        continue;
-                    }
-                    if (!String(birthPlace.value).toLowerCase().includes(filters.birthPlace.toLowerCase())) {
+                    const criteria = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.propertyId == 'SW-P2')
+                        .map((p) => p.value).some((f) => filters.birthPlaces.has(f));
+                    if (!criteria) {
                         delete visited[k];
                         continue;
                     }
                 }
             }
             // filter on To Death Place
-            if (filters.deathPlace !== '') {
+            if (filters.deathPlaces.size !== 0) {
                 for (const [k, _] of Object.entries(visited)) {
-                    const deathPlace = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.propertyId == 'SW-P3')[0];
-                    if (deathPlace === undefined) {
-                        delete visited[k];
-                        continue;
-                    }
-                    if (!String(deathPlace.value).toLowerCase().includes(filters.deathPlace.toLowerCase())) {
+                    const criteria = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.propertyId == 'SW-P3')
+                        .map((p) => p.value).some((f) => filters.deathPlaces.has(f));
+                    if (!criteria) {
                         delete visited[k];
                         continue;
                     }
