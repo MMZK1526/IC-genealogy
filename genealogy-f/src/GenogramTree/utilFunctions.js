@@ -175,6 +175,7 @@ export function getPersonMap(data) {
             if (attr.value === null || attr.value === '') continue;
             if (attr.propertyId === 'WD-P19' || attr.propertyId === 'WD-P20') continue; // not used by new PoB, PoD design
             if (attr.name === 'family name' || attr.name === 'given name') continue;    // this two fields not show, use personal name instead
+            if (attr.value.includes("http")) continue;
 
             if (attrMap.has(attr.name) && attr.name === 'family') {
                 let newVal = attrMap.get(attr.name) + '; ' + attr.value;
