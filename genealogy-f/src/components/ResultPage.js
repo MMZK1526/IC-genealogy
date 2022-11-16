@@ -7,6 +7,7 @@ import Toolbar from "../Toolbar";
 import Card from "react-bootstrap/Card";
 import Container from 'react-bootstrap/Container';
 import DefaultImg from "../images/default.png";
+import WidePutin from "../images/wideputin.png"
 
 function withRouter(Component) {
   function ComponentWithRouterProp(props) {
@@ -69,13 +70,10 @@ class ResultPage extends React.Component {
 
 function PersonCard({ onClick, title, desc }) {
   
-  const portrait = new Image();
-  portrait.src = DefaultImg;
+  const portrait = new Image(DefaultImg);
 
-  const height = portrait.height;
-  const width = portrait.width;
-
-  const displayHeight = 200;
+  let aspect = portrait.width / portrait.height;
+  let displayWidth = 150;
 
   return (
     <Card style={{ width: '16rem', cursor: 'pointer', height: '22rem' }} className="m-3 result" onClick={onClick}>
@@ -87,7 +85,7 @@ function PersonCard({ onClick, title, desc }) {
         </Card.Text>
       </Card.Body>
       
-      <Card.Img variant="botom" src={DefaultImg} height={displayHeight} width={width / height * displayHeight}/>
+      <Card.Img variant="botom" src={DefaultImg} height={displayWidth * aspect} width={displayWidth}/>
     </Card>
   );
 }
