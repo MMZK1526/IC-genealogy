@@ -10,27 +10,41 @@ export class Requests {
         return await this.genericRequest({requestOrUrl: url});
     }
 
+    relationsCacheAndWiki = ({id = 'WD-Q152308', depth = 2, visitedItems = []} = {}) => {
+        const params = {id: id, depth: depth, visitedItems: visitedItems};
+        return [
+            this.relationsDb(params),
+            this.relations(params),
+        ];
+    }
+
     // { targets: [], items: {}, relations: {} }
     relationsCacheOrWiki = async ({id = 'WD-Q152308', depth = 2, visitedItems = []} = {}) => {
         const params = {id: id, depth: depth, visitedItems: visitedItems};
         const dbRes = await this.relationsDb(params);
-        if (!_.isEmpty(Object.values(dbRes).filter(x => !_.isEmpty(x)))) {
-            console.log('Database used to fetch data');
+        if (!this.dbResEmpty(dbRes)) {
+            // console.error('Database used to fetch data');
             return dbRes;
         }
         const wikiDataRes = await this.relations(params);
-        console.log('Wiki data used to fetch data');
+        // console.error('Wiki data used to fetch data');
         return wikiDataRes;
     }
 
     relations = async ({id = 'WD-Q152308', depth = 2, visitedItems = []} = {}) => {
         const url = `${this.baseUrl}/relations_wk?id=${id}&depth=${depth}`;
-        return await this.genericPost(url, visitedItems, id, depth);
+        return await this.genericPost(url, visitedItems, id, depth).then(x => {
+            console.error('Wiki data used to fetch data');
+            return x;
+        });
     }
 
     relationsDb = async ({id = 'WD-Q152308', depth = 2, visitedItems = []} = {}) => {
         const url = `${this.baseUrl}/relations_db?id=${id}&depth=${depth}`;
-        return await this.genericPost(url, visitedItems, id, depth);
+        return await this.genericPost(url, visitedItems, id, depth).then(x => {
+            console.error('Database used to fetch data');
+            return x;
+        });
     }
 
     relationCalc = async ({start, relations}) => {
@@ -79,6 +93,10 @@ export class Requests {
         } catch {
             throw new Error(`Error while JSON-parsing the following text response:\n${resText}`);
         }
+    }
+
+    dbResEmpty = (dbRes) => {
+        return !_.isEmpty(Object.values(dbRes).filter(x => !_.isEmpty(x)));
     }
 }
 
