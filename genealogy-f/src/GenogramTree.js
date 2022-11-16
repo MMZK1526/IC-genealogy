@@ -2003,6 +2003,9 @@ class GenogramLayout extends go.LayeredDigraphLayout {
     addRecs(diagram, numRecs, itemtemplates) {
         // sort lowest to highest based on y co-ordinates
         let startYs = [...new Set(idPos.map(p => p.y))].sort();
+        let startXs = idPos.map(p => p.x).sort();
+        console.log(startXs);
+        let startX = startXs[0] - 200; // get lowest x co node
         console.log(startYs);
         let n = 5;
         let sizeEach = 158; // remove this hard code
@@ -2019,16 +2022,18 @@ class GenogramLayout extends go.LayeredDigraphLayout {
             // sort ascending by dates
             // TODO dates not sorted properly
             // exclude unknown people and people without date of births from the list
-            pos2 = pos2.filter(p => !((p.key).startsWith('_'))).map(p => (globalPersonMap.get(p.key)).get("Date of birth")).filter(p => p != undefined && p != null).sort();
+            let pos2dob = pos2.filter(p => !((p.key).startsWith('_'))).map(p => (globalPersonMap.get(p.key)).get("Date of birth")).filter(p => p != undefined && p != null).sort();
+            let pos2dod = pos2.filter(p => !((p.key).startsWith('_'))).map(p => (globalPersonMap.get(p.key)).get("Date of death")).filter(p => p != undefined && p != null).sort();
             console.log(pos2);
-            let startDate = pos2.length < 1 ? "*" : (new Date(pos2[0])).getFullYear();
-            let endDate = pos2.length < 1 ? "*" : (new Date(pos2[pos2.length - 1])).getFullYear();
+            let startDate = pos2dob.length < 1 ? "*" : (new Date(pos2dob[0])).getFullYear();
+            let endDate = pos2dob.length < 1 ? "*" : (new Date(pos2dob[pos2dob.length - 1])).getFullYear();
+            // let endDate = pos2dod.length < 1 ? "*" : (new Date(pos2dod[pos2dod.length - 1])).getFullYear();
             console.log("start", startDate, "end", endDate);
-            let part = $(go.Part, "Horizontal", {position: new go.Point(-80, startY)},
+            let part = $(go.Part, "Horizontal", {position: new go.Point(startX, startY)},
                             // $(go.Shape,"Rectangle",
                             //     {width : 40, height: sizeEach - 10, margin: 0, fill: "#b5651d"}),
                             $(go.TextBlock,
-                                { position: new go.Point(-80, startY), font: "Italic 24pt sans-serif", text: startDate + " - " + endDate, stroke: "red"},
+                                { position: new go.Point(startX, startY), font: "Italic 24pt sans-serif", text: startDate + " - " + endDate, stroke: "red"},
                                 ),
                         );
             // add to mapping so can be determined later
