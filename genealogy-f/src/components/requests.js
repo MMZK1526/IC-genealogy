@@ -61,6 +61,7 @@ export class Requests {
         const ok = response.ok;
         const status = response.status;
         if (status === 503 && retryNum > 0) {
+            console.log(`Request retry number ${totalRetry - retryNum + 1}`);
             const waitTime = (totalRetry + 1 - retryNum) * 1_000;
             await wait(waitTime);
             await this.genericRequest({requestOrUrl, id, depth, retryNum: retryNum - 1});
