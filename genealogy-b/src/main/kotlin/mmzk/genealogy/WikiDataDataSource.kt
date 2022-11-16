@@ -85,6 +85,9 @@ class WikiDataDataSource(
                     personalNames[id] = NameFormatter()
                 }
             }
+            val image = row["photoLabel"]?.let {
+                AdditionalPropertyDTO("WD-P18", "image", it, getHash(row, "photo"))
+            }
             val wikiLink = row["article"]?.let {
                 AdditionalPropertyDTO("SW-P4", "wikipedia link", it, "")
             }
@@ -152,7 +155,8 @@ class WikiDataDataSource(
                     gender,
                     family,
                     givenName,
-                    familyName
+                    familyName,
+                    image
                 )
             }
 
@@ -185,7 +189,7 @@ class WikiDataDataSource(
         repo.additionalHttpHeaders = Collections.singletonMap("User-Agent", userAgent)
 
         val querySelect = """
-              SELECT ?article ?${SPARQL.item} ?${SPARQL.name} ?${SPARQL.alias} ?${SPARQL.description} ?${SPARQL.family}_ ?${SPARQL.family}Label ?${SPARQL.givenName}_ ?${SPARQL.givenName}Label ?${SPARQL.familyName}_ ?${SPARQL.familyName}Label ?${SPARQL.ordinal} ?${SPARQL.familyNameType}Label ?${SPARQL.dateOfBirth} ?${SPARQL.dateOfBirth}_ ?${SPARQL.dateOfDeath} ?${SPARQL.dateOfDeath}_ ?${SPARQL.placeOfBirth}Label ?${SPARQL.placeOfBirth}_ ?${SPARQL.placeOfBirthCountry}Label ?${SPARQL.placeOfDeath}Label ?${SPARQL.placeOfDeath}_ ?${SPARQL.placeOfDeathCountry}Label ?${SPARQL.gender}Label ?${SPARQL.gender}_ WHERE {
+              SELECT ?photoLabel ?photo_ ?article ?${SPARQL.item} ?${SPARQL.name} ?${SPARQL.alias} ?${SPARQL.description} ?${SPARQL.family}_ ?${SPARQL.family}Label ?${SPARQL.givenName}_ ?${SPARQL.givenName}Label ?${SPARQL.familyName}_ ?${SPARQL.familyName}Label ?${SPARQL.ordinal} ?${SPARQL.familyNameType}Label ?${SPARQL.dateOfBirth} ?${SPARQL.dateOfBirth}_ ?${SPARQL.dateOfDeath} ?${SPARQL.dateOfDeath}_ ?${SPARQL.placeOfBirth}Label ?${SPARQL.placeOfBirth}_ ?${SPARQL.placeOfBirthCountry}Label ?${SPARQL.placeOfDeath}Label ?${SPARQL.placeOfDeath}_ ?${SPARQL.placeOfDeathCountry}Label ?${SPARQL.gender}Label ?${SPARQL.gender}_ WHERE {
                   ?${SPARQL.item} wdt:P31 wd:Q5 .
                   OPTIONAL { ?${SPARQL.item} schema:description ?${SPARQL.description} .
                              FILTER ( lang(?${SPARQL.description}) = "en" ). }
@@ -212,6 +216,8 @@ class WikiDataDataSource(
                   OPTIONAL { ?article schema:about ?${SPARQL.item} .
                              ?article schema:inLanguage "en" .
                              FILTER (SUBSTR(str(?article), 1, 25) = "https://en.wikipedia.org/") }
+                  OPTIONAL { ?${SPARQL.item} p:P18 ?photo_ .
+                             ?photo_ ps:P18 ?photo . }
                   SERVICE wikibase:mwapi {
                     bd:serviceParam wikibase:api "EntitySearch" .
                     bd:serviceParam wikibase:endpoint "www.wikidata.org" .
@@ -276,7 +282,7 @@ class WikiDataDataSource(
             val userAgent = "WikiData Crawler for Genealogy Visualiser WebApp, Contact piopio555888@gmail.com"
             repo.additionalHttpHeaders = Collections.singletonMap("User-Agent", userAgent)
             val querySelect = """
-              SELECT ?article ?${SPARQL.item} ?${SPARQL.name} ?${SPARQL.alias} ?${SPARQL.description} ?${SPARQL.family}_ ?${SPARQL.family}Label ?${SPARQL.givenName}_ ?${SPARQL.givenName}Label ?${SPARQL.familyName}_ ?${SPARQL.familyName}Label ?${SPARQL.ordinal} ?${SPARQL.familyNameType}Label ?${SPARQL.dateOfBirth} ?${SPARQL.dateOfBirth}_ ?${SPARQL.dateOfDeath} ?${SPARQL.dateOfDeath}_ ?${SPARQL.placeOfBirth}Label ?${SPARQL.placeOfBirth}_ ?${SPARQL.placeOfBirthCountry}Label ?${SPARQL.placeOfDeath}Label ?${SPARQL.placeOfDeath}_ ?${SPARQL.placeOfDeathCountry}Label ?${SPARQL.gender}Label ?${SPARQL.gender}_ WHERE {
+              SELECT ?photoLabel ?photo_ ?article ?${SPARQL.item} ?${SPARQL.name} ?${SPARQL.alias} ?${SPARQL.description} ?${SPARQL.family}_ ?${SPARQL.family}Label ?${SPARQL.givenName}_ ?${SPARQL.givenName}Label ?${SPARQL.familyName}_ ?${SPARQL.familyName}Label ?${SPARQL.ordinal} ?${SPARQL.familyNameType}Label ?${SPARQL.dateOfBirth} ?${SPARQL.dateOfBirth}_ ?${SPARQL.dateOfDeath} ?${SPARQL.dateOfDeath}_ ?${SPARQL.placeOfBirth}Label ?${SPARQL.placeOfBirth}_ ?${SPARQL.placeOfBirthCountry}Label ?${SPARQL.placeOfDeath}Label ?${SPARQL.placeOfDeath}_ ?${SPARQL.placeOfDeathCountry}Label ?${SPARQL.gender}Label ?${SPARQL.gender}_ WHERE {
                   VALUES ?${SPARQL.item} { ${ids.joinToString(" ") { "wd:$it" }} } .
                   OPTIONAL { ?${SPARQL.item} schema:description ?${SPARQL.description} .
                              FILTER ( lang(?${SPARQL.description}) = "en" ). }
@@ -303,6 +309,8 @@ class WikiDataDataSource(
                   OPTIONAL { ?article schema:about ?${SPARQL.item} .
                              ?article schema:inLanguage "en" .
                              FILTER (SUBSTR(str(?article), 1, 25) = "https://en.wikipedia.org/") }
+                  OPTIONAL { ?${SPARQL.item} p:P18 ?photo_ .
+                             ?photo_ ps:P18 ?photo . }
                   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
                 }
         """.trimIndent()
