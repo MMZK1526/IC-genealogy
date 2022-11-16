@@ -316,7 +316,7 @@ export class DiagramWrapper extends React.Component {
                 'toolManager.dragSelectingTool': null,
             })
         this.diagram = this.state.diagram;
-
+        globalDiagram = this.diagram;
         // determine the color for each attribute shape
         function attrFill(a) {
             switch (a) {
@@ -2002,21 +2002,18 @@ class GenogramLayout extends go.LayeredDigraphLayout {
 
     addRecs(diagram, numRecs, itemtemplates) {
         // sort lowest to highest based on y co-ordinates
-        let startYs = [...new Set(idPos.map(p => p.y))].sort();
-        let startXs = idPos.map(p => p.x).sort();
-        console.log(startXs);
+        let startXs = [...new Set(idPos.map(p => p.x.valueOf()))].sort((a,b) => a - b);
+        let startYs = [...new Set(idPos.map(p => p.y.valueOf()))].sort((a,b) => a - b);
         let startX = startXs[0] - 200; // get lowest x co node
-        console.log(startYs);
-        let n = 5;
-        let sizeEach = 158; // remove this hard code
-        let c = 0;
-        // console.log("got here");
-        console.log(globalPersonMap.keys());
-        for (let startY of startYs) {
+        let endX = startXs[startXs.length - 1] + 100;
+        for (let i = 0; i < startYs.length; i++) {
+            let startY = startYs[i];
+            let endY = i != startYs.length - 1 ? startYs[i + 1] : startYs[i] + 150;
             // for each section filter which nodes fall within the y co-ordinates then get the nodes with the highest and lowest date to determine the range of this "layer"
             let pos2 = idPos.filter(p => p.y == startY);
             if (pos2.length == 0) {
                 // no nodes in this region
+                console.log("no nodes in this region so broke early");
                 break
             }
             // sort ascending by dates
@@ -2029,16 +2026,15 @@ class GenogramLayout extends go.LayeredDigraphLayout {
             let endDate = pos2dob.length < 1 ? "*" : (new Date(pos2dob[pos2dob.length - 1])).getFullYear();
             // let endDate = pos2dod.length < 1 ? "*" : (new Date(pos2dod[pos2dod.length - 1])).getFullYear();
             console.log("start", startDate, "end", endDate);
-            let part = $(go.Part, "Horizontal", {position: new go.Point(startX, startY)},
-                            // $(go.Shape,"Rectangle",
-                            //     {width : 40, height: sizeEach - 10, margin: 0, fill: "#b5651d"}),
+            let part = $(go.Part, "Horizontal", {selectable: false, position: new go.Point(startX, startY - 45)},
+                            $(go.Shape,"Rectangle",
+                                {width : endX - startX, height: endY - startY, margin: 0, fill: i % 2 == 0 ? "yellow" : "blue", opacity: 0.12, stroke: null}),
                             $(go.TextBlock,
-                                { position: new go.Point(startX, startY), font: "Italic 24pt sans-serif", text: startDate + " - " + endDate, stroke: "red"},
+                                {font: "Italic 24pt sans-serif", text: startDate + " - " + endDate, stroke: "red"},
                                 ),
                         );
             // add to mapping so can be determined later
             diagram.add(part);
-            c += 1;
         }
     };
 
