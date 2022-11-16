@@ -99,6 +99,16 @@ export function applyFamilyFilter(id, familyName, idPerson) {
 // global map from id of person to their attributes, used to change opacity for filtering in the goJs diagram.
 var relMap = new Map();
 
+// converts negative date, before pasing to date object
+function ndb(d) {
+    return d[0] == "-" ? "-00" + d.substring(1) : d;
+}
+
+// converts -700 -> 700BC otherwise leaves the same
+function bcDate(d) {
+    return d < 0 ? (d * -1) + "BC" : d
+}
+
 function transform(data) {
     relMap = new Map();
 
@@ -202,6 +212,7 @@ export function capitalizeFirstLetter(string) {
 // Outer map: personId -> inner map
 // Inner map: property -> value
 function getPersonMap(data) {
+    console.log(data)
     let personMap = new Map;
     for (let person of data) {
         const personId = person.id;
@@ -234,9 +245,15 @@ function getPersonMap(data) {
         attrMap.forEach((value, key) => {
             switch (key) {
                 case 'date of birth':
-                    value = value.replace(/^0+/, '').split('T')[0];
+                    value = value.split('T')[0];
+                    // if (value.startsWith('-')) {
+                    //     value = "-00" + value.substring(1);
+                    // }
                 case 'date of death':
-                    value = value.replace(/^0+/, '').split('T')[0];
+                    value = value.split('T')[0];
+                    // if (value.startsWith('-')) {
+                    //     value = "-00" + value.substring(1);
+                    // }
                 default:
             }
             attributes.set(capitalizeFirstLetter(key), value);
@@ -300,7 +317,7 @@ export class DiagramWrapper extends React.Component {
                         $(go.Shape, 'Circle', {fill: '#c1cee3', stroke: null}),
                         $(go.Placeholder, {margin: 0})
                     ),
-                scrollMargin: 200,
+                scrollMargin: 220,
                 layout:  // use a custom layout, defined below
                     $(GenogramLayout, {direction: 90, layerSpacing: 50, columnSpacing: 0}),
                 'InitialLayoutCompleted': _ => {
@@ -2001,6 +2018,8 @@ class GenogramLayout extends go.LayeredDigraphLayout {
         this.addRecs(globalDiagram);
     }
 
+
+
     addRecs(diagram, numRecs, itemtemplates) {
         // sort lowest to highest based on y co-ordinates
         let startXs = [...new Set(idPos.map(p => p.x.valueOf()))].sort((a,b) => a - b);
@@ -2017,21 +2036,27 @@ class GenogramLayout extends go.LayeredDigraphLayout {
                 console.log("no nodes in this region so broke early");
                 break
             }
-            // sort ascending by dates
-            // TODO dates not sorted properly
-            // exclude unknown people and people without date of births from the list
-            let pos2dob = pos2.filter(p => !((p.key).startsWith('_'))).map(p => (globalPersonMap.get(p.key)).get("Date of birth")).filter(p => p != undefined && p != null).sort();
-            let pos2dod = pos2.filter(p => !((p.key).startsWith('_'))).map(p => (globalPersonMap.get(p.key)).get("Date of death")).filter(p => p != undefined && p != null).sort();
-            console.log(pos2);
-            let startDate = pos2dob.length < 1 ? "*" : (new Date(pos2dob[0])).getFullYear();
-            let endDate = pos2dob.length < 1 ? "*" : (new Date(pos2dob[pos2dob.length - 1])).getFullYear();
-            // let endDate = pos2dod.length < 1 ? "*" : (new Date(pos2dod[pos2dod.length - 1])).getFullYear();
-            console.log("start", startDate, "end", endDate);
+            let personInfo = pos2.filter(p => !((p.key).startsWith('_'))).map(p => (globalPersonMap.get(p.key)));
+            let bd = personInfo.map(p => {return {dob: p.get("Date of birth"), dod: p.get("Date of death")}});
+            console.log(bd);
+            // calculate start date for the era
+            let dob = bd.filter(p => p.dob != undefined).map(p => new Date(ndb(p.dob))).sort((a,b) => a - b);
+            console.log(dob)
+            let startDate = dob.length < 1 ? "*" : dob[0].getFullYear();
+
+            // calculate end date for the era
+            let dod = bd.filter(p => p.dod != undefined).map(p => new Date(ndb(p.dod))).sort((a,b) => a - b);
+            // console.log(dod);
+            let unknownsAlive = bd.filter(p=> p.dod == undefined && (p.dob != undefined && (new Date(ndb(p.dob)) > new Date("1912")))).length > 0; // i.e. some of the unknowns are alive so we cannot end era
+            let endDate = unknownsAlive ? "*" : (dod.length < 1 ? "*" : dod[dod.length - 1].getFullYear());
+
+            // console.log("start", startDate, "end", endDate);
+            // create "eras" as a part in the grid background made up of date in the corner and an opaque rectangle covering the diagram
             let part = $(go.Part, "Position", {selectable: false, position: new go.Point(startX, startY - 45), layerName: "Grid"},
                             $(go.Shape,"Rectangle",
                                 {width : endX - startX, height: endY - startY, margin: 0, fill: i % 2 == 0 ? "#FFFFE0" : "#ADD8E6", opacity: 0.15, stroke: null}),
                             $(go.TextBlock,
-                                {font: "Italic 24pt calligraphy", text: startDate + " - " + endDate, stroke: "black"},
+                                {font: "Italic 24pt calligraphy", text: bcDate(startDate) + " - " + bcDate(endDate), stroke: "black"},
                                 ),
                         );
             let shape = 
