@@ -1269,15 +1269,23 @@ class GenogramTree extends React.Component {
             // filter on From birth year
             if (filters.fromYear !== '') {
                 visited = visited.filter((k) => {
-                    let dob = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'date of birth')[0];
-                    return dob === undefined || new Date(dob) >= new Date(fromYear);
+                    let dob = (this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'date of birth')[0]);
+                    if (dob == undefined) {return false};
+                    dob = ndb(dob.value.split('T')[0]);
+                    let fromYear = filters.fromYear[0] == "-" ? "-" + (filters.fromYear.substring(1)).padStart(6, '0') : filters.fromYear.padStart(4, '0');
+                    console.log(dob, fromYear, new Date(dob).getFullYear() >= new Date(fromYear).getFullYear());
+                    return new Date(dob).getFullYear() >= new Date(fromYear).getFullYear();
                 });
             }
             // filter on To birth year
             if (filters.toYear !== '') {
                 visited = visited.filter((k) => {
-                    let dob = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'date of birth')[0];
-                    return dob === undefined || new Date(dob) <= new Date(toYear);
+                    let dob = (this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'date of birth')[0]);
+                    if (dob == undefined) {return false};
+                    dob = ndb(dob.value.split('T')[0]);
+                    let toYear = filters.toYear[0] == "-" ? "-" + (filters.toYear.substring(1)).padStart(6, '0') : filters.toYear.padStart(4, '0');
+                    console.log(dob, toYear);
+                    return new Date(dob).getFullYear() <= new Date(toYear).getFullYear();
                 });
             }
             // filter on Birth Place
@@ -2012,6 +2020,8 @@ class GenogramLayout extends go.LayeredDigraphLayout {
         // sort lowest to highest based on y co-ordinates
         let startXs = [...new Set(idPos.map(p => p.x.valueOf()))].sort((a,b) => a - b);
         let startYs = [...new Set(idPos.map(p => p.y.valueOf()))].sort((a,b) => a - b);
+        console.log(startXs);
+        console.log(startYs);
         let startX = startXs[0] - 200; // get lowest x co node
         let endX = startXs[startXs.length - 1] + 100;
         for (let i = 0; i < startYs.length; i++) {
