@@ -18,6 +18,7 @@ import Toolbar from './Toolbar';
 import {FilterModel} from './filterModel';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
+import { AiOutlineConsoleSql } from 'react-icons/ai';
 
 function withRouter(Component) {
     function ComponentWithRouterProp(props) {
@@ -36,7 +37,7 @@ function withRouter(Component) {
 }
 // global map to get the position of nodes based off key after they have been placed by the algorithm
 // is there not better ways to design this : (
-var idPosMap = new Map();
+var idPos = [];
 var globalDiagram;
 var globalPersonMap;
 // comparing date using js inbuilt date
@@ -1980,19 +1981,19 @@ class GenogramLayout extends go.LayeredDigraphLayout {
                 }
             }
         });
-        idPosMap = new Map();
+        idPos = [];
         this.network.vertexes.each(v => {
             if (v.node != null) {
                 if (v.node.isLinkLabel) {
                     const link = v.node.labeledLink;
                     const spouseA = link.fromNode;
                     const spouseB = link.toNode;
-                    idPosMap.set({x : spouseA.location.x, y : spouseA.location.y}, spouseA.key); //  or spouseA.x
-                    idPosMap.set({x : spouseB.location.x, y : spouseB.location.y}, spouseB.key); //  or spouseA.x
+                    idPos.push({x : spouseA.location.x, y : spouseA.location.y, key: spouseA.key}); //  or spouseA.x
+                    idPos.push({x : spouseB.location.x, y : spouseB.location.y, key: spouseB.key}); //  or spouseA.x
                     // idPosMap.set(spouseA.key, {x : spouseA.x, y : spouseB.y}); //  or spouseA.x
                     // idPosMap.set(spouseB.key, {x : spouseB.x, y : spouseB.y}); //  or spouseA.x
                 } else {
-                    idPosMap.set({x : v.x, y : v.y}, v.node.key);
+                    idPos.push({x : v.x, y : v.y, key: v.node.key});
                 }
             }
         })
@@ -2000,33 +2001,31 @@ class GenogramLayout extends go.LayeredDigraphLayout {
     }
 
     addRecs(diagram, numRecs, itemtemplates) {
-        let maxH = 790;
         let n = 5;
-        let sizeEach = maxH / n;
+        let sizeEach = 158; // remove this hard code
         let c = 0;
         // console.log("got here");
-        let it = idPosMap.keys();
-        let result = it.next();
-        let pos = [];
-        while (!result.done) {
-            pos.push(result.value);
-            result = it.next();
-        }
-        console.log(this.personMap.keys);
+        console.log(globalPersonMap.keys());
         while (c < n) {
             // for each section filter which nodes fall within the y co-ordinates then get the nodes with the highest and lowest date to determine the range of this "layer"
-            let pos2 = pos.filter(p => c * sizeEach <= p.y && p.y <= (c + 1) * sizeEach);
+            let pos2 = idPos.filter(p => c * sizeEach <= p.y && p.y <= (c + 1) * sizeEach);
+            if (pos2.length == 0) {
+                // no nodes in this region
+                break
+            }
             // sort ascending by dates
-            pos2 = pos2.map(p => )
-            // pos2 = pos2.sort();
-            let startDate = pos2[0];
-            let endDate = pos2[pos2.length - 1];
+            // TODO dates not sorted properly
+            // exclude unknown people and people without date of births from the list
+            pos2 = pos2.filter(p => !((p.key).startsWith('_'))).map(p => (globalPersonMap.get(p.key)).get("Date of birth")).filter(p => p != undefined && p != null).sort();
+            console.log(pos2);
+            let startDate = pos2.length < 1 ? "*" : (new Date(pos2[0])).getFullYear();
+            let endDate = pos2.length < 1 ? "*" : (new Date(pos2[pos2.length - 1])).getFullYear();
             console.log("start", startDate, "end", endDate);
             let part = $(go.Part, "Horizontal", {position: new go.Point(-80,c * sizeEach)},
                             $(go.Shape,"Rectangle",
-                                {width : 40, height: sizeEach - 10, margin: 0}),
+                                {width : 40, height: sizeEach - 10, margin: 0, fill: "#b5651d"}),
                             $(go.TextBlock,
-                                { position: new go.Point(-80,c * sizeEach), font: "8pt sans-serif", text: "1950", stroke: "red"},
+                                { position: new go.Point(-80,c * sizeEach), font: "Italic 24pt sans-serif", text: startDate + " - " + endDate, stroke: "red"},
                                 ),
                         );
             // add to mapping so can be determined later
