@@ -114,20 +114,24 @@ function transform(data) {
 
     Object.values(data.items).forEach((person) => {
         let singlePerson = new Map();
+        let hasGender = false;
         for (let attr of person.additionalProperties) {
             if (attr.name === 'gender') {
                 // assumption that someone with unknown gender will always be at the boundary of a graph as otherwise their gender can be determined.
-                if (attr.value == "http://www.wikidata.org/.well-known/genid/beb45cfe6120c68b9a361c0339e27365") {
-                    singlePerson.set('gender', "unknown")
-                } else {
+                if (attr.value == 'male' || attr.value == 'female') {
+                    hasGender = true;
                     singlePerson.set('gender', attr.value);
                 }
             }
+        }
+        if (!hasGender) {
+            singlePerson.set('gender', "unknown")
         }
 
         singlePerson.set('key', person.id);
         singlePerson.set('name', person.name);
         singlePerson.set('spouse', []);
+
         relMap.set(person.id, Object.fromEntries(singlePerson));
     });
 
@@ -200,6 +204,11 @@ function addUnknown(mfs, relMap) {
         relMap.set(newM.key, newM);
         relMap.set(mfs.key, mfs);
     }
+    // deal with unknown gender spouses
+    // if (mfs.gender == "unknown") {
+    //     if (mfs.spouse)
+    // }
+    
 
     return relMap;
 }
@@ -704,7 +713,6 @@ export class DiagramWrapper extends React.Component {
                     selectable: false,
                     layerName: 'Background',
                     click: function (e, link) {
-                        console.log("clicking something")
                         // highlight all Links and Nodes coming out of a given Node
                         var diagram = link.diagram;
                         // node.shape.fill = "#7ec2d7"
@@ -1215,7 +1223,7 @@ class GenogramTree extends React.Component {
 
         // Use filter
         const filters = this.state.filters;
-        console.log(filters)
+        // console.log(filters)
         var filteredJSON = {targets: this.state.originalJSON.targets};
         if (filters.bloodline || filters.families.size !== 0 || filters.fromYear !== '' || filters.toYear !== '' ||
             filters.birthPlace !== '' || filters.deathPlace !== '' || filters.personalName !== '') {
@@ -1273,7 +1281,6 @@ class GenogramTree extends React.Component {
                     if (dob == undefined) {return false};
                     dob = ndb(dob.value.split('T')[0]);
                     let fromYear = filters.fromYear[0] == "-" ? "-" + (filters.fromYear.substring(1)).padStart(6, '0') : filters.fromYear.padStart(4, '0');
-                    console.log(dob, fromYear, new Date(dob).getFullYear() >= new Date(fromYear).getFullYear());
                     return new Date(dob).getFullYear() >= new Date(fromYear).getFullYear();
                 });
             }
@@ -1284,7 +1291,6 @@ class GenogramTree extends React.Component {
                     if (dob == undefined) {return false};
                     dob = ndb(dob.value.split('T')[0]);
                     let toYear = filters.toYear[0] == "-" ? "-" + (filters.toYear.substring(1)).padStart(6, '0') : filters.toYear.padStart(4, '0');
-                    console.log(dob, toYear);
                     return new Date(dob).getFullYear() <= new Date(toYear).getFullYear();
                 });
             }
@@ -2010,6 +2016,7 @@ class GenogramLayout extends go.LayeredDigraphLayout {
                 }
             }
         })
+        console.log(idPos);
         globalDiagram.removeParts((globalDiagram.findLayer("Grid")).parts);
         this.addRecs(globalDiagram);
     }
@@ -2036,10 +2043,10 @@ class GenogramLayout extends go.LayeredDigraphLayout {
             }
             let personInfo = pos2.filter(p => !((p.key).startsWith('_'))).map(p => (globalPersonMap.get(p.key)));
             let bd = personInfo.map(p => {return {dob: p.get("Date of birth"), dod: p.get("Date of death")}});
-            console.log(bd);
+            // console.log(bd);
             // calculate start date for the era
             let dob = bd.filter(p => p.dob != undefined).map(p => new Date(p.dob)).sort((a,b) => a - b);
-            console.log(dob)
+            // console.log(dob)
             let startDate = dob.length < 1 ? "*" : dob[0].getFullYear();
 
             // calculate end date for the era
