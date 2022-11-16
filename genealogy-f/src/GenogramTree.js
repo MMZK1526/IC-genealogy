@@ -243,20 +243,16 @@ function getPersonMap(data) {
         }
 
         attrMap.forEach((value, key) => {
+            let newVal;
             switch (key) {
+                // converts straight into string ready to go directly in js date object like, new Date(x.get("Date of birth"))
                 case 'date of birth':
-                    value = value.split('T')[0];
-                    // if (value.startsWith('-')) {
-                    //     value = "-00" + value.substring(1);
-                    // }
+                    newVal = ndb(value.split('T')[0]);
                 case 'date of death':
-                    value = value.split('T')[0];
-                    // if (value.startsWith('-')) {
-                    //     value = "-00" + value.substring(1);
-                    // }
+                    newVal = ndb(value.split('T')[0]);
                 default:
             }
-            attributes.set(capitalizeFirstLetter(key), value);
+            attributes.set(capitalizeFirstLetter(key), newVal);
         });
 
         personMap.set(personId, attributes)
@@ -1274,22 +1270,14 @@ class GenogramTree extends React.Component {
             if (filters.fromYear !== '') {
                 visited = visited.filter((k) => {
                     let dob = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'date of birth')[0];
-                    let yearOnly;
-                    if (dob !== undefined) {
-                        yearOnly = parseInt(dob.value.split("-")[0], 10)
-                    }
-                    return dob === undefined || yearOnly >= parseInt(filters.fromYear, 10);
+                    return dob === undefined || new Date(dob) >= new Date(fromYear);
                 });
             }
             // filter on To birth year
             if (filters.toYear !== '') {
                 visited = visited.filter((k) => {
                     let dob = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'date of birth')[0];
-                    let yearOnly;
-                    if (dob !== undefined) {
-                        yearOnly = parseInt(dob.value.split("-")[0], 10)
-                    }
-                    return dob === undefined || yearOnly <= parseInt(filters.toYear, 10);
+                    return dob === undefined || new Date(dob) <= new Date(toYear);
                 });
             }
             // filter on Birth Place
@@ -2040,14 +2028,14 @@ class GenogramLayout extends go.LayeredDigraphLayout {
             let bd = personInfo.map(p => {return {dob: p.get("Date of birth"), dod: p.get("Date of death")}});
             console.log(bd);
             // calculate start date for the era
-            let dob = bd.filter(p => p.dob != undefined).map(p => new Date(ndb(p.dob))).sort((a,b) => a - b);
+            let dob = bd.filter(p => p.dob != undefined).map(p => new Date(p.dob)).sort((a,b) => a - b);
             console.log(dob)
             let startDate = dob.length < 1 ? "*" : dob[0].getFullYear();
 
             // calculate end date for the era
-            let dod = bd.filter(p => p.dod != undefined).map(p => new Date(ndb(p.dod))).sort((a,b) => a - b);
+            let dod = bd.filter(p => p.dod != undefined).map(p => new Date(p.dod)).sort((a,b) => a - b);
             // console.log(dod);
-            let unknownsAlive = bd.filter(p=> p.dod == undefined && (p.dob != undefined && (new Date(ndb(p.dob)) > new Date("1912")))).length > 0; // i.e. some of the unknowns are alive so we cannot end era
+            let unknownsAlive = bd.filter(p=> p.dod == undefined && (p.dob != undefined && (new Date(p.dob) > new Date("1912")))).length > 0; // i.e. some of the unknowns are alive so we cannot end era
             let endDate = unknownsAlive ? "*" : (dod.length < 1 ? "*" : dod[dod.length - 1].getFullYear());
 
             // console.log("start", startDate, "end", endDate);
