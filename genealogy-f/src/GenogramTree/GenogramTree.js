@@ -27,6 +27,7 @@ class GenogramTree extends React.Component {
     constructor(props) {
         super(props);
         this.treeCache = {};
+        this.extensionId = null;
         let rawJSON = null;
         this.source = props.router.location.state ? props.router.location.state.source : null;
         if (this.source) {
@@ -673,19 +674,30 @@ class GenogramTree extends React.Component {
     }
 
     fetchFromCacheOrBackend = async (id, depth) => {
-        if (this.state.relationJSON && this.extendInCache(id)) {
-            this.extendFromCache(id).then(
-                () => console.log('Cache was used for rendering')
-            );
-        } else {
+        if (this.state.relationJSON == null) {
             this.fetchRelations({id: id, depth: depth});
         }
-        const relationsPromise = this.requests.relationsCacheOrWiki({id: id, depth: 3});
-        this.updateTreeCache(relationsPromise).then(
-            () => console.log('Cache has been updated')
+        if (this.extendInCache(id)) {
+            this.extendFromCache(id);
+            return;
+        }
+        this.extensionId = id;
+        const cachePromise = this.requests.relationsCacheOrWiki({id: id, depth: 3});
+        this.updateTreeCache(cachePromise).then(
+            () => {
+                console.log('Cache has been updated');
+                this.tryExtendFromCache();
+            }
         );
     }
 
+    tryExtendFromCache = async () => {
+        const id = this.extensionId;
+        if (!id || !this.extendInCache(id)) {
+            return;
+        }
+        await this.extendFromCache(id);
+    }
 
     updateTreeCache = async (relationsPromise) => {
         const relations = await relationsPromise;
@@ -759,6 +771,7 @@ class GenogramTree extends React.Component {
         const prunedRelationsIds = new Set(Object.values(prunedRelations).flat().map(x => x.item1Id));
         console.assert(_.isEqual(itemIds, prunedRelationsIds));
         kinshipTree.relations = prunedRelations;
+        this.extensionId = null;
         this.setState({
             originalJSON: kinshipTree,
             isLoading: false,
@@ -766,6 +779,7 @@ class GenogramTree extends React.Component {
             newDataAvailable: true,
             newData: kinshipTree,
         });
+        console.log('Cache was used for rendering');
     }
 }
 
