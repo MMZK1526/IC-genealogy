@@ -670,9 +670,11 @@ class GenogramTree extends React.Component {
 
                     {
                         this.state.showStats &&
-                        <EscapeCloseable className='popup'>
-                            <StatsPanel data={this.state.relationJSON} onClick={this.handleStatsClick}/>
-                        </EscapeCloseable>
+                        <div className='popup'>
+                            <EscapeCloseable className='popup'>
+                                <StatsPanel data={this.state.relationJSON} onClick={this.handleStatsClick}/>
+                            </EscapeCloseable>
+                        </div>
                     }
 
             </>
