@@ -11,8 +11,8 @@ import { ButtonGroup } from 'react-bootstrap';
 import CloseButton from 'react-bootstrap/CloseButton';
 import {TbMapSearch} from 'react-icons/tb'
 import {capitalizeFirstLetter} from "../GenogramTree/utilFunctions";
-import DefaultImg from "../images/default.png"
-// import Grid from 'react-bootstrap/Grid'
+import DefaultImg from "../images/default.png";
+import Image from "react-bootstrap/Image";
 
 function PopupInfo(props) {
 	const onNew = (_) => {
@@ -56,7 +56,7 @@ function getAdditionalProperties(data) {
 		<Container>
 			<Row>
 				<Col md="auto">
-          <img src={DefaultImg} height='80px'/>
+          <Image src={DefaultImg} height='100px'/>
         </Col>
 				<Col>
 					<Row className='mb-1 justify-content-start'>

@@ -6,6 +6,7 @@ import { Navigate } from "react-router-dom";
 import Toolbar from "../Toolbar";
 import Card from "react-bootstrap/Card";
 import Container from 'react-bootstrap/Container';
+import DefaultImg from "../images/default.png";
 
 function withRouter(Component) {
   function ComponentWithRouterProp(props) {
@@ -45,6 +46,7 @@ class ResultPage extends React.Component {
                   Are you looking for...
               </h2>
               <ScrollMenu className="ml-5">
+                {/* <CardGroup> */}
                   {this.rawJSON && this.rawJSON.map((x) => {
                       return <PersonCard
                           itemId={x.id}
@@ -57,6 +59,7 @@ class ResultPage extends React.Component {
                           }}
                       />
                   })}
+                {/* </CardGroup> */}
               </ScrollMenu>
           </Container>
           </>
@@ -64,18 +67,29 @@ class ResultPage extends React.Component {
     }
 }
 
-function PersonCard({ onClick, selected, title, itemId, desc }) {
+function PersonCard({ onClick, title, desc }) {
   
-    return (
-      <Card style={{ width: '18rem', cursor: 'pointer' }} className="m-3 result" onClick={onClick}>
-        <Card.Body>
-          <Card.Title className="mb-2">{title}</Card.Title>
-          <Card.Text>
-            {desc}
-          </Card.Text>
-        </Card.Body>
-      </Card>
-    );
-  }
+  const portrait = new Image();
+  portrait.src = DefaultImg;
+
+  const height = portrait.height;
+  const width = portrait.width;
+
+  const displayHeight = 200
+
+  return (
+    <Card style={{ width: '16rem', cursor: 'pointer', height: '22rem' }} className="m-3 result" onClick={onClick}>
+
+      <Card.Body>
+        <Card.Title className="mb-2">{title}</Card.Title>
+        <Card.Text>
+          {desc}
+        </Card.Text>
+      </Card.Body>
+      
+      <Card.Img variant="botom" src={DefaultImg} height={displayHeight} width={width / height * displayHeight}/>
+    </Card>
+  );
+}
 
 export default withRouter(ResultPage);
