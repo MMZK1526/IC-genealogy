@@ -43,6 +43,7 @@ class GenogramTree extends React.Component {
             this.handleStatsClick = this.handleStatsClick.bind(this);
             this.handlePopupExtend = this.handlePopupExtend.bind(this);
             this.getPersonsRelations = this.getPersonsRelations.bind(this);
+            this.getPersonMap = this.getPersonMap.bind(this);
             this.setFocusPerson = this.setFocusPerson.bind(this);
             this.getFocusPerson = this.getFocusPerson.bind(this);
             this.requests = this.props.requests;
@@ -216,9 +217,6 @@ class GenogramTree extends React.Component {
 
     // Returns all persons nodes in tree
     getPersonsRelations() {
-        console.log(this.personMap);
-        console.log(this.relations);
-
         return this.relations.filter((person) => {
             return person.name !== 'unknown' && person.gender !== "LinkLabel";
         });
@@ -235,8 +233,8 @@ class GenogramTree extends React.Component {
         return this.state.personInfo;
     }
 
-    getPersonMapRes() {
-        return undefined;
+    getPersonMap() {
+        return this.personMap;
     }
 
     closePopUp() {
@@ -824,6 +822,7 @@ class GenogramTree extends React.Component {
                                     onPersonSelection={(_, v) => this.setFocusPerson(v.key)}
                                     getPersonsRelations={this.getPersonsRelations}
                                     getFocusPerson={this.getFocusPerson}
+                                    getPersonMap={this.getPersonMap}
                                 />
                             }
                         </Col>
