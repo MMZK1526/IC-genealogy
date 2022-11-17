@@ -76,6 +76,7 @@ function PersonCard({ onClick, title, desc, imageURL}) {
 
       <Card.Img
         variant='top'
+        className='rounded'
         src={imageURL === undefined ? DefaultImg : imageURL}
       />
       <Card.Body>
