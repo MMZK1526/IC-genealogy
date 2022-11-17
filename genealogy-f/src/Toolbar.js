@@ -2,7 +2,7 @@ import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button'
 import { BiHomeAlt } from 'react-icons/bi';
-import {downloadJsonFile} from './components/exportAsJson';
+import { downloadJsonFile } from './components/exportAsJson';
 import { AiFillFilter } from 'react-icons/ai';
 import { MdPersonSearch } from 'react-icons/md';
 
@@ -12,9 +12,9 @@ function Toolbar(props) {
       <ButtonToolbar>
         <ButtonGroup className="me-2">
           <Button href={'/'} variant="primary" as="a" onClick={() => {
-              props.genogramTree.treeCache = {};
+            props.genogramTree.treeCache = {};
           }}>
-            <BiHomeAlt size={30}/>
+            <BiHomeAlt size={30} />
           </Button>
         </ButtonGroup>
         {!props.onlyHome &&
@@ -23,7 +23,7 @@ function Toolbar(props) {
               <Button variant="info" id="svgButton">
                 Export as SVG
               </Button>
-              <Button variant="info" onClick={() => downloadJsonFile(props.genogramTree.state.originalJSON)}>
+              <Button variant="info" onClick={() => downloadJsonFile(props.genogramTree.state.relationJSON)}>
                 Export as JSON
               </Button>
             </ButtonGroup>
@@ -58,26 +58,26 @@ function Toolbar(props) {
       </ButtonToolbar>
       <ButtonToolbar className="me-4">
         {!props.onlyHome &&
-          <Button className="me-2" variant='warning' onClick={() => { 
+          <Button className="me-2" variant='warning' onClick={() => {
             props.genogramTree.setState({
               showLookup: !props.genogramTree.state.showLookup,
               showFilters: false,
             });
-            }}>
-              <MdPersonSearch size={30} className="align-middle"/>
-              
-              <span className="align-middle">Lookup</span>
+          }}>
+            <MdPersonSearch size={30} className="align-middle" />
+
+            <span className="align-middle">Lookup</span>
           </Button>
         }
         {!props.onlyHome &&
-          <Button className="me-0" variant='warning' onClick={() => { 
+          <Button className="me-0" variant='warning' onClick={() => {
             props.genogramTree.setState({
               showFilters: !props.genogramTree.state.showFilters,
               showLookup: false,
             });
-            }}>
-              <AiFillFilter size={30} className="align-middle"/>
-              <span className="align-middle">Filter</span>
+          }}>
+            <AiFillFilter size={30} className="align-middle" />
+            <span className="align-middle">Filter</span>
           </Button>
         }
       </ButtonToolbar>
