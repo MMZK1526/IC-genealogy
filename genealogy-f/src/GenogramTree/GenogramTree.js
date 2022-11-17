@@ -16,8 +16,9 @@ import { FilterModel } from '../filterModel';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import { DiagramWrapper } from "./DiagramWrapper";
-import { getPersonMap, transform, withRouter } from "./utilFunctions";
+import { getPersonMap, transform, withRouter, ndb} from "./utilFunctions";
 import { TreeNameLookup } from '../components/TreeNameLookup.js';
+import { AiOutlineConsoleSql } from 'react-icons/ai';
 
 // optional parameter passed to <ReactDiagram onModelChange = {handleModelChange}>
 // called whenever model is changed
@@ -275,10 +276,6 @@ class GenogramTree extends React.Component {
         }
     }
 
-    ndb(d) {
-        return d[0] == "-" ? "-00" + d.substring(1) : d;
-    }
-
     calculateFilter() {
         // Get filter options
         let famMap = new Set();
@@ -382,8 +379,9 @@ class GenogramTree extends React.Component {
                         delete visited[k];
                         continue;
                     }
-                    let yearOnly = parseInt(dob.value.split("-")[0], 10);
-                    if (!yearOnly || yearOnly < parseInt(filters.fromYear, 10)) {
+                    dob = ndb(dob.value.split('T')[0]);
+                    let fromYear = filters.fromYear[0] == "-" ? "-" + (filters.fromYear.substring(1)).padStart(6, '0') : filters.fromYear.padStart(4, '0');
+                    if (new Date(dob).getFullYear() < new Date(fromYear).getFullYear()) {
                         delete visited[k];
                         continue;
                     }
@@ -397,13 +395,17 @@ class GenogramTree extends React.Component {
                         delete visited[k];
                         continue;
                     }
-                    let yearOnly = parseInt(dob.value.split("-")[0], 10);
-                    if (!yearOnly || yearOnly > parseInt(filters.toYear, 10)) {
+                    dob = ndb(dob.value.split('T')[0]);
+                    let toYear = filters.toYear[0] == "-" ? "-" + (filters.toYear.substring(1)).padStart(6, '0') : filters.toYear.padStart(4, '0');
+                    console.log(dob, toYear);
+                    if (new Date(dob).getFullYear() > new Date(toYear).getFullYear()) {
                         delete visited[k];
                         continue;
                     }
                 }
             }
+            // filter on To birth year
+
             // filter on Birth Place
             if (filters.birthPlaces.size !== 0) {
                 for (const [k, _] of Object.entries(visited)) {

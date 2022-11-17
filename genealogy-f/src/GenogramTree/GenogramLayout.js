@@ -369,8 +369,8 @@ export class GenogramLayout extends go.LayeredDigraphLayout {
         // sort lowest to highest based on y co-ordinates
         let startXs = [...new Set(idPos.map(p => p.x.valueOf()))].sort((a,b) => a - b);
         let startYs = [...new Set(idPos.map(p => p.y.valueOf()))].sort((a,b) => a - b);
-        console.log(startXs);
-        console.log(startYs);
+        // console.log(startXs);
+        // console.log(startYs);
         let startX = startXs[0] - 200; // get lowest x co node
         let endX = startXs[startXs.length - 1] + 100;
         for (let i = 0; i < startYs.length; i++) {

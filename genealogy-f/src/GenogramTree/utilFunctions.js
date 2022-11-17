@@ -40,6 +40,10 @@ export function applyDateOfBirthFilter(id, dateFrom, dateTo, idPerson) {
     return d1 <= d3 && d3 <= d2;
 }
 
+export function ndb(d) {
+    return d[0] == "-" ? "-00" + d.substring(1) : d;
+}
+
 export function applyFamilyFilter(id, familyName, idPerson) {
     if (familyName == '') {
         return true;
@@ -191,14 +195,15 @@ export function getPersonMap(data) {
         }
 
         attrMap.forEach((value, key) => {
+            let newVal;
             switch (key) {
                 case 'date of birth':
-                    value = value.replace(/^0+/, '').split('T')[0];
+                    newVal = ndb(value.split('T')[0]);
                 case 'date of death':
-                    value = value.replace(/^0+/, '').split('T')[0];
+                    newVal = ndb(value.split('T')[0]);
                 default:
             }
-            attributes.set(capitalizeFirstLetter(key), value);
+            attributes.set(capitalizeFirstLetter(key), newVal);
         });
 
         personMap.set(personId, attributes)
