@@ -458,26 +458,40 @@ class GenogramTree extends React.Component {
     }
 
     calculateFilter() {
+        let textFilterIDs = ['SW-P2', 'SW-P3', 'WD-P53'];
+        for (let fid of textFilterIDs) {
+            if (this.state.filters.textFilters[fid] === undefined) {
+                this.state.filters.textFilters[fid] = {};
+                this.state.filters.textFilters[fid].all = new Set();
+                this.state.filters.textFilters[fid].choice = new Set();
+            }
+        }
+
         // Get filter options
-        let famMap = new Set();
-        let pobMap = new Set();
-        let podMap = new Set();
+        // let famMap = new Set();
+        // let pobMap = new Set();
+        // let podMap = new Set();
         // set up id map for getting attributes later
         for (let x of Object.keys(this.state.originalJSON.items)) {
             let people = this.state.originalJSON.items[x];
-            for (let f of people.additionalProperties.filter((p) => p.name == 'family').map((p) => p.value)) {
-                famMap.add(f);
+            for (let fid of textFilterIDs) {
+                for (let f of people.additionalProperties.filter((p) => p.propertyId == fid).map((p) => p.value)) {
+                    this.state.filters.textFilters[fid].all.add(f);
+                }
             }
-            for (let f of people.additionalProperties.filter((p) => p.propertyId == 'SW-P2').map((p) => p.value)) {
-                pobMap.add(f);
-            }
-            for (let f of people.additionalProperties.filter((p) => p.propertyId == 'SW-P3').map((p) => p.value)) {
-                podMap.add(f);
-            }
+            // for (let f of people.additionalProperties.filter((p) => p.name == 'family').map((p) => p.value)) {
+            //     famMap.add(f);
+            // }
+            // for (let f of people.additionalProperties.filter((p) => p.propertyId == 'SW-P2').map((p) => p.value)) {
+            //     pobMap.add(f);
+            // }
+            // for (let f of people.additionalProperties.filter((p) => p.propertyId == 'SW-P3').map((p) => p.value)) {
+            //     podMap.add(f);
+            // }
         }
-        this.state.filters.allFamilies = famMap;
-        this.state.filters.allBirthPlaces = pobMap;
-        this.state.filters.allDeathPlaces = podMap;
+        // this.state.filters.allFamilies = famMap;
+        // this.state.filters.allBirthPlaces = pobMap;
+        // this.state.filters.allDeathPlaces = podMap;
     }
 
     applyFilterAndDrawTree() {
@@ -485,10 +499,14 @@ class GenogramTree extends React.Component {
 
         // Use filter
         const filters = this.state.filters;
-        console.log(filters)
         var filteredJSON = { targets: this.state.originalJSON.targets };
-        if (filters.bloodline || filters.families.size !== 0 || filters.fromYear !== '' || filters.toYear !== '' ||
-            filters.birthPlace !== '' || filters.deathPlace !== '' || filters.personalName !== '') {
+        var useTextFilter = false;
+        for (let key of Object.keys(filters.textFilters)) {
+            if (filters.textFilters[key].choice.size > 0) {
+                useTextFilter = true;
+            }
+        }
+        if (filters.bloodline || filters.fromYear !== '' || filters.toYear !== '' || useTextFilter) {
             // Map from item ID to opacity
             let visited = {};
             visited[this.state.root] = '0.9';
@@ -527,31 +545,32 @@ class GenogramTree extends React.Component {
                 Object.keys(this.state.originalJSON.items).forEach((id) => visited[id] = '0.9');
             }
 
-            // filter on personal name
-            // if (filters.personalName !== '') {
+            // filter on text-based filters
+            for (let key of Object.keys(filters.textFilters)) {
+                if (filters.textFilters[key].choice.size > 0) {
+                    for (const [k, _] of Object.entries(visited)) {
+                        const criteria = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.propertyId == key)
+                            .map((p) => p.value).some((f) => filters.textFilters[key].choice.has(f));
+                        if (!criteria) {
+                            delete visited[k];
+                            continue;
+                        }
+                    }
+                }
+            }
+            console.log(Array.from(visited));
+
+            // // filter on Family
+            // if (filters.families.size !== 0) {
             //     for (const [k, _] of Object.entries(visited)) {
-            //         const name = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'personal name')[0];
-            //         if (name === undefined) {
-            //             delete visited[k];
-            //             continue;
-            //         }
-            //         if (!String(name.value).toLowerCase().includes(filters.personalName.toLowerCase())) {
+            //         const criteria = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'family')
+            //             .map((p) => p.value).some((f) => filters.families.has(f));
+            //         if (!criteria) {
             //             delete visited[k];
             //             continue;
             //         }
             //     }
             // }
-            // filter on Family
-            if (filters.families.size !== 0) {
-                for (const [k, _] of Object.entries(visited)) {
-                    const criteria = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'family')
-                        .map((p) => p.value).some((f) => filters.families.has(f));
-                    if (!criteria) {
-                        delete visited[k];
-                        continue;
-                    }
-                }
-            }
             // filter on From birth year
             if (filters.fromYear !== '') {
                 for (const [k, _] of Object.entries(visited)) {
@@ -578,37 +597,34 @@ class GenogramTree extends React.Component {
                     }
                     dob = ndb(dob.value.split('T')[0]);
                     let toYear = filters.toYear[0] == "-" ? "-" + (filters.toYear.substring(1)).padStart(6, '0') : filters.toYear.padStart(4, '0');
-                    console.log(dob, toYear);
                     if (new Date(dob).getFullYear() > new Date(toYear).getFullYear()) {
                         delete visited[k];
                         continue;
                     }
                 }
             }
-            // filter on To birth year
-
-            // filter on Birth Place
-            if (filters.birthPlaces.size !== 0) {
-                for (const [k, _] of Object.entries(visited)) {
-                    const criteria = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.propertyId == 'SW-P2')
-                        .map((p) => p.value).some((f) => filters.birthPlaces.has(f));
-                    if (!criteria) {
-                        delete visited[k];
-                        continue;
-                    }
-                }
-            }
-            // filter on To Death Place
-            if (filters.deathPlaces.size !== 0) {
-                for (const [k, _] of Object.entries(visited)) {
-                    const criteria = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.propertyId == 'SW-P3')
-                        .map((p) => p.value).some((f) => filters.deathPlaces.has(f));
-                    if (!criteria) {
-                        delete visited[k];
-                        continue;
-                    }
-                }
-            }
+            // // filter on Birth Place
+            // if (filters.birthPlaces.size !== 0) {
+            //     for (const [k, _] of Object.entries(visited)) {
+            //         const criteria = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.propertyId == 'SW-P2')
+            //             .map((p) => p.value).some((f) => filters.birthPlaces.has(f));
+            //         if (!criteria) {
+            //             delete visited[k];
+            //             continue;
+            //         }
+            //     }
+            // }
+            // // filter on To Death Place
+            // if (filters.deathPlaces.size !== 0) {
+            //     for (const [k, _] of Object.entries(visited)) {
+            //         const criteria = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.propertyId == 'SW-P3')
+            //             .map((p) => p.value).some((f) => filters.deathPlaces.has(f));
+            //         if (!criteria) {
+            //             delete visited[k];
+            //             continue;
+            //         }
+            //     }
+            // }
 
             // Add outliers
             let outlierVisited = (new go.Set()).addAll(Object.keys(visited));
@@ -631,7 +647,6 @@ class GenogramTree extends React.Component {
                 });
                 frontier.removeAll(remover);
                 outlierVisited = outlierParents.retainAll(outlierSpouses);
-                // console.log(outlierVisited.toArray().map((i) => this.state.originalJSON.items[i].name));
                 frontier.addAll(outlierVisited);
                 outlierVisited.each((ov) => {
                     if (!visited[ov]) {
@@ -639,6 +654,9 @@ class GenogramTree extends React.Component {
                     }
                 })
             }
+
+            // Filter out hidden people
+            this.state.filters.hiddenPeople.forEach((k) => delete visited[k]);
 
             var filteredJSON = { targets: this.state.originalJSON.targets, items: {}, relations: {} };
             Object.keys(visited).forEach((v) => {
@@ -669,7 +687,7 @@ class GenogramTree extends React.Component {
         return this.integrateKinshipIntoRelationJSON(kinshipJSON, relationJSON);
     }
 
-// Merge two relational JSONs, modifying the old one.
+    // Merge two relational JSONs, modifying the old one.
     mergeRelations(oldRel, newRel) {
         oldRel.items = { ...oldRel.items, ...newRel.items };
 

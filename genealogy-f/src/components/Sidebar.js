@@ -11,7 +11,7 @@ export function Sidebar(props) {
             'border': '1px solid',
         },
     };
-
+    console.log(Array.from(props.filters.textFilters['WD-P53'].all));
     return (
         <div className='sidebar pe-auto'>
             <Form className="w-100 mb-3 overflow-auto" style={{ maxHeight: "44vh" }}>
@@ -27,16 +27,16 @@ export function Sidebar(props) {
                 <Form.Label className="form-label">Family: </Form.Label>
                 <Multiselect
                     id='family-select'
-                    options={Array.from(props.filters.allFamilies).sort().map((v) => ({name: v, id: v}))} // Options to display in the dropdown
-                    selectedValues={Array.from(props.filters.families).map((v) => ({name: v, id: v}))} // Preselected value to persist in dropdown
-                    onSelect={(_, i) => props.filters.families.add(i.name)} // Function will trigger on select event
-                    onRemove={(_, i) => props.filters.families.delete(i.name)} // Function will trigger on remove event
+                    options={Array.from(props.filters.textFilters['WD-P53'].all).sort().map((v) => ({ name: v, id: v }))} // Options to display in the dropdown
+                    selectedValues={Array.from(props.filters.textFilters['WD-P53'].choice).map((v) => ({ name: v, id: v }))} // Preselected value to persist in dropdown
+                    onSelect={(_, i) => props.filters.textFilters['WD-P53'].choice.add(i.name)} // Function will trigger on select event
+                    onRemove={(_, i) => props.filters.textFilters['WD-P53'].choice.delete(i.name)} // Function will trigger on remove event
                     displayValue='name' // Property name to display in the dropdown options
                     style={style}
                 />
 
                 <Form.Group className='form-group' controlId='bloodline-checkbox'>
-                    <Form.Check className="mb-1" title='Bloodline' label='Bloodline only' type='checkbox' defaultChecked={props.filters.bloodline} 
+                    <Form.Check className="mb-1" title='Bloodline' label='Bloodline only' type='checkbox' defaultChecked={props.filters.bloodline}
                         onChange={(e) => {
                             props.filters.bloodline = e.target.checked;
                         }}
@@ -46,10 +46,10 @@ export function Sidebar(props) {
                 <Form.Label className="form-label">Place Of Birth: </Form.Label>
                 <Multiselect
                     id='pob-select'
-                    options={Array.from(props.filters.allBirthPlaces).sort().map((v) => ({name: v, id: v}))} // Options to display in the dropdown
-                    selectedValues={Array.from(props.filters.birthPlaces).map((v) => ({name: v, id: v}))} // Preselected value to persist in dropdown
-                    onSelect={(_, i) => props.filters.birthPlaces.add(i.name)} // Function will trigger on select event
-                    onRemove={(_, i) => props.filters.birthPlaces.delete(i.name)} // Function will trigger on remove event
+                    options={Array.from(props.filters.textFilters['SW-P2'].all).sort().map((v) => ({ name: v, id: v }))} // Options to display in the dropdown
+                    selectedValues={Array.from(props.filters.textFilters['SW-P2'].choice).map((v) => ({ name: v, id: v }))} // Preselected value to persist in dropdown
+                    onSelect={(_, i) => props.filters.textFilters['SW-P2'].choice.add(i.name)} // Function will trigger on select event
+                    onRemove={(_, i) => props.filters.textFilters['SW-P2'].choice.delete(i.name)} // Function will trigger on remove event
                     displayValue='name' // Property name to display in the dropdown options
                     style={style}
                 />
@@ -57,29 +57,29 @@ export function Sidebar(props) {
                 <Form.Label className="form-label">Place Of Death: </Form.Label>
                 <Multiselect
                     id='pod-select'
-                    options={Array.from(props.filters.allDeathPlaces).sort().map((v) => ({name: v, id: v}))} // Options to display in the dropdown
-                    selectedValues={Array.from(props.filters.deathPlaces).map((v) => ({name: v, id: v}))} // Preselected value to persist in dropdown
-                    onSelect={(_, i) => props.filters.deathPlaces.add(i.name)} // Function will trigger on select event
-                    onRemove={(_, i) => props.filters.deathPlaces.delete(i.name)} // Function will trigger on remove event
+                    options={Array.from(props.filters.textFilters['SW-P3'].all).sort().map((v) => ({ name: v, id: v }))} // Options to display in the dropdown
+                    selectedValues={Array.from(props.filters.textFilters['SW-P3'].choice).map((v) => ({ name: v, id: v }))} // Preselected value to persist in dropdown
+                    onSelect={(_, i) => props.filters.textFilters['SW-P3'].choice.add(i.name)} // Function will trigger on select event
+                    onRemove={(_, i) => props.filters.textFilters['SW-P3'].choice.delete(i.name)} // Function will trigger on remove event
                     displayValue='name' // Property name to display in the dropdown options
                     style={style}
                 />
 
                 <Form.Group className="mb-1" controlId='fromYear-control'>
                     <Form.Label>From</Form.Label>
-                    <Form.Control type='text' placeholder="Year of Birth, e.g. 1900" 
-                    onChange={(e) => {
-                        props.filters.fromYear = e.target.value;
-                    }}
+                    <Form.Control type='text' placeholder="Year of Birth, e.g. 1900"
+                        onChange={(e) => {
+                            props.filters.fromYear = e.target.value;
+                        }}
                     />
                 </Form.Group>
 
-                <Form.Group className="mb-1"  controlId='toYear-control'>
+                <Form.Group className="mb-1" controlId='toYear-control'>
                     <Form.Label>To</Form.Label>
-                    <Form.Control type='text' placeholder="Year of Birth, e.g. 1990" 
-                    onChange={(e) => {
-                        props.filters.toYear = e.target.value;
-                    }}
+                    <Form.Control type='text' placeholder="Year of Birth, e.g. 1990"
+                        onChange={(e) => {
+                            props.filters.toYear = e.target.value;
+                        }}
                     />
                 </Form.Group>
 
