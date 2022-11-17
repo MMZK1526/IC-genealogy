@@ -64,37 +64,32 @@ function getAdditionalProperties(data) {
 		<Container>
 			<Row>
 				<Col md="auto" className='mb-4'>
-					<Image src={data.get("image")} height='100px' />
+					<Image className="rounded" src={data.get("image")} height='140px' />
 				</Col>
 				<Col>
 					<Row className='mb-1 justify-content-start'>
-						<Col key={"name"} md="auto">
-							<h2>{data.get("name")}</h2>
-						</Col>
-
-						<Col key={"Links"} md="auto">
-							<ButtonGroup aria-label="LinksGroup">
-								<Button variant="light" className="search" onClick={() => openSearch(data.get("name"))}>
-									<FcGoogle size={30} />
-								</Button>
-
-								{
-									data.has("wikipedia link") &&
-									<Button variant="light" className="wikilink" onClick={() => openInWikipedia(data.get("wikipedia link"))}>
-										<FaWikipediaW size={30} />
-									</Button>
-								}
-							</ButtonGroup>
-						</Col>
+						<h2>{data.get("name")}</h2>
 					</Row>
-					<Row>
-						<Col key="Description">
-							{data.has("description") &&
-								<p className="fst-italic">
-									{capitalizeFirstLetter(data.get("description"))}
-								</p>}
-						</Col>
+					<Row className="mb-1">
+						{
+							data.has("description") &&
+							<p className="fst-italic">
+								{capitalizeFirstLetter(data.get("description"))}
+							</p>
+						}
 					</Row>
+					<ButtonGroup aria-label="LinksGroup">
+						<Button variant="light" className="search" onClick={() => openSearch(data.get("name"))}>
+							<FcGoogle size={30} />
+						</Button>
+
+						{
+							data.has("wikipedia link") &&
+							<Button variant="light" className="wikilink" onClick={() => openInWikipedia(data.get("wikipedia link"))}>
+								<FaWikipediaW size={30} />
+							</Button>
+						}
+					</ButtonGroup>
 				</Col>
 			</Row>
 			<Row>
