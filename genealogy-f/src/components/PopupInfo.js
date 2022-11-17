@@ -71,12 +71,9 @@ function getAdditionalProperties(data) {
 						<h2>{data.get("name")}</h2>
 					</Row>
 					<Row className="mb-1">
-						{
-							data.has("description") &&
-							<p className="fst-italic">
-								{capitalizeFirstLetter(data.get("description"))}
-							</p>
-						}
+						<p className="fst-italic">
+							{data.has("description") ? capitalizeFirstLetter(data.get("description")) : '(No description)'}
+						</p>
 					</Row>
 					<ButtonGroup aria-label="LinksGroup">
 						{
