@@ -53,15 +53,15 @@ class GenogramTree extends React.Component {
                 personInfo: null,
                 isPopped: false,
                 showStats: false,
-                from: '',
-                to: '',
-                family: '',
                 filters: new FilterModel(true),
                 showBtns: true,
                 recentre: false,
+                recommit: false,
                 newDataAvailable: false,
                 newData: null,
                 zoomToDefault: false,
+                showLookup: false,
+                showFilters: false
             };
             this.componentRef = React.createRef();
         }
@@ -568,6 +568,11 @@ class GenogramTree extends React.Component {
             recentre = true;
             this.state.recentre = false;
         }
+        var recommit = false;
+        if (this.state.recommit) {
+            recommit = true;
+            this.state.recommit = false;
+        }
         this.personMap = getPersonMap(Object.values(this.state.originalJSON.items));
 
         return (
@@ -647,7 +652,16 @@ class GenogramTree extends React.Component {
                                     this.state.root = this.state.personInfo;
                                     this.fetchKinships(this.state.root, this.state.originalJSON);
                                 }}
-                                // onExtend={() => null}
+                                isHidden={this.state.filters.hiddenPeople.has(this.state.personInfo)}
+                                onToggle={() => {
+                                    let hidden = this.state.filters.hiddenPeople;
+                                    if (hidden.has(this.state.personInfo)) {
+                                        hidden.delete(this.state.personInfo);
+                                    } else {
+                                        hidden.add(this.state.personInfo);
+                                    }
+                                    this.setState({ recommit: true });
+                                }}
                                 onExtend={this.handlePopupExtend}
                                 allowExtend={this.props.allowExtend}
                             >
@@ -659,12 +673,12 @@ class GenogramTree extends React.Component {
                     <DiagramWrapper
                         updateDiagram={updateDiagram}
                         recentre={recentre}
+                        recommit={recommit}
                         editCount={this.props.editCount}
                         nodeDataArray={this.relations}
                         onModelChange={this.handleModelChange}
                         onDiagramEvent={this.handleDiagramEvent}
-                        yearFrom={this.props.from}
-                        yearTo={this.props.to}
+                        hiddenPeople={this.state.filters.hiddenPeople}
                         ref={this.componentRef}
                         root={this.state.root}
                         getFocusPerson={this.getFocusPerson}
