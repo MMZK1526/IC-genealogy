@@ -1,6 +1,6 @@
 import React from 'react';
-import './StatsPanel.css';
-import {AiOutlineClose} from "react-icons/ai"
+import './stylesheets/StatsPanel.css';
+import CloseButton from 'react-bootstrap/CloseButton';
 
 export class StatsPanel extends React.Component {
     constructor(props) {
@@ -13,9 +13,7 @@ export class StatsPanel extends React.Component {
     render() {
         return (
             <div className='stats-panel'>
-                <button className='close-button' onClick={this.props.onClick}>
-                    <AiOutlineClose size={30} color='red'/>
-                </button>
+                <CloseButton className='close-button' onClick={this.props.onClick}/>
                 <div id='stat'>{this.numberOfFamilyMembers()}</div>
                 {/*{this.avgChildrenPerPerson()}*/}
                 <div id='stat'>{this.topCountriesOfBirth()}</div>

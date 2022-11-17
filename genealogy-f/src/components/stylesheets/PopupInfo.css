@@ -2,7 +2,7 @@
     position: relative;
     padding: 30px 30px 20px 30px;
     max-width: 70vw;
-    background-color: rgba(255, 255, 255, 0.99);
+    background-color: white;
     block-size: fit-content;
     border-radius: 5px;
 }

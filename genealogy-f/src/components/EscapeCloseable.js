@@ -1,6 +1,6 @@
 import React from 'react';
 import HotKeys from 'react-hot-keys';
-import './EscapeCloseable.css';
+import './stylesheets/EscapeCloseable.css';
 
 export default class EscapeCloseable extends React.Component {
     constructor(props) {

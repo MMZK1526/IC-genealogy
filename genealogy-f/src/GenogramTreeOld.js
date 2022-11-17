@@ -7,11 +7,9 @@ import './App.css';
 import PopupInfo from './components/popup-info/PopupInfo.js'
 import './GenogramTree.css';
 import {StatsPanel} from './components/stats-panel/StatsPanel';
-import {Link, useLocation, useNavigate, useParams} from 'react-router-dom';
+import {useLocation, useNavigate, useParams} from 'react-router-dom';
 import EscapeCloseable from './components/escape-closeable/EscapeCloseable';
 import './components/shared.css';
-import _ from 'lodash';
-import Button from 'react-bootstrap/Button';
 import {setStatePromise} from './components/utils';
 import ModalSpinner from './ModalSpinner';
 import Toolbar from './Toolbar';
@@ -99,16 +97,6 @@ export function applyFamilyFilter(id, familyName, idPerson) {
 // global map from id of person to their attributes, used to change opacity for filtering in the goJs diagram.
 var relMap = new Map();
 
-// converts negative date, before pasing to date object
-function ndb(d) {
-    return d[0] == "-" ? "-00" + d.substring(1) : d;
-}
-
-// converts -700 -> 700BC otherwise leaves the same
-function bcDate(d) {
-    return d < 0 ? (d * -1) + "BC" : d
-}
-
 function transform(data) {
     relMap = new Map();
 
@@ -132,6 +120,7 @@ function transform(data) {
         singlePerson.set('name', person.name);
         singlePerson.set('spouse', []);
 
+        singlePerson.set('opacity', person.opacity);
         relMap.set(person.id, Object.fromEntries(singlePerson));
     });
 
@@ -164,11 +153,6 @@ function transform(data) {
     }
 
     var newOutput = [];
-
-    for (let key of relMap.keys()) {
-        let r = relMap.get(key);
-        r.opacity = '0.9';
-    }
 
     // add unknown nodes for unknown parent
     for (let key of relMap.keys()) {
@@ -490,9 +474,9 @@ export class DiagramWrapper extends React.Component {
         }
 
         function mouseLeave(e, obj) {
-            // e.diagram.commit(function (d) {
-            //     d.clearHighlighteds();
-            // }, "no highlighteds");
+            e.diagram.commit(function (d) {
+                d.clearHighlighteds();
+            }, "no highlighteds");
         }
 
         // used for templating the timeline, as it needs to be generated based on the nodes
@@ -554,9 +538,6 @@ export class DiagramWrapper extends React.Component {
             ));
         // remove highlighting form all nodes, when user clicks on background
         this.diagram.click = function (e) {
-          e.diagram.commit(function (d) {
-            d.clearHighlighteds();
-        }, "no highlighteds");
             // console.log("clearing stuff")
 
         };
@@ -1082,10 +1063,6 @@ class GenogramTree extends React.Component {
                 visitedItems: this.state.originalJSON ? Object.keys(this.state.originalJSON.items) : []
             });
 
-        if (Object.keys(relationJSON.relations).length === 0) {
-            return;
-        }
-
         if (this.state.originalJSON) {
             let oldItems = Object.keys(this.state.originalJSON.items);
             let newItems = Object.keys(relationJSON.items);
@@ -1190,7 +1167,7 @@ class GenogramTree extends React.Component {
         } else {
             this.mergeRelations(this.state.originalJSON, relationJSON);
         }
-        this.fetchKinships(this.state.root, this.state.originalJSON);
+        this.injectKinship(this.state.root, this.state.originalJSON);
         this.applyFilterAndDrawTree();
         if (id == null || id === undefined) {
             this.state.isLoading = false;
@@ -1223,12 +1200,12 @@ class GenogramTree extends React.Component {
 
         // Use filter
         const filters = this.state.filters;
-        // console.log(filters)
         var filteredJSON = {targets: this.state.originalJSON.targets};
         if (filters.bloodline || filters.families.size !== 0 || filters.fromYear !== '' || filters.toYear !== '' ||
             filters.birthPlace !== '' || filters.deathPlace !== '' || filters.personalName !== '') {
-            let visited = new go.Set();
-            visited.add(this.state.root);
+            // Map from item ID to opacity
+            let visited = {};
+            visited[this.state.root] = '0.9';
             if (filters.bloodline) {
                 console.log('血胤');
                 var frontier = [this.state.root];
@@ -1239,10 +1216,10 @@ class GenogramTree extends React.Component {
                     if (cur) {
                         if (this.state.originalJSON.relations[cur]) {
                             var newElems = this.state.originalJSON.relations[cur]
-                                .filter((r) => r.type !== 'spouse' && !visited.contains(r.item1Id));
+                                .filter((r) => r.type !== 'spouse' && visited[r.item1Id] !== '0.9');
                             var newFrontier = newElems.filter((r) => r.type !== 'child').map((r) => r.item1Id);
                             var newDescendants = newElems.filter((r) => r.type === 'child').map((r) => r.item1Id);
-                            visited.addAll(newElems.map((r) => r.item1Id));
+                            newElems.map((r) => r.item1Id).forEach((id) => visited[id] = '0.9');
                             frontier.push(...newFrontier);
                             descendants.push(...newDescendants);
                         }
@@ -1250,29 +1227,44 @@ class GenogramTree extends React.Component {
                         cur = descendants.shift();
                         if (this.state.originalJSON.relations[cur]) {
                             var newElems = this.state.originalJSON.relations[cur]
-                                .filter((r) => r.type !== 'spouse' && !visited.contains(r.item1Id));
+                                .filter((r) => r.type !== 'spouse' && visited[r.item1Id] !== '0.9');
                             var newDescendants = newElems.filter((r) => r.type === 'child').map((r) => r.item1Id);
-                            visited.addAll(newElems.map((r) => r.item1Id));
+                            newDescendants.forEach((id) => visited[id] = '0.9');
+                            newElems.filter((r) => !visited[r.item1Id]).map((r) => r.item1Id).forEach((id) => {
+                                visited[id] = '0.2';
+                            });
                             descendants.push(...newDescendants);
                         }
                     }
                 }
             } else {
-                visited.addAll(Object.keys(this.state.originalJSON.items));
+                Object.keys(this.state.originalJSON.items).forEach((id) => visited[id] = '0.9');
             }
+
             // filter on personal name
             if (filters.personalName !== '') {
-                visited = visited.filter((k) => {
-                    let name = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'personal name')[0];
-                    if (name === undefined) return false;
-                    return String(name.value).toLowerCase().includes(filters.personalName.toLowerCase());
-                });
+                for (const [k, _] of Object.entries(visited)) {
+                    const name = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'personal name')[0];
+                    if (name === undefined) {
+                        delete visited[k];
+                        continue;
+                    }
+                    if (!String(name.value).toLowerCase().includes(filters.personalName.toLowerCase())) {
+                        delete visited[k];
+
+                    }
+                }
             }
             // filter on Family
             if (filters.families.size !== 0) {
-                visited = visited.filter((v) =>
-                    this.state.originalJSON.items[v].additionalProperties.filter((p) => p.name == 'family')
-                        .map((p) => p.value).some((f) => filters.families.has(f)));
+                for (const [k, _] of Object.entries(visited)) {
+                    const criteria = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'family')
+                        .map((p) => p.value).some((f) => filters.families.has(f));
+                    if (!criteria) {
+                        delete visited[k];
+
+                    }
+                }
             }
             // filter on From birth year
             if (filters.fromYear !== '') {
@@ -1296,24 +1288,36 @@ class GenogramTree extends React.Component {
             }
             // filter on Birth Place
             if (filters.birthPlace !== '') {
-                visited = visited.filter((k) => {
-                    let birthPlace = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.propertyId == 'SW-P2')[0];
-                    if (birthPlace === undefined) return false;
-                    return String(birthPlace.value).toLowerCase().includes(filters.birthPlace.toLowerCase());
-                });
+                for (const [k, _] of Object.entries(visited)) {
+                    const birthPlace = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.propertyId == 'SW-P2')[0];
+                    if (birthPlace === undefined) {
+                        delete visited[k];
+                        continue;
+                    }
+                    if (!String(birthPlace.value).toLowerCase().includes(filters.birthPlace.toLowerCase())) {
+                        delete visited[k];
+
+                    }
+                }
             }
             // filter on To Death Place
             if (filters.deathPlace !== '') {
-                visited = visited.filter((k) => {
-                    let deathPlace = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.propertyId == 'SW-P3')[0];
-                    if (deathPlace === undefined) return false;
-                    return String(deathPlace.valaue).toLowerCase().includes(filters.deathPlace.toLowerCase());
-                });
+                for (const [k, _] of Object.entries(visited)) {
+                    const deathPlace = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.propertyId == 'SW-P3')[0];
+                    if (deathPlace === undefined) {
+                        delete visited[k];
+                        continue;
+                    }
+                    if (!String(deathPlace.value).toLowerCase().includes(filters.deathPlace.toLowerCase())) {
+                        delete visited[k];
+
+                    }
+                }
             }
 
             // Add outliers
-            let outlierVisited = (new go.Set()).addAll(visited);
-            var frontier = (new go.Set()).addAll(visited);
+            let outlierVisited = (new go.Set()).addAll(Object.keys(visited));
+            var frontier = (new go.Set()).addAll(Object.keys(visited));
             while (outlierVisited.size > 0 && frontier.size > 0) {
                 let outlierParents = new go.Set();
                 let outlierSpouses = new go.Set();
@@ -1321,7 +1325,7 @@ class GenogramTree extends React.Component {
                 frontier.each((v) => {
                     if (this.state.originalJSON.relations[v]) {
                         var newElems = this.state.originalJSON.relations[v]
-                            .filter((r) => (r.type !== 'child') && !visited.contains(r.item1Id));
+                            .filter((r) => (r.type !== 'child') && !visited[r.item1Id]);
                         if (newElems.length === 0) {
                             remover.add(v);
                         } else {
@@ -1334,28 +1338,25 @@ class GenogramTree extends React.Component {
                 outlierVisited = outlierParents.retainAll(outlierSpouses);
                 // console.log(outlierVisited.toArray().map((i) => this.state.originalJSON.items[i].name));
                 frontier.addAll(outlierVisited);
-                visited.addAll(outlierVisited);
+                outlierVisited.each((ov) => {
+                    if (!visited[ov]) {
+                        visited[ov] = '0.2';
+                    }
+                })
             }
 
             var filteredJSON = {targets: this.state.originalJSON.targets, items: {}, relations: {}};
-            visited.each((v) => {
-                console.assert(Object.hasOwn(this.state.originalJSON.items, v));
+            Object.keys(visited).forEach((v) => {
                 filteredJSON.items[v] = this.state.originalJSON.items[v];
-                if (Object.hasOwn(this.state.originalJSON.relations, v)) {
-                    filteredJSON.relations[v] = this.state.originalJSON.relations[v].filter((r) => visited.contains(r.item1Id));
+                filteredJSON.items[v].opacity = visited[v];
+                if (this.state.originalJSON.relations[v]) {
+                    filteredJSON.relations[v] = this.state.originalJSON.relations[v].filter((r) => visited[r.item1Id]);
                 }
             });
             this.state.relationJSON = filteredJSON;
         } else {
             this.state.relationJSON = JSON.parse(JSON.stringify(this.state.originalJSON));
         }
-    }
-
-    async fetchKinships(id, relationJSON) {
-        const newRelationJSON = await this.injectKinship(id, relationJSON);
-        this.setState({
-            originalJSON: newRelationJSON
-        });
     }
 
     async injectKinship(id, relationJSON) {
@@ -1366,7 +1367,7 @@ class GenogramTree extends React.Component {
         return this.integrateKinshipIntoRelationJSON(kinshipJSON, relationJSON);
     }
 
-// Merge two relational JSONs, modifying the old one.
+    // Merge two relational JSONs, modifying the old one.
     mergeRelations(oldRel, newRel) {
         oldRel.items = {...oldRel.items, ...newRel.items};
 
@@ -1463,83 +1464,83 @@ class GenogramTree extends React.Component {
             <>
                 <Container fluid className="pe-none p-0 h-100 justify-content-between" style={{
                     position: "fixed",
-                        zIndex: 1
-                            }}>
-                                <Row>
-                                        {this.state.showBtns &&
-                                    <Toolbar genogramTree={this}/>
-                                    }
-                            </Row>
+                    zIndex: 1
+                }}>
+                    <Row>
+                        {this.state.showBtns &&
+                            <Toolbar genogramTree={this}/>
+                        }
+                    </Row>
                     <Row className="me-4 mh-50 justify-content-end">
-                    <Col xs="4">
-                        {this.state.showFilters &&
-                        <Sidebar
-                            filters={this.state.filters}
-                            yearFromChange={e => {
-                                this.setState({
-                                    from: e.target.value,
-                                    isUpdated: true
-                                });
-                            }}
-                            yearToChange={e => {
-                                this.setState({
-                                    to: e.target.value,
-                                    isUpdated: true
-                                });
-                            }}
-                            familyChange={e => {
-                                this.setState({
-                                    family: e.target.value,
-                                    isUpdated: true
-                                });
-                            }}
-                            onChange={() => this.setState({isUpdated: true, isLoading: true})}
-                            onPrune={() => {
-                                this.state.originalJSON.relations = JSON.parse(JSON.stringify(this.state.relationJSON.relations));
-                                for (const key of Object.keys(this.state.originalJSON.items)) {
-                                    if (!this.state.relationJSON.items[key] && key !== this.state.root) {
-                                        delete this.state.originalJSON.items[key];
-                                    }
-                                }
-                                this.calculateFilter();
-                                this.setState({isUpdated: true, isLoading: true});
-                            }}
-                            onPersonSelection={(_, v) => this.setFocusPerson(v.key)}
-                            getAllPersons={this.getAllPersons}
-                            getFocusPerson={this.getFocusPerson}
-                        />
-                    }
-                    </Col>
-          </Row>
-          <Row>
-            <Col xs="2">
-                        {this.state.isLoading &&
-                        <div className='pe-auto'>
-                    <ModalSpinner/>
-                </div>
-              }
-            </Col>
-          </Row>
-                            </Container>
-        {
-                            this.state.isPopped
-                ? <div className='popup'>
-                  <PopupInfo
-                      closePopUp={this.closePopUp}
-                      info={this.personMap.get(this.state.personInfo)}
-                      onNew={() => {
-                        this.state.root = this.state.personInfo;
-                            this.fetchKinships(this.state.root, this.state.originalJSON);
+                        <Col xs="4">
+                            {this.state.showFilters &&
+                                <Sidebar
+                                    filters={this.state.filters}
+                                    yearFromChange={e => {
+                                        this.setState({
+                                            from: e.target.value,
+                                            isUpdated: true
+                                        });
+                                    }}
+                                    yearToChange={e => {
+                                        this.setState({
+                                            to: e.target.value,
+                                            isUpdated: true
+                                        });
+                                    }}
+                                    familyChange={e => {
+                                        this.setState({
+                                            family: e.target.value,
+                                            isUpdated: true
+                                        });
+                                    }}
+                                    onChange={() => this.setState({isUpdated: true, isLoading: true})}
+                                    onPrune={() => {
+                                        this.state.originalJSON.relations = JSON.parse(JSON.stringify(this.state.relationJSON.relations));
+                                        for (const key of Object.keys(this.state.originalJSON.items)) {
+                                            if (!this.state.relationJSON.items[key] && key !== this.state.root) {
+                                                delete this.state.originalJSON.items[key];
+                                            }
+                                        }
+                                        this.calculateFilter();
+                                        this.setState({isUpdated: true, isLoading: true});
+                                    }}
+                                    onPersonSelection={(_, v) => this.setFocusPerson(v.key)}
+                                    getAllPersons={this.getAllPersons}
+                                    getFocusPerson={this.getFocusPerson}
+                                />
+                            }
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Col xs="2">
+                            {this.state.isLoading &&
+                                <div className='pe-auto'>
+                                    <ModalSpinner/>
+                                </div>
+                            }
+                        </Col>
+                    </Row>
+                </Container>
+                {
+                    this.state.isPopped
+                        ? <div className='popup'>
+                            <PopupInfo
+                                closePopUp={this.closePopUp}
+                                info={this.personMap.get(this.state.personInfo)}
+                                onNew={() => {
+                                    this.state.root = this.state.personInfo;
+                                    this.injectKinship(this.state.root, this.state.originalJSON);
                                 }}
-                            // onExtend={() => null}
-                        onExtend={this.handlePopupExtend}
-                    allowExtend={this.props.allowExtend}
-                  >
-                  </PopupInfo>
-                </div>
-                : ''
-          }
-        <div className='tree-box'>
+                                // onExtend={() => null}
+                                onExtend={this.handlePopupExtend}
+                                allowExtend={this.props.allowExtend}
+                            >
+                            </PopupInfo>
+                        </div>
+                        : ''
+                }
+                <div className='tree-box'>
                     <DiagramWrapper
                         updateDiagram={updateDiagram}
                         recentre={recentre}
@@ -1555,14 +1556,14 @@ class GenogramTree extends React.Component {
                         zoomToDefault={this.state.zoomToDefault}
                     />
 
-                        </div>
+                </div>
 
-                    {
-                        this.state.showStats &&
-                        <EscapeCloseable className='popup'>
-                            <StatsPanel data={this.state.relationJSON} onClick={this.handleStatsClick}/>
-                        </EscapeCloseable>
-                    }
+                {
+                    this.state.showStats &&
+                    <EscapeCloseable className='popup'>
+                        <StatsPanel data={this.state.relationJSON} onClick={this.handleStatsClick}/>
+                    </EscapeCloseable>
+                }
 
             </>
         );
@@ -1593,7 +1594,7 @@ class GenogramTree extends React.Component {
     }
 
 
-// initialises tree (in theory should only be called once, diagram should be .clear() and then data updated for re-initialisation)
+    // initialises tree (in theory should only be called once, diagram should be .clear() and then data updated for re-initialisation)
     // see https://gojs.net/latest/intro/react.html
 
     // majority of code below is from https://gojs.net/latest/samples/genogram.html
@@ -2016,60 +2017,8 @@ class GenogramLayout extends go.LayeredDigraphLayout {
                 }
             }
         })
-        console.log(idPos);
-        globalDiagram.removeParts((globalDiagram.findLayer("Grid")).parts);
-        this.addRecs(globalDiagram);
+
     }
-
-
-
-    addRecs(diagram, numRecs, itemtemplates) {
-        // sort lowest to highest based on y co-ordinates
-        let startXs = [...new Set(idPos.map(p => p.x.valueOf()))].sort((a,b) => a - b);
-        let startYs = [...new Set(idPos.map(p => p.y.valueOf()))].sort((a,b) => a - b);
-        console.log(startXs);
-        console.log(startYs);
-        let startX = startXs[0] - 200; // get lowest x co node
-        let endX = startXs[startXs.length - 1] + 100;
-        for (let i = 0; i < startYs.length; i++) {
-            let startY = startYs[i];
-            let endY = i != startYs.length - 1 ? startYs[i + 1] : startYs[i] + 150;
-            // for each section filter which nodes fall within the y co-ordinates then get the nodes with the highest and lowest date to determine the range of this "layer"
-            let pos2 = idPos.filter(p => p.y == startY);
-            if (pos2.length == 0) {
-                // no nodes in this region
-                console.log("no nodes in this region so broke early");
-                break
-            }
-            let personInfo = pos2.filter(p => !((p.key).startsWith('_'))).map(p => (globalPersonMap.get(p.key)));
-            let bd = personInfo.map(p => {return {dob: p.get("Date of birth"), dod: p.get("Date of death")}});
-            // console.log(bd);
-            // calculate start date for the era
-            let dob = bd.filter(p => p.dob != undefined).map(p => new Date(p.dob)).sort((a,b) => a - b);
-            // console.log(dob)
-            let startDate = dob.length < 1 ? "*" : dob[0].getFullYear();
-
-            // calculate end date for the era
-            let dod = bd.filter(p => p.dod != undefined).map(p => new Date(p.dod)).sort((a,b) => a - b);
-            // console.log(dod);
-            let unknownsAlive = bd.filter(p=> p.dod == undefined && (p.dob != undefined && (new Date(p.dob) > new Date("1912")))).length > 0; // i.e. some of the unknowns are alive so we cannot end era
-            let endDate = unknownsAlive ? "*" : (dod.length < 1 ? "*" : dod[dod.length - 1].getFullYear());
-
-            // console.log("start", startDate, "end", endDate);
-            // create "eras" as a part in the grid background made up of date in the corner and an opaque rectangle covering the diagram
-            let part = $(go.Part, "Position", {selectable: false, position: new go.Point(startX, startY - 45), layerName: "Grid"},
-                            $(go.Shape,"Rectangle",
-                                {width : endX - startX, height: endY - startY, margin: 0, fill: i % 2 == 0 ? "#FFFFE0" : "#ADD8E6", opacity: 0.15, stroke: null}),
-                            $(go.TextBlock,
-                                {font: "Italic 24pt calligraphy", text: bcDate(startDate) + " - " + bcDate(endDate), stroke: "black"},
-                                ),
-                        );
-            let shape = 
-            // add to mapping so can be determined later
-            diagram.add(part);
-        }
-    };
-
     findParentsMarriageLabelNode(node) {
         const it = node.findNodesInto();
         while (it.next()) {
@@ -2193,4 +2142,4 @@ class ArcLink extends go.Link {
     }
 }
 
-export default withRouter(GenogramTree);
+// export default withRouter(GenogramTree);
