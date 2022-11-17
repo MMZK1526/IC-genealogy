@@ -6,8 +6,7 @@ import { Navigate } from "react-router-dom";
 import Toolbar from "../Toolbar";
 import Card from "react-bootstrap/Card";
 import Container from 'react-bootstrap/Container';
-import DefaultImg from "../images/default.png";
-import Image from "react-bootstrap/Image";
+import DefaultImg from "../images/default-short.png";
 // import DefaultImg from "../images/wideputin.png";
 
 function withRouter(Component) {
@@ -73,8 +72,12 @@ class ResultPage extends React.Component {
 
 function PersonCard({ onClick, title, desc, imageURL}) {
   return (
-    <Card style={{ width: '16rem', cursor: 'pointer', height: '24rem' }} className="m-3 result" onClick={onClick}>
+    <Card style={{ width: '16rem', cursor: 'pointer'}} className="m-3 result" onClick={onClick}>
 
+      <Card.Img
+        variant='top'
+        src={imageURL === undefined ? DefaultImg : imageURL}
+      />
       <Card.Body>
         <Card.Title className="mb-2">{title}</Card.Title>
         <Card.Text>
@@ -82,10 +85,6 @@ function PersonCard({ onClick, title, desc, imageURL}) {
         </Card.Text>
       </Card.Body>
 
-      <Image
-        className='bottom align-items-center justify-content-center w-50 m-3 rounded'
-        src={imageURL === undefined ? DefaultImg : imageURL}
-      />
     </Card>
   );
 }
