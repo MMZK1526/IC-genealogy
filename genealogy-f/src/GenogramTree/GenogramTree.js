@@ -560,17 +560,6 @@ class GenogramTree extends React.Component {
             }
             console.log(Array.from(visited));
 
-            // // filter on Family
-            // if (filters.families.size !== 0) {
-            //     for (const [k, _] of Object.entries(visited)) {
-            //         const criteria = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'family')
-            //             .map((p) => p.value).some((f) => filters.families.has(f));
-            //         if (!criteria) {
-            //             delete visited[k];
-            //             continue;
-            //         }
-            //     }
-            // }
             // filter on From birth year
             if (filters.fromYear !== '') {
                 for (const [k, _] of Object.entries(visited)) {
@@ -603,28 +592,6 @@ class GenogramTree extends React.Component {
                     }
                 }
             }
-            // // filter on Birth Place
-            // if (filters.birthPlaces.size !== 0) {
-            //     for (const [k, _] of Object.entries(visited)) {
-            //         const criteria = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.propertyId == 'SW-P2')
-            //             .map((p) => p.value).some((f) => filters.birthPlaces.has(f));
-            //         if (!criteria) {
-            //             delete visited[k];
-            //             continue;
-            //         }
-            //     }
-            // }
-            // // filter on To Death Place
-            // if (filters.deathPlaces.size !== 0) {
-            //     for (const [k, _] of Object.entries(visited)) {
-            //         const criteria = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.propertyId == 'SW-P3')
-            //             .map((p) => p.value).some((f) => filters.deathPlaces.has(f));
-            //         if (!criteria) {
-            //             delete visited[k];
-            //             continue;
-            //         }
-            //     }
-            // }
 
             // Add outliers
             let outlierVisited = (new go.Set()).addAll(Object.keys(visited));
