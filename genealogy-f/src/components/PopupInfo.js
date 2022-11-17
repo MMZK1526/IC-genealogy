@@ -35,7 +35,7 @@ function PopupInfo(props) {
 			<EscapeCloseable onClick={props.closePopUp}>
 				<CloseButton className='close-btn' onClick={props.closePopUp} />
 				{getAdditionalProperties(props.info)}
-				<Container className="text-center">
+				<Container className="text-center mt-2">
 					<Button variant="primary" onClick={onExtend} className="m-1">
 						Extend tree from this person
 					</Button>
@@ -63,7 +63,7 @@ function getAdditionalProperties(data) {
 	return (
 		<Container>
 			<Row>
-				<Col md="auto">
+				<Col md="auto" className='mb-4'>
 					<Image src={data.get("image")} height='100px' />
 				</Col>
 				<Col>
@@ -89,9 +89,9 @@ function getAdditionalProperties(data) {
 					</Row>
 					<Row>
 						<Col key="Description">
-							{data.has("Description") &&
+							{data.has("description") &&
 								<p className="fst-italic">
-									{capitalizeFirstLetter(data.get("Description"))}
+									{capitalizeFirstLetter(data.get("description"))}
 								</p>}
 						</Col>
 					</Row>
@@ -112,7 +112,7 @@ function getAllAttr(data) {
 	}).map((k) => (
 		<Row key={"Row " + k}>
 			<Col xs={4} key={k}>
-				<p>{k}</p>
+				<p>{capitalizeFirstLetter(k)}</p>
 			</Col>
 			<Col key={data.get(k)}>
 				{
