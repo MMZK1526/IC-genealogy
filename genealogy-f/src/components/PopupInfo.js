@@ -64,9 +64,9 @@ function getAdditionalProperties(data) {
 		<Container>
 			<Row>
 				<Col md="auto" className='mb-4'>
-					<Image className="rounded" src={data.get("image")} height='140px' />
+					<Image className="rounded" src={data.has("image") ? data.get("image") : DefaultImg} height='140px' />
 				</Col>
-				<Col>
+				<Col className='mb-4'>
 					<Row className='mb-1 justify-content-start'>
 						<h2>{data.get("name")}</h2>
 					</Row>
@@ -79,16 +79,16 @@ function getAdditionalProperties(data) {
 						}
 					</Row>
 					<ButtonGroup aria-label="LinksGroup">
-						<Button variant="light" className="search" onClick={() => openSearch(data.get("name"))}>
-							<FcGoogle size={30} />
-						</Button>
-
 						{
 							data.has("wikipedia link") &&
 							<Button variant="light" className="wikilink" onClick={() => openInWikipedia(data.get("wikipedia link"))}>
 								<FaWikipediaW size={30} />
 							</Button>
 						}
+
+						<Button variant="light" className="search" onClick={() => openSearch(data.get("name"))}>
+							<FcGoogle size={30} />
+						</Button>
 					</ButtonGroup>
 				</Col>
 			</Row>
