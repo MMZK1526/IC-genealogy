@@ -528,19 +528,19 @@ class GenogramTree extends React.Component {
             }
 
             // filter on personal name
-            if (filters.personalName !== '') {
-                for (const [k, _] of Object.entries(visited)) {
-                    const name = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'personal name')[0];
-                    if (name === undefined) {
-                        delete visited[k];
-                        continue;
-                    }
-                    if (!String(name.value).toLowerCase().includes(filters.personalName.toLowerCase())) {
-                        delete visited[k];
-                        continue;
-                    }
-                }
-            }
+            // if (filters.personalName !== '') {
+            //     for (const [k, _] of Object.entries(visited)) {
+            //         const name = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'personal name')[0];
+            //         if (name === undefined) {
+            //             delete visited[k];
+            //             continue;
+            //         }
+            //         if (!String(name.value).toLowerCase().includes(filters.personalName.toLowerCase())) {
+            //             delete visited[k];
+            //             continue;
+            //         }
+            //     }
+            // }
             // filter on Family
             if (filters.families.size !== 0) {
                 for (const [k, _] of Object.entries(visited)) {

@@ -15,14 +15,14 @@ export function Sidebar(props) {
     return (
         <div className='sidebar pe-auto'>
             <Form className="w-100 mb-3 overflow-auto" style={{ maxHeight: "44vh" }}>
-                <Form.Group className="form-group"  controlId='Name-control'>
+                {/* <Form.Group className="form-group"  controlId='Name-control'>
                     <Form.Label>Personal Name</Form.Label>
                     <Form.Control type='text' placeholder="e.g. Charles" 
                     onChange={(e) => {
                         props.filters.personalName = e.target.value;
                     }}
                     />
-                </Form.Group>
+                </Form.Group> */}
 
                 <Form.Label className="form-label">Family: </Form.Label>
                 <Multiselect
