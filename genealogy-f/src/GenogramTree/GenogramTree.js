@@ -16,7 +16,7 @@ import { FilterModel } from '../filterModel';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import { DiagramWrapper } from "./DiagramWrapper";
-import { getPersonMap, transform, withRouter, ndb} from "./utilFunctions";
+import { getPersonMap, transform, withRouter, ndb } from "./utilFunctions";
 import { TreeNameLookup } from '../components/TreeNameLookup.js';
 import { AiOutlineConsoleSql } from 'react-icons/ai';
 
@@ -87,7 +87,7 @@ class GenogramTree extends React.Component {
     }
 
     getPersonMapRes() {
-            return undefined;
+        return undefined;
     }
 
     closePopUp() {
@@ -721,7 +721,10 @@ class GenogramTree extends React.Component {
             this.extendFromCache(id);
         }
         this.extensionId = id;
-        const cachePromise = this.requests.relationsCacheOrWiki({ id: id, depth: 3 });
+        const cachePromise = this.requests.relationsCacheOrWiki({
+            id: id, depth: 3
+            , outlierVisited: this.state.originalJSON ? Object.keys(this.state.originalJSON.items) : []
+        });
         this.updateTreeCache(cachePromise).then(
             () => {
                 console.log('Cache has been updated');

@@ -1,19 +1,19 @@
-import {Sidebar} from './components/sidebar/Sidebar.js';
+import { Sidebar } from './components/sidebar/Sidebar.js';
 import Container from 'react-bootstrap/Container';
 import React from 'react';
 import * as go from 'gojs';
-import {ReactDiagram} from 'gojs-react';
+import { ReactDiagram } from 'gojs-react';
 import './App.css';
 import PopupInfo from './components/popup-info/PopupInfo.js'
 import './GenogramTree.css';
-import {StatsPanel} from './components/stats-panel/StatsPanel';
-import {useLocation, useNavigate, useParams} from 'react-router-dom';
+import { StatsPanel } from './components/stats-panel/StatsPanel';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import EscapeCloseable from './components/escape-closeable/EscapeCloseable';
 import './components/shared.css';
-import {setStatePromise} from './components/utils';
+import { setStatePromise } from './components/utils';
 import ModalSpinner from './ModalSpinner';
 import Toolbar from './Toolbar';
-import {FilterModel} from './filterModel';
+import { FilterModel } from './filterModel';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import { AiOutlineConsoleSql } from 'react-icons/ai';
@@ -26,7 +26,7 @@ function withRouter(Component) {
         return (
             <Component
                 {...props}
-                router={{location, navigate, params}}
+                router={{ location, navigate, params }}
             />
         );
     }
@@ -171,7 +171,7 @@ function transform(data) {
 
 function addUnknown(mfs, relMap) {
     if (mfs.mother && !mfs.father) {
-        let newF = {key: '_' + mfs.mother, name: 'unknown', gender: 'male', opacity: '0.2'};
+        let newF = { key: '_' + mfs.mother, name: 'unknown', gender: 'male', opacity: '0.2' };
         // marry parent to unknown and set child parent to unknown
         newF.spouse = [mfs.mother];
         mfs.father = newF.key;
@@ -181,7 +181,7 @@ function addUnknown(mfs, relMap) {
 
     // case of unknown mother - temporarily replace with 'unknown' node
     if (!mfs.mother && mfs.father) {
-        let newM = {key: '_' + mfs.father, name: 'unknown', gender: 'female', opacity: '0.2'};
+        let newM = { key: '_' + mfs.father, name: 'unknown', gender: 'female', opacity: '0.2' };
         // marry parent to unknown and set child parent to unknown
         newM.spouse = [mfs.father];
         mfs.mother = newM.key;
@@ -192,7 +192,7 @@ function addUnknown(mfs, relMap) {
     // if (mfs.gender == "unknown") {
     //     if (mfs.spouse)
     // }
-    
+
 
     return relMap;
 }
@@ -210,10 +210,10 @@ function getPersonMap(data) {
     for (let person of data) {
         const personId = person.id;
         let attributes = new Map;
-        attributes.set('Name', person.name);
+        attributes.set('name', person.name);
 
         if (person.description !== '') {
-            attributes.set('Description', person.description);
+            attributes.set('description', person.description);
         }
 
 
@@ -267,7 +267,7 @@ export class DiagramWrapper extends React.Component {
         this.yearTo = props.yearTo;
         this.root = props.root;
         this.getFocusPerson = props.getFocusPerson;
-        this.state = {diagram: undefined, isFirstRender: true};
+        this.state = { diagram: undefined, isFirstRender: true };
         this.init();
     }
 
@@ -302,13 +302,13 @@ export class DiagramWrapper extends React.Component {
                 // when a node is selected, draw a big yellow circle behind it
                 nodeSelectionAdornmentTemplate:
                     $(go.Adornment, 'Auto',
-                        {layerName: 'Grid'},  // the predefined layer that is behind everything else
-                        $(go.Shape, 'Circle', {fill: '#c1cee3', stroke: null}),
-                        $(go.Placeholder, {margin: 0})
+                        { layerName: 'Grid' },  // the predefined layer that is behind everything else
+                        $(go.Shape, 'Circle', { fill: '#c1cee3', stroke: null }),
+                        $(go.Placeholder, { margin: 0 })
                     ),
                 scrollMargin: 220,
                 layout:  // use a custom layout, defined below
-                    $(GenogramLayout, {direction: 90, layerSpacing: 50, columnSpacing: 0}),
+                    $(GenogramLayout, { direction: 90, layerSpacing: 50, columnSpacing: 0 }),
                 'InitialLayoutCompleted': _ => {
                     var node = this.diagram.findNodeForKey(this.getFocusPerson());
                     if (node == null) {
@@ -499,7 +499,7 @@ export class DiagramWrapper extends React.Component {
                 // new go.Binding('opacity', 'hide', h => h ? 0 : 1),
                 // new go.Binding('pickable', 'hide', h => !h),
                 $(go.Panel,
-                    {name: 'ICON'},
+                    { name: 'ICON' },
                     $(go.Shape, 'Square',
                         {
                             width: 40,
@@ -523,7 +523,7 @@ export class DiagramWrapper extends React.Component {
                             itemTemplate:
                                 $(go.Panel,
                                     $(go.Shape,
-                                        {stroke: null, strokeWidth: 0},
+                                        { stroke: null, strokeWidth: 0 },
                                         new go.Binding('fill', '', attrFill),
                                         new go.Binding('geometry', '', maleGeometry))
                                 ),
@@ -533,7 +533,7 @@ export class DiagramWrapper extends React.Component {
                     )
                 ),
                 $(go.TextBlock,
-                    {textAlign: 'center', maxSize: new go.Size(80, NaN), background: 'rgba(255,255,255,0.5)'},
+                    { textAlign: 'center', maxSize: new go.Size(80, NaN), background: 'rgba(255,255,255,0.5)' },
                     new go.Binding('text', 'name'), new go.Binding('opacity', 'opacity'))
             ));
         // remove highlighting form all nodes, when user clicks on background
@@ -555,7 +555,7 @@ export class DiagramWrapper extends React.Component {
                 // new go.Binding('opacity', 'hide', h => h ? 0 : 1),
                 // new go.Binding('pickable', 'hide', h => !h),
                 $(go.Panel,
-                    {name: 'ICON'},
+                    { name: 'ICON' },
                     $(go.Shape, 'Circle',
                         {
                             width: 40,
@@ -579,7 +579,7 @@ export class DiagramWrapper extends React.Component {
                             itemTemplate:
                                 $(go.Panel,
                                     $(go.Shape,
-                                        {stroke: null, strokeWidth: 0},
+                                        { stroke: null, strokeWidth: 0 },
                                         new go.Binding('fill', '', attrFill),
                                         new go.Binding('geometry', '', femaleGeometry))
                                 ),
@@ -589,7 +589,7 @@ export class DiagramWrapper extends React.Component {
                     )
                 ),
                 $(go.TextBlock,
-                    {textAlign: 'center', maxSize: new go.Size(80, NaN), background: 'rgba(255,255,255,0.5)'},
+                    { textAlign: 'center', maxSize: new go.Size(80, NaN), background: 'rgba(255,255,255,0.5)' },
                     new go.Binding('text', 'name'), new go.Binding('opacity', 'opacity'))
             ));
 
@@ -607,7 +607,7 @@ export class DiagramWrapper extends React.Component {
                 // new go.Binding('opacity', 'hide', h => h ? 0 : 1),
                 // new go.Binding('pickable', 'hide', h => !h),
                 $(go.Panel,
-                    {name: 'ICON'},
+                    { name: 'ICON' },
                     $(go.Shape, 'Triangle',
                         {
                             width: 40,
@@ -627,20 +627,20 @@ export class DiagramWrapper extends React.Component {
                         }).ofObject()),
                 ),
                 $(go.TextBlock,
-                    {textAlign: 'center', maxSize: new go.Size(80, NaN), background: 'rgba(255,255,255,0.5)'},
+                    { textAlign: 'center', maxSize: new go.Size(80, NaN), background: 'rgba(255,255,255,0.5)' },
                     new go.Binding('text', 'name'), new go.Binding('opacity', 'opacity'))
             ));
 
         // the representation of each label node -- nothing shows on a Marriage Link
         this.diagram.nodeTemplateMap.add('LinkLabel',
             $(go.Node, {
-                    selectable: false,
-                    width: 1,
-                    height: 1,
-                    fromEndSegmentLength: 20,
-                    avoidable: false,
-                    layerName: "Foreground"
-                },
+                selectable: false,
+                width: 1,
+                height: 1,
+                fromEndSegmentLength: 20,
+                avoidable: false,
+                layerName: "Foreground"
+            },
                 // $("Shape", "Ellipse",
                 //     {
                 //       width: 5, height: 5, stroke: null,
@@ -657,7 +657,7 @@ export class DiagramWrapper extends React.Component {
                     toSpot: go.Spot.Top,
                     layerName: 'Background', selectable: true,
                 },
-                $(go.Shape, {stroke: '#424242', strokeWidth: 0.5},
+                $(go.Shape, { stroke: '#424242', strokeWidth: 0.5 },
                     new go.Binding('opacity', 'opacity'),
                     // shape stroke and width depend on whether Link.isHighlighted is true
                     // new go.Binding("stroke", "isHighlighted", function(h) { return h ? "90EE90" : "#424242"; })
@@ -679,7 +679,7 @@ export class DiagramWrapper extends React.Component {
                     selectable: false,
                     layerName: 'Background'
                 },
-                $(go.Shape, {strokeWidth: 1, stroke: '#5d8cc1' /* blue */}, new go.Binding('opacity', 'opacity'),
+                $(go.Shape, { strokeWidth: 1, stroke: '#5d8cc1' /* blue */ }, new go.Binding('opacity', 'opacity'),
                     new go.Binding('strokeWidth', "isHighlighted", function (h) {
                         return h ? 5 : 0.5;
                     }).ofObject(),)
@@ -713,14 +713,14 @@ export class DiagramWrapper extends React.Component {
                         diagram.commitTransaction("highlight");
                     }
                 },
-                $(go.Shape, {strokeWidth: 1, stroke: '#ff0000' /* red */}, new go.Binding('opacity', 'opacity'),
+                $(go.Shape, { strokeWidth: 1, stroke: '#ff0000' /* red */ }, new go.Binding('opacity', 'opacity'),
                     new go.Binding('strokeWidth', "isHighlighted", function (h) {
                         return h ? 5 : 0.5;
                     }).ofObject(),)
             ));
 
-            // part.add(new go.Shape("Rectangle", {width : 40, height: 750 / 5, margin: 0}));
-            // addRecs(part)
+        // part.add(new go.Shape("Rectangle", {width : 40, height: 750 / 5, margin: 0}));
+        // addRecs(part)
 
         return this.diagram;
     }
@@ -750,9 +750,9 @@ export class DiagramWrapper extends React.Component {
     }
 
     makeSvg = () => {
-        const svg = this.state.diagram.makeSvg({scale: 1, background: "white"});
+        const svg = this.state.diagram.makeSvg({ scale: 1, background: "white" });
         const svgstr = new XMLSerializer().serializeToString(svg);
-        const blob = new Blob([svgstr], {type: "image/svg+xml"});
+        const blob = new Blob([svgstr], { type: "image/svg+xml" });
         this.downloadSvg(blob);
     }
 
@@ -842,9 +842,9 @@ export class DiagramWrapper extends React.Component {
                         const hasChildLink = this.findHasChild(diagram, key, wife);
                         // add a label node for the marriage link
                         // add the marriage link itself, also referring to the label node
-                        var mdata = {from: key, to: wife, category: 'Marriage'};
+                        var mdata = { from: key, to: wife, category: 'Marriage' };
                         if (!hasChildLink) {
-                            const mlab = {gender: 'LinkLabel'};
+                            const mlab = { gender: 'LinkLabel' };
                             model.addNodeData(mlab);
                             mdata.labelKeys = [mlab.key];
                         }
@@ -869,7 +869,7 @@ export class DiagramWrapper extends React.Component {
                 var link = this.findHasChild(diagram, father, mother);
                 if (link == null) {
                     // add a label node for the hasChild link
-                    const mlab = {gender: 'LinkLabel'};
+                    const mlab = { gender: 'LinkLabel' };
                     model.addNodeData(mlab);
                     this.diagram.model.addLinkData({
                         from: father,
@@ -886,7 +886,7 @@ export class DiagramWrapper extends React.Component {
                     continue;
                 }
                 const mlabkey = mdata.labelKeys[0];
-                const cdata = {from: mlabkey, to: key};
+                const cdata = { from: mlabkey, to: key };
                 this.diagram.model.addLinkData(cdata);
             }
         }
@@ -1055,7 +1055,7 @@ class GenogramTree extends React.Component {
     }
 
     // If id is provided, we search this id. Otherwise, it is a JSON provided by the user
-    async fetchRelations({id = null, depth = null, customUpload = false} = {}) {
+    async fetchRelations({ id = null, depth = null, customUpload = false } = {}) {
         const relationJSON = (id === null) ?
             this.state.originalJSON :
             await this.requests.relationsCacheOrWiki({
@@ -1200,7 +1200,7 @@ class GenogramTree extends React.Component {
 
         // Use filter
         const filters = this.state.filters;
-        var filteredJSON = {targets: this.state.originalJSON.targets};
+        var filteredJSON = { targets: this.state.originalJSON.targets };
         if (filters.bloodline || filters.families.size !== 0 || filters.fromYear !== '' || filters.toYear !== '' ||
             filters.birthPlace !== '' || filters.deathPlace !== '' || filters.personalName !== '') {
             // Map from item ID to opacity
@@ -1270,7 +1270,7 @@ class GenogramTree extends React.Component {
             if (filters.fromYear !== '') {
                 visited = visited.filter((k) => {
                     let dob = (this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'date of birth')[0]);
-                    if (dob == undefined) {return false};
+                    if (dob == undefined) { return false };
                     dob = ndb(dob.value.split('T')[0]);
                     let fromYear = filters.fromYear[0] == "-" ? "-" + (filters.fromYear.substring(1)).padStart(6, '0') : filters.fromYear.padStart(4, '0');
                     return new Date(dob).getFullYear() >= new Date(fromYear).getFullYear();
@@ -1280,7 +1280,7 @@ class GenogramTree extends React.Component {
             if (filters.toYear !== '') {
                 visited = visited.filter((k) => {
                     let dob = (this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'date of birth')[0]);
-                    if (dob == undefined) {return false};
+                    if (dob == undefined) { return false };
                     dob = ndb(dob.value.split('T')[0]);
                     let toYear = filters.toYear[0] == "-" ? "-" + (filters.toYear.substring(1)).padStart(6, '0') : filters.toYear.padStart(4, '0');
                     return new Date(dob).getFullYear() <= new Date(toYear).getFullYear();
@@ -1345,7 +1345,7 @@ class GenogramTree extends React.Component {
                 })
             }
 
-            var filteredJSON = {targets: this.state.originalJSON.targets, items: {}, relations: {}};
+            var filteredJSON = { targets: this.state.originalJSON.targets, items: {}, relations: {} };
             Object.keys(visited).forEach((v) => {
                 filteredJSON.items[v] = this.state.originalJSON.items[v];
                 filteredJSON.items[v].opacity = visited[v];
@@ -1369,7 +1369,7 @@ class GenogramTree extends React.Component {
 
     // Merge two relational JSONs, modifying the old one.
     mergeRelations(oldRel, newRel) {
-        oldRel.items = {...oldRel.items, ...newRel.items};
+        oldRel.items = { ...oldRel.items, ...newRel.items };
 
         const idRelMap = new Map();
 
@@ -1437,9 +1437,9 @@ class GenogramTree extends React.Component {
 
             return (
                 <>
-                    <Toolbar onlyHome={true}/>
-                    <Container style={{height: "100vh"}} className="d-flex justify-content-center">
-                        <ModalSpinner/>
+                    <Toolbar onlyHome={true} />
+                    <Container style={{ height: "100vh" }} className="d-flex justify-content-center">
+                        <ModalSpinner />
                     </Container>
                 </>
             );
@@ -1468,7 +1468,7 @@ class GenogramTree extends React.Component {
                 }}>
                     <Row>
                         {this.state.showBtns &&
-                            <Toolbar genogramTree={this}/>
+                            <Toolbar genogramTree={this} />
                         }
                     </Row>
                     <Row className="me-4 mh-50 justify-content-end">
@@ -1494,7 +1494,7 @@ class GenogramTree extends React.Component {
                                             isUpdated: true
                                         });
                                     }}
-                                    onChange={() => this.setState({isUpdated: true, isLoading: true})}
+                                    onChange={() => this.setState({ isUpdated: true, isLoading: true })}
                                     onPrune={() => {
                                         this.state.originalJSON.relations = JSON.parse(JSON.stringify(this.state.relationJSON.relations));
                                         for (const key of Object.keys(this.state.originalJSON.items)) {
@@ -1503,7 +1503,7 @@ class GenogramTree extends React.Component {
                                             }
                                         }
                                         this.calculateFilter();
-                                        this.setState({isUpdated: true, isLoading: true});
+                                        this.setState({ isUpdated: true, isLoading: true });
                                     }}
                                     onPersonSelection={(_, v) => this.setFocusPerson(v.key)}
                                     getAllPersons={this.getAllPersons}
@@ -1516,7 +1516,7 @@ class GenogramTree extends React.Component {
                         <Col xs="2">
                             {this.state.isLoading &&
                                 <div className='pe-auto'>
-                                    <ModalSpinner/>
+                                    <ModalSpinner />
                                 </div>
                             }
                         </Col>
@@ -1561,7 +1561,7 @@ class GenogramTree extends React.Component {
                 {
                     this.state.showStats &&
                     <EscapeCloseable className='popup'>
-                        <StatsPanel data={this.state.relationJSON} onClick={this.handleStatsClick}/>
+                        <StatsPanel data={this.state.relationJSON} onClick={this.handleStatsClick} />
                     </EscapeCloseable>
                 }
 
@@ -1575,9 +1575,9 @@ class GenogramTree extends React.Component {
                 () => console.log('Cache was used for rendering')
             );
         } else {
-            this.fetchRelations({id: id, depth: depth});
+            this.fetchRelations({ id: id, depth: depth });
         }
-        const relationsPromise = this.requests.relationsCacheOrWiki({id: id, depth: 3});
+        const relationsPromise = this.requests.relationsCacheOrWiki({ id: id, depth: 3 });
         this.updateTreeCache(relationsPromise).then(
             () => console.log('Cache has been updated')
         );
@@ -2008,12 +2008,12 @@ class GenogramLayout extends go.LayeredDigraphLayout {
                     const link = v.node.labeledLink;
                     const spouseA = link.fromNode;
                     const spouseB = link.toNode;
-                    idPos.push({x : spouseA.location.x, y : spouseA.location.y - 21, key: spouseA.key}); //  or spouseA.x
-                    idPos.push({x : spouseB.location.x, y : spouseB.location.y - 21, key: spouseB.key}); //  or spouseA.x
+                    idPos.push({ x: spouseA.location.x, y: spouseA.location.y - 21, key: spouseA.key }); //  or spouseA.x
+                    idPos.push({ x: spouseB.location.x, y: spouseB.location.y - 21, key: spouseB.key }); //  or spouseA.x
                     // idPosMap.set(spouseA.key, {x : spouseA.x, y : spouseB.y}); //  or spouseA.x
                     // idPosMap.set(spouseB.key, {x : spouseB.x, y : spouseB.y}); //  or spouseA.x
                 } else {
-                    idPos.push({x : v.x, y : v.y, key: v.node.key});
+                    idPos.push({ x: v.x, y: v.y, key: v.node.key });
                 }
             }
         })
@@ -2060,14 +2060,14 @@ class ArcLink extends go.Link {
         var sy21 = Math.pow(y2, 2) - Math.pow(y1, 2);
 
         var f = ((sx13) * (x12)
-                + (sy13) * (x12)
-                + (sx21) * (x13)
-                + (sy21) * (x13))
+            + (sy13) * (x12)
+            + (sx21) * (x13)
+            + (sy21) * (x13))
             / (2 * ((y31) * (x12) - (y21) * (x13)));
         var g = ((sx13) * (y12)
-                + (sy13) * (y12)
-                + (sx21) * (y13)
-                + (sy21) * (y13))
+            + (sy13) * (y12)
+            + (sx21) * (y13)
+            + (sy21) * (y13))
             / (2 * ((x31) * (y12) - (x21) * (y13)));
 
         var c = -(Math.pow(x1, 2)) -
@@ -2130,8 +2130,8 @@ class ArcLink extends go.Link {
         let endAngle = Math.atan2(rotatedToPoint.y - circle.cY, rotatedToPoint.x - circle.cX);
         let increment = (endAngle - startAngle) / 10;
         for (var currentAngle = startAngle;
-             startAngle < endAngle ? currentAngle <= endAngle : currentAngle >= endAngle;
-             currentAngle += increment) {
+            startAngle < endAngle ? currentAngle <= endAngle : currentAngle >= endAngle;
+            currentAngle += increment) {
             let parametricResult = parametric(currentAngle);
             let point = this.rotate(parametricResult.x, parametricResult.y, slopeAngle);
             this.addPointAt(point.x, point.y);

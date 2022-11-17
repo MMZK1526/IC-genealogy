@@ -1,18 +1,17 @@
-import {wait} from "./utils";
+import { wait } from "./utils";
 import _ from 'lodash';
 
 export class Requests {
     baseUrl = 'https://db-de-genealogie.herokuapp.com';
     // baseUrl = 'http://0.0.0.0:8080';
 
-    search = async (name='silvia') => {
+    search = async (name = 'silvia') => {
         const url = `${this.baseUrl}/search?q=${name}`;
-        return await this.genericRequest({requestOrUrl: url});
+        return await this.genericRequest({ requestOrUrl: url });
     }
 
-    // { targets: [], items: {}, relations: {} }
-    relationsCacheOrWiki = async ({id = 'WD-Q152308', depth = 2, visitedItems = []} = {}) => {
-        const params = {id: id, depth: depth, visitedItems: visitedItems};
+    relationsCacheOrWiki = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [] } = {}) => {
+        const params = { id: id, depth: depth, visitedItems: visitedItems };
         const dbRes = await this.relationsDb(params);
         if (!_.isEmpty(Object.values(dbRes).filter(x => !_.isEmpty(x)))) {
             console.log('Database used to fetch data');
@@ -23,17 +22,17 @@ export class Requests {
         return wikiDataRes;
     }
 
-    relations = async ({id = 'WD-Q152308', depth = 2, visitedItems = []} = {}) => {
+    relations = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [] } = {}) => {
         const url = `${this.baseUrl}/relations_wk?id=${id}&depth=${depth}`;
         return await this.genericPost(url, visitedItems, id, depth);
     }
 
-    relationsDb = async ({id = 'WD-Q152308', depth = 2, visitedItems = []} = {}) => {
+    relationsDb = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [] } = {}) => {
         const url = `${this.baseUrl}/relations_db?id=${id}&depth=${depth}`;
         return await this.genericPost(url, visitedItems, id, depth);
     }
 
-    relationCalc = async ({start, relations}) => {
+    relationCalc = async ({ start, relations }) => {
         const url = `${this.baseUrl}/relation_calc`;
         const body = {
             start: start,
@@ -42,7 +41,7 @@ export class Requests {
         return await this.genericPost(url, body);
     }
 
-    async genericPost(url, body, id=null, depth=null) {
+    async genericPost(url, body, id = null, depth = null) {
         const headers = new Headers();
         headers.append('Content-Type', 'application/json');
         const request = new Request(
@@ -53,10 +52,10 @@ export class Requests {
                 body: JSON.stringify(body),
             }
         );
-        return await this.genericRequest({requestOrUrl: request, id, depth});
+        return await this.genericRequest({ requestOrUrl: request, id, depth });
     }
 
-    async genericRequest({requestOrUrl, id = null, depth = null, retryNum = 3, totalRetry = 3} = {}) {
+    async genericRequest({ requestOrUrl, id = null, depth = null, retryNum = 3, totalRetry = 3 } = {}) {
         const response = await fetch(requestOrUrl);
         const ok = response.ok;
         const status = response.status;
@@ -64,7 +63,7 @@ export class Requests {
             console.log(`Request retry number ${totalRetry - retryNum + 1}`);
             const waitTime = (totalRetry + 1 - retryNum) * 1_000;
             await wait(waitTime);
-            await this.genericRequest({requestOrUrl, id, depth, retryNum: retryNum - 1});
+            await this.genericRequest({ requestOrUrl, id, depth, retryNum: retryNum - 1 });
             return;
         }
         if (!ok) {

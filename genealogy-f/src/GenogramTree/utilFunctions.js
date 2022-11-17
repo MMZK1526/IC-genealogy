@@ -1,6 +1,6 @@
 import React from "react";
-import {relMap, setRelMap} from "./globals";
-import {useLocation, useNavigate, useParams} from "react-router-dom";
+import { relMap, setRelMap } from "./globals";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 // comparing date using js inbuilt date
 export function applyDateOfBirthFilter(id, dateFrom, dateTo, idPerson) {
@@ -136,7 +136,7 @@ export function transform(data) {
 
 export function addUnknown(mfs, relMap) {
     if (mfs.mother && !mfs.father) {
-        let newF = {key: '_' + mfs.mother, name: 'unknown', gender: 'male', opacity: '0.2'};
+        let newF = { key: '_' + mfs.mother, name: 'unknown', gender: 'male', opacity: '0.2' };
         // marry parent to unknown and set child parent to unknown
         newF.spouse = [mfs.mother];
         mfs.father = newF.key;
@@ -146,7 +146,7 @@ export function addUnknown(mfs, relMap) {
 
     // case of unknown mother - temporarily replace with 'unknown' node
     if (!mfs.mother && mfs.father) {
-        let newM = {key: '_' + mfs.father, name: 'unknown', gender: 'female', opacity: '0.2'};
+        let newM = { key: '_' + mfs.father, name: 'unknown', gender: 'female', opacity: '0.2' };
         // marry parent to unknown and set child parent to unknown
         newM.spouse = [mfs.father];
         mfs.mother = newM.key;
@@ -169,10 +169,10 @@ export function getPersonMap(data) {
     for (let person of data) {
         const personId = person.id;
         let attributes = new Map;
-        attributes.set('Name', person.name);
+        attributes.set('name', person.name);
 
         if (person.description !== '') {
-            attributes.set('Description', person.description);
+            attributes.set('description', person.description);
         }
 
 
@@ -183,13 +183,13 @@ export function getPersonMap(data) {
             if (attr.value === null || attr.value === '') continue;
             if (attr.propertyId === 'WD-P19' || attr.propertyId === 'WD-P20') continue; // not used by new PoB, PoD design
             if (attr.name === 'family name' || attr.name === 'given name') continue;    // this two fields not show, use personal name instead
-            if (attr.value.includes("http")) continue;
+            if (attr.value.includes(".well-known")) continue; // Ignore ID values that are not parsed successfully in the back-end
 
             if (attrMap.has(attr.name) && attr.name === 'family') {
                 let newVal = attrMap.get(attr.name) + '; ' + attr.value;
                 attrMap.set(attr.name, newVal);
             } else if (attrMap.has(attr.name)) {
-
+                // TODO: Use list
             } else {
                 attrMap.set(attr.name, attr.value);
             }
@@ -200,14 +200,17 @@ export function getPersonMap(data) {
             switch (key) {
                 case 'date of birth':
                     newVal = ndb(value.split('T')[0]);
+                    break;
                 case 'date of death':
                     newVal = ndb(value.split('T')[0]);
+                    break;
                 default:
+                    newVal = value;
             }
-            attributes.set(capitalizeFirstLetter(key), newVal);
+            attributes.set(key, newVal);
         });
 
-        personMap.set(personId, attributes)
+        personMap.set(personId, attributes);
     }
     return personMap;
 }
@@ -220,7 +223,7 @@ export function withRouter(Component) {
         return (
             <Component
                 {...props}
-                router={{location, navigate, params}}
+                router={{ location, navigate, params }}
             />
         );
     }

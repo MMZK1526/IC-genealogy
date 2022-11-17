@@ -68,19 +68,19 @@ function getAdditionalProperties(data) {
 				</Col>
 				<Col>
 					<Row className='mb-1 justify-content-start'>
-						<Col key={"Name"} md="auto">
-							<h2>{data.get("Name")}</h2>
+						<Col key={"name"} md="auto">
+							<h2>{data.get("name")}</h2>
 						</Col>
 
 						<Col key={"Links"} md="auto">
 							<ButtonGroup aria-label="LinksGroup">
-								<Button variant="light" className="search" onClick={() => openSearch(data.get("Name"))}>
+								<Button variant="light" className="search" onClick={() => openSearch(data.get("name"))}>
 									<FcGoogle size={30} />
 								</Button>
 
 								{
-									data.has("Wikipedia link") &&
-									<Button variant="light" className="wikilink" onClick={() => openInWikipedia(data.get("Wikipedia link"))}>
+									data.has("wikipedia link") &&
+									<Button variant="light" className="wikilink" onClick={() => openInWikipedia(data.get("wikipedia link"))}>
 										<FaWikipediaW size={30} />
 									</Button>
 								}
@@ -108,7 +108,7 @@ function getAdditionalProperties(data) {
 
 function getAllAttr(data) {
 	return Object.keys(Object.fromEntries(data)).filter(function (k) {
-		return k !== "Name" && k !== "Description" && k !== "Wikipedia link";
+		return k !== "name" && k !== "description" && k !== "wikipedia link";
 	}).map((k) => (
 		<Row key={"Row " + k}>
 			<Col xs={4} key={k}>
@@ -116,7 +116,7 @@ function getAllAttr(data) {
 			</Col>
 			<Col key={data.get(k)}>
 				{
-					k === "Place of birth" || k === "Place of death"
+					k === "place of birth" || k === "place of death"
 						? <a href={"http://www.google.com/maps?q=" + data.get(k)} target="_blank" rel="noopener noreferrer">
 							<TbMapSearch />
 							{" " + data.get(k)}

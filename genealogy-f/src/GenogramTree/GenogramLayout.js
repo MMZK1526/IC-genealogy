@@ -345,17 +345,17 @@ export class GenogramLayout extends go.LayeredDigraphLayout {
                     const link = v.node.labeledLink;
                     const spouseA = link.fromNode;
                     const spouseB = link.toNode;
-                    idPos.push({x : spouseA.location.x, y : spouseA.location.y - 21, key: spouseA.key}); //  or spouseA.x
-                    idPos.push({x : spouseB.location.x, y : spouseB.location.y - 21, key: spouseB.key}); //  or spouseA.x
+                    idPos.push({ x: spouseA.location.x, y: spouseA.location.y - 21, key: spouseA.key }); //  or spouseA.x
+                    idPos.push({ x: spouseB.location.x, y: spouseB.location.y - 21, key: spouseB.key }); //  or spouseA.x
                     // idPosMap.set(spouseA.key, {x : spouseA.x, y : spouseB.y}); //  or spouseA.x
                     // idPosMap.set(spouseB.key, {x : spouseB.x, y : spouseB.y}); //  or spouseA.x
                 } else {
-                    idPos.push({x : v.x, y : v.y, key: v.node.key});
+                    idPos.push({ x: v.x, y: v.y, key: v.node.key });
                 }
             }
         })
         // console.log(idPos);
-        console.log(this.personMap);
+        console.log(`F: ${this.personMap}`);
         // console.log(typeof this.diagram);
         this.diagram.removeParts(this.diagram.findLayer("Grid").parts);
         this.addRecs(this.diagram, idPos);
@@ -367,8 +367,8 @@ export class GenogramLayout extends go.LayeredDigraphLayout {
 
     addRecs(diagram, idPos, itemtemplates) {
         // sort lowest to highest based on y co-ordinates
-        let startXs = [...new Set(idPos.map(p => p.x.valueOf()))].sort((a,b) => a - b);
-        let startYs = [...new Set(idPos.map(p => p.y.valueOf()))].sort((a,b) => a - b);
+        let startXs = [...new Set(idPos.map(p => p.x.valueOf()))].sort((a, b) => a - b);
+        let startYs = [...new Set(idPos.map(p => p.y.valueOf()))].sort((a, b) => a - b);
         // console.log(startXs);
         // console.log(startYs);
         let startX = startXs[0] - 200; // get lowest x co node
@@ -384,28 +384,28 @@ export class GenogramLayout extends go.LayeredDigraphLayout {
                 break
             }
             let personInfo = pos2.filter(p => !((p.key).startsWith('_'))).map(p => (this.personMap.get(p.key)));
-            let bd = personInfo.map(p => {return {dob: p.get("Date of birth"), dod: p.get("Date of death")}});
+            let bd = personInfo.map(p => { return { dob: p.get("date of birth"), dod: p.get("date of death") } });
             // console.log(bd);
             // calculate start date for the era
-            let dob = bd.filter(p => p.dob != undefined).map(p => new Date(p.dob)).sort((a,b) => a - b);
+            let dob = bd.filter(p => p.dob != undefined).map(p => new Date(p.dob)).sort((a, b) => a - b);
             // console.log(dob)
             let startDate = dob.length < 1 ? "*" : dob[0].getFullYear();
 
             // calculate end date for the era
-            let dod = bd.filter(p => p.dod != undefined).map(p => new Date(p.dod)).sort((a,b) => a - b);
+            let dod = bd.filter(p => p.dod != undefined).map(p => new Date(p.dod)).sort((a, b) => a - b);
             // console.log(dod);
-            let unknownsAlive = bd.filter(p=> p.dod == undefined && (p.dob != undefined && (new Date(p.dob) > new Date("1912")))).length > 0; // i.e. some of the unknowns are alive so we cannot end era
+            let unknownsAlive = bd.filter(p => p.dod == undefined && (p.dob != undefined && (new Date(p.dob) > new Date("1912")))).length > 0; // i.e. some of the unknowns are alive so we cannot end era
             let endDate = unknownsAlive ? "*" : (dod.length < 1 ? "*" : dod[dod.length - 1].getFullYear());
 
             // console.log("start", startDate, "end", endDate);
             // create "eras" as a part in the grid background made up of date in the corner and an opaque rectangle covering the diagram
-            let part = $(go.Part, "Position", {selectable: false, position: new go.Point(startX, startY - 45), layerName: "Grid"},
-                            $(go.Shape,"Rectangle",
-                                {width : endX - startX, height: endY - startY, margin: 0, fill: i % 2 == 0 ? "#FFFFE0" : "#ADD8E6", opacity: 0.15, stroke: null}),
-                            $(go.TextBlock,
-                                {font: "Italic 24pt calligraphy", text: this.bcDate(startDate) + " - " + this.bcDate(endDate), stroke: "black"},
-                                ),
-                        );
+            let part = $(go.Part, "Position", { selectable: false, position: new go.Point(startX, startY - 45), layerName: "Grid" },
+                $(go.Shape, "Rectangle",
+                    { width: endX - startX, height: endY - startY, margin: 0, fill: i % 2 == 0 ? "#FFFFE0" : "#ADD8E6", opacity: 0.15, stroke: null }),
+                $(go.TextBlock,
+                    { font: "Italic 24pt calligraphy", text: this.bcDate(startDate) + " - " + this.bcDate(endDate), stroke: "black" },
+                ),
+            );
             // add to mapping so can be determined later
             diagram.add(part);
         }
