@@ -7,7 +7,8 @@ import Toolbar from "../Toolbar";
 import Card from "react-bootstrap/Card";
 import Container from 'react-bootstrap/Container';
 import DefaultImg from "../images/default.png";
-import WidePutin from "../images/wideputin.png"
+import Image from "react-bootstrap/Image";
+// import DefaultImg from "../images/wideputin.png";
 
 function withRouter(Component) {
   function ComponentWithRouterProp(props) {
@@ -71,14 +72,8 @@ class ResultPage extends React.Component {
 }
 
 function PersonCard({ onClick, title, desc, imageURL}) {
-  
-  const portrait = imageURL === undefined ? new Image(DefaultImg) : new Image(imageURL);
-
-  let aspect = portrait.width / portrait.height;
-  let displayWidth = 150;
-
   return (
-    <Card style={{ width: '16rem', cursor: 'pointer', height: '22rem' }} className="m-3 result" onClick={onClick}>
+    <Card style={{ width: '16rem', cursor: 'pointer', height: '24rem' }} className="m-3 result" onClick={onClick}>
 
       <Card.Body>
         <Card.Title className="mb-2">{title}</Card.Title>
@@ -86,8 +81,11 @@ function PersonCard({ onClick, title, desc, imageURL}) {
           {desc}
         </Card.Text>
       </Card.Body>
-      
-      <Card.Img variant="botom" src={imageURL === undefined ? DefaultImg : imageURL} height={displayWidth * aspect} width={displayWidth}/>
+
+      <Image
+        className='bottom align-items-center justify-content-center w-50 m-3 rounded'
+        src={imageURL === undefined ? DefaultImg : imageURL}
+      />
     </Card>
   );
 }
