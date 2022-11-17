@@ -63,6 +63,7 @@ export function applyFamilyFilter(id, familyName, idPerson) {
 }
 
 export function transform(data) {
+    console.log(data);
     setRelMap(new Map());
 
     Object.values(data.items).forEach((person) => {

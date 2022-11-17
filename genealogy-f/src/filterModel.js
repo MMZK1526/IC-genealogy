@@ -11,5 +11,6 @@ export class FilterModel {
     this.allDeathPlaces = new Set();
     this.deathPlaces = new Set();
     this.personalName = '';
+    this.hiddenPeople = new Set();
   }
 }

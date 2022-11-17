@@ -1,8 +1,8 @@
-import React from "react";
-import * as go from "gojs";
-import {ReactDiagram} from "gojs-react";
-import {GenogramLayout} from "./GenogramLayout";
-import {ArcLink} from "./ArcLink";
+import React from 'react';
+import * as go from 'gojs';
+import { ReactDiagram } from 'gojs-react';
+import { GenogramLayout } from './GenogramLayout';
+import { ArcLink } from './ArcLink';
 
 const $ = go.GraphObject.make;
 
@@ -11,9 +11,8 @@ export class DiagramWrapper extends React.Component {
         super(props);
         this.diagramRef = React.createRef();
         this.nodeDataArray = props.nodeDataArray;
-        this.yearFrom = props.yearFrom;
-        this.yearTo = props.yearTo;
         this.root = props.root;
+        this.hiddenPeople = props.hiddenPeople;
         this.getFocusPerson = props.getFocusPerson;
         this.personMap = props.personMap;
         this.state = {diagram: undefined, isFirstRender: true};
@@ -26,7 +25,7 @@ export class DiagramWrapper extends React.Component {
         if (diagram instanceof go.Diagram) {
             diagram.addDiagramListener('ObjectSingleClicked', this.props.onDiagramEvent);
         }
-        document.getElementById("svgButton").addEventListener("click", this.makeSvg);
+        document.getElementById('svgButton').addEventListener('click', this.makeSvg);
     }
 
     componentWillUnmount() {
@@ -50,13 +49,13 @@ export class DiagramWrapper extends React.Component {
                 // when a node is selected, draw a big yellow circle behind it
                 nodeSelectionAdornmentTemplate:
                     $(go.Adornment, 'Auto',
-                        {layerName: 'Grid'},  // the predefined layer that is behind everything else
-                        $(go.Shape, 'Circle', {fill: '#c1cee3', stroke: null}),
-                        $(go.Placeholder, {margin: 0})
+                        { layerName: 'Grid' },  // the predefined layer that is behind everything else
+                        $(go.Shape, 'Circle', { fill: '#c1cee3', stroke: null }),
+                        $(go.Placeholder, { margin: 0 })
                     ),
                 scrollMargin: 250,
                 layout:  // use a custom layout, defined below
-                    $(GenogramLayout, {direction: 90, layerSpacing: 50, columnSpacing: 0}),
+                    $(GenogramLayout, { direction: 90, layerSpacing: 50, columnSpacing: 0 }),
                 'InitialLayoutCompleted': _ => {
                     var node = this.diagram.findNodeForKey(this.getFocusPerson());
                     if (node == null) {
@@ -188,17 +187,16 @@ export class DiagramWrapper extends React.Component {
         }
 
         function mouseEnter(e, obj) {
-            var node = obj.findObject("NODE2")
-            // var shape = obj.findObject("SHAPE");
-            // shape.fill = "#6DAB80";
-            // shape.stroke = "#A6E6A1";
-            // var text = obj.findObject("TEXT");
-            // text.stroke = "white";
-            console.log("clicking something")
+            var node = obj.findObject('NODE2')
+            // var shape = obj.findObject('SHAPE');
+            // shape.fill = '#6DAB80';
+            // shape.stroke = '#A6E6A1';
+            // var text = obj.findObject('TEXT');
+            // text.stroke = 'white';
             // highlight all Links and Nodes coming out of a given Node
             var diagram = node.diagram;
-            // node.shape.fill = "#7ec2d7"
-            diagram.startTransaction("highlight");
+            // node.shape.fill = '#7ec2d7'
+            diagram.startTransaction('highlight');
             // remove any previous highlighting
             diagram.clearHighlighteds();
             // node.isHighlighted = true;
@@ -226,20 +224,19 @@ export class DiagramWrapper extends React.Component {
                 n.isHighlighted = true;
                 let link = n.labeledLink;
                 if (link != null) {
-                    console.log(n)
                     link.isHighlighted = true;
                     link.fromNode.isHighlighted = true;
                     link.toNode.isHighlighted = true;
                 }
 
             });
-            diagram.commitTransaction("highlight");
+            diagram.commitTransaction('highlight');
         }
 
         function mouseLeave(e, obj) {
             // e.diagram.commit(function (d) {
             //     d.clearHighlighteds();
-            // }, "no highlighteds");
+            // }, 'no highlighteds');
         }
 
 
@@ -254,14 +251,14 @@ export class DiagramWrapper extends React.Component {
                     locationSpot: go.Spot.Center,
                     locationObjectName: 'ICON',
                     selectionObjectName: 'ICON',
-                    name: "NODE2",
+                    name: 'NODE2',
                     mouseEnter: mouseEnter,
                     mouseLeave: mouseLeave,
                 },
                 // new go.Binding('opacity', 'hide', h => h ? 0 : 1),
                 // new go.Binding('pickable', 'hide', h => !h),
                 $(go.Panel,
-                    {name: 'ICON'},
+                    { name: 'ICON' },
                     $(go.Shape, 'Square',
                         {
                             width: 40,
@@ -270,11 +267,11 @@ export class DiagramWrapper extends React.Component {
                             fill: '#7ec2d7',
                             stroke: '#919191',
                             portId: '',
-                            name: "SHAPE"
+                            name: 'SHAPE'
                         },
-                        new go.Binding('fill', "color"),
+                        new go.Binding('fill', 'color'),
                         new go.Binding('fill', 'isHighlighted', function (h) {
-                            return h ? "#FFD700" : "#7ec2d7";
+                            return h ? '#FFD700' : '#7ec2d7';
                         }).ofObject(),
                         new go.Binding('strokeWidth', 'isHighlighted', function (h) {
                             return h ? 2 : 2;
@@ -285,7 +282,7 @@ export class DiagramWrapper extends React.Component {
                             itemTemplate:
                                 $(go.Panel,
                                     $(go.Shape,
-                                        {stroke: null, strokeWidth: 0},
+                                        { stroke: null, strokeWidth: 0 },
                                         new go.Binding('fill', '', attrFill),
                                         new go.Binding('geometry', '', maleGeometry))
                                 ),
@@ -295,13 +292,13 @@ export class DiagramWrapper extends React.Component {
                     )
                 ),
                 $(go.TextBlock,
-                    {textAlign: 'center', maxSize: new go.Size(80, NaN), background: 'rgba(255,255,255,0.5)'},
+                    { textAlign: 'center', maxSize: new go.Size(80, NaN), background: 'rgba(255,255,255,0.5)' },
                     new go.Binding('text', 'name'), new go.Binding('opacity', 'opacity'))
             ));
         // remove highlighting form all nodes, when user clicks on background
         this.diagram.click = function (e) {
-            e.diagram.commit(function(d) { d.clearHighlighteds(); }, "no highlighteds");
-            // console.log("clearing stuff")
+            e.diagram.commit(function (d) { d.clearHighlighteds(); }, 'no highlighteds');
+            // console.log('clearing stuff')
         };
         this.diagram.nodeTemplateMap.add('female',  // female
             $(go.Node, 'Vertical',
@@ -310,14 +307,14 @@ export class DiagramWrapper extends React.Component {
                     locationSpot: go.Spot.Center,
                     locationObjectName: 'ICON',
                     selectionObjectName: 'ICON',
-                    name: "NODE2",
+                    name: 'NODE2',
                     mouseEnter: mouseEnter,
                     mouseLeave: mouseLeave,
                 },
                 // new go.Binding('opacity', 'hide', h => h ? 0 : 1),
                 // new go.Binding('pickable', 'hide', h => !h),
                 $(go.Panel,
-                    {name: 'ICON'},
+                    { name: 'ICON' },
                     $(go.Shape, 'Circle',
                         {
                             width: 40,
@@ -326,22 +323,22 @@ export class DiagramWrapper extends React.Component {
                             fill: '#ff99a8',
                             stroke: '#a1a1a1',
                             portId: '',
-                            name: "SHAPE"
+                            name: 'SHAPE'
                         },
-                        new go.Binding('fill', "color"),
+                        new go.Binding('fill', 'color'),
                         new go.Binding('opacity', 'opacity'),
                         new go.Binding('strokeWidth', 'isHighlighted', function (h) {
                             return h ? 2 : 2;
                         }).ofObject(),
                         new go.Binding('fill', 'isHighlighted', function (h) {
-                            return h ? "#FFD700" : "#ff99a8";
+                            return h ? '#FFD700' : '#ff99a8';
                         }).ofObject()),
                     $(go.Panel,
                         { // for each attribute show a Shape at a particular place in the overall circle
                             itemTemplate:
                                 $(go.Panel,
                                     $(go.Shape,
-                                        {stroke: null, strokeWidth: 0},
+                                        { stroke: null, strokeWidth: 0 },
                                         new go.Binding('fill', '', attrFill),
                                         new go.Binding('geometry', '', femaleGeometry))
                                 ),
@@ -351,7 +348,7 @@ export class DiagramWrapper extends React.Component {
                     )
                 ),
                 $(go.TextBlock,
-                    {textAlign: 'center', maxSize: new go.Size(80, NaN), background: 'rgba(255,255,255,0.5)'},
+                    { textAlign: 'center', maxSize: new go.Size(80, NaN), background: 'rgba(255,255,255,0.5)' },
                     new go.Binding('text', 'name'), new go.Binding('opacity', 'opacity'))
             ));
 
@@ -362,14 +359,14 @@ export class DiagramWrapper extends React.Component {
                     locationSpot: go.Spot.Center,
                     locationObjectName: 'ICON',
                     selectionObjectName: 'ICON',
-                    name: "NODE2",
+                    name: 'NODE2',
                     mouseEnter: mouseEnter,
                     mouseLeave: mouseLeave,
                 },
                 // new go.Binding('opacity', 'hide', h => h ? 0 : 1),
                 // new go.Binding('pickable', 'hide', h => !h),
                 $(go.Panel,
-                    {name: 'ICON'},
+                    { name: 'ICON' },
                     $(go.Shape, 'Triangle',
                         {
                             width: 40,
@@ -378,35 +375,35 @@ export class DiagramWrapper extends React.Component {
                             fill: '#a1a1a1',
                             stroke: '#a1a1a1',
                             portId: '',
-                            name: "SHAPE"
+                            name: 'SHAPE'
                         },
                         new go.Binding('opacity', 'opacity'),
                         new go.Binding('strokeWidth', 'isHighlighted', function (h) {
                             return h ? 2 : 2;
                         }).ofObject(),
                         new go.Binding('fill', 'isHighlighted', function (h) {
-                            return h ? "#FFD700" : "#a1a1a1";
+                            return h ? '#FFD700' : '#a1a1a1';
                         }).ofObject()),
                 ),
                 $(go.TextBlock,
-                    {textAlign: 'center', maxSize: new go.Size(80, NaN), background: 'rgba(255,255,255,0.5)'},
+                    { textAlign: 'center', maxSize: new go.Size(80, NaN), background: 'rgba(255,255,255,0.5)' },
                     new go.Binding('text', 'name'), new go.Binding('opacity', 'opacity'))
             ));
 
         // the representation of each label node -- nothing shows on a Marriage Link
         this.diagram.nodeTemplateMap.add('LinkLabel',
             $(go.Node, {
-                    selectable: false,
-                    width: 1,
-                    height: 1,
-                    fromEndSegmentLength: 20,
-                    avoidable: false,
-                    layerName: "Foreground"
-                },
-                // $("Shape", "Ellipse",
+                selectable: false,
+                width: 1,
+                height: 1,
+                fromEndSegmentLength: 20,
+                avoidable: false,
+                layerName: 'Foreground'
+            },
+                // $('Shape', 'Ellipse',
                 //     {
                 //       width: 5, height: 5, stroke: null,
-                //       portId: "", fromLinkable: true, toLinkable: true, cursor: "pointer", fill: "black",
+                //       portId: '', fromLinkable: true, toLinkable: true, cursor: 'pointer', fill: 'black',
                 //     })
             ));
 
@@ -419,16 +416,16 @@ export class DiagramWrapper extends React.Component {
                     toSpot: go.Spot.Top,
                     layerName: 'Background', selectable: true,
                 },
-                $(go.Shape, {stroke: '#424242', strokeWidth: 0.5},
+                $(go.Shape, { stroke: '#424242', strokeWidth: 0.5 },
                     new go.Binding('opacity', 'opacity'),
                     // shape stroke and width depend on whether Link.isHighlighted is true
-                    // new go.Binding("stroke", "isHighlighted", function(h) { return h ? "90EE90" : "#424242"; })
+                    // new go.Binding('stroke', 'isHighlighted', function(h) { return h ? '90EE90' : '#424242'; })
                     // .ofObject(),
-                    new go.Binding('strokeWidth', "isHighlighted", function (h) {
+                    new go.Binding('strokeWidth', 'isHighlighted', function (h) {
                         return h ? 5 : 0.5;
                     }).ofObject(),
                 )
-                // new go.Binding("strokeWidth", "isHighlighted", function(h) { return h ? 1 : 0.5; })
+                // new go.Binding('strokeWidth', 'isHighlighted', function(h) { return h ? 1 : 0.5; })
                 // .ofObject())
             );
 
@@ -441,8 +438,8 @@ export class DiagramWrapper extends React.Component {
                     selectable: false,
                     layerName: 'Background'
                 },
-                $(go.Shape, {strokeWidth: 1, stroke: '#5d8cc1' /* blue */}, new go.Binding('opacity', 'opacity'),
-                    new go.Binding('strokeWidth', "isHighlighted", function (h) {
+                $(go.Shape, { strokeWidth: 1, stroke: '#5d8cc1' /* blue */ }, new go.Binding('opacity', 'opacity'),
+                    new go.Binding('strokeWidth', 'isHighlighted', function (h) {
                         return h ? 5 : 0.5;
                     }).ofObject(),)
             ));
@@ -456,11 +453,10 @@ export class DiagramWrapper extends React.Component {
                     selectable: false,
                     layerName: 'Background',
                     click: function (e, link) {
-                        console.log("clicking something")
                         // highlight all Links and Nodes coming out of a given Node
                         var diagram = link.diagram;
-                        // node.shape.fill = "#7ec2d7"
-                        diagram.startTransaction("highlight");
+                        // node.shape.fill = '#7ec2d7'
+                        diagram.startTransaction('highlight');
                         // remove any previous highlighting
                         diagram.clearHighlighteds();
                         link.isHighlighted = true;
@@ -473,11 +469,11 @@ export class DiagramWrapper extends React.Component {
                         });
                         // for each Node destination for the Node, set Node.isHighlighted
                         // node.findNodesOutOf().each(function(n) { n.isHighlighted = true; });
-                        diagram.commitTransaction("highlight");
+                        diagram.commitTransaction('highlight');
                     }
                 },
-                $(go.Shape, {strokeWidth: 1, stroke: '#ff0000' /* red */}, new go.Binding('opacity', 'opacity'),
-                    new go.Binding('strokeWidth', "isHighlighted", function (h) {
+                $(go.Shape, { strokeWidth: 1, stroke: '#ff0000' /* red */ }, new go.Binding('opacity', 'opacity'),
+                    new go.Binding('strokeWidth', 'isHighlighted', function (h) {
                         return h ? 5 : 0.5;
                     }).ofObject(),)
             ));
@@ -487,10 +483,10 @@ export class DiagramWrapper extends React.Component {
 
     downloadSvg = (blob) => {
         const url = window.URL.createObjectURL(blob);
-        const filename = "family-tree.svg";
+        const filename = 'family-tree.svg';
 
-        const a = document.createElement("a");
-        a.style = "display: none";
+        const a = document.createElement('a');
+        a.style = 'display: none';
         a.href = url;
         a.download = filename;
 
@@ -509,15 +505,14 @@ export class DiagramWrapper extends React.Component {
     }
 
     makeSvg = () => {
-        const svg = this.state.diagram.makeSvg({scale: 1, background: "white"});
+        const svg = this.state.diagram.makeSvg({ scale: 1, background: 'white' });
         const svgstr = new XMLSerializer().serializeToString(svg);
-        const blob = new Blob([svgstr], {type: "image/svg+xml"});
+        const blob = new Blob([svgstr], { type: 'image/svg+xml' });
         this.downloadSvg(blob);
     }
 
     // create and initialize the Diagram.model given an array of node data representing people
     setupDiagram(array, focusId) {
-        console.log("got here setup diagram");
         this.diagram.model =
             new go.GraphLinksModel(
                 { // declare support for link label nodes
@@ -599,9 +594,9 @@ export class DiagramWrapper extends React.Component {
                         const hasChildLink = this.findHasChild(diagram, key, wife);
                         // add a label node for the marriage link
                         // add the marriage link itself, also referring to the label node
-                        var mdata = {from: key, to: wife, category: 'Marriage'};
+                        var mdata = { from: key, to: wife, category: 'Marriage' };
                         if (!hasChildLink) {
-                            const mlab = {gender: 'LinkLabel'};
+                            const mlab = { gender: 'LinkLabel' };
                             model.addNodeData(mlab);
                             mdata.labelKeys = [mlab.key];
                         }
@@ -626,7 +621,7 @@ export class DiagramWrapper extends React.Component {
                 var link = this.findHasChild(diagram, father, mother);
                 if (link == null) {
                     // add a label node for the hasChild link
-                    const mlab = {gender: 'LinkLabel'};
+                    const mlab = { gender: 'LinkLabel' };
                     model.addNodeData(mlab);
                     this.diagram.model.addLinkData({
                         from: father,
@@ -643,10 +638,25 @@ export class DiagramWrapper extends React.Component {
                     continue;
                 }
                 const mlabkey = mdata.labelKeys[0];
-                const cdata = {from: mlabkey, to: key};
+                const cdata = { from: mlabkey, to: key };
                 this.diagram.model.addLinkData(cdata);
             }
         }
+    }
+
+    toggleOpacity() {
+        // all model changes should happen in a transaction
+        const hiddenPeople = this.hiddenPeople;
+        this.diagram.model.commit(function (m) {
+            m.nodeDataArray.forEach((d) => {
+                if (hiddenPeople.has(d.key)) {
+                    m.set(d, 'originalOpacity', d.opacity);
+                    m.set(d, 'opacity', '0.2');
+                } else {
+                    m.set(d, 'opacity', d.originalOpacity);
+                }
+            });
+        }, 'toggleOpacity');
     }
 
     render() {
@@ -672,6 +682,11 @@ export class DiagramWrapper extends React.Component {
                 this.diagram.select(node);
             }
         }
+
+        if (this.props.recommit) {
+            this.toggleOpacity();
+        }
+
         if (this.props.zoomToDefault) {
             this.diagram.scale = 1;
         }
