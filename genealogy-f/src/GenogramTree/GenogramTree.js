@@ -323,13 +323,31 @@ class GenogramTree extends React.Component {
     }
 
     containsMoreData = (tree, other) => {
-        return [tree, other].map(x =>
-            Object.entries(x)
-                .filter(([k, v]) => k !== 'items')
-                .map(([k, v]) => v)
-                .map(x => Object.keys(x))
-                .map(x => x.length)
-        ).reduce((t, o) => t[0] > o[0] && t[1] > o[1])[0];
+        const counts = this.countTree(tree);
+        const otherCounts = this.countTree(other);
+        let result = counts[0] > otherCounts[0] && counts[1] > otherCounts[1];
+        return result;
+    }
+
+    countTree = (tree) => {
+        return [
+            this.countItems(tree),
+            this.countRelations(tree),
+        ];
+    }
+
+    countItems = (relationsJSON) => {
+        const obj = relationsJSON.items;
+        const individuals = Object.keys(obj);
+        const result = individuals.length;
+        return result;
+    }
+
+    countRelations = (relationsJSON) => {
+        const obj = relationsJSON.relations;
+        const individuals = Object.values(obj).flat();
+        const result = individuals.length;
+        return result;
     }
 
     loadCustomData = async () => {
