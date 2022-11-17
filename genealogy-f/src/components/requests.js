@@ -96,7 +96,7 @@ export class Requests {
     }
 
     dbResEmpty = (dbRes) => {
-        return !_.isEmpty(Object.values(dbRes).filter(x => !_.isEmpty(x)));
+        return _.isEmpty(Object.values(dbRes).filter(x => !_.isEmpty(x)));
     }
 }
 

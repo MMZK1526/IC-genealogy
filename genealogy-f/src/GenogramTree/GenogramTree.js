@@ -20,6 +20,8 @@ import { getPersonMap, transform, withRouter, ndb } from "./utilFunctions";
 import { TreeNameLookup } from '../components/TreeNameLookup.js';
 import { AiOutlineConsoleSql } from 'react-icons/ai';
 
+const ENABLE_PRE_FETCHING = false;
+
 // optional parameter passed to <ReactDiagram onModelChange = {handleModelChange}>
 // called whenever model is changed
 
@@ -876,8 +878,11 @@ class GenogramTree extends React.Component {
     }
 
     fetchFromCacheOrBackend = async (id, depth) => {
-        if (this.state.relationJSON == null) {
+        if (this.state.relationJSON == null || !ENABLE_PRE_FETCHING) {
             this.fetchRelations({ id: id, depth: depth });
+        }
+        if (!ENABLE_PRE_FETCHING) {
+            return;
         }
         if (this.extendInCache(id)) {
             this.extendFromCache(id);
