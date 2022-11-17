@@ -923,7 +923,7 @@ class GenogramTree extends React.Component {
             newDataAvailable: true,
             newData: wikiTree,
         });
-        console.error('Wiki cache has been updated');
+        console.log('Wiki cache has been updated');
     }
 
     tryExtendFromCache = async () => {
@@ -937,13 +937,13 @@ class GenogramTree extends React.Component {
     updateTreeCache = async (relations) => {
         if (_.isEmpty(this.treeCache)) {
             this.treeCache = relations;
-            console.error('Cache has been updated');
+            console.log('Cache has been updated');
             return;
         }
         const newTree = this.mergeRelations(this.treeCache, relations);
         this.treeCache = await this.injectKinship(this.state.root, newTree);
         await this.tryExtendFromCache();
-        console.error('Cache has been updated');
+        console.log('Cache has been updated');
     }
     // initialises tree (in theory should only be called once, diagram should be .clear() and then data updated for re-initialisation)
 
@@ -979,7 +979,7 @@ class GenogramTree extends React.Component {
             newDataAvailable: true,
             newData: kinshipTree,
         });
-        console.error('Cache was used for rendering');
+        console.log('Cache was used for rendering');
     }
 
     getRenderTreeUsingCache = async (extendId, curTree, cachedTree) => {
