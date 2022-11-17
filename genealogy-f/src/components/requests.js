@@ -23,18 +23,18 @@ export class Requests {
         const params = {id: id, depth: depth, visitedItems: visitedItems};
         const dbRes = await this.relationsDb(params);
         if (!this.dbResEmpty(dbRes)) {
-            // console.error('Database used to fetch data');
+            // console.log('Database used to fetch data');
             return dbRes;
         }
         const wikiDataRes = await this.relations(params);
-        // console.error('Wiki data used to fetch data');
+        // console.log('Wiki data used to fetch data');
         return wikiDataRes;
     }
 
     relations = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [] } = {}) => {
         const url = `${this.baseUrl}/relations_wk?id=${id}&depth=${depth}`;
         return await this.genericPost(url, visitedItems, id, depth).then(x => {
-            console.error('Wiki data used to fetch data');
+            console.log('Wiki data used to fetch data');
             return x;
         });
     }
@@ -42,7 +42,7 @@ export class Requests {
     relationsDb = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [] } = {}) => {
         const url = `${this.baseUrl}/relations_db?id=${id}&depth=${depth}`;
         return await this.genericPost(url, visitedItems, id, depth).then(x => {
-            console.error('Database used to fetch data');
+            console.log('Database used to fetch data');
             return x;
         });
     }
