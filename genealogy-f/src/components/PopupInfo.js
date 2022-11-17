@@ -64,7 +64,7 @@ function getAdditionalProperties(data) {
 		<Container>
 			<Row>
 				<Col md="auto">
-					<Image src={DefaultImg} height='100px' />
+					<Image src={data.get("image")} height='100px' />
 				</Col>
 				<Col>
 					<Row className='mb-1 justify-content-start'>
@@ -108,7 +108,7 @@ function getAdditionalProperties(data) {
 
 function getAllAttr(data) {
 	return Object.keys(Object.fromEntries(data)).filter(function (k) {
-		return k !== "name" && k !== "description" && k !== "wikipedia link";
+		return k !== "name" && k !== "description" && k !== "wikipedia link" && k !== "image";
 	}).map((k) => (
 		<Row key={"Row " + k}>
 			<Col xs={4} key={k}>

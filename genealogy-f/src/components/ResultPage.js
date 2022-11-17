@@ -54,6 +54,8 @@ class ResultPage extends React.Component {
                           title={x.name}
                           key={x.id}
                           desc={x.description}
+                          imageURL={x.additionalProperties.filter((p) => p.name == 'image').length !== 0 ? 
+                          x.additionalProperties.filter((p) => p.name == 'image')[0].value : undefined}
                           onClick={() => {
                             this.id = x.id;
                             this.setState({showTree: true});
@@ -68,9 +70,9 @@ class ResultPage extends React.Component {
     }
 }
 
-function PersonCard({ onClick, title, desc }) {
+function PersonCard({ onClick, title, desc, imageURL}) {
   
-  const portrait = new Image(DefaultImg);
+  const portrait = imageURL === undefined ? new Image(DefaultImg) : new Image(imageURL);
 
   let aspect = portrait.width / portrait.height;
   let displayWidth = 150;
@@ -85,7 +87,7 @@ function PersonCard({ onClick, title, desc }) {
         </Card.Text>
       </Card.Body>
       
-      <Card.Img variant="botom" src={DefaultImg} height={displayWidth * aspect} width={displayWidth}/>
+      <Card.Img variant="botom" src={imageURL === undefined ? DefaultImg : imageURL} height={displayWidth * aspect} width={displayWidth}/>
     </Card>
   );
 }
