@@ -3,15 +3,16 @@ import './stylesheets/Sidebar.css';
 import { Autocomplete, TextField } from '@mui/material';
 
 export function TreeNameLookup(props) {
-    const allPersons = props.getAllPersons();
+    const allPersonsRelations = props.getPersonsRelations();
 
+    // console.log(allPersons);
     return (
         <div className='sidebar pe-auto'>
             <label className="form-label">Look for name in tree: </label>
             <Autocomplete
-                options={allPersons}
+                options={allPersonsRelations}
                 getOptionLabel={(option) => `${option.name}@${option.key}`}
-                value={allPersons.find(person => person.key === props.getFocusPerson())}
+                value={allPersonsRelations.find(person => person.key === props.getFocusPerson())}
                 onChange={props.onPersonSelection}
                 sx={{ width: '100%', backgroundColor: "white" }}
                 renderInput={(params) => {
