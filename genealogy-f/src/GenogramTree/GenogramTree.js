@@ -479,19 +479,7 @@ class GenogramTree extends React.Component {
                     this.state.filters.textFilters[fid].all.add(f);
                 }
             }
-            // for (let f of people.additionalProperties.filter((p) => p.name == 'family').map((p) => p.value)) {
-            //     famMap.add(f);
-            // }
-            // for (let f of people.additionalProperties.filter((p) => p.propertyId == 'SW-P2').map((p) => p.value)) {
-            //     pobMap.add(f);
-            // }
-            // for (let f of people.additionalProperties.filter((p) => p.propertyId == 'SW-P3').map((p) => p.value)) {
-            //     podMap.add(f);
-            // }
         }
-        // this.state.filters.allFamilies = famMap;
-        // this.state.filters.allBirthPlaces = pobMap;
-        // this.state.filters.allDeathPlaces = podMap;
     }
 
     applyFilterAndDrawTree() {
@@ -506,7 +494,7 @@ class GenogramTree extends React.Component {
                 useTextFilter = true;
             }
         }
-        if (filters.bloodline || filters.fromYear !== '' || filters.toYear !== '' || useTextFilter) {
+        if (filters.bloodline || filters.fromYear !== '' || filters.toYear !== '' || useTextFilter || filters.removeHiddenPeople) {
             // Map from item ID to opacity
             let visited = {};
             visited[this.state.root] = '0.9';
@@ -623,7 +611,9 @@ class GenogramTree extends React.Component {
             }
 
             // Filter out hidden people
-            this.state.filters.hiddenPeople.forEach((k) => delete visited[k]);
+            if (filters.removeHiddenPeople) {
+                this.state.filters.hiddenPeople.forEach((k) => delete visited[k]);
+            }
 
             var filteredJSON = { targets: this.state.originalJSON.targets, items: {}, relations: {} };
             Object.keys(visited).forEach((v) => {

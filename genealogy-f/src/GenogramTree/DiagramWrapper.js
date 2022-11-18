@@ -15,7 +15,7 @@ export class DiagramWrapper extends React.Component {
         this.hiddenPeople = props.hiddenPeople;
         this.getFocusPerson = props.getFocusPerson;
         this.personMap = props.personMap;
-        this.state = {diagram: undefined, isFirstRender: true};
+        this.state = { diagram: undefined, isFirstRender: true };
         this.init();
     }
 

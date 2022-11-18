@@ -15,15 +15,6 @@ export function Sidebar(props) {
     return (
         <div className='sidebar pe-auto'>
             <Form className="w-100 mb-3 overflow-auto" style={{ maxHeight: "44vh" }}>
-                {/* <Form.Group className="form-group"  controlId='Name-control'>
-                    <Form.Label>Personal Name</Form.Label>
-                    <Form.Control type='text' placeholder="e.g. Charles" 
-                    onChange={(e) => {
-                        props.filters.personalName = e.target.value;
-                    }}
-                    />
-                </Form.Group> */}
-
                 <Form.Label className="form-label">Family: </Form.Label>
                 <Multiselect
                     id='family-select'
@@ -39,6 +30,14 @@ export function Sidebar(props) {
                     <Form.Check className="mb-1" title='Bloodline' label='Bloodline only' type='checkbox' defaultChecked={props.filters.bloodline}
                         onChange={(e) => {
                             props.filters.bloodline = e.target.checked;
+                        }}
+                    />
+                </Form.Group>
+
+                <Form.Group className='form-group' controlId='hiddenPeople-checkbox'>
+                    <Form.Check className="mb-1" title='Hide' label='Hide uninterested' type='checkbox' defaultChecked={props.filters.removeHiddenPeople}
+                        onChange={(e) => {
+                            props.filters.removeHiddenPeople = e.target.checked;
                         }}
                     />
                 </Form.Group>

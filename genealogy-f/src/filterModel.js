@@ -5,5 +5,6 @@ export class FilterModel {
     this.fromYear = '';
     this.toYear = '';
     this.textFilters = {};
+    this.hiddenPeople = new Set();
   }
 }
