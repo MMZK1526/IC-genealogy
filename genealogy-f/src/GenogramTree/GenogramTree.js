@@ -15,10 +15,10 @@ import Toolbar from '../Toolbar';
 import { FilterModel } from '../filterModel';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import { DiagramWrapper } from "./DiagramWrapper";
-import { getPersonMap, transform, withRouter, ndb } from "./utilFunctions";
+import { DiagramWrapper } from './DiagramWrapper';
+import { getPersonMap, transform, withRouter, ndb } from './utilFunctions';
 import { TreeNameLookup } from '../components/TreeNameLookup.js';
-import { AiOutlineConsoleSql } from 'react-icons/ai';
+import { Opacity } from './Const';
 
 const ENABLE_PRE_FETCHING = false;
 
@@ -84,7 +84,7 @@ class GenogramTree extends React.Component {
     //         return (
     //             <>
     //                 <Toolbar onlyHome={true}/>
-    //                 <Container style={{height: "100vh"}} className="d-flex justify-content-center">
+    //                 <Container style={{height: '100vh'}} className='d-flex justify-content-center'>
     //                     <ModalSpinner/>
     //                 </Container>
     //             </>
@@ -108,8 +108,8 @@ class GenogramTree extends React.Component {
 
     //     return (
     //         <>
-    //             <Container fluid className="pe-none p-0 h-100 justify-content-between" style={{
-    //                 position: "fixed",
+    //             <Container fluid className='pe-none p-0 h-100 justify-content-between' style={{
+    //                 position: 'fixed',
     //                 zIndex: 1
     //             }}>
     //                 <Row>
@@ -117,8 +117,8 @@ class GenogramTree extends React.Component {
     //                         <Toolbar genogramTree={this}/>
     //                     }
     //                 </Row>
-    //                 <Row className="me-4 mh-50 justify-content-end">
-    //                     <Col xs="4">
+    //                 <Row className='me-4 mh-50 justify-content-end'>
+    //                     <Col xs='4'>
     //                         {this.state.showFilters &&
     //                             <Sidebar
     //                                 filters={this.state.filters}
@@ -159,7 +159,7 @@ class GenogramTree extends React.Component {
     //                     </Col>
     //                 </Row>
     //                 <Row>
-    //                     <Col xs="2">
+    //                     <Col xs='2'>
     //                         {this.state.isLoading &&
     //                             <div className='pe-auto'>
     //                                 <ModalSpinner/>
@@ -218,7 +218,7 @@ class GenogramTree extends React.Component {
     // Returns all persons nodes in tree
     getPersonsRelations() {
         return this.relations.filter((person) => {
-            return person.name !== 'unknown' && person.gender !== "LinkLabel";
+            return person.name !== 'unknown' && person.gender !== 'LinkLabel';
         });
     }
 
@@ -355,7 +355,7 @@ class GenogramTree extends React.Component {
     }
 
     loadRelations = (relationJSON, id) => {
-        console.log("Loading relations!");
+        console.log('Loading relations!');
         // Add reciprocal relations.
         for (const [key, relations] of Object.entries(relationJSON.relations)) {
             for (const relation of relations) {
@@ -497,7 +497,7 @@ class GenogramTree extends React.Component {
         if (filters.bloodline || filters.fromYear !== '' || filters.toYear !== '' || useTextFilter || filters.removeHiddenPeople) {
             // Map from item ID to opacity
             let visited = {};
-            visited[this.state.root] = '0.9';
+            visited[this.state.root] = { opacity: Opacity.normal };
             if (filters.bloodline) {
                 console.log('血胤');
                 var frontier = [this.state.root];
@@ -508,10 +508,10 @@ class GenogramTree extends React.Component {
                     if (cur) {
                         if (this.state.originalJSON.relations[cur]) {
                             var newElems = this.state.originalJSON.relations[cur]
-                                .filter((r) => r.type !== 'spouse' && visited[r.item1Id] !== '0.9');
+                                .filter((r) => r.type !== 'spouse' && (!visited[r.item1Id] || visited[r.item1Id].opacity !== Opacity.normal));
                             var newFrontier = newElems.filter((r) => r.type !== 'child').map((r) => r.item1Id);
                             var newDescendants = newElems.filter((r) => r.type === 'child').map((r) => r.item1Id);
-                            newElems.map((r) => r.item1Id).forEach((id) => visited[id] = '0.9');
+                            newElems.map((r) => r.item1Id).forEach((id) => visited[id] = { opacity: Opacity.normal });
                             frontier.push(...newFrontier);
                             descendants.push(...newDescendants);
                         }
@@ -519,18 +519,18 @@ class GenogramTree extends React.Component {
                         cur = descendants.shift();
                         if (this.state.originalJSON.relations[cur]) {
                             var newElems = this.state.originalJSON.relations[cur]
-                                .filter((r) => r.type !== 'spouse' && visited[r.item1Id] !== '0.9');
+                                .filter((r) => r.type !== 'spouse' && (!visited[r.item1Id] || visited[r.item1Id].opacity !== Opacity.normal));
                             var newDescendants = newElems.filter((r) => r.type === 'child').map((r) => r.item1Id);
-                            newDescendants.forEach((id) => visited[id] = '0.9');
+                            newDescendants.forEach((id) => visited[id] = { opacity: Opacity.normal });
                             newElems.filter((r) => !visited[r.item1Id]).map((r) => r.item1Id).forEach((id) => {
-                                visited[id] = '0.5';
+                                visited[id] = { opacity: Opacity.outlier };
                             });
                             descendants.push(...newDescendants);
                         }
                     }
                 }
             } else {
-                Object.keys(this.state.originalJSON.items).forEach((id) => visited[id] = '0.9');
+                Object.keys(this.state.originalJSON.items).forEach((id) => visited[id] = { opacity: Opacity.normal });
             }
 
             // filter on text-based filters
@@ -557,7 +557,7 @@ class GenogramTree extends React.Component {
                         continue;
                     }
                     dob = ndb(dob.value.split('T')[0]);
-                    let fromYear = filters.fromYear[0] == "-" ? "-" + (filters.fromYear.substring(1)).padStart(6, '0') : filters.fromYear.padStart(4, '0');
+                    let fromYear = filters.fromYear[0] == '-' ? '-' + (filters.fromYear.substring(1)).padStart(6, '0') : filters.fromYear.padStart(4, '0');
                     if (new Date(dob).getFullYear() < new Date(fromYear).getFullYear()) {
                         delete visited[k];
                         continue;
@@ -573,7 +573,7 @@ class GenogramTree extends React.Component {
                         continue;
                     }
                     dob = ndb(dob.value.split('T')[0]);
-                    let toYear = filters.toYear[0] == "-" ? "-" + (filters.toYear.substring(1)).padStart(6, '0') : filters.toYear.padStart(4, '0');
+                    let toYear = filters.toYear[0] == '-' ? '-' + (filters.toYear.substring(1)).padStart(6, '0') : filters.toYear.padStart(4, '0');
                     if (new Date(dob).getFullYear() > new Date(toYear).getFullYear()) {
                         delete visited[k];
                         continue;
@@ -605,7 +605,7 @@ class GenogramTree extends React.Component {
                 frontier.addAll(outlierVisited);
                 outlierVisited.each((ov) => {
                     if (!visited[ov]) {
-                        visited[ov] = '0.5';
+                        visited[ov] = { opacity: Opacity.outlier };
                     }
                 })
             }
@@ -613,12 +613,13 @@ class GenogramTree extends React.Component {
             // Filter out hidden people
             if (filters.removeHiddenPeople) {
                 this.state.filters.hiddenPeople.forEach((k) => delete visited[k]);
+            } else {
+                this.state.filters.hiddenPeople.forEach((k) => visited[k] = { opacity: Opacity.hidden, originalOpacity: visited[k].opacity });
             }
 
             var filteredJSON = { targets: this.state.originalJSON.targets, items: {}, relations: {} };
             Object.keys(visited).forEach((v) => {
-                filteredJSON.items[v] = this.state.originalJSON.items[v];
-                filteredJSON.items[v].opacity = visited[v];
+                filteredJSON.items[v] = { ...this.state.originalJSON.items[v], ...visited[v] };
                 if (this.state.originalJSON.relations[v]) {
                     filteredJSON.relations[v] = this.state.originalJSON.relations[v].filter((r) => visited[r.item1Id]);
                 }
@@ -716,13 +717,13 @@ class GenogramTree extends React.Component {
             return (
                 <>
                     <Toolbar onlyHome={true} />
-                    <Container style={{ height: "100vh" }} className="d-flex justify-content-center">
+                    <Container style={{ height: '100vh' }} className='d-flex justify-content-center'>
                         <ModalSpinner />
                     </Container>
                 </>
             );
         }
-        console.log("got here initial getting person map");
+        console.log('got here initial getting person map');
         var updateDiagram = false;
         if (this.state.isUpdated) {
             this.state.isUpdated = false;
@@ -746,8 +747,8 @@ class GenogramTree extends React.Component {
 
         return (
             <>
-                <Container fluid className="pe-none p-0 h-100 justify-content-between" style={{
-                    position: "fixed",
+                <Container fluid className='pe-none p-0 h-100 justify-content-between' style={{
+                    position: 'fixed',
                     zIndex: 1
                 }}>
                     <Row>
@@ -755,8 +756,8 @@ class GenogramTree extends React.Component {
                             <Toolbar genogramTree={this} />
                         }
                     </Row>
-                    <Row className="me-4 mh-50 justify-content-end">
-                        <Col xs="4">
+                    <Row className='me-4 mh-50 justify-content-end'>
+                        <Col xs='4'>
                             {this.state.showFilters &&
                                 <Sidebar
                                     filters={this.state.filters}
@@ -803,7 +804,7 @@ class GenogramTree extends React.Component {
                         </Col>
                     </Row>
                     <Row>
-                        <Col xs="2">
+                        <Col xs='2'>
                             {this.state.isLoading &&
                                 <div className='pe-auto'>
                                     <ModalSpinner />

@@ -1,6 +1,7 @@
-import React from "react";
-import { relMap, setRelMap } from "./globals";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import React from 'react';
+import { relMap, setRelMap } from './globals';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Opacity } from './Const';
 
 // comparing date using js inbuilt date
 export function applyDateOfBirthFilter(id, dateFrom, dateTo, idPerson) {
@@ -41,7 +42,7 @@ export function applyDateOfBirthFilter(id, dateFrom, dateTo, idPerson) {
 }
 
 export function ndb(d) {
-    return d[0] == "-" ? "-00" + d.substring(1) : d;
+    return d[0] == '-' ? '-00' + d.substring(1) : d;
 }
 
 export function applyFamilyFilter(id, familyName, idPerson) {
@@ -62,7 +63,7 @@ export function applyFamilyFilter(id, familyName, idPerson) {
     return family.some((x) => x.value.toLowerCase().includes(familyName.toLowerCase()));
 }
 
-export function transform(data) {
+export function transform(data, filters) {
     console.log(data);
     setRelMap(new Map());
 
@@ -79,13 +80,14 @@ export function transform(data) {
             }
         }
         if (!hasGender) {
-            singlePerson.set('gender', "unknown")
+            singlePerson.set('gender', 'unknown')
         }
 
         singlePerson.set('key', person.id);
         singlePerson.set('name', person.name);
         singlePerson.set('spouse', []);
         singlePerson.set('opacity', person.opacity);
+        singlePerson.set('originalOpacity', person.originalOpacity);
         relMap.set(person.id, Object.fromEntries(singlePerson));
     });
 
@@ -129,14 +131,14 @@ export function transform(data) {
     for (let key of relMap.keys()) {
         newOutput.push(relMap.get(key));
     }
-    // console.log(newOutput);
+
     return newOutput;
 
 }
 
 export function addUnknown(mfs, relMap) {
     if (mfs.mother && !mfs.father) {
-        let newF = { key: '_' + mfs.mother, name: 'unknown', gender: 'male', opacity: '0.2' };
+        let newF = { key: '_' + mfs.mother, name: 'unknown', gender: 'male', opacity: Opacity.hidden };
         // marry parent to unknown and set child parent to unknown
         newF.spouse = [mfs.mother];
         mfs.father = newF.key;
@@ -146,7 +148,7 @@ export function addUnknown(mfs, relMap) {
 
     // case of unknown mother - temporarily replace with 'unknown' node
     if (!mfs.mother && mfs.father) {
-        let newM = { key: '_' + mfs.father, name: 'unknown', gender: 'female', opacity: '0.2' };
+        let newM = { key: '_' + mfs.father, name: 'unknown', gender: 'female', opacity: Opacity.hidden };
         // marry parent to unknown and set child parent to unknown
         newM.spouse = [mfs.father];
         mfs.mother = newM.key;
@@ -183,7 +185,7 @@ export function getPersonMap(data) {
             if (attr.value === null || attr.value === '') continue;
             if (attr.propertyId === 'WD-P19' || attr.propertyId === 'WD-P20') continue; // not used by new PoB, PoD design
             if (attr.name === 'family name' || attr.name === 'given name') continue;    // this two fields not show, use personal name instead
-            if (attr.value.includes(".well-known")) continue; // Ignore ID values that are not parsed successfully in the back-end
+            if (attr.value.includes('.well-known')) continue; // Ignore ID values that are not parsed successfully in the back-end
 
             if (attrMap.has(attr.name) && attr.name === 'family') {
                 let newVal = attrMap.get(attr.name) + '; ' + attr.value;

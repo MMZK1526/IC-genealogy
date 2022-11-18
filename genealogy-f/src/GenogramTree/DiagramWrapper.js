@@ -3,6 +3,7 @@ import * as go from 'gojs';
 import { ReactDiagram } from 'gojs-react';
 import { GenogramLayout } from './GenogramLayout';
 import { ArcLink } from './ArcLink';
+import { Opacity } from './Const';
 
 const $ = go.GraphObject.make;
 
@@ -69,7 +70,8 @@ export class DiagramWrapper extends React.Component {
                 'toolManager.dragSelectingTool': null,
                 minScale: 0.1,
                 maxScale: 5,
-            })
+            });
+
         this.diagram = this.state.diagram;
         // determine the color for each attribute shape
         function attrFill(a) {
@@ -211,13 +213,6 @@ export class DiagramWrapper extends React.Component {
                         l.isHighlighted = true;
                         l.toNode.isHighlighted = true;
                     });
-                    // while (!result.done) {
-                    //   console.log(typeof result.node);
-                    //   // result.isHighlighted = true;
-                    //   console.log(typeof result.value);
-                    //   result = it.next();
-                    //   break
-                    // }
                 }
             });
             node.findNodesConnected().each(function (n) {
@@ -655,8 +650,8 @@ export class DiagramWrapper extends React.Component {
             m.nodeDataArray.forEach((d) => {
                 if (hiddenPeople.has(d.key)) {
                     m.set(d, 'originalOpacity', d.opacity);
-                    m.set(d, 'opacity', '0.2');
-                } else {
+                    m.set(d, 'opacity', Opacity.hidden);
+                } else if (d.originalOpacity !== undefined) {
                     m.set(d, 'opacity', d.originalOpacity);
                 }
             });
