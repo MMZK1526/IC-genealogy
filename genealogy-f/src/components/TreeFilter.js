@@ -11,7 +11,19 @@ export function TreeFilter(props) {
             'border': '1px solid',
         },
     };
-    console.log(Array.from(props.filters.textFilters['WD-P53'].all));
+
+    const clearSelections = () => {
+        // Clear all selections
+        for (let key of Object.keys(props.filters.textFilters)) {
+            props.filters.textFilters[key].choice.clear();
+        }
+
+        // Reset to bloodline only
+        props.filters.bloodline = true;
+
+        props.onChange(true);
+    }
+
     return (
         <div className='sidebar pe-auto'>
             <Form className="w-100 mb-3 overflow-auto" style={{ maxHeight: "44vh" }}>
@@ -84,10 +96,13 @@ export function TreeFilter(props) {
 
             </Form>
 
-            <Button className='m-1 text-center w-100' variant="primary" onClick={() => props.onChange()}>
+            <Button className='m-1 text-center w-100' variant="success" onClick={() => props.onChange(false)}>
                 Apply
             </Button>
-            <Button className='m-1 text-center w-100' variant="danger" onClick={() => props.onPrune()}>
+            <Button className='m-1 text-center w-100' variant="primary" onClick={() => clearSelections()}>
+                Reset
+            </Button>
+            <Button className='mt-4 m-1 text-center w-100' variant="danger" onClick={() => props.onPrune()}>
                 Prune
             </Button>
         </div>

@@ -779,7 +779,7 @@ class GenogramTree extends React.Component {
                                             isUpdated: true
                                         });
                                     }}
-                                    onChange={() => this.setState({ isUpdated: true, isLoading: true })}
+                                    onChange={(isReset) => this.setState({ isUpdated: true, isLoading: true, showFilters: !isReset })}
                                     onPrune={() => {
                                         this.state.originalJSON.relations = JSON.parse(JSON.stringify(this.state.relationJSON.relations));
                                         for (const key of Object.keys(this.state.originalJSON.items)) {
