@@ -1,7 +1,7 @@
 .sidebar {
   padding: 20px;
-  max-height: 88vh;
-  background-color: rgba(201, 220, 236, 1);
+  /* max-height: 88vh; */
+  background-color: white;
 
   border-radius: 5px;
 
