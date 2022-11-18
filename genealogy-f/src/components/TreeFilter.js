@@ -4,7 +4,7 @@ import Button from 'react-bootstrap/Button';
 import './stylesheets/Sidebar.css';
 import Multiselect from 'multiselect-react-dropdown';
 
-export function Sidebar(props) {
+export function TreeFilter(props) {
     const style = {
         searchBox: { // To change search box element look
             'fontSize': '20px',

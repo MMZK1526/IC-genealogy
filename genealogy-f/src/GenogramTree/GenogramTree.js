@@ -1,4 +1,4 @@
-import { Sidebar } from '../components/Sidebar.js';
+import { TreeFilter } from '../components/TreeFilter.js';
 import Container from 'react-bootstrap/Container';
 import React from 'react';
 import * as go from 'gojs';
@@ -120,7 +120,7 @@ class GenogramTree extends React.Component {
     //                 <Row className='me-4 mh-50 justify-content-end'>
     //                     <Col xs='4'>
     //                         {this.state.showFilters &&
-    //                             <Sidebar
+    //                             <TreeFilter
     //                                 filters={this.state.filters}
     //                                 yearFromChange={e => {
     //                                     this.setState({
@@ -759,7 +759,7 @@ class GenogramTree extends React.Component {
                     <Row className='me-4 mh-50 justify-content-end'>
                         <Col xs='4'>
                             {this.state.showFilters &&
-                                <Sidebar
+                                <TreeFilter
                                     filters={this.state.filters}
                                     yearFromChange={e => {
                                         this.setState({
