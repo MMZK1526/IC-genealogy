@@ -103,6 +103,7 @@ export class NameSearch extends React.Component {
         await this.requests.search(this.state.initialName).then(r => {
             if (Object.values(r).length === 0) {
                 alert("Person not found!");
+                this.setState({isLoading: false});
                 return;
             }
 
