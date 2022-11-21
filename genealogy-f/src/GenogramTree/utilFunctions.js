@@ -166,7 +166,7 @@ export function capitalizeFirstLetter(string) {
 // Create a map of maps
 // Outer map: personId -> inner map
 // Inner map: property -> value
-export function getPersonMap(data) {
+export function getPersonMap(data, allRelations) {
     let personMap = new Map;
     for (let person of data) {
         const personId = person.id;
@@ -177,8 +177,19 @@ export function getPersonMap(data) {
             attributes.set('description', person.description);
         }
 
+        let person_relations = allRelations.filter((p) => p[0].item2Id == personId)[0];
 
         let attrMap = new Map;
+        for (let rela of person_relations) {
+            let targetName = data.filter((p) => p.id == rela.item1Id)[0].name;
+            if (attrMap.has(rela.type)) {
+                attrMap.set(rela.type, attrMap.get(rela.type) + ", " + targetName)
+            } else {
+                attrMap.set(rela.type, targetName);
+            }
+        }
+
+
         // wash data for additionalProperties
         for (let attr of person.additionalProperties) {
             // If field doesn't present, don't put in the Map

@@ -587,7 +587,7 @@ class GenogramTree extends React.Component {
             this.state.isUpdated = false;
             this.applyFilterAndDrawTree();
             this.relations = transform(this.state.relationJSON);
-            this.personMap = getPersonMap(Object.values(this.state.originalJSON.items));
+            this.personMap = getPersonMap(Object.values(this.state.originalJSON.items), Object.values(this.state.originalJSON.relations));
             updateDiagram = true;
             this.state.isLoading = false;
         }
@@ -601,7 +601,7 @@ class GenogramTree extends React.Component {
             recommit = true;
             this.state.recommit = false;
         }
-        this.personMap = getPersonMap(Object.values(this.state.originalJSON.items));
+        this.personMap = getPersonMap(Object.values(this.state.originalJSON.items), Object.values(this.state.originalJSON.relations));
 
         return (
             <>
