@@ -1,18 +1,17 @@
 import React from 'react';
 import './stylesheets/Sidebar.css';
-// import { Autocomplete, TextField } from '@mui/material';
 
-export function TreeGroups(props) {
-    // const allPersonsRelations = props.getPersonsRelations();
-    // const personMap = props.getPersonMap();
+export class TreeGroups extends React.Component {
+  constructor(props) {
+    super(props);
+    // TODO
+  }
 
-    // const getPersonalName = (key) => {
-    //     return personMap.get(key).get("personal name");
-    // }
-
+  render() {
     return (
-        <div className='sidebar pe-auto'>
-            Default tree group
-        </div>
+      <div className='sidebar pe-auto'>
+        Default tree group
+      </div>
     );
+  }
 }
