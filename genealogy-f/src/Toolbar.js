@@ -5,6 +5,7 @@ import { BiHomeAlt } from 'react-icons/bi';
 import { downloadJsonFile } from './components/exportAsJson';
 import { AiFillFilter } from 'react-icons/ai';
 import { MdPersonSearch } from 'react-icons/md';
+import { GrGroup } from 'react-icons/gr';
 
 function Toolbar(props) {
   return (
@@ -57,9 +58,23 @@ function Toolbar(props) {
         }
       </ButtonToolbar>
       <ButtonToolbar className="me-4">
+      {!props.onlyHome &&
+          <Button className="me-2" variant='warning' onClick={() => {
+            props.genogramTree.setState({
+              showGroups: !props.genogramTree.state.showGroups,
+              showLookup: false,
+              showFilters: false,
+            });
+          }}>
+            <GrGroup size={30} className="align-middle me-1" />
+
+            <span className="align-middle">Group</span>
+          </Button>
+        }
         {!props.onlyHome &&
           <Button className="me-2" variant='warning' onClick={() => {
             props.genogramTree.setState({
+              showGroups: false,
               showLookup: !props.genogramTree.state.showLookup,
               showFilters: false,
             });
@@ -72,8 +87,9 @@ function Toolbar(props) {
         {!props.onlyHome &&
           <Button className="me-0" variant='warning' onClick={() => {
             props.genogramTree.setState({
-              showFilters: !props.genogramTree.state.showFilters,
+              showGroups: false,
               showLookup: false,
+              showFilters: !props.genogramTree.state.showFilters,
             });
           }}>
             <AiFillFilter size={30} className="align-middle" />
