@@ -106,7 +106,7 @@ class GenogramTree extends React.Component {
     }
 
     handleDiagramEvent(event) {
-        console.log(this.personMap);
+        // console.log(this.personMap);
         if (!this.personMap.has(event.subject.part.key)) {
             return;
         }
@@ -581,7 +581,7 @@ class GenogramTree extends React.Component {
                 </>
             );
         }
-        console.log('got here initial getting person map');
+        // console.log('got here initial getting person map');
         var updateDiagram = false;
         if (this.state.isUpdated) {
             this.state.isUpdated = false;
