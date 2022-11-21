@@ -19,6 +19,7 @@ import { DiagramWrapper } from './DiagramWrapper';
 import { getPersonMap, transform, withRouter, ndb } from './utilFunctions';
 import { TreeNameLookup } from '../components/TreeNameLookup.js';
 import { Opacity } from './Const';
+import { TreeGroups } from '../components/TreeGroups.js';
 
 const ENABLE_PRE_FETCHING = false;
 
@@ -800,6 +801,10 @@ class GenogramTree extends React.Component {
                                     getFocusPerson={this.getFocusPerson}
                                     getPersonMap={this.getPersonMap}
                                 />
+                            }
+                            {
+                                this.state.showGroups &&
+                                <TreeGroups/>
                             }
                         </Col>
                     </Row>
