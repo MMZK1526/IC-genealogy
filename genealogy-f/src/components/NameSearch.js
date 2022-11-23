@@ -28,7 +28,7 @@ export class NameSearch extends React.Component {
 
     render() {
         if (this.state.result) {
-            return (<Navigate to="/result" replace={true} state={{result: this.state.result}}/>);
+            return (<Navigate to="/result" replace={true} state={{result: this.state.result, name: this.state.initialName}}/>);
         }
         if (this.state.showTree) {
             return (<Navigate to="/tree" replace={true} state={{source: this.id, relations: this.relations}}/>);

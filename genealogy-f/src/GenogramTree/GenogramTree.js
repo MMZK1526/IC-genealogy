@@ -36,6 +36,7 @@ class GenogramTree extends React.Component {
         this.extensionId = null;
         let rawJSON = null;
         this.source = props.router.location.state ? props.router.location.state.source : null;
+        this.sourceName = props.router.location.state ? props.router.location.state.sourceName : null;
         if (this.source) {
             rawJSON = props.router.location.state.relations;
             this.handleModelChange = this.handleModelChange.bind(this);
@@ -69,6 +70,10 @@ class GenogramTree extends React.Component {
             };
             this.componentRef = React.createRef();
         }
+    }
+
+    componentDidMount(){
+        document.title = this.sourceName + "'s family tree - Ancesta";
     }
 
     // Returns all persons nodes in tree

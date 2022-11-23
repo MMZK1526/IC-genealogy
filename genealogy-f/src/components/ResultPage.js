@@ -29,15 +29,20 @@ class ResultPage extends React.Component {
     constructor(props) {
       super(props);
       this.rawJSON = props.router.location.state ? props.router.location.state.result : null;
+      this.name = props.router.location.state ? props.router.location.state.name : '';
       this.state = {
         showTree: false
       };
       this.id = null;
     }
 
+    componentDidMount(){
+      document.title = "Results for " + this.name + " - Ancesta";
+    }
+
     render() {
       if (this.state.showTree) {
-        return (<Navigate to="/tree" replace={true} state={{source: this.id, relations: null}}/>);
+        return (<Navigate to="/tree" replace={true} state={{source: this.id, relations: null, sourceName: this.name}}/>);
       }
       return (
         <>
@@ -58,6 +63,7 @@ class ResultPage extends React.Component {
                           x.additionalProperties.filter((p) => p.name == 'image')[0].value : undefined}
                           onClick={() => {
                             this.id = x.id;
+                            this.name = x.name;
                             this.setState({showTree: true});
                           }}
                       />
