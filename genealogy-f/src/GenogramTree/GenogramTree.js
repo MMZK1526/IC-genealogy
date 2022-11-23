@@ -664,10 +664,6 @@ class GenogramTree extends React.Component {
                                 this.state.showGroups &&
                                 <TreeGroups/>
                             }
-                            {
-                                this.state.showRelations &&
-                                <TreeRelations/>
-                            }
                         </Col>
                     </Row>
                     <Row>
@@ -732,6 +728,15 @@ class GenogramTree extends React.Component {
                         <EscapeCloseable className='popup'>
                             <StatsPanel data={this.state.relationJSON} onClick={this.handleStatsClick} />
                         </EscapeCloseable>
+                    </div>
+                }
+
+                {
+                    this.state.showRelations &&
+                    <div className='popup'>
+                        <TreeRelations
+                            closePopUp={() => this.setState({ showRelations: false })}
+                        />
                     </div>
                 }
 

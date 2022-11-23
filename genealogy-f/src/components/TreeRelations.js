@@ -1,17 +1,24 @@
 import './stylesheets/PopupInfo.css';
-// import { Autocomplete, TextField } from '@mui/material';
+import './stylesheets/shared.css';
+import EscapeCloseable from './EscapeCloseable';
+import CloseButton from 'react-bootstrap/CloseButton';
+import Container from 'react-bootstrap/Container';
 
 export function TreeRelations(props) {
-	// const allPersonsRelations = props.getPersonsRelations();
-	// const personMap = props.getPersonMap();
-
-	// const getPersonalName = (key) => {
-	// 	return personMap.get(key).get("personal name");
-	// }
-
 	return (
-		<div className='sidebar pe-auto'>
+		<div className='popup-inner'>
+			<EscapeCloseable onClick={props.closePopUp}>
+				<CloseButton className='close-btn' onClick={props.closePopUp} />
+				{getRelations() /* TODO: getRelations(props.info) */}
+			</EscapeCloseable>
+		</div >
+	);
+}
+
+function getRelations(data) {
+	return (
+		<Container>
 			TODO
-		</div>
+		</Container>
 	);
 }
