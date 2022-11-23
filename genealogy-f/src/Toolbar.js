@@ -61,7 +61,7 @@ function Toolbar(props) {
       </ButtonToolbar>
       {!props.onlyHome &&
         <ButtonToolbar className="me-4">
-          <Button className="me-2" variant='dark' onClick={() => {
+          <Button className="me-2" variant='secondary' onClick={() => {
             props.genogramTree.setState({
               showRelations: !props.genogramTree.state.showRelations,
               showLookup: false,
@@ -73,7 +73,7 @@ function Toolbar(props) {
             <span className="align-middle"> Relations</span>
           </Button>
 
-          <Button className="me-2" variant='dark' onClick={() => {
+          <Button className="me-2" variant='secondary' onClick={() => {
             props.genogramTree.setState({
               showRelations: false,
               showLookup: !props.genogramTree.state.showLookup,

@@ -11,8 +11,9 @@ import { ButtonGroup } from 'react-bootstrap';
 import CloseButton from 'react-bootstrap/CloseButton';
 import { TbMapSearch } from 'react-icons/tb'
 import { capitalizeFirstLetter } from '../GenogramTree/utilFunctions';
-import DefaultImg from '../images/default.png';
 import Image from 'react-bootstrap/Image';
+import DefaultImg from '../images/default.png';
+import PersonWeb from '../images/person-web.png';
 import { Utils } from './utils';
 
 function PopupInfo(props) {
@@ -76,7 +77,8 @@ function getAdditionalProperties(data) {
 							{data.has('description') ? capitalizeFirstLetter(data.get('description')) : '(No description)'}
 						</p>
 					</Row>
-					<ButtonGroup aria-label='LinksGroup'>
+
+					<ButtonGroup className='me-2' aria-label='LinksGroup'>
 						{
 							data.has('wikipedia link') &&
 							<Button variant='light' className='wikilink' onClick={() => openInWikipedia(data.get('wikipedia link'))}>
@@ -88,6 +90,11 @@ function getAdditionalProperties(data) {
 							<FcGoogle size={30} />
 						</Button>
 					</ButtonGroup>
+
+					<Button variant='secondary' onClick={() => {}}>
+						<Image src={PersonWeb} height='30px' className="align-middle" />
+            			<span className="align-middle"> Relations</span>
+					</Button>
 				</Col>
 			</Row>
 			<Row>
