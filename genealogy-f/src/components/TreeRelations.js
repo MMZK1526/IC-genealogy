@@ -3,22 +3,41 @@ import './stylesheets/shared.css';
 import EscapeCloseable from './EscapeCloseable';
 import CloseButton from 'react-bootstrap/CloseButton';
 import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import { capitalizeFirstLetter } from '../GenogramTree/utilFunctions';
+import { Utils } from './utils';
 
 export function TreeRelations(props) {
 	return (
 		<div className='popup-inner'>
 			<EscapeCloseable onClick={props.closePopUp}>
 				<CloseButton className='close-btn' onClick={props.closePopUp} />
-				{getRelations(props.info)}
+				{ShowRelations(props.info)}
 			</EscapeCloseable>
 		</div >
 	);
 }
 
-function getRelations(data) {
+function ShowRelations(data) {
 	return (
 		<Container>
-			{data}
+			{getRelationFields(data)}
 		</Container>
 	);
+}
+
+function getRelationFields(data) {
+	return Object.keys(Object.fromEntries(data)).filter(function (k) {
+		return Utils.relationsKeywords.includes(k);
+	}).map((k) => (
+		<Row key={'Row ' + k}>
+			<Col xs={4} key={k}>
+				<p>{capitalizeFirstLetter(k)}</p>
+			</Col>
+			<Col key={data.get(k)}>
+				<p>{data.get(k)}</p>
+			</Col>
+		</Row>
+	));
 }

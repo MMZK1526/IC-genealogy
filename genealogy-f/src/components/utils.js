@@ -3,6 +3,10 @@ import {Requests} from './requests';
 import util from "util";
 
 export class Utils {
+    static get relationsKeywords() { return ['spouse', 'father', 'mother', 'child', 'relation to the searched person'];}
+    static get locationKeywords() { return ['place of birth', 'place of death'];}
+    static get specialKeywords() { return ['name', 'description', 'wikipedia link', 'image'];}
+
     constructor() {
         this.requests = new Requests();
     }

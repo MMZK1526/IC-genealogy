@@ -13,6 +13,7 @@ import { TbMapSearch } from 'react-icons/tb'
 import { capitalizeFirstLetter } from '../GenogramTree/utilFunctions';
 import DefaultImg from '../images/default.png';
 import Image from 'react-bootstrap/Image';
+import { Utils } from './utils';
 
 function PopupInfo(props) {
 	const onNew = (_) => {
@@ -100,7 +101,7 @@ function getAdditionalProperties(data) {
 
 function getAllAttr(data) {
 	return Object.keys(Object.fromEntries(data)).filter(function (k) {
-		return k !== 'name' && k !== 'description' && k !== 'wikipedia link' && k !== 'image';
+		return !Utils.specialKeywords.includes(k) && !Utils.relationsKeywords.includes(k);
 	}).map((k) => (
 		<Row key={'Row ' + k}>
 			<Col xs={4} key={k}>
@@ -108,12 +109,12 @@ function getAllAttr(data) {
 			</Col>
 			<Col key={data.get(k)}>
 				{
-					k === 'place of birth' || k === 'place of death'
-						? <a href={'http://www.google.com/maps?q=' + data.get(k)} target='_blank' rel='noopener noreferrer'>
-							<TbMapSearch />
-							{' ' + data.get(k)}
-						</a>
-						: <p>{data.get(k)}</p>
+					Utils.locationKeywords.includes(k)
+					? <a href={'http://www.google.com/maps?q=' + data.get(k)} target='_blank' rel='noopener noreferrer'>
+						<TbMapSearch />
+						{' ' + data.get(k)}
+					</a>
+					: <p>{data.get(k)}</p>
 				}
 			</Col>
 		</Row>
