@@ -9,7 +9,7 @@ export function TreeRelations(props) {
 		<div className='popup-inner'>
 			<EscapeCloseable onClick={props.closePopUp}>
 				<CloseButton className='close-btn' onClick={props.closePopUp} />
-				{getRelations() /* TODO: getRelations(props.info) */}
+				{getRelations(props.info)}
 			</EscapeCloseable>
 		</div >
 	);
@@ -18,7 +18,7 @@ export function TreeRelations(props) {
 function getRelations(data) {
 	return (
 		<Container>
-			TODO
+			{data}
 		</Container>
 	);
 }

@@ -6,7 +6,6 @@ import '../stylesheets/App.css';
 import PopupInfo from '../components/PopupInfo.js'
 import '../stylesheets/GenogramTree.css';
 import { StatsPanel } from '../components/StatsPanel';
-import EscapeCloseable from '../components/EscapeCloseable';
 import '../components/stylesheets/shared.css';
 import _ from 'lodash';
 import { setStatePromise } from '../components/utils';
@@ -41,8 +40,6 @@ class GenogramTree extends React.Component {
             rawJSON = props.router.location.state.relations;
             this.handleModelChange = this.handleModelChange.bind(this);
             this.handleDiagramEvent = this.handleDiagramEvent.bind(this);
-            this.closePopUp = this.closePopUp.bind(this);
-            this.handleStatsClick = this.handleStatsClick.bind(this);
             this.handlePopupExtend = this.handlePopupExtend.bind(this);
             this.getPersonsRelations = this.getPersonsRelations.bind(this);
             this.getPersonMap = this.getPersonMap.bind(this);
@@ -96,12 +93,6 @@ class GenogramTree extends React.Component {
         return this.personMap;
     }
 
-    closePopUp() {
-        this.setState({
-            isPopped: false
-        })
-    }
-
     handleModelChange(changes) {
         console.log('GoJS model changed!');
     }
@@ -117,11 +108,6 @@ class GenogramTree extends React.Component {
         })
     }
 
-    handleStatsClick() {
-        this.setState((state) => ({
-            showStats: !state.showStats,
-        }));
-    }
     integrateKinshipIntoRelationJSON(kinshipJson, relationJSON) {
         for (const key of Object.keys(kinshipJson)) {
             const kinshipStr = kinshipJson[key].map((arr) => {
@@ -677,32 +663,51 @@ class GenogramTree extends React.Component {
                     </Row>
                 </Container>
                 {
-                    this.state.isPopped
-                        ? <div className='popup'>
-                            <PopupInfo
-                                closePopUp={this.closePopUp}
-                                info={this.personMap.get(this.state.personInfo)}
-                                onNew={() => {
-                                    this.state.root = this.state.personInfo;
-                                    this.fetchKinships(this.state.root, this.state.originalJSON);
-                                }}
-                                isHidden={this.state.filters.hiddenPeople.has(this.state.personInfo)}
-                                onToggle={() => {
-                                    let hidden = this.state.filters.hiddenPeople;
-                                    if (hidden.has(this.state.personInfo)) {
-                                        hidden.delete(this.state.personInfo);
-                                    } else {
-                                        hidden.add(this.state.personInfo);
-                                    }
-                                    this.setState({ recommit: true });
-                                }}
-                                onExtend={this.handlePopupExtend}
-                                allowExtend={this.props.allowExtend}
-                            >
-                            </PopupInfo>
-                        </div>
-                        : ''
+                    this.state.isPopped &&
+                    <div className='popup'>
+                        <PopupInfo
+                            closePopUp={() => this.setState({ isPopped: false })}
+                            info={this.personMap.get(this.state.personInfo)}
+                            onNew={() => {
+                                this.state.root = this.state.personInfo;
+                                this.fetchKinships(this.state.root, this.state.originalJSON);
+                            }}
+                            isHidden={this.state.filters.hiddenPeople.has(this.state.personInfo)}
+                            onToggle={() => {
+                                let hidden = this.state.filters.hiddenPeople;
+                                if (hidden.has(this.state.personInfo)) {
+                                    hidden.delete(this.state.personInfo);
+                                } else {
+                                    hidden.add(this.state.personInfo);
+                                }
+                                this.setState({ recommit: true });
+                            }}
+                            onExtend={this.handlePopupExtend}
+                            allowExtend={this.props.allowExtend}
+                        />
+                    </div>
                 }
+
+                {
+                    this.state.showStats &&
+                    <div className='popup'>
+                        <StatsPanel
+                            closePopUp={() => this.setState({ showStats: false })}
+                            data={this.state.relationJSON}
+                        />
+                    </div>
+                }
+
+                {
+                    this.state.showRelations &&
+                    <div className='popup'>
+                        <TreeRelations
+                            closePopUp={() => this.setState({ showRelations: false })}
+                            info={this.personMap.get(this.state.personInfo)}
+                        />
+                    </div>
+                }
+
                 <div className='tree-box'>
                     <DiagramWrapper
                         updateDiagram={updateDiagram}
@@ -721,25 +726,6 @@ class GenogramTree extends React.Component {
                     />
 
                 </div>
-
-                {
-                    this.state.showStats &&
-                    <div className='popup'>
-                        <EscapeCloseable className='popup'>
-                            <StatsPanel data={this.state.relationJSON} onClick={this.handleStatsClick} />
-                        </EscapeCloseable>
-                    </div>
-                }
-
-                {
-                    this.state.showRelations &&
-                    <div className='popup'>
-                        <TreeRelations
-                            closePopUp={() => this.setState({ showRelations: false })}
-                        />
-                    </div>
-                }
-
             </>
         );
     }
