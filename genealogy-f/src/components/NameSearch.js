@@ -8,6 +8,8 @@ import {CustomUpload} from "./CustomUpload";
 import {Utils} from './utils';
 import Stack from 'react-bootstrap/Stack';
 import Spinner from 'react-bootstrap/Spinner';
+import Image from 'react-bootstrap/Image';
+import PersonWeb from '../images/person-web.png';
 
 export class NameSearch extends React.Component {
     constructor(props) {
@@ -34,7 +36,9 @@ export class NameSearch extends React.Component {
         return (
             <div className="m-5">
             <Stack gap={5} className="text-center justify-content-center">
-                <h1 className='mt-5'>Ancesta - Genealogy Project</h1>
+                <Image className="align-self-center mt-2" src={PersonWeb} width='240px'/>
+
+                <h1>Ancesta - Genealogy Project</h1>
                 <Form onSubmit={this.handleChangeInitialName} className="w-50 m-auto">
                     <InputGroup>
                         <MdOutlinePersonSearch size={50} color='darkslategray'/>

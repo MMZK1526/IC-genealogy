@@ -6,8 +6,8 @@ import { downloadJsonFile } from './components/exportAsJson';
 import { AiFillFilter } from 'react-icons/ai';
 import { MdPersonSearch } from 'react-icons/md';
 import { GrGroup } from 'react-icons/gr';
-import PersonWeb from './images/person-web.png'
 import Image from 'react-bootstrap/Image';
+import PersonWeb from './images/person-web.png';
 
 function Toolbar(props) {
   return (

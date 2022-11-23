@@ -13,12 +13,11 @@ import {
   } from "react-router-dom";
 import * as util from 'util';
 
-import {BiHomeAlt} from "react-icons/bi"
 import GenogramTree from "./GenogramTree/GenogramTree";
 
 class App extends React.Component {
     componentDidMount(){
-        document.title = "Ancesta - Genealogy Project"
+        document.title = "Ancesta - Genealogy Project";
     }
     
     constructor(props) {
