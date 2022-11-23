@@ -6,6 +6,8 @@ import { downloadJsonFile } from './components/exportAsJson';
 import { AiFillFilter } from 'react-icons/ai';
 import { MdPersonSearch } from 'react-icons/md';
 import { GrGroup } from 'react-icons/gr';
+import PersonWeb from './images/person-web.png'
+import Image from 'react-bootstrap/Image';
 
 function Toolbar(props) {
   return (
@@ -57,46 +59,57 @@ function Toolbar(props) {
           </>
         }
       </ButtonToolbar>
-      <ButtonToolbar className="me-4">
       {!props.onlyHome &&
-          <Button className="me-2" variant='warning' onClick={() => {
+        <ButtonToolbar className="me-4">
+          <Button className="me-2" variant='dark' onClick={() => {
             props.genogramTree.setState({
-              showGroups: !props.genogramTree.state.showGroups,
+              showRelations: !props.genogramTree.state.showRelations,
               showLookup: false,
-              showFilters: false,
-            });
-          }}>
-            <GrGroup size={30} className="align-middle me-1" />
-
-            <span className="align-middle">Group</span>
-          </Button>
-        }
-        {!props.onlyHome &&
-          <Button className="me-2" variant='warning' onClick={() => {
-            props.genogramTree.setState({
               showGroups: false,
+              showFilters: false,
+              });
+            }}>
+            <Image src={PersonWeb} height='30px' className="align-middle" />
+            <span className="align-middle"> Relations</span>
+          </Button>
+
+          <Button className="me-2" variant='dark' onClick={() => {
+            props.genogramTree.setState({
+              showRelations: false,
               showLookup: !props.genogramTree.state.showLookup,
-              showFilters: false,
-            });
-          }}>
-            <MdPersonSearch size={30} className="align-middle" />
-
-            <span className="align-middle">Lookup</span>
-          </Button>
-        }
-        {!props.onlyHome &&
-          <Button className="me-0" variant='warning' onClick={() => {
-            props.genogramTree.setState({
               showGroups: false,
-              showLookup: false,
-              showFilters: !props.genogramTree.state.showFilters,
-            });
-          }}>
-            <AiFillFilter size={30} className="align-middle" />
-            <span className="align-middle">Filter</span>
+              showFilters: false,
+              });
+            }}>
+            <MdPersonSearch size={30} className="align-middle" />
+            <span className="align-middle"> Lookup</span>
           </Button>
-        }
-      </ButtonToolbar>
+
+          <Button className="me-2" variant='warning' onClick={() => {
+            props.genogramTree.setState({
+              showRelations: false,
+              showLookup: false,
+              showGroups: !props.genogramTree.state.showGroups,
+              showFilters: false,
+              });
+            }}>
+            <GrGroup size={30} className="align-middle me-1" />
+            <span className="align-middle"> Group</span>
+          </Button>
+          
+          <Button className="me-2" variant='warning' onClick={() => {
+            props.genogramTree.setState({
+              showRelations: false,
+              showLookup: false,
+              showGroups: false,
+              showFilters: !props.genogramTree.state.showFilters,
+              });
+            }}>
+            <AiFillFilter size={30} className="align-middle" />
+            <span className="align-middle"> Filter</span>
+          </Button>
+        </ButtonToolbar>
+      }
     </div>
   );
 }

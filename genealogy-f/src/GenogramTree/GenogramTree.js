@@ -20,6 +20,7 @@ import { getPersonMap, transform, withRouter, ndb } from './utilFunctions';
 import { TreeNameLookup } from '../components/TreeNameLookup.js';
 import { Opacity } from './Const';
 import { TreeGroups } from '../components/TreeGroups.js';
+import { TreeRelations } from '../components/TreeRelations.js';
 
 const ENABLE_PRE_FETCHING = false;
 
@@ -662,6 +663,10 @@ class GenogramTree extends React.Component {
                             {
                                 this.state.showGroups &&
                                 <TreeGroups/>
+                            }
+                            {
+                                this.state.showRelations &&
+                                <TreeRelations/>
                             }
                         </Col>
                     </Row>
