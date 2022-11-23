@@ -36,7 +36,7 @@ function PopupInfo(props) {
 		<div className='popup-inner'>
 			<EscapeCloseable onClick={props.closePopUp}>
 				<CloseButton className='close-btn' onClick={props.closePopUp} />
-				{getAdditionalProperties(props.info)}
+				{getAdditionalProperties(props.info, props.switchToRelations)}
 				<Container className='text-center mt-2'>
 					<Button variant='primary' onClick={onExtend} className='m-1'>
 						Extend tree from this person
@@ -53,7 +53,7 @@ function PopupInfo(props) {
 	);
 }
 
-function getAdditionalProperties(data) {
+function getAdditionalProperties(data, switchToRelations) {
 	const openInWikipedia = url => {
 		window.open(url, '_blank', 'noopener,noreferrer');
 	};
@@ -91,7 +91,7 @@ function getAdditionalProperties(data) {
 						</Button>
 					</ButtonGroup>
 
-					<Button variant='secondary' onClick={() => {}}>
+					<Button variant='secondary' onClick={() => switchToRelations()}>
 						<Image src={PersonWeb} height='30px' className="align-middle" />
             			<span className="align-middle"> Relations</span>
 					</Button>

@@ -684,6 +684,7 @@ class GenogramTree extends React.Component {
                             }}
                             onExtend={this.handlePopupExtend}
                             allowExtend={this.props.allowExtend}
+                            switchToRelations={() => this.setState({ isPopped: false, showRelations: true })}
                         />
                     </div>
                 }
