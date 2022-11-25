@@ -40,19 +40,22 @@ function getRelationFields(data) {
 				? <Col key={'Col ' + k}>
 					{data.get(k).map((v) => (
 						<Row key={'Inner Row ' + v.kinship}>
-							<p>{v.kinship}</p>
+							<Button
+								className='text-start'
+								variant="link"
+								onClick={() => {
+									console.log(v.path)
+								}}
+							>
+								{v.kinship}
+							</Button>
 						</Row>
 					))}
 				</Col> :
 				<Col key={data.get(k)}>
-					<Button
-						variant="link"
-						onClick={() => {
-							console.log(k)
-						}}
-					>
+					<p>
 						{data.get(k)}
-					</Button>
+					</p>
 				</Col>
 			}
 		</Row>
