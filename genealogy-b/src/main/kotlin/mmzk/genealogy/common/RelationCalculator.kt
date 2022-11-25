@@ -12,7 +12,13 @@ data class RelationCalculatorRequest(
     val relations: Set<RelationshipDTO>
 )
 
-fun calculateRelations(input: RelationCalculatorRequest): Map<String, List<List<String>>> {
+@Serializable
+data class RelationCalculatorResponseEntry(
+    val relation: List<String>,
+    val path: List<String>
+)
+
+fun calculateRelations(input: RelationCalculatorRequest): Map<String, List<RelationCalculatorResponseEntry>> {
     val relationsMap = input.relations.groupBy { it.item2Id }
     val result = mutableMapOf<String, MutableSet<List<RelationshipDTO>>>()
     val frontier = ArrayDeque(listOf(input.start))
@@ -48,7 +54,12 @@ fun calculateRelations(input: RelationCalculatorRequest): Map<String, List<List<
     }
 
     return result.mapValues { (_, paths) ->
-        paths.map { path -> kinshipCalculator(path.map { it.typeId })}.toSet().toList()
+        paths.map { path ->
+            RelationCalculatorResponseEntry(
+                kinshipCalculator(path.map { it.typeId }),
+                path.map { it.item1Id })
+        }
+            .toList()
     }
 }
 
