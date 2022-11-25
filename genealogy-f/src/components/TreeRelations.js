@@ -35,9 +35,18 @@ function getRelationFields(data) {
 			<Col xs={4} key={k}>
 				<p>{capitalizeFirstLetter(k)}</p>
 			</Col>
-			<Col key={data.get(k)}>
-				<p>{data.get(k)}</p>
-			</Col>
+			{Array.isArray(data.get(k))
+				? <Col key={'Col ' + k}>
+					{data.get(k).map((v) => (
+						<Row key={'Inner Row ' + v.kinship}>
+							<p>{v.kinship}</p>
+						</Row>
+					))}
+				</Col> :
+				<Col key={data.get(k)}>
+					<p>{data.get(k)}</p>
+				</Col>
+			}
 		</Row>
 	));
 }

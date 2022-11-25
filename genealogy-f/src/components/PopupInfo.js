@@ -93,7 +93,7 @@ function getAdditionalProperties(data, switchToRelations) {
 
 					<Button variant='secondary' onClick={() => switchToRelations()}>
 						<Image src={PersonWeb} height='30px' className="align-middle" />
-            			<span className="align-middle"> Relations</span>
+						<span className="align-middle"> Relations</span>
 					</Button>
 				</Col>
 			</Row>
@@ -117,11 +117,11 @@ function getAllAttr(data) {
 			<Col key={data.get(k)}>
 				{
 					Utils.locationKeywords.includes(k)
-					? <a href={'http://www.google.com/maps?q=' + data.get(k)} target='_blank' rel='noopener noreferrer'>
-						<TbMapSearch />
-						{' ' + data.get(k)}
-					</a>
-					: <p>{data.get(k)}</p>
+						? <a href={'http://www.google.com/maps?q=' + data.get(k)} target='_blank' rel='noopener noreferrer'>
+							<TbMapSearch />
+							{' ' + data.get(k)}
+						</a>
+						: <p>{data.get(k)}</p>
 				}
 			</Col>
 		</Row>

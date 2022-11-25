@@ -208,6 +208,16 @@ export function getPersonMap(data, allRelations) {
             }
         }
 
+        if (person.kinships !== undefined) {
+            for (let attr of person.kinships) {
+                if (attrMap.has('kinship')) {
+                    attrMap.get('kinship').push(attr);
+                } else {
+                    attrMap.set('kinship', [attr]);
+                }
+            }
+        }
+
         attrMap.forEach((value, key) => {
             let newVal;
             switch (key) {

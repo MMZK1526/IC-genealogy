@@ -72,7 +72,7 @@ class GenogramTree extends React.Component {
         }
     }
 
-    componentDidMount(){
+    componentDidMount() {
         document.title = this.sourceName + "'s family tree - Ancesta";
     }
 
@@ -115,31 +115,19 @@ class GenogramTree extends React.Component {
 
     integrateKinshipIntoRelationJSON(kinshipJson, relationJSON) {
         for (const key of Object.keys(kinshipJson)) {
-            const kinshipStr = kinshipJson[key].map((arr) => {
+            const item = relationJSON.items[key];
+            if (item.kinships === undefined) {
+                item.kinships = [];
+            }
+            const kinshipStrs = kinshipJson[key].map((arr) => {
                 arr.reverse();
                 return arr.join(' of the ');
-            }).join('; ');
+            });
 
-            // console.assert(relationJSON.items[key]);
             if (!relationJSON.items[key]) {
                 continue;
             }
-            const item = relationJSON.items[key];
-            const props = item.additionalProperties;
-            const prop = props.find((p) => p.propertyId == 'PB-kinship');
-            if (prop) {
-                prop.value = kinshipStr;
-            } else {
-                const property = {
-                    propertyId: 'PB-kinship',
-                    name: 'relation to the searched person',
-                    value: kinshipStr,
-                    valueHash: null,
-                };
-                props.push(property);
-            }
-            item.additionalProperties = props;
-            relationJSON.items[key] = item;
+            kinshipStrs.forEach((str) => item.kinships.push({ 'kinship': str }));
         }
 
         return relationJSON;
@@ -653,7 +641,7 @@ class GenogramTree extends React.Component {
                             }
                             {
                                 this.state.showGroups &&
-                                <TreeGroups/>
+                                <TreeGroups />
                             }
                         </Col>
                     </Row>

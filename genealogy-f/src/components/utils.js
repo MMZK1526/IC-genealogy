@@ -1,11 +1,11 @@
 import _ from "lodash";
-import {Requests} from './requests';
+import { Requests } from './requests';
 import util from "util";
 
 export class Utils {
-    static get relationsKeywords() { return ['spouse', 'father', 'mother', 'child', 'relation to the searched person'];}
-    static get locationKeywords() { return ['place of birth', 'place of death'];}
-    static get specialKeywords() { return ['name', 'description', 'wikipedia link', 'image'];}
+    static get relationsKeywords() { return ['spouse', 'father', 'mother', 'child', 'kinship']; }
+    static get locationKeywords() { return ['place of birth', 'place of death']; }
+    static get specialKeywords() { return ['name', 'description', 'wikipedia link', 'image']; }
 
     constructor() {
         this.requests = new Requests();
@@ -55,7 +55,7 @@ export class Utils {
     }
 
     fetchRelations = async (id) => {
-        const relations = await this.requests.relations({id: id});
+        const relations = await this.requests.relations({ id: id });
         return await this.addKinship(
             id,
             relations,
@@ -64,7 +64,7 @@ export class Utils {
 
     addKinship = async (id, relationsJson) => {
         const kinshipJson = await this.requests.relationCalc(
-            {start: id, relations: Object.values(relationsJson.relations).flat()});
+            { start: id, relations: Object.values(relationsJson.relations).flat() });
         return this.addKinshipHelper(kinshipJson, relationsJson);
     }
 
@@ -82,13 +82,13 @@ export class Utils {
                 prop.value = kinshipStr;
             } else {
                 const property = {
-                propertyId: 'PB-kinship',
-                name: 'relation to the searched person',
-                value: kinshipStr,
-                valueHash: null,
+                    propertyId: 'PB-kinship',
+                    name: 'relation to the searched person',
+                    value: kinshipStr,
+                    valueHash: null,
                 };
                 props.push(property);
-          }
+            }
             item.additionalProperties = props;
             relationsJson.items[key] = item;
         }
