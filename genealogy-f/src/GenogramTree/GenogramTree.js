@@ -53,7 +53,7 @@ class GenogramTree extends React.Component {
                 isUpdated: !this.isLoading,
                 isLoading: this.isLoading,
                 originalJSON: rawJSON,
-                relationJSON: rawJSON,
+                relationsJSON: rawJSON,
                 kinshipJSON: null,
                 personInfo: null,
                 isPopped: false,
@@ -113,7 +113,7 @@ class GenogramTree extends React.Component {
         })
     }
 
-    integrateKinshipIntoRelationJSON(kinshipJSON, relationJSON) {
+    integrateKinshipIntoRelationJSON(kinshipJSON, relationsJSON) {
         for (const key of Object.keys(kinshipJSON)) {
             const item = relationsJSON.items[key];
             if (item.kinships === undefined) {
@@ -130,7 +130,7 @@ class GenogramTree extends React.Component {
             kinshipStrs.forEach((str) => item.kinships.push({ 'kinship': str, 'path': kinshipJSON.path }));
         }
 
-        return relationJSON;
+        return relationsJSON;
     }
 
     // If id is provided, we search this id. Otherwise, it is a JSON provided by the user
@@ -192,21 +192,21 @@ class GenogramTree extends React.Component {
         this.loadRelations(this.state.originalJSON, null);
     }
 
-    loadRelations = (relationJSON, id) => {
+    loadRelations = (relationsJSON, id) => {
         console.log('Loading relations!');
         // Add reciprocal relations.
-        for (const [key, relations] of Object.entries(relationJSON.relations)) {
+        for (const [key, relations] of Object.entries(relationsJSON.relations)) {
             for (const relation of relations) {
                 if (relation.type === 'spouse') {
-                    if (!relationJSON.relations[relation.item1Id]) {
-                        relationJSON.relations[relation.item1Id] = [{
+                    if (!relationsJSON.relations[relation.item1Id]) {
+                        relationsJSON.relations[relation.item1Id] = [{
                             item1Id: key,
                             item2Id: relation.item1Id,
                             type: 'spouse',
                             typeId: 'WD-P26'
                         }];
-                    } else if (!relationJSON.relations[relation.item1Id].some((r) => r.type === 'spouse' && r.item1Id === key)) {
-                        relationJSON.relations[relation.item1Id].push({
+                    } else if (!relationsJSON.relations[relation.item1Id].some((r) => r.type === 'spouse' && r.item1Id === key)) {
+                        relationsJSON.relations[relation.item1Id].push({
                             item1Id: key,
                             item2Id: relation.item1Id,
                             type: 'spouse',
@@ -214,15 +214,15 @@ class GenogramTree extends React.Component {
                         });
                     }
                 } else if (relation.type === 'father' || relation.type === 'mother') {
-                    if (!relationJSON.relations[relation.item1Id]) {
-                        relationJSON.relations[relation.item1Id] = [{
+                    if (!relationsJSON.relations[relation.item1Id]) {
+                        relationsJSON.relations[relation.item1Id] = [{
                             item1Id: key,
                             item2Id: relation.item1Id,
                             type: 'child',
                             typeId: 'WD-P40'
                         }];
-                    } else if (!relationJSON.relations[relation.item1Id].some((r) => (r.type === 'child') && r.item1Id === key)) {
-                        relationJSON.relations[relation.item1Id].push({
+                    } else if (!relationsJSON.relations[relation.item1Id].some((r) => (r.type === 'child') && r.item1Id === key)) {
+                        relationsJSON.relations[relation.item1Id].push({
                             item1Id: key,
                             item2Id: relation.item1Id,
                             type: 'child',
@@ -231,39 +231,39 @@ class GenogramTree extends React.Component {
                     }
                 } else if (relation.type === 'child') {
                     let gender = null;
-                    for (let attr of relationJSON.items[key].additionalProperties) {
+                    for (let attr of relationsJSON.items[key].additionalProperties) {
                         if (attr.name === 'gender') {
                             gender = attr.value;
                             break;
                         }
                     }
 
-                    if (!relationJSON.relations[relation.item1Id]) {
+                    if (!relationsJSON.relations[relation.item1Id]) {
                         if (gender === 'male') {
-                            relationJSON.relations[relation.item1Id] = [{
+                            relationsJSON.relations[relation.item1Id] = [{
                                 item1Id: key,
                                 item2Id: relation.item1Id,
                                 type: 'father',
                                 typeId: 'WD-P22'
                             }];
                         } else if (gender === 'female') {
-                            relationJSON.relations[relation.item1Id] = [{
+                            relationsJSON.relations[relation.item1Id] = [{
                                 item1Id: key,
                                 item2Id: relation.item1Id,
                                 type: 'mother',
                                 typeId: 'WD-P25'
                             }];
                         }
-                    } else if (!relationJSON.relations[relation.item1Id].some((r) => (r.type === 'father' || r.type === 'mother') && r.item1Id === key)) {
+                    } else if (!relationsJSON.relations[relation.item1Id].some((r) => (r.type === 'father' || r.type === 'mother') && r.item1Id === key)) {
                         if (gender === 'male') {
-                            relationJSON.relations[relation.item1Id].push({
+                            relationsJSON.relations[relation.item1Id].push({
                                 item1Id: key,
                                 item2Id: relation.item1Id,
                                 type: 'father',
                                 typeId: 'WD-P22'
                             });
                         } else if (gender === 'female') {
-                            relationJSON.relations[relation.item1Id].push({
+                            relationsJSON.relations[relation.item1Id].push({
                                 item1Id: key,
                                 item2Id: relation.item1Id,
                                 type: 'mother',
@@ -276,9 +276,9 @@ class GenogramTree extends React.Component {
         }
 
         if (this.state.originalJSON == null) {
-            this.state.originalJSON = relationJSON;
+            this.state.originalJSON = relationsJSON;
         } else {
-            this.mergeRelations(this.state.originalJSON, relationJSON);
+            this.mergeRelations(this.state.originalJSON, relationsJSON);
         }
         this.fetchKinships(this.state.root, this.state.originalJSON);
         this.applyFilterAndDrawTree();
@@ -462,25 +462,25 @@ class GenogramTree extends React.Component {
                     filteredJSON.relations[v] = this.state.originalJSON.relations[v].filter((r) => visited[r.item1Id]);
                 }
             });
-            this.state.relationJSON = filteredJSON;
+            this.state.relationsJSON = filteredJSON;
         } else {
-            this.state.relationJSON = JSON.parse(JSON.stringify(this.state.originalJSON));
+            this.state.relationsJSON = JSON.parse(JSON.stringify(this.state.originalJSON));
         }
     }
 
-    async fetchKinships(id, relationJSON) {
-        const newRelationJSON = await this.injectKinship(id, relationJSON);
+    async fetchKinships(id, relationsJSON) {
+        const newRelationJSON = await this.injectKinship(id, relationsJSON);
         this.setState({
             originalJSON: newRelationJSON
         });
     }
 
-    injectKinship = async (id, relationJSON) => {
+    injectKinship = async (id, relationsJSON) => {
         const kinshipJSON = await this.requests.relationCalc({
             start: id,
-            relations: Object.values(relationJSON.relations).flat(),
+            relations: Object.values(relationsJSON.relations).flat(),
         });
-        return this.integrateKinshipIntoRelationJSON(kinshipJSON, relationJSON);
+        return this.integrateKinshipIntoRelationJSON(kinshipJSON, relationsJSON);
     }
 
     // Merge two relational JSONs, modifying the old one.
@@ -549,7 +549,7 @@ class GenogramTree extends React.Component {
             return <p>Invalid URL!</p>
         }
 
-        if (this.state.relationJSON == null) {
+        if (this.state.relationsJSON == null) {
             this.fetchFromCacheOrBackend(this.source, 2);
 
             return (
@@ -566,7 +566,7 @@ class GenogramTree extends React.Component {
         if (this.state.isUpdated) {
             this.state.isUpdated = false;
             this.applyFilterAndDrawTree();
-            this.relations = transform(this.state.relationJSON);
+            this.relations = transform(this.state.relationsJSON);
             this.personMap = getPersonMap(Object.values(this.state.originalJSON.items), Object.values(this.state.originalJSON.relations));
             updateDiagram = true;
             this.state.isLoading = false;
@@ -619,9 +619,9 @@ class GenogramTree extends React.Component {
                                     }}
                                     onChange={(isReset) => this.setState({ isUpdated: true, isLoading: true, showFilters: !isReset })}
                                     onPrune={() => {
-                                        this.state.originalJSON.relations = JSON.parse(JSON.stringify(this.state.relationJSON.relations));
+                                        this.state.originalJSON.relations = JSON.parse(JSON.stringify(this.state.relationsJSON.relations));
                                         for (const key of Object.keys(this.state.originalJSON.items)) {
-                                            if (!this.state.relationJSON.items[key] && key !== this.state.root) {
+                                            if (!this.state.relationsJSON.items[key] && key !== this.state.root) {
                                                 delete this.state.originalJSON.items[key];
                                             }
                                         }
@@ -687,7 +687,7 @@ class GenogramTree extends React.Component {
                     <div className='popup'>
                         <StatsPanel
                             closePopUp={() => this.setState({ showStats: false })}
-                            data={this.state.relationJSON}
+                            data={this.state.relationsJSON}
                         />
                     </div>
                 }
@@ -725,7 +725,7 @@ class GenogramTree extends React.Component {
     }
 
     fetchFromCacheOrBackend = async (id, depth) => {
-        if (this.state.relationJSON == null || !ENABLE_PRE_FETCHING) {
+        if (this.state.relationsJSON == null || !ENABLE_PRE_FETCHING) {
             this.fetchRelations({ id: id, depth: depth });
         }
         if (!ENABLE_PRE_FETCHING) {
@@ -800,7 +800,7 @@ class GenogramTree extends React.Component {
     // majority of code below is from https://gojs.net/latest/samples/genogram.html
 
     extendInCache = (id) => {
-        const curTree = this.state.relationJSON;
+        const curTree = this.state.relationsJSON;
         const cachedTree = this.treeCache;
         if (_.isEmpty(cachedTree)) {
             return false;
