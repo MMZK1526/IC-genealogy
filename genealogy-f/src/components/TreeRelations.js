@@ -1,6 +1,7 @@
 import './stylesheets/PopupInfo.css';
 import './stylesheets/shared.css';
 import EscapeCloseable from './EscapeCloseable';
+import Button from 'react-bootstrap/Button';
 import CloseButton from 'react-bootstrap/CloseButton';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
@@ -44,7 +45,14 @@ function getRelationFields(data) {
 					))}
 				</Col> :
 				<Col key={data.get(k)}>
-					<p>{data.get(k)}</p>
+					<Button
+						variant="link"
+						onClick={() => {
+							console.log(k)
+						}}
+					>
+						{data.get(k)}
+					</Button>
 				</Col>
 			}
 		</Row>
