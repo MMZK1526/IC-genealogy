@@ -19,12 +19,12 @@ export class Utils {
         };
     }
 
-    extendRelations = async (id, relationsJson) => {
-        console.assert(!_.isEmpty(relationsJson));
-        const oldRelationsJson = structuredClone(relationsJson);
-        const newRelationsJson = await this.fetchRelations(id);
-        const mergedRelationsJsonTemp = this.mergeRelations(oldRelationsJson, newRelationsJson);
-        return await this.addKinship(id, mergedRelationsJsonTemp);
+    extendRelations = async (id, relationsJSON) => {
+        console.assert(!_.isEmpty(relationsJSON));
+        const oldRelationsJSON = structuredClone(relationsJSON);
+        const newRelationsJSON = await this.fetchRelations(id);
+        const mergedRelationsJSONTemp = this.mergeRelations(oldRelationsJSON, newRelationsJSON);
+        return await this.addKinship(id, mergedRelationsJSONTemp);
     }
 
     mergeRelations = (oldRel, newRel) => {
@@ -62,38 +62,30 @@ export class Utils {
         );
     }
 
-    addKinship = async (id, relationsJson) => {
-        const kinshipJson = await this.requests.relationCalc(
-            { start: id, relations: Object.values(relationsJson.relations).flat() });
-        return this.addKinshipHelper(kinshipJson, relationsJson);
+    addKinship = async (id, relationsJSON) => {
+        const kinshipJSON = await this.requests.relationCalc(
+            { start: id, relations: Object.values(relationsJSON.relations).flat() });
+        return this.addKinshipHelper(kinshipJSON, relationsJSON);
     }
 
-    addKinshipHelper = (kinshipJson, relationsJson) => {
-        for (const key of Object.keys(kinshipJson)) {
-            const kinshipStr = kinshipJson[key].map((arr) => {
+    addKinshipHelper = (kinshipJSON, relationsJSON) => {
+        for (const key of Object.keys(kinshipJSON)) {
+            const item = relationJSON.items[key];
+            if (item.kinships === undefined) {
+                item.kinships = [];
+            }
+            const kinshipStrs = kinshipJSON[key].map((arr) => {
                 arr.reverse();
                 return arr.join(' of the ');
-            }).join('; ');
-            console.assert(relationsJson.items[key]);
-            const item = relationsJson.items[key];
-            const props = item.additionalProperties;
-            const prop = props.find((p) => p.propertyId == 'PB-kinship');
-            if (prop) {
-                prop.value = kinshipStr;
-            } else {
-                const property = {
-                    propertyId: 'PB-kinship',
-                    name: 'relation to the searched person',
-                    value: kinshipStr,
-                    valueHash: null,
-                };
-                props.push(property);
+            });
+
+            if (!relationJSON.items[key]) {
+                continue;
             }
-            item.additionalProperties = props;
-            relationsJson.items[key] = item;
+            kinshipStrs.forEach((str) => item.kinships.push({ 'kinship': str }));
         }
 
-        return relationsJson;
+        return relationsJSON;
     }
 }
 
@@ -101,8 +93,8 @@ export function setStatePromise(thisRef) {
     return util.promisify(thisRef.setState);
 }
 
-export function getIds(relationsJson) {
-    return Array.from(relationsJson.items.map(x => x.id));
+export function getIds(relationsJSON) {
+    return Array.from(relationsJSON.items.map(x => x.id));
 }
 
 export async function wait(ms) {
