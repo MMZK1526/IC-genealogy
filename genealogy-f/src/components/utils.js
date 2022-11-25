@@ -74,7 +74,7 @@ export class Utils {
             if (item.kinships === undefined) {
                 item.kinships = [];
             }
-            const kinshipStrs = kinshipJSON[key].map((arr) => {
+            const kinshipStrs = kinshipJSON[key].kinship.map((arr) => {
                 arr.reverse();
                 return arr.join(' of the ');
             });
@@ -82,7 +82,7 @@ export class Utils {
             if (!relationsJSON.items[key]) {
                 continue;
             }
-            kinshipStrs.forEach((str) => item.kinships.push({ 'kinship': str }));
+            kinshipStrs.forEach((str) => item.kinships.push({ 'kinship': str, 'path': kinshipJSON.path }));
         }
 
         return relationsJSON;

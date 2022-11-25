@@ -113,21 +113,21 @@ class GenogramTree extends React.Component {
         })
     }
 
-    integrateKinshipIntoRelationJSON(kinshipJson, relationJSON) {
-        for (const key of Object.keys(kinshipJson)) {
-            const item = relationJSON.items[key];
+    integrateKinshipIntoRelationJSON(kinshipJSON, relationJSON) {
+        for (const key of Object.keys(kinshipJSON)) {
+            const item = relationsJSON.items[key];
             if (item.kinships === undefined) {
                 item.kinships = [];
             }
-            const kinshipStrs = kinshipJson[key].map((arr) => {
+            const kinshipStrs = kinshipJSON[key].kinship.map((arr) => {
                 arr.reverse();
                 return arr.join(' of the ');
             });
 
-            if (!relationJSON.items[key]) {
+            if (!relationsJSON.items[key]) {
                 continue;
             }
-            kinshipStrs.forEach((str) => item.kinships.push({ 'kinship': str }));
+            kinshipStrs.forEach((str) => item.kinships.push({ 'kinship': str, 'path': kinshipJSON.path }));
         }
 
         return relationJSON;
