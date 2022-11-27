@@ -671,6 +671,7 @@ export class DiagramWrapper extends React.Component {
             } else {
                 this.setupDiagram(this.props.nodeDataArray, this.props.nodeDataArray[0].key);
             }
+            this.highlight.length = 0;
         }
 
         if (this.props.recentre) {
