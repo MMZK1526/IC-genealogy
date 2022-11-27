@@ -57,7 +57,7 @@ fun calculateRelations(input: RelationCalculatorRequest): Map<String, List<Relat
         paths.map { path ->
             RelationCalculatorResponseEntry(
                 kinshipCalculator(path.map { it.typeId }),
-                path.map { it.item1Id })
+                listOf(input.start) + path.map { it.item1Id })
         }
             .toList()
     }
