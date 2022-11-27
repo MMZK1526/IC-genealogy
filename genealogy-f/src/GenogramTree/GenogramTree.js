@@ -104,7 +104,6 @@ class GenogramTree extends React.Component {
     }
 
     handleDiagramEvent(event) {
-        // console.log(this.personMap);
         if (!this.personMap.has(event.subject.part.key)) {
             return;
         }
