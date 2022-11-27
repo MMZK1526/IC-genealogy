@@ -690,7 +690,7 @@ export class DiagramWrapper extends React.Component {
 
         if (true) {
             const highlight = this.highlight;
-            const labelledNodes = [];
+            const labelledNodes = {};
             this.diagram.startTransaction('highlight');
             this.diagram.clearHighlighteds();
             for (const key of highlight) {
@@ -704,7 +704,7 @@ export class DiagramWrapper extends React.Component {
                 node.isHighlighted = true;
                 node.findLinksConnected().each(function (l) {
                     if (l.isLabeledLink) {
-                        l.labelNodes.each((n) => labelledNodes.push(n));
+                        l.labelNodes.each((n) => labelledNodes[n] = l);
                     }
                 });
             }
@@ -716,8 +716,9 @@ export class DiagramWrapper extends React.Component {
                     if (highlight.includes(otherNode.key)) {
                         l.isHighlighted = true;
                     }
-                    else if (labelledNodes.includes(otherNode)) {
+                    else if (labelledNodes[otherNode]) {
                         l.isHighlighted = true;
+                        labelledNodes[otherNode].isHighlighted = true;
                     }
                 });
             }
