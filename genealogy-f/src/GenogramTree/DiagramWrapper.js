@@ -73,6 +73,28 @@ export class DiagramWrapper extends React.Component {
             });
 
         this.diagram = this.state.diagram;
+        // Whenever the Diagram.position or Diagram.scale change,
+        // update the position of all simple Parts that have a _viewPosition property.  
+        this.diagram.addDiagramListener("ViewportBoundsChanged", function(e) {
+                e.diagram.commit(function(dia) {
+                // only iterates through simple Parts in the diagram, not Nodes or Links
+                    dia.parts.each(function(part) {
+                        // and only on those that have the "_viewPosition" property set to a Point
+                        if (part._viewPosition) {
+                            // console.log(part.position)
+                            // console.log(dia.transformViewToDoc(part._viewPosition))
+                            if (dia.transformViewToDoc(part._viewPosition).x > 0) {
+                                // part.position is now a Doc cor
+                                part.position = new go.Point(dia.transformViewToDoc(part._viewPosition).x, part.position.y)
+                            } else {
+                                // part.position is now a View coordinate
+                                part.position = part._viewPosition
+                            }
+                            // part.scale = 1/dia.scale;  // counteract any zooming
+                        }
+                    })
+                }, null);  // set skipsUndoManager to true, to avoid recording these changes
+            });
         // determine the color for each attribute shape
         function attrFill(a) {
             switch (a) {

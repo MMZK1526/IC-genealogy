@@ -15,6 +15,7 @@ import Image from 'react-bootstrap/Image';
 import DefaultImg from '../images/default.png';
 import PersonWeb from '../images/person-web.png';
 import { Utils } from './utils';
+import { MdPadding } from 'react-icons/md';
 
 function PopupInfo(props) {
 	const onNew = (_) => {
@@ -36,7 +37,7 @@ function PopupInfo(props) {
 		<div className='popup-inner'>
 			<EscapeCloseable onClick={props.closePopUp}>
 				<CloseButton className='close-btn' onClick={props.closePopUp} />
-				{getAdditionalProperties(props.info, props.switchToRelations)}
+				{getAdditionalProperties(props.info, props.switchToRelations, props.id)}
 				<Container className='text-center mt-2'>
 					<Button variant='primary' onClick={onExtend} className='m-1'>
 						Extend tree from this person
@@ -53,7 +54,7 @@ function PopupInfo(props) {
 	);
 }
 
-function getAdditionalProperties(data, switchToRelations) {
+function getAdditionalProperties(data, switchToRelations, id) {
 	const openInWikipedia = url => {
 		window.open(url, '_blank', 'noopener,noreferrer');
 	};
@@ -99,17 +100,25 @@ function getAdditionalProperties(data, switchToRelations) {
 			</Row>
 			<Row>
 				<Container className='overflow-auto additional-properties-container'>
-					{getAllAttr(data)}
+					{getAllAttr(data, id)}
 				</Container>
 			</Row>
 		</Container>
 	);
 }
 
-function getAllAttr(data) {
-	return Object.keys(Object.fromEntries(data)).filter(function (k) {
+function getAllAttr(data, id) {
+	let group = new Set("Q11102170", "Q8255089")
+	let attrSet = new Set(["name", "child"])
+	console.log(data)
+	data = new Map([...data].filter(([k,v]) => attrSet.has(k)))
+	console.log(data)
+	let x = Object.keys(Object.fromEntries(data)).filter(function (k) {
+		return k
 		return !Utils.specialKeywords.includes(k) && !Utils.relationsKeywords.includes(k);
-	}).map((k) => (
+	})
+	console.log(x)
+	return x.map((k) => (
 		<Row key={'Row ' + k}>
 			<Col xs={4} key={k}>
 				<p>{capitalizeFirstLetter(k)}</p>
@@ -121,7 +130,7 @@ function getAllAttr(data) {
 							<TbMapSearch />
 							{' ' + data.get(k)}
 						</a>
-						: <p>{data.get(k)}</p>
+						: <p>{true ? data.get(k) : "hello"}</p>
 				}
 			</Col>
 		</Row>

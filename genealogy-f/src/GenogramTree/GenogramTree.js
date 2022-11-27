@@ -120,7 +120,7 @@ class GenogramTree extends React.Component {
                 item.kinships = [];
             }
             const kinshipStrs = kinshipJSON[key].map((arr) => {
-                console.log(arr);
+                // console.log(arr);
                 arr.relation.reverse();
                 return arr.relation.join(' of the ');
             });
@@ -662,6 +662,7 @@ class GenogramTree extends React.Component {
                         <PopupInfo
                             closePopUp={() => this.setState({ isPopped: false })}
                             info={this.personMap.get(this.state.personInfo)}
+                            id = {this.state.personInfo}
                             onNew={() => {
                                 this.state.root = this.state.personInfo;
                                 this.fetchKinships(this.state.root, this.state.originalJSON);

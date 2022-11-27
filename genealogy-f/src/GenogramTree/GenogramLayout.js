@@ -371,7 +371,7 @@ export class GenogramLayout extends go.LayeredDigraphLayout {
         let startYs = [...new Set(idPos.map(p => p.y.valueOf()))].sort((a, b) => a - b);
         // console.log(startXs);
         // console.log(startYs);
-        let startX = startXs[0] - 200; // get lowest x co node
+        let startX = startXs[0]; // get lowest x co node
         let endX = startXs[startXs.length - 1] + 100;
         for (let i = 0; i < startYs.length; i++) {
             let startY = startYs[i];
@@ -399,7 +399,7 @@ export class GenogramLayout extends go.LayeredDigraphLayout {
 
             // console.log("start", startDate, "end", endDate);
             // create "eras" as a part in the grid background made up of date in the corner and an opaque rectangle covering the diagram
-            let part = $(go.Part, "Position", { selectable: false, position: new go.Point(startX, startY - 45), layerName: "Grid" },
+            let part = $(go.Part, {position: new go.Point(startX,startY - 45), selectable: false, layerName: "Grid", _viewPosition:  new go.Point(startX,startY - 45)},
                 $(go.Shape, "Rectangle",
                     { width: endX - startX, height: endY - startY, margin: 0, fill: i % 2 == 0 ? "#FFFFE0" : "#ADD8E6", opacity: 0.15, stroke: null }),
                 $(go.TextBlock,
@@ -408,7 +408,11 @@ export class GenogramLayout extends go.LayeredDigraphLayout {
             );
             // add to mapping so can be determined later
             diagram.add(part);
+
         }
+            // Whenever the Diagram.position or Diagram.scale change,
+            // update the position of all simple Parts that have a _viewPosition property.
+
     };
 
 
