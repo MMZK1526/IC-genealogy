@@ -66,7 +66,8 @@ class GenogramTree extends React.Component {
                 newData: null,
                 zoomToDefault: false,
                 showLookup: false,
-                showFilters: false
+                showFilters: false,
+                highlight: [],
             };
             this.componentRef = React.createRef();
         }
@@ -107,6 +108,9 @@ class GenogramTree extends React.Component {
         if (!this.personMap.has(event.subject.part.key)) {
             return;
         }
+        if (!this.state.highlight.includes(event.subject.part.key)) {
+            this.state.highlight.length = 0;
+        }
         this.setState({
             personInfo: event.subject.part.key,
             isPopped: true
@@ -116,11 +120,14 @@ class GenogramTree extends React.Component {
     integrateKinshipIntoRelationJSON(kinshipJSON, relationsJSON) {
         for (const key of Object.keys(kinshipJSON)) {
             const item = relationsJSON.items[key];
+            item.kinships = undefined;
+        }
+        for (const key of Object.keys(kinshipJSON)) {
+            const item = relationsJSON.items[key];
             if (item.kinships === undefined) {
                 item.kinships = [];
             }
             const kinshipStrs = kinshipJSON[key].map((arr) => {
-                console.log(arr);
                 arr.relation.reverse();
                 return arr.relation.join(' of the ');
             });
@@ -128,7 +135,7 @@ class GenogramTree extends React.Component {
             if (!relationsJSON.items[key]) {
                 continue;
             }
-            kinshipStrs.forEach((str) => item.kinships.push({ 'kinship': str, 'path': kinshipJSON[key].map((k) => k.path) }));
+            kinshipStrs.forEach((str, ix) => item.kinships.push({ 'kinship': str, 'path': kinshipJSON[key][ix].path }));
         }
 
         return relationsJSON;
@@ -699,12 +706,14 @@ class GenogramTree extends React.Component {
                         <TreeRelations
                             closePopUp={() => this.setState({ showRelations: false })}
                             info={this.personMap.get(this.state.personInfo)}
+                            highlight={this.state.highlight}
                         />
                     </div>
                 }
 
                 <div className='tree-box'>
                     <DiagramWrapper
+                        highlight={this.state.highlight}
                         updateDiagram={updateDiagram}
                         recentre={recentre}
                         recommit={recommit}

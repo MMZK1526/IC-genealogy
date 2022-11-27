@@ -10,6 +10,7 @@ const $ = go.GraphObject.make;
 export class DiagramWrapper extends React.Component {
     constructor(props) {
         super(props);
+        this.highlight = props.highlight;
         this.diagramRef = React.createRef();
         this.nodeDataArray = props.nodeDataArray;
         this.root = props.root;
@@ -38,6 +39,7 @@ export class DiagramWrapper extends React.Component {
     }
 
     init() {
+        const highlight = this.highlight;
         if (!(this.state.diagram === undefined)) {
             this.diagram = this.state.diagram;
             return;
@@ -189,7 +191,8 @@ export class DiagramWrapper extends React.Component {
         }
 
         function mouseEnter(e, obj) {
-            var node = obj.findObject('NODE2')
+            if (highlight.length > 0) return;
+            var node = obj.findObject('NODE2');
             // var shape = obj.findObject('SHAPE');
             // shape.fill = '#6DAB80';
             // shape.stroke = '#A6E6A1';
@@ -293,6 +296,7 @@ export class DiagramWrapper extends React.Component {
             ));
         // remove highlighting form all nodes, when user clicks on background
         this.diagram.click = function (e) {
+            highlight.length = 0;
             e.diagram.commit(function (d) { d.clearHighlighteds(); }, 'no highlighteds');
             // console.log('clearing stuff')
         };
@@ -684,6 +688,21 @@ export class DiagramWrapper extends React.Component {
 
         if (this.props.recommit) {
             this.toggleOpacity();
+        }
+
+        if (true) {
+            this.diagram.startTransaction('highlight');
+            this.diagram.clearHighlighteds();
+            for (const key of this.highlight) {
+                if (!this.diagram.findNodeForKey(key)) {
+                    alert('This relation contains people that are not in the graph');
+                    this.diagram.clearHighlighteds();
+                    this.highlight.length = 0;
+                    break;
+                }
+                this.diagram.findNodeForKey(key).isHighlighted = true;
+            }
+            this.diagram.commitTransaction('highlight');
         }
 
         if (this.props.zoomToDefault) {

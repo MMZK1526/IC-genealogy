@@ -171,6 +171,7 @@ export function getPersonMap(data, allRelations) {
     for (let person of data) {
         const personId = person.id;
         let attributes = new Map;
+        attributes.set('id', personId);
         attributes.set('name', person.name);
 
         if (person.description !== '') {

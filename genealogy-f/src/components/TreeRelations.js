@@ -14,21 +14,21 @@ export function TreeRelations(props) {
 		<div className='popup-inner'>
 			<EscapeCloseable onClick={props.closePopUp}>
 				<CloseButton className='close-btn' onClick={props.closePopUp} />
-				{ShowRelations(props.info)}
+				{ShowRelations(props.info, props.highlight, props.closePopUp)}
 			</EscapeCloseable>
 		</div >
 	);
 }
 
-function ShowRelations(data) {
+function ShowRelations(data, highlight, close) {
 	return (
 		<Container>
-			{getRelationFields(data)}
+			{getRelationFields(data, highlight, close)}
 		</Container>
 	);
 }
 
-function getRelationFields(data) {
+function getRelationFields(data, highlight, close) {
 	return Object.keys(Object.fromEntries(data)).filter(function (k) {
 		return Utils.relationsKeywords.includes(k);
 	}).map((k) => (
@@ -38,16 +38,19 @@ function getRelationFields(data) {
 			</Col>
 			{Array.isArray(data.get(k))
 				? <Col key={'Col ' + k}>
-					{data.get(k).map((v) => (
-						<Row key={'Inner Row ' + v.kinship}>
+					{data.get(k).map((v, ix) => (
+						<Row key={'Inner Row ' + v.kinship + ' ' + ix}>
 							<Button
 								className='text-start'
 								variant="link"
 								onClick={() => {
-									console.log(v.path)
-								}}
-							>
-								{v.kinship}
+									highlight.length = 0;
+									for (const name of v.path) {
+										highlight.push(name);
+									}
+									console.log(highlight);
+									close();
+								}}>{v.kinship}
 							</Button>
 						</Row>
 					))}
