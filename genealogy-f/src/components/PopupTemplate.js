@@ -1,4 +1,5 @@
 import './stylesheets/PopupInfo.css'
+import './stylesheets/Sidebar.css';
 import './stylesheets/shared.css';
 import EscapeCloseable from './EscapeCloseable';
 import Button from 'react-bootstrap/Button';
@@ -16,8 +17,10 @@ import DefaultImg from '../images/default.png';
 import PersonWeb from '../images/person-web.png';
 import { Utils } from './utils';
 import { MdPadding } from 'react-icons/md';
+import { useState } from "react";
+import Form from 'react-bootstrap/Form';
 
-function PopupInfo(props) {
+function PopupTemplate(props) {
 	const onNew = (_) => {
 		props.onNew();
 		props.closePopUp();
@@ -34,27 +37,17 @@ function PopupInfo(props) {
 	}
 
 	return (
-		<div className='popup-inner'>
+        // could also set this back to popup-inner
+		<div className='sidebar pe-auto'>
 			<EscapeCloseable onClick={props.closePopUp}>
 				<CloseButton className='close-btn' onClick={props.closePopUp} />
-				{getAdditionalProperties(props.info, props.switchToRelations, props.id, props.mySet)}
-				<Container className='text-center mt-2'>
-					<Button variant='primary' onClick={onExtend} className='m-1'>
-						Extend tree from this person
-					</Button>
-					<Button variant='primary' onClick={onNew} className='m-1'>
-						Use this person as root
-					</Button>
-					<Button variant='primary' onClick={onToggle} className='m-1'>
-						{props.isHidden ? 'Show this person' : 'Not interested'}
-					</Button>
-				</Container>
+				{getAdditionalProperties(props.info, props.switchToRelations, props.id, props.mySet, props.personMap)}
 			</EscapeCloseable>
 		</div >
 	);
 }
 
-function getAdditionalProperties(data, switchToRelations, id, mySet) {
+function getAdditionalProperties(data, switchToRelations, id, mySet, personMap) {
 	const openInWikipedia = url => {
 		window.open(url, '_blank', 'noopener,noreferrer');
 	};
@@ -66,41 +59,8 @@ function getAdditionalProperties(data, switchToRelations, id, mySet) {
 	return (
 		<Container>
 			<Row>
-				<Col md='auto' className='mb-4'>
-					<Image className='rounded' src={data.has('image') ? data.get('image') : DefaultImg} height='140px' />
-				</Col>
-				<Col className='mb-4'>
-					<Row className='mb-1 justify-content-start'>
-						<h2>{data.get('name')}</h2>
-					</Row>
-					<Row className='mb-1'>
-						<p className='fst-italic'>
-							{data.has('description') ? capitalizeFirstLetter(data.get('description')) : '(No description)'}
-						</p>
-					</Row>
-
-					<ButtonGroup className='me-2' aria-label='LinksGroup'>
-						{
-							data.has('wikipedia link') &&
-							<Button variant='light' className='wikilink' onClick={() => openInWikipedia(data.get('wikipedia link'))}>
-								<FaWikipediaW size={30} />
-							</Button>
-						}
-
-						<Button variant='light' className='search' onClick={() => openSearch(data.get('name'))}>
-							<FcGoogle size={30} />
-						</Button>
-					</ButtonGroup>
-
-					<Button variant='secondary' onClick={() => switchToRelations()}>
-						<Image src={PersonWeb} height='30px' className="align-middle" />
-						<span className="align-middle"> Relations</span>
-					</Button>
-				</Col>
-			</Row>
-			<Row>
 				<Container className='overflow-auto additional-properties-container'>
-					{getAllAttr(data, id, mySet)}
+					{getAllAttr(data, id, mySet, personMap)}
 				</Container>
 			</Row>
 		</Container>
@@ -113,41 +73,47 @@ const iteratorIncludes = (it, value) => {
 	return false
   }
 
-function getAllAttr(data, id, mySet, keyGroup, groupAttr) {
-	console.log(mySet)
+function getAllAttr(data, id, mySet, personMap) {
+    // console.log()
 	// every Group must exist in groupAttr
 	// keyGroup = new Map([["WD-Q11102170", "a"], ["WD-Q8255089", "a"], ["WD-Q11102170", "b"]])
 	// groupAttr = new Map([["a", new Set(["name", "child"])], ["b", new Set(["name"])]])
 	// console.log(iteratorIncludes(keyGroup.keys(), id))
 	// data = iteratorIncludes(keyGroup.keys(), id)  ? new Map([...data].filter(([k,v]) => (groupAttr.get(keyGroup.get(id))).has(k))) : data
+    // // pass in longest possible data list for data
 	// let x = Object.keys(Object.fromEntries(data)).filter(function (k) {
 	// 	return iteratorIncludes(keyGroup.keys(), id) ? k : !Utils.specialKeywords.includes(k) && !Utils.relationsKeywords.includes(k)
 	// })
 
+    // keyGroup = new Map([["WD-Q11102170", "a"], ["WD-Q8255089", "a"], ["WD-Q11102170", "b"]])
+	// groupAttr = new Map([["a", new Set(["name", "child"])], ["b", new Set(["name"])]])
+	// data = new Map([...data].filter(([k,v]) => mySet.has(k)))
     // pass in longest possible data list for data
-	let x = Object.keys(Object.fromEntries(data)).filter(function (k) {
+    
+    let displayOptions = [...personMap.values()].map((m) => [...m.keys()])
+    let ranked = displayOptions.sort((a,b) => b.length - a.length)[0]
+    ranked = ranked.filter(function (k) {
 		return !Utils.specialKeywords.includes(k) && !Utils.relationsKeywords.includes(k);
 	})
-	console.log(x)
-	x = x.filter((i) => mySet.has(i))
-	console.log(x)
-	return x.map((k) => (
+    ranked.forEach(item => mySet.add(item))
+	return ranked.map((k) => (
 		<Row key={'Row ' + k}>
 			<Col xs={4} key={k}>
 				<p>{capitalizeFirstLetter(k)}</p>
 			</Col>
-			<Col key={data.get(k)}>
-				{
-					Utils.locationKeywords.includes(k)
-						? <a href={'http://www.google.com/maps?q=' + data.get(k)} target='_blank' rel='noopener noreferrer'>
-							<TbMapSearch />
-							{' ' + data.get(k)}
-						</a>
-						: <p>{data.get(k)}</p>
-				}
+			<Col key="check_switch">
+                <Form>
+                    <Form.Check
+                        reverse
+                        type="switch"
+                        id="custom-switch"
+                        defaultChecked={mySet.has(k)}
+                        onChange={(e) => {e.target.checked ? mySet.add(k) : mySet.delete(k)}}
+                    />
+                </Form>
 			</Col>
 		</Row>
 	));
 }
 
-export default PopupInfo
+export default PopupTemplate
