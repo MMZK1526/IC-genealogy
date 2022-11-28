@@ -20,11 +20,12 @@ import { MdPadding } from 'react-icons/md';
 import { useState } from "react";
 import Form from 'react-bootstrap/Form';
 import './stylesheets/Sidebar.css';
+import Multiselect from 'multiselect-react-dropdown';
 
 function PopupTemplate(props) {
 	return (
         // could also set this back to popup-inner
-		<div className='sidebar pe-auto'>
+		<div className='template pe-auto'>
 			<EscapeCloseable onClick={props.closePopUp}>
 				<CloseButton className='close-btn' onClick={props.closePopUp} />
 				{getAdditionalProperties(props.info, props.switchToRelations, props.id, props.groupModel, props.personMap)}
@@ -47,24 +48,35 @@ function getAdditionalProperties(data, switchToRelations, id, groupModel, person
 
 function getAllAttr(data, id, groupModel, personMap) {
 
-    const onApplyAll = (selectSet) => {
-        groupModel.globalSet = new Set([...selectSet])
-    }
-    
-    const onApplyGroup = (selectSet) => {
-
-        groupModel.groupItemSet = new Set([...selectSet])
-
-    }
+    const style = {
+		searchBox: { // To change search box element look
+			'fontSize': '20px',
+			'border': '1px solid',
+		},
+	};
     
     let displayOptions = [...personMap.values()].map((m) => [...m.keys()])
+    let ids = [...personMap.keys()].filter(id => personMap.get(id).get("name") != undefined)
     let ranked = displayOptions.sort((a,b) => b.length - a.length)[0]
     ranked = ranked.filter(function (k) {
 		return !Utils.specialKeywords.includes(k) && !Utils.relationsKeywords.includes(k);
 	})
-    let selectSet = groupModel.selectSet
+    let groupItemSet = groupModel.groupItemSet
+    let globalSet = groupModel.globalSet
     // create set that we will then add to either global or group
 	return (<>
+            <Form>
+    		<Form.Label className="form-label">People in group: </Form.Label>
+				<Multiselect
+					id='pob-select'
+					options={ids.map((v) => ({name: (personMap.get(v)).get("name"), id: v}))} // Options to display in the dropdown
+					selectedValues={[...groupModel.groupSet].map((v) => ({name: (personMap.get(v)).get("name"), id: v}))} // Preselected value to persist in dropdown
+					onSelect={(_, v) => groupModel.groupSet.add(v.id)} // Function will trigger on select event
+					onRemove={(_, v) => groupModel.groupSet.delete(v.id)} // Function will trigger on remove event
+					displayValue='name' // Property name to display in the dropdown options
+					style={style}
+				/>
+                </Form>
         {ranked.map((k) => (
             <Row key={'Row ' + k}>
                 <Col xs={4} key={k}>
@@ -76,19 +88,32 @@ function getAllAttr(data, id, groupModel, personMap) {
                             reverse
                             type="switch"
                             id="custom-switch"
-                            defaultChecked={selectSet.has(k)}
-                            onChange={(e) => {e.target.checked ? selectSet.add(k) : selectSet.delete(k)}}
+                            defaultChecked={groupItemSet.has(k)}
+                            onChange={(e) => { e.target.checked ? groupItemSet.add(k) : groupItemSet.delete(k)}}
                         />
                     </Form>
                 </Col>
             </Row>
         ))}
-        <Button className='m-1 text-center w-100' variant="primary" onClick={() => onApplyAll(selectSet)}>
-            Apply to all
-        </Button>
-        <Button className='m-1 text-center w-100' variant="primary" onClick={() => onApplyGroup(selectSet)}>
-			Apply to group
-		</Button>
+        <h3>All other people</h3>
+        {ranked.map((k) => (
+            <Row key={'Row ' + k}>
+                <Col xs={4} key={k}>
+                    <p>{capitalizeFirstLetter(k)}</p>
+                </Col>
+                <Col key="check_switch">
+                    <Form>
+                        <Form.Check
+                            reverse
+                            type="switch"
+                            id="custom-switch"
+                            defaultChecked={globalSet.has(k)}
+                            onChange={(e) => { e.target.checked ? globalSet.add(k) : globalSet.delete(k)}}
+                        />
+                    </Form>
+                </Col>
+            </Row>
+        ))}
     </>
     )
 }

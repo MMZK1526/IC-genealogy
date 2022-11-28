@@ -573,7 +573,8 @@ class GenogramTree extends React.Component {
             this.relations = transform(this.state.relationsJSON);
             this.personMap = getPersonMap(Object.values(this.state.originalJSON.items), Object.values(this.state.originalJSON.relations));
             // show all attributes at start
-            this.state.groupModel.globalSet = this.state.groupModel.selectSet = new Set([...this.personMap.values()].map((m) => [...m.keys()]).sort((a,b) => b.length - a.length)[0])
+            this.state.groupModel.globalSet = new Set([...this.personMap.values()].map((m) => [...m.keys()]).sort((a,b) => b.length - a.length)[0])
+            this.state.groupModel.groupItemSet = new Set([...this.state.groupModel.globalSet])
             console.log(this.personMap)
             updateDiagram = true;
             this.state.isLoading = false;

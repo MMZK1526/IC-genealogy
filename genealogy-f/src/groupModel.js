@@ -6,7 +6,6 @@ export class GroupModel {
         this.globalSet = new Set()
         this.groupSet = new Set()
         this.groupItemSet = new Set()
-        this.selectSet = new Set()
     }
   }
   
