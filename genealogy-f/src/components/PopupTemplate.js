@@ -27,7 +27,7 @@ function PopupTemplate(props) {
         // could also set this back to popup-inner
 		<div className='template pe-auto'>
 			<EscapeCloseable onClick={props.closePopUp}>
-				<CloseButton className='close-btn' onClick={props.closePopUp} />
+				{/* <CloseButton className='close-btn' onClick={props.closePopUp} /> */}
 				{getAdditionalProperties(props.info, props.switchToRelations, props.id, props.groupModel, props.personMap)}
 			</EscapeCloseable>
 		</div >

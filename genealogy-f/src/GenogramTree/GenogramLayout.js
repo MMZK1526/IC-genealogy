@@ -383,7 +383,7 @@ export class GenogramLayout extends go.LayeredDigraphLayout {
                 console.log("no nodes in this region so broke early");
                 break
             }
-            let personInfo = pos2.filter(p => !((p.key).startsWith('_'))).map(p => (this.personMap.get(p.key)));
+            let personInfo = pos2.filter(p => !((p.key).startsWith('_'))).map(p => (this.personMap.get(p.key))).filter(p => !(p == undefined));
             let bd = personInfo.map(p => { return { dob: p.get("date of birth"), dod: p.get("date of death") } });
             // console.log(bd);
             // calculate start date for the era
