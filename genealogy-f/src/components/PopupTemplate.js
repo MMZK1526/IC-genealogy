@@ -48,11 +48,12 @@ function getAdditionalProperties(data, switchToRelations, id, groupModel, person
 function getAllAttr(data, id, groupModel, personMap) {
 
     const onApplyAll = (selectSet) => {
-        groupModel.globalSet = selectSet
+        groupModel.globalSet = new Set([...selectSet])
     }
     
     const onApplyGroup = (selectSet) => {
-        groupModel.groupItemSet = selectSet
+
+        groupModel.groupItemSet = new Set([...selectSet])
 
     }
     
@@ -63,7 +64,6 @@ function getAllAttr(data, id, groupModel, personMap) {
 	})
     let selectSet = groupModel.selectSet
     // create set that we will then add to either global or group
-    ranked.forEach(item => selectSet.add(item))
 	return (<>
         {ranked.map((k) => (
             <Row key={'Row ' + k}>

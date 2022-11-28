@@ -54,7 +54,7 @@ function PopupInfo(props) {
 						{props.isHidden ? 'Show this person' : 'Not interested'}
 					</Button>
 					<Button variant='primary' onClick={onGroupAdd} className='m-1'>
-						{props.inGroup ? 'Add to group' : 'Remove from group'}
+						{props.inGroup ? 'Remove from group' : 'Add to group'}
 					</Button>
 				</Container>
 			</EscapeCloseable>
@@ -117,17 +117,15 @@ function getAdditionalProperties(data, switchToRelations, id, groupModel, inGrou
 
 
 function getAllAttr(data, id, groupModel, inGroup) {
-	console.log(mySet)
 
     // pass in longest possible data list for data
 	let x = Object.keys(Object.fromEntries(data)).filter(function (k) {
 		return !Utils.specialKeywords.includes(k) && !Utils.relationsKeywords.includes(k);
 	})
-	console.log(x)
 	// apply filters for both sets
-	x = x.filter((i) => groupModel.globalSet.has(i))
-	x = inGroup ? x.filter((i) => groupModel.groupItemSet.has(i)) : x
-	console.log(x)
+	x = x.filter((i) => groupModel.globalSet.has(i) || inGroup && groupModel.groupItemSet.has(i))
+	console.log(groupModel.globalSet)
+	console.log(groupModel.groupItemSet)
 	return x.map((k) => (
 		<Row key={'Row ' + k}>
 			<Col xs={4} key={k}>
