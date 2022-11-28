@@ -50,8 +50,12 @@ export class CustomUpload extends React.Component {
 
     async handleSubmit(event) {
         event.preventDefault();
-        let foo = JSON.parse(await this.state.file.text());
-        this.props.onSubmit(foo);
+        try {
+            let foo = JSON.parse(await this.state.file.text());
+            this.props.onSubmit(foo);
+        } catch {
+            alert("Invalid JSON!");
+        }
     }
 
     handleClick() {
