@@ -178,15 +178,17 @@ export function getPersonMap(data, allRelations) {
             attributes.set('description', person.description);
         }
 
-        let person_relations = allRelations.filter((p) => p[0].item2Id == personId)[0];
+        let person_relations = allRelations[personId];
 
         let attrMap = new Map;
-        for (let rela of person_relations) {
-            let targetName = data.filter((p) => p.id == rela.item1Id)[0].name;
-            if (attrMap.has(rela.type)) {
-                attrMap.set(rela.type, attrMap.get(rela.type) + ", " + targetName)
-            } else {
-                attrMap.set(rela.type, targetName);
+        if (person_relations !== undefined) {
+            for (let rela of person_relations) {
+                let targetName = data.filter((p) => p.id == rela.item1Id)[0].name;
+                if (attrMap.has(rela.type)) {
+                    attrMap.set(rela.type, attrMap.get(rela.type) + ", " + targetName)
+                } else {
+                    attrMap.set(rela.type, targetName);
+                }
             }
         }
 
