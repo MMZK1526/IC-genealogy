@@ -71,6 +71,10 @@ export class Utils {
     addKinshipHelper = (kinshipJSON, relationsJSON) => {
         for (const key of Object.keys(kinshipJSON)) {
             const item = relationsJSON.items[key];
+            item.kinships = undefined;
+        }
+        for (const key of Object.keys(kinshipJSON)) {
+            const item = relationsJSON.items[key];
             if (item.kinships === undefined) {
                 item.kinships = [];
             }
@@ -83,7 +87,7 @@ export class Utils {
             if (!relationsJSON.items[key]) {
                 continue;
             }
-            kinshipStrs.forEach((str) => item.kinships.push({ 'kinship': str, 'path': kinshipJSON[key].map((k) => k.path) }));
+            kinshipStrs.forEach((str, ix) => item.kinships.push({ 'kinship': str, 'path': kinshipJSON[key][ix].path }));
         }
 
         return relationsJSON;

@@ -10,6 +10,7 @@ const $ = go.GraphObject.make;
 export class DiagramWrapper extends React.Component {
     constructor(props) {
         super(props);
+        this.highlight = props.highlight;
         this.diagramRef = React.createRef();
         this.nodeDataArray = props.nodeDataArray;
         this.root = props.root;
@@ -38,6 +39,7 @@ export class DiagramWrapper extends React.Component {
     }
 
     init() {
+        const highlight = this.highlight;
         if (!(this.state.diagram === undefined)) {
             this.diagram = this.state.diagram;
             return;
@@ -211,7 +213,8 @@ export class DiagramWrapper extends React.Component {
         }
 
         function mouseEnter(e, obj) {
-            var node = obj.findObject('NODE2')
+            if (highlight.length > 0) return;
+            var node = obj.findObject('NODE2');
             // var shape = obj.findObject('SHAPE');
             // shape.fill = '#6DAB80';
             // shape.stroke = '#A6E6A1';
@@ -230,8 +233,7 @@ export class DiagramWrapper extends React.Component {
                 l.isHighlighted = true;
                 if (l.isLabeledLink) {
                     let it = l.labelNodes;
-                    let result = it.next();
-                    it.ra.value.findLinksConnected().each(function (l) {
+                    it.first().findLinksConnected().each(function (l) {
                         l.isHighlighted = true;
                         l.toNode.isHighlighted = true;
                     });
@@ -315,8 +317,8 @@ export class DiagramWrapper extends React.Component {
             ));
         // remove highlighting form all nodes, when user clicks on background
         this.diagram.click = function (e) {
+            highlight.length = 0;
             e.diagram.commit(function (d) { d.clearHighlighteds(); }, 'no highlighteds');
-            // console.log('clearing stuff')
         };
         this.diagram.nodeTemplateMap.add('female',  // female
             $(go.Node, 'Vertical',
@@ -693,6 +695,7 @@ export class DiagramWrapper extends React.Component {
             } else {
                 this.setupDiagram(this.props.nodeDataArray, this.props.nodeDataArray[0].key);
             }
+            this.highlight.length = 0;
         }
 
         if (this.props.recentre) {
@@ -708,6 +711,43 @@ export class DiagramWrapper extends React.Component {
 
         if (this.props.recommit) {
             this.toggleOpacity();
+        }
+
+        if (true) {
+            const highlight = this.highlight;
+            const labelledNodes = {};
+            this.diagram.startTransaction('highlight');
+            this.diagram.clearHighlighteds();
+            for (const key of highlight) {
+                const node = this.diagram.findNodeForKey(key);
+                if (!node) {
+                    alert('This relation contains people that are not in the graph');
+                    this.diagram.clearHighlighteds();
+                    highlight.length = 0;
+                    break;
+                }
+                node.isHighlighted = true;
+                node.findLinksConnected().each(function (l) {
+                    if (l.isLabeledLink) {
+                        l.labelNodes.each((n) => labelledNodes[n] = l);
+                    }
+                });
+            }
+
+            for (const key of highlight) {
+                const node = this.diagram.findNodeForKey(key);
+                node.findLinksConnected().each(function (l) {
+                    const otherNode = l.toNode.key === node.key ? l.fromNode : l.toNode;
+                    if (highlight.includes(otherNode.key)) {
+                        l.isHighlighted = true;
+                    }
+                    else if (labelledNodes[otherNode]) {
+                        l.isHighlighted = true;
+                        labelledNodes[otherNode].isHighlighted = true;
+                    }
+                });
+            }
+            this.diagram.commitTransaction('highlight');
         }
 
         if (this.props.zoomToDefault) {
