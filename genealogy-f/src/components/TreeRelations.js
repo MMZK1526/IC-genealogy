@@ -11,20 +11,12 @@ import { Utils } from './utils';
 
 export function TreeRelations(props) {
 	return (
-		<div className='popup-inner'>
+		<div className='popup-inner w-50 overflow-auto' style={{ maxHeight: "50%" }}>
 			<EscapeCloseable onClick={props.closePopUp}>
 				<CloseButton className='close-btn' onClick={props.closePopUp} />
-				{ShowRelations(props.info, props.highlight, props.closePopUp)}
+				{getRelationFields(props.info, props.highlight, props.closePopUp)}
 			</EscapeCloseable>
 		</div >
-	);
-}
-
-function ShowRelations(data, highlight, close) {
-	return (
-		<Container>
-			{getRelationFields(data, highlight, close)}
-		</Container>
 	);
 }
 

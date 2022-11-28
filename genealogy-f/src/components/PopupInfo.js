@@ -39,7 +39,7 @@ function PopupInfo(props) {
 	}
 
 	return (
-		<div className='popup-inner'>
+		<div className='popup-inner w-50'>
 			<EscapeCloseable onClick={props.closePopUp}>
 				<CloseButton className='close-btn' onClick={props.closePopUp} />
 				{getAdditionalProperties(props.info, props.switchToRelations, props.id, props.groupModel, props.inGroup)}
