@@ -728,11 +728,11 @@ class GenogramTree extends React.Component {
                                 this.fetchKinships(this.state.root, this.state.originalJSON);
                             }}
                             isHidden={this.state.filters.hiddenPeople.has(this.state.personInfo)}
-                            onToggle={() => {
+                            onFilterModeChanged={newFilterMode => {
                                 let hidden = this.state.filters.hiddenPeople;
-                                if (hidden.has(this.state.personInfo)) {
+                                if (hidden.has(this.state.personInfo) && newFilterMode != 1) {
                                     hidden.delete(this.state.personInfo);
-                                } else {
+                                } else if (!hidden.has(this.state.personInfo) && newFilterMode != 0) {
                                     hidden.add(this.state.personInfo);
                                 }
                                 this.setState({ recommit: true });
