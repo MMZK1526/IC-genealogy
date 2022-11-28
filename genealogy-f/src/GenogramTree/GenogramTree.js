@@ -5,7 +5,7 @@ import * as go from 'gojs';
 import '../stylesheets/App.css';
 import PopupInfo from '../components/PopupInfo.js'
 import RelSearchResult from '../components/RelSearchResult.js'
-import PopupTemplate from '../components/PopupTemplate.js';
+// import PopupTemplate from '../components/PopupTemplate.js';
 import '../stylesheets/GenogramTree.css';
 import { StatsPanel } from '../components/StatsPanel';
 import '../components/stylesheets/shared.css';
@@ -677,29 +677,11 @@ class GenogramTree extends React.Component {
                             }
                             {
                                 this.state.showGroups &&
-                                <PopupTemplate
-                                    closePopUp={() => this.setState({ isPopped: false })}
+                                <TreeGroups
                                     info={this.personMap.get(this.state.personInfo)}
                                     id={this.state.personInfo}
                                     groupModel={this.state.groupModel}
                                     personMap={this.personMap}
-                                    onNew={() => {
-                                        this.state.root = this.state.personInfo;
-                                        this.fetchKinships(this.state.root, this.state.originalJSON);
-                                    }}
-                                    isHidden={this.state.filters.hiddenPeople.has(this.state.personInfo)}
-                                    onToggle={() => {
-                                        let hidden = this.state.filters.hiddenPeople;
-                                        if (hidden.has(this.state.personInfo)) {
-                                            hidden.delete(this.state.personInfo);
-                                        } else {
-                                            hidden.add(this.state.personInfo);
-                                        }
-                                        this.setState({ recommit: true });
-                                    }}
-                                    onExtend={this.handlePopupExtend}
-                                    allowExtend={this.props.allowExtend}
-                                    switchToRelations={() => this.setState({ isPopped: false, showRelations: true })}
                                 />
                             }
                         </Col>
