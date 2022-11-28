@@ -108,12 +108,15 @@ class GenogramTree extends React.Component {
     }
 
     setAnotherPerson(anotherId) {
-        console.log("Another Person: ")
-        console.log(anotherId)
-        this.setState({
-            anotherPerson: anotherId,
-            recentre: true
-        });
+        if (anotherId === null) {
+            this.setState({
+            anotherPerson: null,
+            });
+        } else {
+            this.setState({
+                anotherPerson: anotherId.key,
+            });
+        }
     }
 
     getAnotherPerson() {
@@ -666,10 +669,10 @@ class GenogramTree extends React.Component {
                                 this.state.showLookup &&
                                 <TreeNameLookup
                                     onPersonSelection={(_, v) => this.setFocusPerson(v.key)}
-                                    onAnotherPersonSelection={(_, v) => this.setAnotherPerson(v.key)}
+                                    onAnotherPersonSelection={(_, v) => this.setAnotherPerson(v)}
                                     getPersonsRelations={this.getPersonsRelations}
                                     getFocusPerson={this.getFocusPerson}
-                                    getAnotherPerson={this.getAnotherPerson}
+                                    getAnotherPerson={this.state.anotherPerson}
                                     getPersonMap={this.getPersonMap}
                                 />
                             }

@@ -127,7 +127,6 @@ function getAllAttr(data, id, groupModel, inGroup) {
 	console.log(groupModel.globalSet)
 	console.log(groupModel.groupItemSet)
 	console.log(groupModel.groupSet)
-	console.log("lll")
 	console.log(data)
 	return x.map((k) => (
 		<Row key={'Row ' + k}>

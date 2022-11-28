@@ -1,5 +1,6 @@
 import './stylesheets/Sidebar.css';
 import { Autocomplete, TextField } from '@mui/material';
+import { Row } from 'react-bootstrap';
 
 export function TreeNameLookup(props) {
 	const allPersonsRelations = props.getPersonsRelations();
@@ -44,8 +45,31 @@ export function TreeNameLookup(props) {
 			/>
 
 			
-			<label className="form-label">Relationship with: </label>
+			
+			<div>
+				{
+				props.getAnotherPerson === null ?
+
+				<label></label> : 
+				
+				<div>
+					<label className="form-label">Is </label>
+					{relaBetween(props.getFocusPerson(), props.getAnotherPerson)}
+				</div>
+				}
+			</div>
+			
 
 		</div>
+	);
+}
+
+function relaBetween(from, to) {
+	return (
+		<Row>
+		<label>{from}</label>
+		<label>{to}</label>
+		</Row>
+		
 	);
 }
