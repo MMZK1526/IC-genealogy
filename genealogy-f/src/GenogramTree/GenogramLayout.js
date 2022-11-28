@@ -399,9 +399,9 @@ export class GenogramLayout extends go.LayeredDigraphLayout {
 
             // console.log("start", startDate, "end", endDate);
             // create "eras" as a part in the grid background made up of date in the corner and an opaque rectangle covering the diagram
-            let part = $(go.Part, {position: new go.Point(startX,startY - 45), selectable: false, layerName: "Grid", _viewPosition:  new go.Point(startX,startY - 45)},
+            let part = $(go.Part, {position: new go.Point(0,startY - 45), selectable: false, layerName: "Grid", _viewPosition:  new go.Point(0,startY - 45)},
                 $(go.Shape, "Rectangle",
-                    { width: endX - startX, height: endY - startY, margin: 0, fill: i % 2 == 0 ? "#FFFFE0" : "#ADD8E6", opacity: 0.15, stroke: null }),
+                    { width: endX - 0, height: endY - startY, margin: 0, fill: i % 2 == 0 ? "#FFFFE0" : "#ADD8E6", opacity: 0.15, stroke: null }),
                 $(go.TextBlock,
                     { font: "Italic 24pt calligraphy", text: this.bcDate(startDate) + " - " + this.bcDate(endDate), stroke: "black" },
                 ),
