@@ -25,24 +25,18 @@ import Multiselect from 'multiselect-react-dropdown';
 function PopupTemplate(props) {
 	return (
         // could also set this back to popup-inner
-		<div className='template pe-auto'>
-			<EscapeCloseable onClick={props.closePopUp}>
-				{/* <CloseButton className='close-btn' onClick={props.closePopUp} /> */}
-				{getAdditionalProperties(props.info, props.switchToRelations, props.id, props.groupModel, props.personMap)}
-			</EscapeCloseable>
+		<div className='sidebar pe-auto'>
+            {/* <CloseButton className='close-btn' onClick={props.closePopUp} /> */}
+            {getAdditionalProperties(props.info, props.switchToRelations, props.id, props.groupModel, props.personMap)}
 		</div >
 	);
 }
 
 function getAdditionalProperties(data, switchToRelations, id, groupModel, personMap) {
 	return (
-		<Container>
-			<Row>
-				<Container className='overflow-auto additional-properties-container'>
-					{getAllAttr(data, id, groupModel, personMap)}
-				</Container>
-			</Row>
-		</Container>
+        <Container className='overflow-auto additional-properties-container'>
+            {getAllAttr(data, id, groupModel, personMap)}
+        </Container>
 	);
 }
 
@@ -79,10 +73,10 @@ function getAllAttr(data, id, groupModel, personMap) {
                 </Form>
         {ranked.map((k) => (
             <Row key={'Row ' + k}>
-                <Col xs={4} key={k}>
+                <Col key={k}>
                     <p>{capitalizeFirstLetter(k)}</p>
                 </Col>
-                <Col key="check_switch">
+                <Col xs={3} key="check_switch">
                     <Form>
                         <Form.Check
                             reverse
@@ -98,10 +92,10 @@ function getAllAttr(data, id, groupModel, personMap) {
         <h3>All other people</h3>
         {ranked.map((k) => (
             <Row key={'Row ' + k}>
-                <Col xs={4} key={k}>
+                <Col key={k}>
                     <p>{capitalizeFirstLetter(k)}</p>
                 </Col>
-                <Col key="check_switch">
+                <Col xs={3} key="check_switch">
                     <Form>
                         <Form.Check
                             reverse
