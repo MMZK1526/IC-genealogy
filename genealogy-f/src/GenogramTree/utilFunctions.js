@@ -191,6 +191,7 @@ export function getPersonMap(data, allRelations) {
                 }
             }
         }
+        
 
 
         // wash data for additionalProperties

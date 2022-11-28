@@ -80,23 +80,23 @@ export class DiagramWrapper extends React.Component {
         this.diagram.addDiagramListener("ViewportBoundsChanged", function (e) {
             e.diagram.commit(function (dia) {
                 // only iterates through simple Parts in the diagram, not Nodes or Links
-                dia.parts.each(function (part) {
-                    // and only on those that have the "_viewPosition" property set to a Point
-                    // console.log(part.position)
-                    // console.log(dia.transformViewToDoc(part._viewPosition))
-                    if (part._viewPosition) {
-                        if (dia.transformViewToDoc(part._viewPosition).x > 0) {
-                            // part.position is now a Doc cor
-                            part.position = new go.Point(dia.transformViewToDoc(part._viewPosition).x, part.position.y)
-                        } else {
-                            // part.position is now a View coordinate
-                            part.position = part._viewPosition
+                    dia.parts.each(function(part) {
+                        // and only on those that have the "_viewPosition" property set to a Point
+                        // console.log(part.position)
+                        // console.log(dia.transformViewToDoc(part._viewPosition))
+                        if (part._viewPosition) {
+                            if (dia.transformViewToDoc(part._viewPosition).x > 0) {
+                                // part.position is now a Doc cor
+                                part.position = new go.Point(dia.transformViewToDoc(part._viewPosition).x, part.position.y)
+                            } else {
+                                // part.position is now a View coordinate
+                                part.position = part._viewPosition
+                            }
+                            // part.scale = 1/dia.scale;  // counteract any zooming
                         }
-                        // part.scale = 1/dia.scale;  // counteract any zooming
-                    }
-                })
-            }, null);  // set skipsUndoManager to true, to avoid recording these changes
-        });
+                    })
+                }, null);  // set skipsUndoManager to true, to avoid recording these changes
+            });
         // determine the color for each attribute shape
         function attrFill(a) {
             switch (a) {

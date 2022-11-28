@@ -26,6 +26,26 @@ export function TreeNameLookup(props) {
 				  }}
 				renderOption={(props, option) => <li component="li" {...props}>{option.name}</li>}
 			/>
+
+			<label className="form-label">Relationship with: </label>
+			<Autocomplete
+				options={allPersonsRelations}
+				getOptionLabel={(option) => `${option.name} (${getPersonalName(option.key)})@${option.key}`}
+				// value={allPersonsRelations.find(person => person.key === props.getAnotherPerson())}
+				onChange={props.onAnotherPersonSelection}
+				sx={{ width: '100%', backgroundColor: "white" }}
+				renderInput={(params) => {
+					params.inputProps.value = params.inputProps.value.split("@")[0];
+					return (
+					  <TextField {...params}/>
+					);
+				  }}
+				renderOption={(props, option) => <li component="li" {...props}>{option.name}</li>}
+			/>
+
+			
+			<label className="form-label">Relationship with: </label>
+
 		</div>
 	);
 }

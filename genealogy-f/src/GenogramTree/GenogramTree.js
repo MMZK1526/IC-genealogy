@@ -48,6 +48,10 @@ class GenogramTree extends React.Component {
             this.getPersonMap = this.getPersonMap.bind(this);
             this.setFocusPerson = this.setFocusPerson.bind(this);
             this.getFocusPerson = this.getFocusPerson.bind(this);
+
+            this.setAnotherPerson = this.setAnotherPerson.bind(this);
+            this.getAnotherPerson = this.getAnotherPerson.bind(this);
+
             this.requests = this.props.requests;
             this.isLoading = !rawJSON;
             this.state = {
@@ -58,6 +62,7 @@ class GenogramTree extends React.Component {
                 relationsJSON: rawJSON,
                 kinshipJSON: null,
                 personInfo: null,
+                anotherPerson: null,
                 isPopped: false,
                 showStats: false,
                 filters: new FilterModel(true),
@@ -100,6 +105,19 @@ class GenogramTree extends React.Component {
 
     getPersonMap() {
         return this.personMap;
+    }
+
+    setAnotherPerson(anotherId) {
+        console.log("Another Person: ")
+        console.log(anotherId)
+        this.setState({
+            anotherPerson: anotherId,
+            recentre: true
+        });
+    }
+
+    getAnotherPerson() {
+        return this.state.anotherPerson;
     }
 
     handleModelChange(changes) {
@@ -648,8 +666,10 @@ class GenogramTree extends React.Component {
                                 this.state.showLookup &&
                                 <TreeNameLookup
                                     onPersonSelection={(_, v) => this.setFocusPerson(v.key)}
+                                    onAnotherPersonSelection={(_, v) => this.setAnotherPerson(v.key)}
                                     getPersonsRelations={this.getPersonsRelations}
                                     getFocusPerson={this.getFocusPerson}
+                                    getAnotherPerson={this.getAnotherPerson}
                                     getPersonMap={this.getPersonMap}
                                 />
                             }
