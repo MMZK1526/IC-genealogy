@@ -355,7 +355,7 @@ export class GenogramLayout extends go.LayeredDigraphLayout {
             }
         })
         // console.log(idPos);
-        console.log(`F: ${this.personMap}`);
+        // console.log(`F: ${this.personMap}`);
         // console.log(typeof this.diagram);
         this.diagram.removeParts(this.diagram.findLayer("Grid").parts);
         this.addRecs(this.diagram, idPos);

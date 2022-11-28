@@ -1,6 +1,8 @@
 import './stylesheets/Sidebar.css';
 import { Autocomplete, TextField } from '@mui/material';
 import { Row } from 'react-bootstrap';
+import Button from 'react-bootstrap/Button';
+
 
 export function TreeNameLookup(props) {
 	const allPersonsRelations = props.getPersonsRelations();
@@ -28,7 +30,7 @@ export function TreeNameLookup(props) {
 				renderOption={(props, option) => <li component="li" {...props}>{option.name}</li>}
 			/>
 
-			<label className="form-label">Relationship with: </label>
+			<label className="m-1 form-label">Relationship with: </label>
 			<Autocomplete
 				options={allPersonsRelations}
 				getOptionLabel={(option) => `${option.name} (${getPersonalName(option.key)})@${option.key}`}
@@ -44,20 +46,9 @@ export function TreeNameLookup(props) {
 				renderOption={(props, option) => <li component="li" {...props}>{option.name}</li>}
 			/>
 
-			
-			
-			<div>
-				{
-				props.getAnotherPerson === null ?
-
-				<label></label> : 
-				
-				<div>
-					<label className="form-label">Is </label>
-					{relaBetween(props.getFocusPerson(), props.getAnotherPerson)}
-				</div>
-				}
-			</div>
+			<Button className='mt-3 text-center w-100' variant="success" onClick={() => props.onChange(false)}>
+				Apply
+			</Button>
 			
 
 		</div>

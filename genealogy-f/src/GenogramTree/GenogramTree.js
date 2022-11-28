@@ -4,6 +4,7 @@ import React from 'react';
 import * as go from 'gojs';
 import '../stylesheets/App.css';
 import PopupInfo from '../components/PopupInfo.js'
+import RelSearchResult from '../components/RelSearchResult.js'
 import PopupTemplate from '../components/PopupTemplate.js';
 import '../stylesheets/GenogramTree.css';
 import { StatsPanel } from '../components/StatsPanel';
@@ -76,6 +77,7 @@ class GenogramTree extends React.Component {
                 showLookup: false,
                 showFilters: false,
                 highlight: [],
+                isShownBetween: false,
             };
             this.componentRef = React.createRef();
         }
@@ -415,8 +417,6 @@ class GenogramTree extends React.Component {
                     }
                 }
             }
-            console.log(Array.from(visited));
-
             // filter on From birth year
             if (filters.fromYear !== '') {
                 for (const [k, _] of Object.entries(visited)) {
@@ -592,7 +592,6 @@ class GenogramTree extends React.Component {
                 </>
             );
         }
-        // console.log('got here initial getting person map');
         var updateDiagram = false;
         if (this.state.isUpdated) {
             this.state.isUpdated = false;
@@ -602,7 +601,6 @@ class GenogramTree extends React.Component {
             // show all attributes at start
             this.state.groupModel.globalSet = new Set([...this.personMap.values()].map((m) => [...m.keys()]).sort((a, b) => b.length - a.length)[0])
             this.state.groupModel.groupItemSet = new Set([...this.state.groupModel.globalSet])
-            console.log(this.personMap)
             updateDiagram = true;
             this.state.isLoading = false;
         }
@@ -674,6 +672,7 @@ class GenogramTree extends React.Component {
                                     getFocusPerson={this.getFocusPerson}
                                     getAnotherPerson={this.state.anotherPerson}
                                     getPersonMap={this.getPersonMap}
+                                    onChange={() => this.setState({ isPopped: false, isShownBetween: true})}
                                 />
                             }
                             {
@@ -770,6 +769,16 @@ class GenogramTree extends React.Component {
                             closePopUp={() => this.setState({ showRelations: false })}
                             info={this.personMap.get(this.state.personInfo)}
                             highlight={this.state.highlight}
+                        />
+                    </div>
+                }
+
+            {
+                    this.state.isShownBetween &&
+                    <div className='popup'>
+                        <RelSearchResult
+                            closePopUp={() => this.setState({ isShownBetween: false })}
+                            info={this.personMap.get(this.state.anotherPerson)}
                         />
                     </div>
                 }

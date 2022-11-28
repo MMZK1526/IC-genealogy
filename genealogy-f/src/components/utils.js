@@ -12,6 +12,8 @@ export class Utils {
     }
 
     processRelations = async (data) => {
+        console.log("process....")
+        console.log(data)
         const chosenId = data.targets[0].id;
         return {
             id: chosenId,

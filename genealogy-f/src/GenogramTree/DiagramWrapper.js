@@ -685,11 +685,11 @@ export class DiagramWrapper extends React.Component {
     }
 
     render() {
+        let focusId = this.getFocusPerson();
         if (this.state.isFirstRender || this.props.updateDiagram) {
             this.state.isFirstRender = false;
 
             // From graph expand
-            let focusId = this.getFocusPerson();
             if (!focusId) {
                 focusId = this.props.nodeDataArray[0].key;
             }

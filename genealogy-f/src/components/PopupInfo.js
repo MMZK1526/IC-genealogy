@@ -160,10 +160,9 @@ function getAllAttr(data, id, groupModel, inGroup) {
 	})
 	// apply filters for both sets
 	x = x.filter((i) => groupModel.globalSet.has(i)).filter((i) => !inGroup || inGroup && groupModel.groupItemSet.has(i))
-	console.log(groupModel.globalSet)
-	console.log(groupModel.groupItemSet)
-	console.log(groupModel.groupSet)
-	console.log(data)
+	// console.log(groupModel.globalSet)
+	// console.log(groupModel.groupItemSet)
+	// console.log(groupModel.groupSet)
 	return x.map((k) => (
 		<Row key={'Row ' + k}>
 			<Col xs={4} key={k}>
