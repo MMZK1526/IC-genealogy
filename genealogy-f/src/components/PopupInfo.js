@@ -33,11 +33,16 @@ function PopupInfo(props) {
 		props.closePopUp();
 	}
 
+	const onGroupAdd = (_) => {
+		props.onGroupAdd();
+		props.closePopUp();
+	}
+
 	return (
 		<div className='popup-inner'>
 			<EscapeCloseable onClick={props.closePopUp}>
 				<CloseButton className='close-btn' onClick={props.closePopUp} />
-				{getAdditionalProperties(props.info, props.switchToRelations, props.id, props.mySet)}
+				{getAdditionalProperties(props.info, props.switchToRelations, props.id, props.groupModel, props.inGroup)}
 				<Container className='text-center mt-2'>
 					<Button variant='primary' onClick={onExtend} className='m-1'>
 						Extend tree from this person
@@ -48,13 +53,16 @@ function PopupInfo(props) {
 					<Button variant='primary' onClick={onToggle} className='m-1'>
 						{props.isHidden ? 'Show this person' : 'Not interested'}
 					</Button>
+					<Button variant='primary' onClick={onGroupAdd} className='m-1'>
+						{props.inGroup ? 'Add to group' : 'Remove from group'}
+					</Button>
 				</Container>
 			</EscapeCloseable>
 		</div >
 	);
 }
 
-function getAdditionalProperties(data, switchToRelations, id, mySet) {
+function getAdditionalProperties(data, switchToRelations, id, groupModel, inGroup) {
 	const openInWikipedia = url => {
 		window.open(url, '_blank', 'noopener,noreferrer');
 	};
@@ -100,36 +108,25 @@ function getAdditionalProperties(data, switchToRelations, id, mySet) {
 			</Row>
 			<Row>
 				<Container className='overflow-auto additional-properties-container'>
-					{getAllAttr(data, id, mySet)}
+					{getAllAttr(data, id, groupModel, inGroup)}
 				</Container>
 			</Row>
 		</Container>
 	);
 }
-const iteratorIncludes = (it, value) => {
-	for (let x of it) {
-	  if (x === value) return true
-	}
-	return false
-  }
 
-function getAllAttr(data, id, mySet, keyGroup, groupAttr) {
+
+function getAllAttr(data, id, groupModel, inGroup) {
 	console.log(mySet)
-	// every Group must exist in groupAttr
-	// keyGroup = new Map([["WD-Q11102170", "a"], ["WD-Q8255089", "a"], ["WD-Q11102170", "b"]])
-	// groupAttr = new Map([["a", new Set(["name", "child"])], ["b", new Set(["name"])]])
-	// console.log(iteratorIncludes(keyGroup.keys(), id))
-	// data = iteratorIncludes(keyGroup.keys(), id)  ? new Map([...data].filter(([k,v]) => (groupAttr.get(keyGroup.get(id))).has(k))) : data
-	// let x = Object.keys(Object.fromEntries(data)).filter(function (k) {
-	// 	return iteratorIncludes(keyGroup.keys(), id) ? k : !Utils.specialKeywords.includes(k) && !Utils.relationsKeywords.includes(k)
-	// })
 
     // pass in longest possible data list for data
 	let x = Object.keys(Object.fromEntries(data)).filter(function (k) {
 		return !Utils.specialKeywords.includes(k) && !Utils.relationsKeywords.includes(k);
 	})
 	console.log(x)
-	x = x.filter((i) => mySet.has(i))
+	// apply filters for both sets
+	x = x.filter((i) => groupModel.globalSet.has(i))
+	x = inGroup ? x.filter((i) => groupModel.groupItemSet.has(i)) : x
 	console.log(x)
 	return x.map((k) => (
 		<Row key={'Row ' + k}>

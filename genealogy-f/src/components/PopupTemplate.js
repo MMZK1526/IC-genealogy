@@ -19,101 +19,79 @@ import { Utils } from './utils';
 import { MdPadding } from 'react-icons/md';
 import { useState } from "react";
 import Form from 'react-bootstrap/Form';
+import './stylesheets/Sidebar.css';
 
 function PopupTemplate(props) {
-	const onNew = (_) => {
-		props.onNew();
-		props.closePopUp();
-	};
-
-	const onExtend = (_) => {
-		props.onExtend();
-		props.closePopUp();
-	};
-
-	const onToggle = (_) => {
-		props.onToggle();
-		props.closePopUp();
-	}
-
 	return (
         // could also set this back to popup-inner
 		<div className='sidebar pe-auto'>
 			<EscapeCloseable onClick={props.closePopUp}>
 				<CloseButton className='close-btn' onClick={props.closePopUp} />
-				{getAdditionalProperties(props.info, props.switchToRelations, props.id, props.mySet, props.personMap)}
+				{getAdditionalProperties(props.info, props.switchToRelations, props.id, props.groupModel, props.personMap)}
 			</EscapeCloseable>
 		</div >
 	);
 }
 
-function getAdditionalProperties(data, switchToRelations, id, mySet, personMap) {
-	const openInWikipedia = url => {
-		window.open(url, '_blank', 'noopener,noreferrer');
-	};
-
-	const openSearch = name => {
-		window.open('http://www.google.com/search?q=' + name, '_blank', 'noopener,noreferrer');
-	};
-
+function getAdditionalProperties(data, switchToRelations, id, groupModel, personMap) {
 	return (
 		<Container>
 			<Row>
 				<Container className='overflow-auto additional-properties-container'>
-					{getAllAttr(data, id, mySet, personMap)}
+					{getAllAttr(data, id, groupModel, personMap)}
 				</Container>
 			</Row>
 		</Container>
 	);
 }
-const iteratorIncludes = (it, value) => {
-	for (let x of it) {
-	  if (x === value) return true
-	}
-	return false
-  }
 
-function getAllAttr(data, id, mySet, personMap) {
-    // console.log()
-	// every Group must exist in groupAttr
-	// keyGroup = new Map([["WD-Q11102170", "a"], ["WD-Q8255089", "a"], ["WD-Q11102170", "b"]])
-	// groupAttr = new Map([["a", new Set(["name", "child"])], ["b", new Set(["name"])]])
-	// console.log(iteratorIncludes(keyGroup.keys(), id))
-	// data = iteratorIncludes(keyGroup.keys(), id)  ? new Map([...data].filter(([k,v]) => (groupAttr.get(keyGroup.get(id))).has(k))) : data
-    // // pass in longest possible data list for data
-	// let x = Object.keys(Object.fromEntries(data)).filter(function (k) {
-	// 	return iteratorIncludes(keyGroup.keys(), id) ? k : !Utils.specialKeywords.includes(k) && !Utils.relationsKeywords.includes(k)
-	// })
+function getAllAttr(data, id, groupModel, personMap) {
 
-    // keyGroup = new Map([["WD-Q11102170", "a"], ["WD-Q8255089", "a"], ["WD-Q11102170", "b"]])
-	// groupAttr = new Map([["a", new Set(["name", "child"])], ["b", new Set(["name"])]])
-	// data = new Map([...data].filter(([k,v]) => mySet.has(k)))
-    // pass in longest possible data list for data
+    const onApplyAll = (selectSet) => {
+        groupModel.globalSet = selectSet
+    }
+    
+    const onApplyGroup = (selectSet) => {
+        groupModel.groupItemSet = selectSet
+
+    }
     
     let displayOptions = [...personMap.values()].map((m) => [...m.keys()])
     let ranked = displayOptions.sort((a,b) => b.length - a.length)[0]
     ranked = ranked.filter(function (k) {
 		return !Utils.specialKeywords.includes(k) && !Utils.relationsKeywords.includes(k);
 	})
-    ranked.forEach(item => mySet.add(item))
-	return ranked.map((k) => (
-		<Row key={'Row ' + k}>
-			<Col xs={4} key={k}>
-				<p>{capitalizeFirstLetter(k)}</p>
-			</Col>
-			<Col key="check_switch">
-                <Form>
-                    <Form.Check
-                        reverse
-                        type="switch"
-                        id="custom-switch"
-                        defaultChecked={mySet.has(k)}
-                        onChange={(e) => {e.target.checked ? mySet.add(k) : mySet.delete(k)}}
-                    />
-                </Form>
-			</Col>
-		</Row>
-	));
+    let selectSet = groupModel.selectSet
+    // create set that we will then add to either global or group
+    ranked.forEach(item => selectSet.add(item))
+	return (<>
+        {ranked.map((k) => (
+            <Row key={'Row ' + k}>
+                <Col xs={4} key={k}>
+                    <p>{capitalizeFirstLetter(k)}</p>
+                </Col>
+                <Col key="check_switch">
+                    <Form>
+                        <Form.Check
+                            reverse
+                            type="switch"
+                            id="custom-switch"
+                            defaultChecked={selectSet.has(k)}
+                            onChange={(e) => {e.target.checked ? selectSet.add(k) : selectSet.delete(k)}}
+                        />
+                    </Form>
+                </Col>
+            </Row>
+        ))}
+        <Button className='m-1 text-center w-100' variant="primary" onClick={() => onApplyAll(selectSet)}>
+            Apply to all
+        </Button>
+        <Button className='m-1 text-center w-100' variant="primary" onClick={() => onApplyGroup(selectSet)}>
+			Apply to group
+		</Button>
+    </>
+    )
 }
+
 
 export default PopupTemplate

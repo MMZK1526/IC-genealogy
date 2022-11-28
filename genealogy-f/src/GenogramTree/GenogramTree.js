@@ -21,6 +21,7 @@ import { TreeNameLookup } from '../components/TreeNameLookup.js';
 import { Opacity } from './Const';
 import { TreeGroups } from '../components/TreeGroups.js';
 import { TreeRelations } from '../components/TreeRelations.js';
+import { GroupModel } from '../groupModel.js';
 
 const ENABLE_PRE_FETCHING = false;
 
@@ -60,6 +61,7 @@ class GenogramTree extends React.Component {
                 isPopped: false,
                 showStats: false,
                 filters: new FilterModel(true),
+                groupModel: new GroupModel(),
                 showBtns: true,
                 recentre: false,
                 recommit: false,
@@ -68,7 +70,6 @@ class GenogramTree extends React.Component {
                 zoomToDefault: false,
                 showLookup: false,
                 showFilters: false,
-                mySet: new Set(),
             };
             this.componentRef = React.createRef();
         }
@@ -571,6 +572,8 @@ class GenogramTree extends React.Component {
             this.applyFilterAndDrawTree();
             this.relations = transform(this.state.relationsJSON);
             this.personMap = getPersonMap(Object.values(this.state.originalJSON.items), Object.values(this.state.originalJSON.relations));
+            // show all attributes at start
+            this.state.groupModel.globalSet = new Set([...personMap.values()].map((m) => [...m.keys()]).sort((a,b) => b.length - a.length)[0])
             console.log(this.personMap)
             updateDiagram = true;
             this.state.isLoading = false;
@@ -650,7 +653,7 @@ class GenogramTree extends React.Component {
                                         closePopUp={() => this.setState({ isPopped: false })}
                                         info={this.personMap.get(this.state.personInfo)}
                                         id = {this.state.personInfo}
-                                        mySet = {this.state.mySet}
+                                        groupModel = {this.state.groupModel}
                                         personMap = {this.personMap}
                                         onNew={() => {
                                             this.state.root = this.state.personInfo;
@@ -691,7 +694,7 @@ class GenogramTree extends React.Component {
                             closePopUp={() => this.setState({ isPopped: false })}
                             info={this.personMap.get(this.state.personInfo)}
                             id = {this.state.personInfo}
-                            mySet = {this.state.mySet}
+                            groupModel = {this.state.groupModel}
                             onNew={() => {
                                 this.state.root = this.state.personInfo;
                                 this.fetchKinships(this.state.root, this.state.originalJSON);
@@ -706,6 +709,15 @@ class GenogramTree extends React.Component {
                                 }
                                 this.setState({ recommit: true });
                             }}
+                            onGroupAdd={() => {
+                                let group = this.state.groupModel.groupSet
+                                if (group.has(this.state.personInfo)) {
+                                    group.delete(this.state.personInfo);
+                                } else {
+                                    group.add(this.state.personInfo)
+                                }
+                            }}
+                            inGroup ={this.state.groupModel.groupSet.has(this.state.personInfo)}
                             onExtend={this.handlePopupExtend}
                             allowExtend={this.props.allowExtend}
                             switchToRelations={() => this.setState({ isPopped: false, showRelations: true })}
