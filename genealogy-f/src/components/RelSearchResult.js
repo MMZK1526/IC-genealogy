@@ -23,22 +23,35 @@ function RelSearchResult(props) {
 		<div className='popup-inner w-50'>
 			<EscapeCloseable onClick={props.closeRelSearchResult}>
 				<CloseButton className='close-btn' onClick={props.closePopUp} />
-				{getRelationsFrom(props.info)}
+				{getRelationsFrom(props.info, props.highlight, props.closePopUp)}
 			</EscapeCloseable>
 		</div >
 	);
 }
 
-function getRelationsFrom(data) {
+function getRelationsFrom(data, highlight, close) {
 
     if (data.get("kinship") === undefined) {
         return (
             <label>No valid relationship is found!</label>
         );
     }
-
+    let relation = data.get("kinship")[0];
     return (
-        <label>{data.get("kinship")[0].kinship}</label>
+        <Row>
+            <Button
+                className='text-start'
+                variant="link"
+                onClick={() => {
+                    highlight.length = 0;
+                    for (const name of relation.path) {
+                        highlight.push(name);
+                    }
+                    close();
+                }}>{relation.kinship}
+			</Button>
+        </Row>
+        
     );
 }
 

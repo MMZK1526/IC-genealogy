@@ -773,12 +773,13 @@ class GenogramTree extends React.Component {
                     </div>
                 }
 
-            {
+                {
                     this.state.isShownBetween &&
                     <div className='popup'>
                         <RelSearchResult
                             closePopUp={() => this.setState({ isShownBetween: false })}
                             info={this.personMap.get(this.state.anotherPerson)}
+                            highlight={this.state.highlight}
                         />
                     </div>
                 }
