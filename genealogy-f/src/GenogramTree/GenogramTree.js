@@ -4,7 +4,6 @@ import React from 'react';
 import * as go from 'gojs';
 import '../stylesheets/App.css';
 import PopupInfo from '../components/PopupInfo.js'
-import PopupTemplate from '../components/PopupTemplate.js'
 import '../stylesheets/GenogramTree.css';
 import { StatsPanel } from '../components/StatsPanel';
 import '../components/stylesheets/shared.css';
