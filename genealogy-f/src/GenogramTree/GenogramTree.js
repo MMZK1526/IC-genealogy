@@ -678,8 +678,8 @@ class GenogramTree extends React.Component {
                             {
                                 this.state.showGroups &&
                                 <TreeGroups
-                                    info={this.personMap.get(this.state.personInfo)}
-                                    id={this.state.personInfo}
+                                    // info={this.personMap.get(this.state.personInfo)}
+                                    // id={this.state.personInfo}
                                     groupModel={this.state.groupModel}
                                     personMap={this.personMap}
                                 />
