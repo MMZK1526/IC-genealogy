@@ -14,6 +14,7 @@ import {
 import * as util from 'util';
 
 import GenogramTree from "./GenogramTree/GenogramTree";
+import { SnackbarProvider } from 'notistack';
 
 class App extends React.Component {
     componentDidMount(){
@@ -36,21 +37,22 @@ class App extends React.Component {
 
     render() {
         return (
-            
             <div className="App">
-                <link
-                    rel="stylesheet"
-                    href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"
-                    integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi"
-                    crossOrigin="anonymous"
+                <SnackbarProvider>
+                    <link
+                        rel="stylesheet"
+                        href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"
+                        integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi"
+                        crossOrigin="anonymous"
                     />
-              <Router>
-                <Routes>
-                    <Route path="/" element={<Home requests={this.requests}/>} />
-                    <Route path="/result" element={<ResultPage requests={this.requests}/>} />
-                    <Route path="/tree" element={<GenogramTree requests={this.requests} onPopupExtend={this.handlePopupExtend}/>} />
-                </Routes>
-              </Router>
+                    <Router>
+                        <Routes>
+                            <Route path="/" element={<Home requests={this.requests}/>} />
+                            <Route path="/result" element={<ResultPage requests={this.requests}/>} />
+                            <Route path="/tree" element={<GenogramTree requests={this.requests} onPopupExtend={this.handlePopupExtend}/>} />
+                        </Routes>
+                    </Router>
+                </SnackbarProvider>
             </div>
           );
     }

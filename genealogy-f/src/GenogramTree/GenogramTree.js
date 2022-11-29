@@ -24,6 +24,7 @@ import { TreeGroups } from '../components/TreeGroups.js';
 import { TreeRelations } from '../components/TreeRelations.js';
 import { GroupModel } from '../groupModel.js';
 import {Navigate, useNavigate} from "react-router-dom";
+import { withSnackbar } from 'notistack';
 
 const ENABLE_PRE_FETCHING = false;
 
@@ -80,6 +81,7 @@ class GenogramTree extends React.Component {
                 showFilters: false,
                 highlight: [],
                 isShownBetween: false,
+                extendImpossible: new Set(),
             };
             this.componentRef = React.createRef();
         }
@@ -565,11 +567,28 @@ class GenogramTree extends React.Component {
             alert('Please wait for the current expansion to finish');
             return;
         }
+        if (
+            this.state.extendImpossible.has(this.state.selectedPerson)
+        ) {
+            this.props.enqueueSnackbar(
+                'Extend not possible for selected person. No new relatives found.',
+                {
+                    autoHideDuration: 2_000,
+                    variant: 'warning',
+                }
+            );
+            return;
+        }
         this.setState({
             isLoading: true,
             isUpdated: false,
         });
         await this.fetchFromCacheOrBackend(this.state.selectedPerson, 2);
+        this.setState(prev => {
+            const extendImpossible = prev.extendImpossible;
+            extendImpossible.add(prev.selectedPerson);
+            return {extendImpossible};
+        });
     }
 
     resetDiagram = async () => {
@@ -739,6 +758,7 @@ class GenogramTree extends React.Component {
                             onExtend={this.handlePopupExtend}
                             allowExtend={this.props.allowExtend}
                             switchToRelations={() => this.setState({ isPopped: false, showRelations: true })}
+                            extendImpossible={this.state.extendImpossible.has(this.state.selectedPerson)}
                         />
                     </div>
                 }
@@ -952,4 +972,4 @@ class GenogramTree extends React.Component {
     }
 }
 
-export default withRouter(GenogramTree);
+export default withRouter(withSnackbar(GenogramTree));

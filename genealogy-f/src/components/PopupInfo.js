@@ -86,7 +86,7 @@ class PopupInfo extends Component<{}> {
 						</Row>
 						<Row>
 							<Col xs="auto">
-								<Button variant='primary' onClick={this.onExtend} className='m-1'>
+								<Button variant={this.props.extendImpossible ? 'warning' : 'primary'} onClick={this.onExtend} className='m-1'>
 									Extend tree from this person
 								</Button>
 							</Col>
