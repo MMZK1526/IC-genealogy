@@ -11,16 +11,6 @@ export class Utils {
         this.requests = new Requests();
     }
 
-    processRelations = async (data) => {
-        console.log("process....")
-        console.log(data)
-        const chosenId = data.targets[0].id;
-        return {
-            id: chosenId,
-            data: await this.addKinship(chosenId, data),
-        };
-    }
-
     extendRelations = async (id, relationsJSON) => {
         console.assert(!_.isEmpty(relationsJSON));
         const oldRelationsJSON = structuredClone(relationsJSON);
