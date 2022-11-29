@@ -185,13 +185,13 @@ class GenogramTree extends React.Component {
 
     // If id is provided, we search this id. Otherwise, it is a JSON provided by the user
 
-    fetchRelations = async ({ id = null, depth = null, allSpouses = true, customUpload = false } = {}) => {
+    fetchRelations = async ({ id = null, depth = null, allSpouses = true } = {}) => {
         if (id === null) {
             await this.loadCustomData();
             return;
         }
         const [dbPromise, wikiDataPromise] = this.requests.relationsCacheAndWiki({
-            id: id, depth: depth,
+            id: id, depth: depth, allSpouses: allSpouses,
             visitedItems: this.state.originalJSON ? Object.keys(this.state.originalJSON.items) : []
         });
         const dbRes = await dbPromise;
@@ -589,7 +589,7 @@ class GenogramTree extends React.Component {
             isLoading: true,
             isUpdated: false,
         });
-        await this.fetchFromCacheOrBackend(this.state.selectedPerson, 1);
+        await this.fetchFromCacheOrBackend(this.state.selectedPerson, 1, false);
         this.forceUpdate();
         if (
             _.isEqual(this.prevRelationsJSON, this.state.relationsJSON)
@@ -856,8 +856,8 @@ class GenogramTree extends React.Component {
         const extendPromise = this.extendInCache(id) ? Promise.resolve() : this.extendFromCache(id);
         this.extensionId = id;
         const [dbPromise, wikiDataPromise] = this.requests.relationsCacheAndWiki({
-            id: id, depth: 3
-            , outlierVisited: this.state.originalJSON ? Object.keys(this.state.originalJSON.items) : []
+            id: id, depth: depth, allSpouses: allSpouses,
+            visitedItems: this.state.originalJSON ? Object.keys(this.state.originalJSON.items) : []
         });
         const dbRes = await dbPromise;
         if (this.requests.dbResEmpty(dbRes)) {

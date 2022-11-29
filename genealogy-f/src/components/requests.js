@@ -10,8 +10,8 @@ export class Requests {
         return await this.genericRequest({ requestOrUrl: url });
     }
 
-    relationsCacheAndWiki = ({id = 'WD-Q152308', depth = 2, visitedItems = []} = {}) => {
-        const params = {id: id, depth: depth, visitedItems: visitedItems};
+    relationsCacheAndWiki = ({ id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true } = {}) => {
+        const params = { id: id, depth: depth, visitedItems: visitedItems, allSpouses: allSpouses };
         return [
             this.relationsDb(params),
             this.relations(params),
@@ -19,8 +19,8 @@ export class Requests {
     }
 
     // { targets: [], items: {}, relations: {} }
-    relationsCacheOrWiki = async ({id = 'WD-Q152308', depth = 2, visitedItems = []} = {}) => {
-        const params = {id: id, depth: depth, visitedItems: visitedItems};
+    relationsCacheOrWiki = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [] } = {}) => {
+        const params = { id: id, depth: depth, visitedItems: visitedItems };
         const dbRes = await this.relationsDb(params);
         if (!this.dbResEmpty(dbRes)) {
             // console.log('Database used to fetch data');
@@ -31,16 +31,20 @@ export class Requests {
         return wikiDataRes;
     }
 
-    relations = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [] } = {}) => {
-        const url = `${this.baseUrl}/relations_wk?id=${id}&depth=${depth}`;
+    relations = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true } = {}) => {
+        const url = allSpouses
+            ? `${this.baseUrl}/relations_wk?id=${id}&depth=${depth}`
+            : `${this.baseUrl}/relations_wk?id=${id}&depth=${depth}&homo_strata=&hetero_strata=WD-P22,WD-P25,WD-P26,WD-P40`;
         return await this.genericPost(url, visitedItems, id, depth).then(x => {
             console.log('Wiki data used to fetch data');
             return x;
         });
     }
 
-    relationsDb = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [] } = {}) => {
-        const url = `${this.baseUrl}/relations_db?id=${id}&depth=${depth}`;
+    relationsDb = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true } = {}) => {
+        const url = allSpouses
+            ? `${this.baseUrl}/relations_db?id=${id}&depth=${depth}`
+            : `${this.baseUrl}/relations_db?id=${id}&depth=${depth}&homo_strata=&hetero_strata=WD-P22,WD-P25,WD-P26,WD-P40`;
         return await this.genericPost(url, visitedItems, id, depth).then(x => {
             console.log('Database used to fetch data');
             return x;
