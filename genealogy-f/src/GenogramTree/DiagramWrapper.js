@@ -724,7 +724,9 @@ export class DiagramWrapper extends React.Component {
             for (const key of highlight) {
                 const node = this.diagram.findNodeForKey(key);
                 if (!node) {
-                    alert('This relation contains people that are not in the graph');
+                    if (this.props.isShownPath) {
+                        alert('This relation contains people that are not in the graph');
+                    }
                     this.diagram.clearHighlighteds();
                     highlight.length = 0;
                     break;

@@ -23,7 +23,7 @@ import { Opacity } from './Const';
 import { TreeGroups } from '../components/TreeGroups.js';
 import { TreeRelations } from '../components/TreeRelations.js';
 import { GroupModel } from '../groupModel.js';
-import {Navigate, useNavigate} from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { withSnackbar } from 'notistack';
 
 const ENABLE_PRE_FETCHING = false;
@@ -82,6 +82,7 @@ class GenogramTree extends React.Component {
                 showFilters: false,
                 highlight: [],
                 isShownBetween: false,
+                isShownPath: true,
                 extendImpossible: new Set(),
             };
             this.componentRef = React.createRef();
@@ -148,9 +149,9 @@ class GenogramTree extends React.Component {
             this.state.highlight.length = 0;
         }
         this.setState({
-                selectedPerson: event.subject.part.key,
-                isPopped: true
-            }
+            selectedPerson: event.subject.part.key,
+            isPopped: true
+        }
         );
     }
 
@@ -598,7 +599,7 @@ class GenogramTree extends React.Component {
         this.setState(prev => {
             const extendImpossible = prev.extendImpossible;
             extendImpossible.add(prev.selectedPerson);
-            return {extendImpossible};
+            return { extendImpossible };
         });
     }
 
@@ -649,6 +650,11 @@ class GenogramTree extends React.Component {
         if (this.state.recommit) {
             recommit = true;
             this.state.recommit = false;
+        }
+        var isShownPath = false;
+        if (this.state.isShownPath) {
+            isShownPath = true;
+            this.state.isShownPath = false;
         }
         this.personMap = getPersonMap(Object.values(this.state.originalJSON.items), this.state.originalJSON.relations);
 
@@ -796,7 +802,7 @@ class GenogramTree extends React.Component {
                     this.state.showRelations &&
                     <div className='popup'>
                         <TreeRelations
-                            closePopUp={() => this.setState({ showRelations: false })}
+                            closePopUp={() => this.setState({ showRelations: false, isShownPath: true })}
                             info={this.personMap.get(this.state.selectedPerson)}
                             highlight={this.state.highlight}
                             root={this.state.root}
@@ -808,7 +814,7 @@ class GenogramTree extends React.Component {
                     this.state.isShownBetween &&
                     <div className='popup'>
                         <RelSearchResult
-                            closePopUp={() => this.setState({ isShownBetween: false })}
+                            closePopUp={() => this.setState({ isShownBetween: false, isShownPath: true })}
                             info={this.personMap.get(this.state.anotherPerson)}
                             highlight={this.state.highlight}
                             root={this.state.selectedPerson}
@@ -822,6 +828,7 @@ class GenogramTree extends React.Component {
                         updateDiagram={updateDiagram}
                         recentre={recentre}
                         recommit={recommit}
+                        isShownPath={isShownPath}
                         editCount={this.props.editCount}
                         nodeDataArray={this.relations}
                         onModelChange={this.handleModelChange}

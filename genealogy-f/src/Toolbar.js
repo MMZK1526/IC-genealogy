@@ -37,14 +37,14 @@ function Toolbar(props) {
                 Show stats
               </Button>
             </ButtonGroup>
-            <ButtonGroup className="me-2">
+            {/* <ButtonGroup className="me-2">
               <Button variant='secondary' onClick={props.genogramTree.flipZoomSwitch}>
                 Default zoom
               </Button>
               <Button variant='secondary' onClick={props.genogramTree.resetDiagram}>
                 Reset
               </Button>
-            </ButtonGroup>
+            </ButtonGroup> */}
             {
               props.genogramTree.state.newDataAvailable &&
               <ButtonGroup className="me-2">
