@@ -11,6 +11,7 @@ import Multiselect from 'multiselect-react-dropdown';
 import './stylesheets/PopupInfo.css'
 import './stylesheets/Sidebar.css';
 import './stylesheets/shared.css';
+import EscapeCloseable from "./EscapeCloseable";
 
 export class TreeGroups extends React.Component {
   constructor(props) {
@@ -63,26 +64,34 @@ export class TreeGroups extends React.Component {
 
     // create set that we will then add to either global or group
     return (
-      <div className='sidebar pe-auto'>
-        <Container className='overflow-auto additional-properties-container'>
-          <Form>
-            <Form.Label className="form-label">People in group: </Form.Label>
-            <Multiselect
-              id='pob-select'
-              options={ids.map((v) => ({name: (this.personMap.get(v)).get("name"), id: v}))} // Options to display in the dropdown
-              selectedValues={[...this.groupModel.groupSet].map((v) => ({name: (this.personMap.get(v)).get("name"), id: v}))} // Preselected value to persist in dropdown
-              onSelect={(_, v) => this.groupModel.groupSet.add(v.id)} // Function will trigger on select event
-              onRemove={(_, v) => this.groupModel.groupSet.delete(v.id)} // Function will trigger on remove event
-              displayValue='name' // Property name to display in the dropdown options
-              style={style}
-            />
-          </Form>
-          { this.showPropertiesSwitch(groupItemSet) }
+      <EscapeCloseable>
+        <div className='sidebar pe-auto'>
+          <Container className='overflow-auto additional-properties-container'>
+            <Form>
+              <Form.Label className="form-label">People in group: </Form.Label>
+              <Multiselect
+                  id='pob-select'
+                  options={ids.map((v) => ({
+                    name: (this.personMap.get(v)).get("name"),
+                    id: v
+                  }))} // Options to display in the dropdown
+                  selectedValues={[...this.groupModel.groupSet].map((v) => ({
+                    name: (this.personMap.get(v)).get("name"),
+                    id: v
+                  }))} // Preselected value to persist in dropdown
+                  onSelect={(_, v) => this.groupModel.groupSet.add(v.id)} // Function will trigger on select event
+                  onRemove={(_, v) => this.groupModel.groupSet.delete(v.id)} // Function will trigger on remove event
+                  displayValue='name' // Property name to display in the dropdown options
+                  style={style}
+              />
+            </Form>
+            {this.showPropertiesSwitch(groupItemSet)}
 
-          <h5>Default</h5>
-          { this.showPropertiesSwitch(globalSet) }
-        </Container>
-      </div>
+            <h5>Default</h5>
+            {this.showPropertiesSwitch(globalSet)}
+          </Container>
+        </div>
+      </EscapeCloseable>
     );
   }
 

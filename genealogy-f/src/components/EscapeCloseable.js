@@ -20,9 +20,13 @@ export default class EscapeCloseable extends React.Component {
         }
     }
 
+    componentDidMount() {
+        document.getElementById("escapeCloseableFocus").focus();
+    }
+
     render() {
         return (
-            <div>
+            <div tabIndex={0} id='escapeCloseableFocus'>
                 {
                     this.state.visible &&
                     <HotKeys

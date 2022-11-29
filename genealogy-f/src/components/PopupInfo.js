@@ -39,13 +39,9 @@ class PopupInfo extends Component<{}> {
 		this.props.closePopUp();
 	}
 
-	componentDidMount() {
-		document.getElementById("popupInfoFocus").focus();
-	}
-
 	render() {
 		return (
-			<div className='popup-inner w-50' tabIndex={0} id='popupInfoFocus'>
+			<div className='popup-inner w-50'>
 				<EscapeCloseable onClick={this.props.closePopUp}>
 					<CloseButton className='close-btn' onClick={this.props.closePopUp}/>
 					{getAdditionalProperties(this.props.info, this.props.switchToRelations, this.props.id, this.props.groupModel, this.props.inGroup)}
