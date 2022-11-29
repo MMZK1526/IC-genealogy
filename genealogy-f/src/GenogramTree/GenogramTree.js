@@ -137,9 +137,10 @@ class GenogramTree extends React.Component {
             this.state.highlight.length = 0;
         }
         this.setState({
-            selectedPerson: event.subject.part.key,
-            isPopped: true
-        })
+                selectedPerson: event.subject.part.key,
+                isPopped: true
+            }
+        );
     }
 
     integrateKinshipIntoRelationJSON(kinshipJSON, relationsJSON) {

@@ -17,85 +17,94 @@ import PersonWeb from '../images/person-web.png';
 import { Utils } from './utils';
 import ToggleButton from 'react-bootstrap/ToggleButton';
 import ToggleButtonGroup from 'react-bootstrap/ToggleButtonGroup';
+import {Component} from "react";
 
-function PopupInfo(props) {
-	const onNew = (_) => {
-		props.onNew();
-		props.closePopUp();
+class PopupInfo extends Component<{}> {
+	onNew = (_) => {
+		this.props.onNew();
+		this.props.closePopUp();
 	};
 
-	const onExtend = (_) => {
-		props.onExtend();
-		props.closePopUp();
+	onExtend = (_) => {
+		this.props.onExtend();
+		this.props.closePopUp();
 	};
 
-	const onFilterModeChanged = (_) => {
-		props.onFilterModeChanged();
+	onFilterModeChanged = (_) => {
+		this.props.onFilterModeChanged();
 	}
 
-	const onGroupAdd = (_) => {
-		props.onGroupAdd();
-		props.closePopUp();
+	onGroupAdd = (_) => {
+		this.props.onGroupAdd();
+		this.props.closePopUp();
 	}
-	return (
-		<div className='popup-inner w-50'>
-			<EscapeCloseable onClick={props.closePopUp}>
-				<CloseButton className='close-btn' onClick={props.closePopUp} />
-				{getAdditionalProperties(props.info, props.switchToRelations, props.id, props.groupModel, props.inGroup)}
-				<Container className='text-center mt-2'>
-					<Row>
-						<Col xs="auto">
-							Filter Mode:
-						</Col>
-						<Col>
-							<ToggleButtonGroup type="radio" name="filter-options" defaultValue={props.isHidden ? 1 : 0} onChange={(e) => {
-								onFilterModeChanged(e);
-							}}>
-								<ToggleButton
-									id="filter-always-included"
-									value={2}
-									variant="outline-primary"
-								>
-									Always Included
-								</ToggleButton>
-								<ToggleButton
-									id="filter-default"
-									value={0}
-									variant="outline-primary"
-								>
-									Default
-								</ToggleButton>
-								<ToggleButton
-									id="filter-not-interested"
-									value={1}
-									variant="outline-primary"
-								>
-									Not Interested
-								</ToggleButton>
-							</ToggleButtonGroup>
-						</Col>
-					</Row>
-					<Row>
-						<Col xs="auto">
-							<Button variant='primary' onClick={onExtend} className='m-1'>
-								Extend tree from this person
-							</Button>
-						</Col>
-						<Col xs="auto">
-						<Button variant='primary' onClick={onNew} className='m-1'>
-							Use this person as root
-						</Button>
-						</Col>
-						<Col xs="auto">
-						<Button variant='primary' onClick={onGroupAdd} className='m-1'>
-							{props.inGroup ? 'Remove from group' : 'Add to group'}
-						</Button>
-						</Col>
-					</Row>
-				</Container>
-			</EscapeCloseable>
-		</div >
-	);
+
+	componentDidMount() {
+		document.getElementById("popupInfoFocus").focus();
+	}
+
+	render() {
+		return (
+			<div className='popup-inner w-50' tabIndex={0} id='popupInfoFocus'>
+				<EscapeCloseable onClick={this.props.closePopUp}>
+					<CloseButton className='close-btn' onClick={this.props.closePopUp}/>
+					{getAdditionalProperties(this.props.info, this.props.switchToRelations, this.props.id, this.props.groupModel, this.props.inGroup)}
+					<Container className='text-center mt-2'>
+						<Row>
+							<Col xs="auto">
+								Filter Mode:
+							</Col>
+							<Col>
+								<ToggleButtonGroup type="radio" name="filter-options"
+												   defaultValue={this.props.isHidden ? 1 : 0} onChange={(e) => {
+									this.onFilterModeChanged(e);
+								}}>
+									<ToggleButton
+										id="filter-always-included"
+										value={2}
+										variant="outline-primary"
+									>
+										Always Included
+									</ToggleButton>
+									<ToggleButton
+										id="filter-default"
+										value={0}
+										variant="outline-primary"
+									>
+										Default
+									</ToggleButton>
+									<ToggleButton
+										id="filter-not-interested"
+										value={1}
+										variant="outline-primary"
+									>
+										Not Interested
+									</ToggleButton>
+								</ToggleButtonGroup>
+							</Col>
+						</Row>
+						<Row>
+							<Col xs="auto">
+								<Button variant='primary' onClick={this.onExtend} className='m-1'>
+									Extend tree from this person
+								</Button>
+							</Col>
+							<Col xs="auto">
+								<Button variant='primary' onClick={this.onNew} className='m-1'>
+									Use this person as root
+								</Button>
+							</Col>
+							<Col xs="auto">
+								<Button variant='primary' onClick={this.onGroupAdd} className='m-1'>
+									{this.props.inGroup ? 'Remove from group' : 'Add to group'}
+								</Button>
+							</Col>
+						</Row>
+					</Container>
+				</EscapeCloseable>
+			</div>
+		);
+	}
 }
 
 function getAdditionalProperties(data, switchToRelations, id, groupModel, inGroup) {
