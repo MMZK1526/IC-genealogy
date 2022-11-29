@@ -41,6 +41,9 @@ function Toolbar(props) {
               <Button variant='secondary' onClick={props.genogramTree.flipZoomSwitch}>
                 Default zoom
               </Button>
+              <Button variant='secondary' onClick={props.genogramTree.resetDiagram}>
+                Reset
+              </Button>
             </ButtonGroup>
             {
               props.genogramTree.state.newDataAvailable &&

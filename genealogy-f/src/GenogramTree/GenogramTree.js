@@ -23,6 +23,7 @@ import { Opacity } from './Const';
 import { TreeGroups } from '../components/TreeGroups.js';
 import { TreeRelations } from '../components/TreeRelations.js';
 import { GroupModel } from '../groupModel.js';
+import {Navigate, useNavigate} from "react-router-dom";
 
 const ENABLE_PRE_FETCHING = false;
 
@@ -61,6 +62,7 @@ class GenogramTree extends React.Component {
                 isLoading: this.isLoading,
                 originalJSON: rawJSON,
                 relationsJSON: rawJSON,
+                // initialJSON: null,
                 kinshipJSON: null,
                 selectedPerson: null,
                 anotherPerson: null,
@@ -570,6 +572,10 @@ class GenogramTree extends React.Component {
         await this.fetchFromCacheOrBackend(this.state.selectedPerson, 2);
     }
 
+    resetDiagram = async () => {
+        location.reload();
+    }
+
     // renders ReactDiagram
 
     render() {
@@ -590,6 +596,7 @@ class GenogramTree extends React.Component {
                 </>
             );
         }
+
         var updateDiagram = false;
         if (this.state.isUpdated) {
             this.state.isUpdated = false;
