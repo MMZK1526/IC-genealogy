@@ -185,7 +185,7 @@ class GenogramTree extends React.Component {
 
     // If id is provided, we search this id. Otherwise, it is a JSON provided by the user
 
-    fetchRelations = async ({ id = null, depth = null, customUpload = false } = {}) => {
+    fetchRelations = async ({ id = null, depth = null, allSpouses = true, customUpload = false } = {}) => {
         if (id === null) {
             await this.loadCustomData();
             return;
@@ -589,7 +589,7 @@ class GenogramTree extends React.Component {
             isLoading: true,
             isUpdated: false,
         });
-        await this.fetchFromCacheOrBackend(this.state.selectedPerson, 2);
+        await this.fetchFromCacheOrBackend(this.state.selectedPerson, 1);
         this.forceUpdate();
         if (
             _.isEqual(this.prevRelationsJSON, this.state.relationsJSON)
@@ -846,9 +846,9 @@ class GenogramTree extends React.Component {
         );
     }
 
-    fetchFromCacheOrBackend = async (id, depth) => {
+    fetchFromCacheOrBackend = async (id, depth, allSpouses) => {
         if (this.state.relationsJSON == null || !ENABLE_PRE_FETCHING) {
-            await this.fetchRelations({ id: id, depth: depth });
+            await this.fetchRelations({ id: id, depth: depth, allSpouses: allSpouses });
         }
         if (!ENABLE_PRE_FETCHING) {
             return;
