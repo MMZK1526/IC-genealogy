@@ -39,6 +39,7 @@ class GenogramTree extends React.Component {
         this.treeCache = {};
         this.wikiTreeCache = {};
         this.extensionId = null;
+        this.prevRelationsJSON = {};
         let rawJSON = null;
         this.source = props.router.location.state ? props.router.location.state.source : null;
         this.sourceName = props.router.location.state ? props.router.location.state.sourceName : null;
@@ -185,7 +186,7 @@ class GenogramTree extends React.Component {
 
     fetchRelations = async ({ id = null, depth = null, customUpload = false } = {}) => {
         if (id === null) {
-            this.loadCustomData();
+            await this.loadCustomData();
             return;
         }
         const [dbPromise, wikiDataPromise] = this.requests.relationsCacheAndWiki({
@@ -562,21 +563,25 @@ class GenogramTree extends React.Component {
 
     // Handle tree extension
 
+    displayExtendImpossibleSnackbar = () => this.props.enqueueSnackbar(
+        'Extend not possible for selected person. No new relatives found.',
+        {
+            autoHideDuration: 2_000,
+            variant: 'warning',
+        }
+    );
+
     async handlePopupExtend() {
         if (this.state.isLoading) {
             alert('Please wait for the current expansion to finish');
             return;
         }
+        this.prevRelationsJSON = JSON.parse(JSON.stringify(this.state.relationsJSON));
+        console.assert(this.prevRelationsJSON !== undefined);
         if (
             this.state.extendImpossible.has(this.state.selectedPerson)
         ) {
-            this.props.enqueueSnackbar(
-                'Extend not possible for selected person. No new relatives found.',
-                {
-                    autoHideDuration: 2_000,
-                    variant: 'warning',
-                }
-            );
+            this.displayExtendImpossibleSnackbar();
             return;
         }
         this.setState({
@@ -584,6 +589,12 @@ class GenogramTree extends React.Component {
             isUpdated: false,
         });
         await this.fetchFromCacheOrBackend(this.state.selectedPerson, 2);
+        this.forceUpdate();
+        if (
+            _.isEqual(this.prevRelationsJSON, this.state.relationsJSON)
+        ) {
+            this.displayExtendImpossibleSnackbar();
+        }
         this.setState(prev => {
             const extendImpossible = prev.extendImpossible;
             extendImpossible.add(prev.selectedPerson);
@@ -617,6 +628,7 @@ class GenogramTree extends React.Component {
         }
 
         var updateDiagram = false;
+
         if (this.state.isUpdated) {
             this.state.isUpdated = false;
             this.applyFilterAndDrawTree();
@@ -639,6 +651,13 @@ class GenogramTree extends React.Component {
             this.state.recommit = false;
         }
         this.personMap = getPersonMap(Object.values(this.state.originalJSON.items), this.state.originalJSON.relations);
+
+        // if (
+        //     !this.state.isLoading &&
+        //     _.isEqual(this.prevRelationsJSON, this.state.relationsJSON)
+        // ) {
+        //     this.displayExtendImpossibleSnackbar();
+        // }
 
         return (
             <>
@@ -732,9 +751,9 @@ class GenogramTree extends React.Component {
                             info={this.personMap.get(this.state.selectedPerson)}
                             id={this.state.selectedPerson}
                             groupModel={this.state.groupModel}
-                            onNew={() => {
+                            onNew={async () => {
                                 this.state.root = this.state.selectedPerson;
-                                this.fetchKinships(this.state.root, this.state.originalJSON);
+                                await this.fetchKinships(this.state.root, this.state.originalJSON);
                             }}
                             isHidden={this.state.filters.hiddenPeople.has(this.state.selectedPerson)}
                             onFilterModeChanged={newFilterMode => {
@@ -822,14 +841,12 @@ class GenogramTree extends React.Component {
 
     fetchFromCacheOrBackend = async (id, depth) => {
         if (this.state.relationsJSON == null || !ENABLE_PRE_FETCHING) {
-            this.fetchRelations({ id: id, depth: depth });
+            await this.fetchRelations({ id: id, depth: depth });
         }
         if (!ENABLE_PRE_FETCHING) {
             return;
         }
-        if (this.extendInCache(id)) {
-            this.extendFromCache(id);
-        }
+        const extendPromise = this.extendInCache(id) ? Promise.resolve() : this.extendFromCache(id);
         this.extensionId = id;
         const [dbPromise, wikiDataPromise] = this.requests.relationsCacheAndWiki({
             id: id, depth: 3
@@ -838,10 +855,10 @@ class GenogramTree extends React.Component {
         const dbRes = await dbPromise;
         if (this.requests.dbResEmpty(dbRes)) {
             const wikiDataRes = await wikiDataPromise;
-            this.updateTreeCache(wikiDataRes);
-            return;
+            const updatePromise = this.updateTreeCache(wikiDataRes);
+            return Promise.all([extendPromise, updatePromise]);
         }
-        this.updateTreeCache(dbRes);
+        const updatePromise = this.updateTreeCache(dbRes);
         const wikiDataRes = await wikiDataPromise;
         if (this.containsMoreData(
             this.neighborTree(wikiDataRes, id),
@@ -849,6 +866,7 @@ class GenogramTree extends React.Component {
         )) {
             this.updateWikiTreeCache(wikiDataRes, id);
         }
+        return Promise.all([extendPromise, updatePromise]);
     }
 
     /**
