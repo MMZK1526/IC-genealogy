@@ -37,11 +37,11 @@ function Toolbar(props) {
                 Show stats
               </Button>
             </ButtonGroup>
-            {/*<ButtonGroup className="me-2">*/}
-            {/*  <Button variant='secondary' onClick={props.genogramTree.zoomToDefault}>*/}
-            {/*    Default zoom*/}
-            {/*  </Button>*/}
-            {/*</ButtonGroup>*/}
+            <ButtonGroup className="me-2">
+              <Button variant='secondary' onClick={props.genogramTree.flipZoomSwitch}>
+                Default zoom
+              </Button>
+            </ButtonGroup>
             {
               props.genogramTree.state.newDataAvailable &&
               <ButtonGroup className="me-2">

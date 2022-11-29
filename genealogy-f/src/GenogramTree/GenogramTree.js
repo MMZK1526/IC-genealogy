@@ -73,7 +73,7 @@ class GenogramTree extends React.Component {
                 recommit: false,
                 newDataAvailable: false,
                 newData: null,
-                zoomToDefault: false,
+                defaultZoomSwitch: false,
                 showLookup: false,
                 showFilters: false,
                 highlight: [],
@@ -85,6 +85,12 @@ class GenogramTree extends React.Component {
 
     componentDidMount() {
         document.title = this.sourceName + "'s family tree - Ancesta";
+    }
+
+    flipZoomSwitch = () => {
+        this.setState(prev => ({
+            defaultZoomSwitch: !prev.defaultZoomSwitch
+        }));
     }
 
     // Returns all persons nodes in tree
@@ -564,17 +570,6 @@ class GenogramTree extends React.Component {
         await this.fetchFromCacheOrBackend(this.state.selectedPerson, 2);
     }
 
-    zoomToDefault = async () => {
-        return;
-        const foo = setStatePromise(this);
-        await foo({
-            zoomToDefault: true,
-        });
-        await foo({
-            zoomToDefault: false,
-        });
-    };
-
     // renders ReactDiagram
 
     render() {
@@ -789,7 +784,7 @@ class GenogramTree extends React.Component {
                         ref={this.componentRef}
                         root={this.state.root}
                         getFocusPerson={this.getFocusPerson}
-                        zoomToDefault={this.state.zoomToDefault}
+                        defaultZoomSwitch={this.state.defaultZoomSwitch}
                         personMap={this.personMap}
                     />
 

@@ -17,6 +17,7 @@ export class DiagramWrapper extends React.Component {
         this.hiddenPeople = props.hiddenPeople;
         this.getFocusPerson = props.getFocusPerson;
         this.personMap = props.personMap;
+        this.localZoomSwitch = props.defaultZoomSwitch;
         this.state = { diagram: undefined, isFirstRender: true };
         this.init();
     }
@@ -76,7 +77,7 @@ export class DiagramWrapper extends React.Component {
 
         this.diagram = this.state.diagram;
         // Whenever the Diagram.position or Diagram.scale change,
-        // update the position of all simple Parts that have a _viewPosition property.  
+        // update the position of all simple Parts that have a _viewPosition property.
         this.diagram.addDiagramListener("ViewportBoundsChanged", function (e) {
             e.diagram.commit(function (dia) {
                 // only iterates through simple Parts in the diagram, not Nodes or Links
@@ -752,8 +753,9 @@ export class DiagramWrapper extends React.Component {
             this.diagram.commitTransaction('highlight');
         }
 
-        if (this.props.zoomToDefault) {
-            this.diagram.scale = 1;
+        if (this.props.defaultZoomSwitch !== this.localZoomSwitch) {
+            this.diagram.commandHandler.resetZoom();
+            this.localZoomSwitch = this.props.defaultZoomSwitch;
         }
         return (
             <ReactDiagram
