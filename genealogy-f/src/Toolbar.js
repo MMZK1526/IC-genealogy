@@ -24,7 +24,7 @@ function Toolbar(props) {
               <Button variant="info" id="svgButton">
                 Export as SVG
               </Button>
-              <Button variant="info" onClick={() => downloadJsonFile(props.genogramTree.state.relationJSON)}>
+              <Button variant="info" onClick={() => downloadJsonFile(props.genogramTree.state.relationsJSON)}>
                 Export as JSON
               </Button>
             </ButtonGroup>
