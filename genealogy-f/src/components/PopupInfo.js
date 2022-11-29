@@ -1,6 +1,6 @@
 import './stylesheets/PopupInfo.css'
 import './stylesheets/shared.css';
-import EscapeCloseable from './EscapeCloseable';
+import EscapeCloseableEnterClickable from './EscapeCloseableEnterClickable';
 import Button from 'react-bootstrap/Button';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
@@ -42,7 +42,12 @@ class PopupInfo extends Component<{}> {
 	render() {
 		return (
 			<div className='popup-inner w-50'>
-				<EscapeCloseable onClick={this.props.closePopUp}>
+				<EscapeCloseableEnterClickable onClick={this.props.closePopUp} onEnterClick={
+					() => {
+						this.props.onExtend();
+						this.props.closePopUp();
+					}
+				}>
 					<CloseButton className='close-btn' onClick={this.props.closePopUp}/>
 					{getAdditionalProperties(this.props.info, this.props.switchToRelations, this.props.id, this.props.groupModel, this.props.inGroup)}
 					<Container className='text-center mt-2'>
@@ -97,7 +102,7 @@ class PopupInfo extends Component<{}> {
 							</Col>
 						</Row>
 					</Container>
-				</EscapeCloseable>
+				</EscapeCloseableEnterClickable>
 			</div>
 		);
 	}

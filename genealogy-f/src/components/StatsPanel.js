@@ -2,7 +2,7 @@ import React from 'react';
 import './stylesheets/StatsPanel.css';
 import './stylesheets/PopupInfo.css';
 import CloseButton from 'react-bootstrap/CloseButton';
-import EscapeCloseable from '../components/EscapeCloseable';
+import EscapeCloseableEnterClickable from './EscapeCloseableEnterClickable';
 
 export class StatsPanel extends React.Component {
     constructor(props) {
@@ -15,13 +15,13 @@ export class StatsPanel extends React.Component {
     render() {
         return (
             <div className='popup-inner'>
-                <EscapeCloseable className='stats-panel' onClick={this.props.closePopUp}>
+                <EscapeCloseableEnterClickable className='stats-panel' onClick={this.props.closePopUp}>
                     <CloseButton className='close-button' onClick={this.props.closePopUp}/>
                     <div id='stat'>{this.numberOfFamilyMembers()}</div>
                     {/*{this.avgChildrenPerPerson()}*/}
                     <div id='stat'>{this.topCountriesOfBirth()}</div>
                     <div id='stat'>{this.topFamilies()}</div>
-                </EscapeCloseable>
+                </EscapeCloseableEnterClickable>
             </div>
         );
     }

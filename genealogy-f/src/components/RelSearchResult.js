@@ -1,6 +1,6 @@
 import './stylesheets/PopupInfo.css'
 import './stylesheets/shared.css';
-import EscapeCloseable from './EscapeCloseable';
+import EscapeCloseableEnterClickable from './EscapeCloseableEnterClickable';
 import Button from 'react-bootstrap/Button';
 import Row from 'react-bootstrap/Row';
 import CloseButton from 'react-bootstrap/CloseButton';
@@ -9,10 +9,10 @@ function RelSearchResult(props) {
 
     return (
         <div className='popup-inner w-50'>
-            <EscapeCloseable onClick={props.closeRelSearchResult}>
+            <EscapeCloseableEnterClickable onClick={props.closeRelSearchResult}>
                 <CloseButton className='close-btn' onClick={props.closePopUp} />
                 {getRelationsFrom(props.info, props.highlight, props.closePopUp)}
-            </EscapeCloseable>
+            </EscapeCloseableEnterClickable>
         </div >
     );
 

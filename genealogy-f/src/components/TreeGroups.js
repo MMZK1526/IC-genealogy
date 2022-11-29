@@ -11,7 +11,7 @@ import Multiselect from 'multiselect-react-dropdown';
 import './stylesheets/PopupInfo.css'
 import './stylesheets/Sidebar.css';
 import './stylesheets/shared.css';
-import EscapeCloseable from "./EscapeCloseable";
+import EscapeCloseableEnterClickable from "./EscapeCloseableEnterClickable";
 
 export class TreeGroups extends React.Component {
   constructor(props) {
@@ -64,7 +64,7 @@ export class TreeGroups extends React.Component {
 
     // create set that we will then add to either global or group
     return (
-      <EscapeCloseable>
+      <EscapeCloseableEnterClickable>
         <div className='sidebar pe-auto'>
           <Container className='overflow-auto additional-properties-container'>
             <Form>
@@ -91,7 +91,7 @@ export class TreeGroups extends React.Component {
             {this.showPropertiesSwitch(globalSet)}
           </Container>
         </div>
-      </EscapeCloseable>
+      </EscapeCloseableEnterClickable>
     );
   }
 

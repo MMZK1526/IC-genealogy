@@ -2,7 +2,7 @@ import './stylesheets/Sidebar.css';
 import { Autocomplete, TextField } from '@mui/material';
 import { Row } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
-import EscapeCloseable from "./EscapeCloseable";
+import EscapeCloseableEnterClickable from "./EscapeCloseableEnterClickable";
 
 
 export function TreeNameLookup(props) {
@@ -14,7 +14,7 @@ export function TreeNameLookup(props) {
 	}
 
 	return (
-		<EscapeCloseable>
+		<EscapeCloseableEnterClickable>
 			<div className='sidebar pe-auto'>
 				<label className="form-label">Look for name in tree: </label>
 				<Autocomplete
@@ -52,7 +52,7 @@ export function TreeNameLookup(props) {
 					Apply
 				</Button>
 			</div>
-		</EscapeCloseable>
+		</EscapeCloseableEnterClickable>
 	);
 }
 

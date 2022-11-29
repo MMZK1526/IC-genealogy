@@ -1,6 +1,6 @@
 import './stylesheets/PopupInfo.css';
 import './stylesheets/shared.css';
-import EscapeCloseable from './EscapeCloseable';
+import EscapeCloseableEnterClickable from './EscapeCloseableEnterClickable';
 import Button from 'react-bootstrap/Button';
 import CloseButton from 'react-bootstrap/CloseButton';
 import Container from 'react-bootstrap/Container';
@@ -11,12 +11,12 @@ import { Utils } from './utils';
 import { useState } from 'react';
 
 export function TreeRelations(props) {
-	return (
+return (
 		<div className='popup-inner w-50 overflow-auto' style={{ maxHeight: "50%" }}>
-			<EscapeCloseable onClick={props.closePopUp}>
+			<EscapeCloseableEnterClickable onClick={props.closePopUp}>
 				<CloseButton className='close-btn' onClick={props.closePopUp} />
 				{getRelationFields(props.info, props.highlight, props.closePopUp)}
-			</EscapeCloseable>
+			</EscapeCloseableEnterClickable>
 		</div >
 	);
 

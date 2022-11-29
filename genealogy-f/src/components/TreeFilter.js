@@ -2,7 +2,7 @@ import { Form } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 import './stylesheets/Sidebar.css';
 import Multiselect from 'multiselect-react-dropdown';
-import EscapeCloseable from "./EscapeCloseable";
+import EscapeCloseableEnterClickable from "./EscapeCloseableEnterClickable";
 
 export function TreeFilter(props) {
 	const style = {
@@ -25,7 +25,7 @@ export function TreeFilter(props) {
 	}
 
 	return (
-		<EscapeCloseable>
+		<EscapeCloseableEnterClickable>
 			<div className='sidebar pe-auto'>
 				<Form className="w-100 mb-3 overflow-auto" style={{maxHeight: "44vh"}}>
 					<Form.Label className="form-label">Family: </Form.Label>
@@ -127,6 +127,6 @@ export function TreeFilter(props) {
 					Prune
 				</Button>
 			</div>
-		</EscapeCloseable>
+		</EscapeCloseableEnterClickable>
 	);
 }
