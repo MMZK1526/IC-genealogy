@@ -24,7 +24,19 @@ function Toolbar(props) {
               <Button variant="info" id="svgButton">
                 Export as SVG
               </Button>
-              <Button variant="info" onClick={() => downloadJsonFile(props.genogramTree.state.relationsJSON)}>
+              <Button variant="info" onClick={() => {
+                const result = {
+                  'tree': props.genogramTree.state.originalJSON,
+                  'filters': props.genogramTree.state.filters,
+                };
+                result.filters.hiddenPeople = Array.from(result.filters.hiddenPeople);
+                for (const key of Object.keys(result.filters.textFilters)) {
+                  result.filters.textFilters[key].choice = Array.from(result.filters.textFilters[key].choice);
+                  result.filters.textFilters[key].all = Array.from(result.filters.textFilters[key].all);
+                }
+                downloadJsonFile(result);
+              }
+              }>
                 Export as JSON
               </Button>
             </ButtonGroup>
@@ -60,7 +72,8 @@ function Toolbar(props) {
           </>
         }
       </ButtonToolbar>
-      {!props.onlyHome &&
+      {
+        !props.onlyHome &&
         <ButtonToolbar className="me-4">
           <Button className="me-2" variant='secondary' onClick={() => {
             props.genogramTree.setState({
@@ -99,7 +112,7 @@ function Toolbar(props) {
           </Button>
         </ButtonToolbar>
       }
-    </div>
+    </div >
   );
 }
 

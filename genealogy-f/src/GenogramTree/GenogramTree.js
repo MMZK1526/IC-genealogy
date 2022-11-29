@@ -26,6 +26,24 @@ import { GroupModel } from '../groupModel.js';
 import { Navigate, useNavigate } from "react-router-dom";
 import { withSnackbar } from 'notistack';
 
+function toFilterModel(filters) {
+    const filterModel = new FilterModel(true);
+    if (filters == null) {
+        return filterModel;
+    }
+    filterModel.bloodline = filters.bloodline;
+    filterModel.removeHiddenPeople = filters.removeHiddenPeople;
+    filterModel.fromYear = filters.fromYear;
+    filterModel.toYear = filters.toYear;
+    filterModel.hiddenPeople = new Set(filters.hiddenPeople);
+    for (const key of Object.keys(filters.textFilters)) {
+        filterModel.textFilters[key] = {};
+        filterModel.textFilters[key].choice = new Set(filters.textFilters[key].choice);
+        filterModel.textFilters[key].all = new Set(filters.textFilters[key].all);
+    }
+    return filterModel;
+}
+
 const ENABLE_PRE_FETCHING = false;
 
 // optional parameter passed to <ReactDiagram onModelChange = {handleModelChange}>
@@ -45,6 +63,9 @@ class GenogramTree extends React.Component {
         this.sourceName = props.router.location.state ? props.router.location.state.sourceName : null;
         if (this.source) {
             rawJSON = props.router.location.state.relations;
+            let rawFilters = props.router.location.state.filters
+                ? toFilterModel(props.router.location.state.filters)
+                : new FilterModel(true);
             this.handleModelChange = this.handleModelChange.bind(this);
             this.handleDiagramEvent = this.handleDiagramEvent.bind(this);
             this.handlePopupExtend = this.handlePopupExtend.bind(this);
@@ -64,13 +85,12 @@ class GenogramTree extends React.Component {
                 isLoading: this.isLoading,
                 originalJSON: rawJSON,
                 relationsJSON: rawJSON,
-                // initialJSON: null,
                 kinshipJSON: null,
                 selectedPerson: null,
                 anotherPerson: null,
                 isPopped: false,
                 showStats: false,
-                filters: new FilterModel(true),
+                filters: rawFilters,
                 groupModel: new GroupModel(),
                 showBtns: true,
                 recentre: false,
