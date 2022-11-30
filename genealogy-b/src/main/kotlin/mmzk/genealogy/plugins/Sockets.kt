@@ -3,12 +3,8 @@ package mmzk.genealogy.plugins
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
-import mmzk.genealogy.Connection
 import io.ktor.server.response.*
-import mmzk.genealogy.WikiDataDataSource
 import mmzk.genealogy.common.Database
-import mmzk.genealogy.common.RelationCalculatorRequest
-import mmzk.genealogy.common.calculateRelations
 import io.ktor.serialization.kotlinx.*
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
@@ -20,32 +16,10 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import mmzk.genealogy.*
 import mmzk.genealogy.common.dto.RelationsResponse
 import java.time.Duration
 import java.util.*
-
-@Serializable
-data class RelationsWkRequest(
-    val requestId: ULong,
-    val id: String,
-    val depth: Int = 0,
-    val homoStrata: String?,
-    val heteroStrata: String?,
-    val visitedItems: List<String>,
-    val ping: String?,
-    )
-
-@Serializable
-data class RelationsWkResponse(
-    val requestId: ULong,
-    val response: RelationsResponse?,
-)
-
-@Serializable
-data class ErrorMessage(
-    val statusCode: Int,
-    val message: String,
-)
 
 fun Application.configureSockets() {
     install(WebSockets) {

@@ -32,6 +32,24 @@ fun Application.configureRouting() {
             )
         }
 
+        post("/relations_wk_old") {
+            val depth = call.request.queryParameters["depth"]?.toIntOrNull() ?: 0
+            val visitedItems = call.receive<List<String>>()
+            call.request.queryParameters["id"]?.let { id ->
+                val homoStrata =
+                    call.request.queryParameters["homo_strata"]?.split(",") ?: listOf("WD-P26")
+                val heteroStrata =
+                    call.request.queryParameters["hetero_strata"]?.split(",") ?: listOf("WD-P22", "WD-P25", "WD-P40")
+                val result = WikiDataDataSource(homoStrata, heteroStrata).findRelatedPeople(id, visitedItems, depth)
+                call.respond(result)
+                Database.insertItems(result.items.values.toList())
+                Database.insertRelations(result.relations.values.flatten())
+            } ?: call.respond(
+                HttpStatusCode.BadRequest,
+                mapOf("error" to "Missing query parameter \"q\"!")
+            )
+        }
+
         post("/relations_db") {
             val depth = call.request.queryParameters["depth"]?.toIntOrNull() ?: 0
             val visitedItems = call.receive<List<String>>()

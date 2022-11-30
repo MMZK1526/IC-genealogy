@@ -7,7 +7,6 @@ const USE_HTTPS = false;
 export class Requests {
     constructor() {
         this.socket = null;
-        // this.wsRequests = new Set();
     }
 
     // rawUrl = 'db-de-genealogie.herokuapp.com'
@@ -42,6 +41,7 @@ export class Requests {
     }
 
     relations = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true } = {}) => {
+        // return this.relationsOld({id, depth, visitedItems, allSpouses});
         const url = `${this.wsUrl}/relations_wk`;
         if (this.socket === null) {
             await this.connectToSocket(url);
@@ -55,14 +55,22 @@ export class Requests {
             visitedItems,
             ping: null,
         };
-        // const requestStr = JSON.stringify(request);
-        // this.wsRequests.add(requestStr);
-        // this.socket.send(requestStr);
+        const t1 = Date.now();
         const response = await this.socket.sendRequest(request, {
             requestId: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
         });
+        const t2 = Date.now();
+        const delta = (t2 - t1) / 1_000;
+        console.log(`New: ${delta} seconds elapsed`);
         console.log('Received websocket response');
-        console.log(JSON.stringify(response));
+        const errorMessage = response.errorMessage;
+        if (errorMessage) {
+            throw Error(```
+Error: ${errorMessage.statusCode}
+${errorMessage.message}
+            ```.trim());
+        }
+        // console.log(JSON.stringify(response));
         return response.response;
     }
 
@@ -95,22 +103,19 @@ export class Requests {
         return this.socket.open().then(() => console.log('Connection opened'));
     }
 
-//     connectToSocketOld = (url) => {
-//         this.socket = new WebSocket(url);
-//         this.socket.onmessage = (event) => {
-//             const textMessage = event.data;
-//             const responseJson = JSON.parse(textMessage);
-//             const originalRequest = responseJson.originalRequest;
-//             if (!this.wsRequests.has(originalRequest)) {
-//                 throw Error(```
-// Received response to request:
-// ${originalRequest}
-// , which had not been made.
-//                     ```.trim());
-//             }
-//             this.wsRequests.delete(originalRequest);
-//         }
-//     }
+    relationsOld = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true } = {}) => {
+        const url = allSpouses
+            ? `${this.baseUrl}/relations_wk_old?id=${id}&depth=${depth}`
+            : `${this.baseUrl}/relations_wk_old?id=${id}&depth=${depth}&homo_strata=&hetero_strata=WD-P22,WD-P25,WD-P26,WD-P40`;
+        const t1 = Date.now();
+        return await this.genericPost(url, visitedItems, id, depth).then(x => {
+            console.log('Wiki data used to fetch data');
+            const t2 = Date.now();
+            const delta = (t2 - t1) / 1_000;
+            console.log(`Old: ${delta} seconds elapsed`);
+            return x;
+        });
+    }
 
     relationsDb = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true } = {}) => {
         return {targets: [], items: {}, relations: {}};

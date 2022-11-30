@@ -637,7 +637,7 @@ class GenogramTree extends React.Component {
         }
 
         if (this.state.relationsJSON == null) {
-            this.fetchFromCacheOrBackend(this.source, 2);
+            this.fetchFromCacheOrBackend(this.source, 1);
 
             return (
                 <>
