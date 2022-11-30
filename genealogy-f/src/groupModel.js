@@ -12,7 +12,7 @@ export class GroupModel {
         this.groupsCount = 1;
 
         this.groupsList = [{
-            id: 0,
+            // id: 0,
             name: "Group 0",
             members: new Set(),
             properties: new Set()
@@ -28,7 +28,7 @@ export class GroupModel {
     /* ### Whole group operations ### */
     addNewGroup() {
         this.groupsList.push({
-            id: this.groupsCount,
+            // id: this.groupsCount,
             name: "Group " + this.groupsCount,
             members: new Set(),
             properties: new Set([...this.defaultProperties])
@@ -37,6 +37,10 @@ export class GroupModel {
     }
 
     /* ### Getters ### */
+    getCurrentGroupId() {
+        return this.currentGroupId;
+    }
+
     getCurrGroupMembers() {
         return this.groupsList[this.currentGroupId].members;
     }
@@ -59,7 +63,7 @@ export class GroupModel {
 
         for (const groupId in this.groupsList) {
             if (this.groupsList[groupId].members.has(personId)) {
-                result.push(this.groupsList[groupId].name);
+                result.push(this.groupsList[groupId]);
             }
         }
 

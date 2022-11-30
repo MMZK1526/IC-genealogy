@@ -17,21 +17,30 @@ export class TreeGroups extends React.Component {
   constructor(props) {
     super(props);
 
-    this.groupModel = props.groupModel; // TODO: move this to state
+    this.groupModel = props.groupModel;
     this.personMap = props.personMap;
 
     this.state = {
+      currId: this.groupModel.getCurrentGroupId(),
       currGroupMembers: [...this.groupModel.getCurrGroupMembers()],
+      currGroupProperties: this.groupModel.getCurrGroupProperties(),
       groups: this.groupModel.getAllGroups(),
     };
 
     this.changeGroupSelection = this.changeGroupSelection.bind(this);
     this.addNewGroup = this.addNewGroup.bind(this);
+    this.showPropertiesSwitch = this.showPropertiesSwitch.bind(this);
   }
 
-  changeGroupSelection (event) {
-    this.groupModel.setCurrentGroupId(event.target.value);
-    this.setState({ currGroupMembers: [...this.groupModel.getCurrGroupMembers()] });
+  changeGroupSelection(groupId) {
+    this.groupModel.setCurrentGroupId(groupId);
+    this.setState({
+      currId: groupId,
+      currGroupMembers: [...this.groupModel.getCurrGroupMembers()],
+      currGroupProperties: this.groupModel.getCurrGroupProperties()
+    });
+    console.log(this.state.currGroupProperties)
+    // this.render();
   }
 
   addNewGroup () {
@@ -60,13 +69,17 @@ export class TreeGroups extends React.Component {
             <Form className='mb-2'>
               <Form.Select
                 className='mb-2'
+                value={this.state.currId}
                 // onChange={(event) => this.groupModel.setCurrentGroupId(event.target.value)}
-                onChange={this.changeGroupSelection}
+                onChange={(event) => this.changeGroupSelection(event.target.value)}
               >
-                  { this.state.groups.map((group) => {
-                    // <option>lolz</option>
-                    return (<option value={group.id}>{group.name}</option>);
-                  }) }
+                { this.state.groups.map((group, id) => {
+                  // <option>lolz</option>
+                  if (id == this.state.groupId) {
+                    return (<option value={id} selected>{group.name}</option>);
+                  }
+                  return (<option value={id}>{group.name}</option>);
+                }) }
               </Form.Select>
 
               <Form.Label className="form-label">People in group: </Form.Label>
@@ -92,7 +105,7 @@ export class TreeGroups extends React.Component {
               Create new group
             </Button>
 
-            {this.showPropertiesSwitch(this.groupModel.getCurrGroupProperties())}
+            {this.showPropertiesSwitch(this.state.currGroupProperties)}
 
             <h5 className='mt-3 mb-3'>Default</h5>
             {this.showPropertiesSwitch(this.groupModel.getDefaultProperties())}

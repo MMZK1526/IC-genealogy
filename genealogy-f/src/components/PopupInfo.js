@@ -26,6 +26,7 @@ class PopupInfo extends React.Component {
 		this.id = props.id;
 		this.state = {
 			hasPerson: this.groupModel.checkPersonInCurrGroup(this.id),
+			inGroups: this.groupModel.getGroupsForPerson(this.id)
 		};
 	}
 
@@ -43,7 +44,7 @@ class PopupInfo extends React.Component {
 		this.props.onFilterModeChanged();
 	}
 
-	onGroupButtonClick = (_) => {
+	onGroupButtonClick = (_) => {	/* NOTE: temporarily unused, due to complexity of multi-group */
 		if (this.groupModel.checkPersonInCurrGroup(this.props.id)) {
 			this.groupModel.removePersonFromGroup(this.props.id);
 		} else {
@@ -52,6 +53,18 @@ class PopupInfo extends React.Component {
 
 		this.setState({ hasPerson: this.groupModel.checkPersonInCurrGroup(this.id) });
 		this.props.closePopUp();
+	}
+
+	printGroupNames() {
+		let result = "";
+		for (let index in this.state.inGroups) {
+			if (index != 0 && index < this.state.inGroups.length) {
+				result = result + ", ";
+			}
+			result = result + this.state.inGroups[index].name;
+			
+		}
+		return result;
 	}
 
 	render() {
@@ -66,7 +79,7 @@ class PopupInfo extends React.Component {
 					<CloseButton className='close-btn' onClick={this.props.closePopUp}/>
 					{getAdditionalProperties(this.props.info, this.props.switchToRelations, this.props.id, this.groupModel, this.props.inGroup)}
 					<Container className='text-center mt-2'>
-						<Row>
+						<Row className='mb-3'>
 							<Col xs="auto">
 								Filter Mode:
 							</Col>
@@ -99,6 +112,14 @@ class PopupInfo extends React.Component {
 								</ToggleButtonGroup>
 							</Col>
 						</Row>
+						<Row className='mb-3'>
+							<Col xs="auto">
+								In groups:
+							</Col>
+							<Col xs="auto">
+								{ this.printGroupNames() }
+							</Col>
+						</Row>
 						<Row>
 							<Col xs="auto">
 								<Button variant={this.props.extendImpossible ? 'warning' : 'primary'} onClick={this.onExtend} className='m-1'>
@@ -111,8 +132,8 @@ class PopupInfo extends React.Component {
 								</Button>
 							</Col>
 							<Col xs="auto">
-								<Button variant='primary' onClick={this.onGroupButtonClick} className='m-1'>
-									{this.state.hasPerson ? 'Remove from group' : 'Add to group'}
+								<Button variant='primary' disabled='true' onClick={this.onGroupButtonClick} className='m-1'>
+									{this.state.hasPerson ? 'Remove from group' : 'Add to group' /* NOTE: temporarily disabled */}
 								</Button>
 							</Col>
 						</Row>
