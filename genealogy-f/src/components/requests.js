@@ -1,13 +1,23 @@
-import { wait } from "./utils";
+import {wait} from "./utils";
 import _ from 'lodash';
+import WebSocketAsPromised from 'websocket-as-promised';
+
+const USE_HTTPS = false;
 
 export class Requests {
-    baseUrl = 'https://db-de-genealogie.herokuapp.com';
-    // baseUrl = 'http://0.0.0.0:8080';
+    constructor() {
+        this.socket = null;
+        // this.wsRequests = new Set();
+    }
 
-    search = async (name = 'silvia') => {
+    // rawUrl = 'db-de-genealogie.herokuapp.com'
+    rawUrl = 'localhost:8080';
+    baseUrl = USE_HTTPS ? `https://${this.rawUrl}` : `http://${this.rawUrl}`;
+    wsUrl = `ws://${this.rawUrl}`;
+
+    search = (name = 'silvia') => {
         const url = `${this.baseUrl}/search?q=${name}`;
-        return await this.genericRequest({ requestOrUrl: url });
+        return this.genericRequest({ requestOrUrl: url });
     }
 
     relationsCacheAndWiki = ({ id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true } = {}) => {
@@ -32,35 +42,97 @@ export class Requests {
     }
 
     relations = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true } = {}) => {
-        const url = allSpouses
-            ? `${this.baseUrl}/relations_wk?id=${id}&depth=${depth}`
-            : `${this.baseUrl}/relations_wk?id=${id}&depth=${depth}&homo_strata=&hetero_strata=WD-P22,WD-P25,WD-P26,WD-P40`;
-        return await this.genericPost(url, visitedItems, id, depth).then(x => {
-            console.log('Wiki data used to fetch data');
-            return x;
+        const url = `${this.wsUrl}/relations_wk`;
+        if (this.socket === null) {
+            await this.connectToSocket(url);
+            this.keepSocketOpen();
+        }
+        const request = {
+            id,
+            depth,
+            homoStrata: null,
+            heteroStrata: allSpouses ? 'WD-P22,WD-P25,WD-P26,WD-P40' : null,
+            visitedItems,
+            ping: null,
+        };
+        // const requestStr = JSON.stringify(request);
+        // this.wsRequests.add(requestStr);
+        // this.socket.send(requestStr);
+        const response = await this.socket.sendRequest(request, {
+            requestId: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
         });
+        console.log('Received websocket response');
+        console.log(JSON.stringify(response));
+        return response.response;
     }
 
+    keepSocketOpen = async () => {
+        while (true) {
+            const request = {
+                id: 'foo',
+                depth: 0,
+                homoStrata: null,
+                heteroStrata: null,
+                visitedItems: [],
+                ping: 'ping',
+            };
+            await this.socket.sendRequest(request, {
+                requestId: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
+            });
+            console.log('Pinged backend');
+            await wait(10_000);
+        }
+    }
+
+    connectToSocket = (url) => {
+        this.socket = new WebSocketAsPromised(url, {
+            packMessage: data => JSON.stringify(data),
+            unpackMessage: data => JSON.parse(data),
+            attachRequestId: (data, requestId) => Object.assign({requestId}, data), // attach requestId to message as `id` field
+            extractRequestId: data => data && data.requestId,                                  // read requestId from message `id` field
+        });
+        this.socket.onClose.addListener(event => console.log(`Connections closed: ${event.reason}`));
+        return this.socket.open().then(() => console.log('Connection opened'));
+    }
+
+//     connectToSocketOld = (url) => {
+//         this.socket = new WebSocket(url);
+//         this.socket.onmessage = (event) => {
+//             const textMessage = event.data;
+//             const responseJson = JSON.parse(textMessage);
+//             const originalRequest = responseJson.originalRequest;
+//             if (!this.wsRequests.has(originalRequest)) {
+//                 throw Error(```
+// Received response to request:
+// ${originalRequest}
+// , which had not been made.
+//                     ```.trim());
+//             }
+//             this.wsRequests.delete(originalRequest);
+//         }
+//     }
+
     relationsDb = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true } = {}) => {
+        return {targets: [], items: {}, relations: {}};
         const url = allSpouses
             ? `${this.baseUrl}/relations_db?id=${id}&depth=${depth}`
             : `${this.baseUrl}/relations_db?id=${id}&depth=${depth}&homo_strata=&hetero_strata=WD-P22,WD-P25,WD-P26,WD-P40`;
-        return await this.genericPost(url, visitedItems, id, depth).then(x => {
+        return this.genericPost(url, visitedItems, id, depth).then(x => {
             console.log('Database used to fetch data');
             return x;
         });
     }
 
-    relationCalc = async ({ start, relations }) => {
+    relationCalc = ({ start, relations }) => {
         const url = `${this.baseUrl}/relation_calc`;
         const body = {
             start: start,
             relations: relations,
         };
-        return await this.genericPost(url, body);
+        return this.genericPost(url, body);
     }
 
-    async genericPost(url, body, id = null, depth = null) {
+    genericPost = (url, body, id = null, depth = null) => {
         const headers = new Headers();
         headers.append('Content-Type', 'application/json');
         const request = new Request(
@@ -71,10 +143,10 @@ export class Requests {
                 body: JSON.stringify(body),
             }
         );
-        return await this.genericRequest({ requestOrUrl: request, id, depth });
+        return this.genericRequest({ requestOrUrl: request, id, depth });
     }
 
-    async genericRequest({ requestOrUrl, id = null, depth = null, retryNum = 3, totalRetry = 3 } = {}) {
+    genericRequest = async ({ requestOrUrl, id = null, depth = null, retryNum = 3, totalRetry = 3 } = {}) => {
         const response = await fetch(requestOrUrl);
         const ok = response.ok;
         const status = response.status;

@@ -5,7 +5,6 @@ import { Navigate } from "react-router-dom";
 import '../stylesheets/NameSearch.css'
 import _ from "lodash";
 import { CustomUpload } from "./CustomUpload";
-import { Utils } from './utils';
 import Stack from 'react-bootstrap/Stack';
 import Spinner from 'react-bootstrap/Spinner';
 import Image from 'react-bootstrap/Image';
@@ -24,7 +23,6 @@ export class NameSearch extends React.Component {
         this.id = null;
         this.relations = null;
         this.filters = null;
-        this.utils = new Utils();
     }
 
     render() {

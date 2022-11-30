@@ -7,8 +7,8 @@ export class Utils {
     static get locationKeywords() { return ['place of birth', 'place of death']; }
     static get specialKeywords() { return ['name', 'description', 'wikipedia link', 'image']; }
 
-    constructor() {
-        this.requests = new Requests();
+    constructor(requests) {
+        this.requests = requests;
     }
 
     extendRelations = async (id, relationsJSON) => {
@@ -97,6 +97,6 @@ export function getIds(relationsJSON) {
     return Array.from(relationsJSON.items.map(x => x.id));
 }
 
-export async function wait(ms) {
-    return await new Promise(resolve => setTimeout(resolve, ms));
+export function wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
