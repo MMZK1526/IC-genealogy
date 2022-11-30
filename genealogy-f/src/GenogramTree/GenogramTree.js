@@ -23,7 +23,6 @@ import { Opacity } from './Const';
 import { TreeGroups } from '../components/TreeGroups.js';
 import { TreeRelations } from '../components/TreeRelations.js';
 import { GroupModel } from '../groupModel.js';
-import { Navigate, useNavigate } from "react-router-dom";
 import { withSnackbar } from 'notistack';
 
 function toFilterModel(filters) {
@@ -148,7 +147,7 @@ class GenogramTree extends React.Component {
             });
         } else {
             this.setState({
-                anotherPerson: anotherId.key,
+                anotherPerson: anotherId.id,
             });
         }
     }
@@ -620,7 +619,7 @@ class GenogramTree extends React.Component {
         this.setState(prev => {
             const extendImpossible = prev.extendImpossible;
             extendImpossible.add(selectedPerson);
-            return {extendImpossible};
+            return { extendImpossible };
         });
     }
 
@@ -739,6 +738,7 @@ class GenogramTree extends React.Component {
                             {
                                 this.state.showLookup &&
                                 <TreeNameLookup
+                                    allPeople={Object.values(this.state.originalJSON.items)}
                                     onPersonSelection={(_, v) => this.setFocusPerson(v.key)}
                                     onAnotherPersonSelection={(_, v) => this.setAnotherPerson(v)}
                                     getPersonsRelations={this.getPersonsRelations}

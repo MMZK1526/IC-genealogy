@@ -22,11 +22,11 @@ export function TreeNameLookup(props) {
 					getOptionLabel={(option) => `${option.name} (${getPersonalName(option.key)})@${option.key}`}
 					value={allPersonsRelations.find(person => person.key === props.getFocusPerson())}
 					onChange={props.onPersonSelection}
-					sx={{width: '100%', backgroundColor: "white"}}
+					sx={{ width: '100%', backgroundColor: "white" }}
 					renderInput={(params) => {
 						params.inputProps.value = params.inputProps.value.split("@")[0];
 						return (
-							<TextField {...params}/>
+							<TextField {...params} />
 						);
 					}}
 					renderOption={(props, option) => <li component="li" {...props}>{option.name}</li>}
@@ -34,15 +34,14 @@ export function TreeNameLookup(props) {
 
 				<label className="m-1 form-label">Relationship with: </label>
 				<Autocomplete
-					options={allPersonsRelations}
-					getOptionLabel={(option) => `${option.name} (${getPersonalName(option.key)})@${option.key}`}
-					// value={allPersonsRelations.find(person => person.key === props.getAnotherPerson())}
+					options={props.allPeople}
+					getOptionLabel={(option) => `${option.name} (${option.additionalProperties.filter((p) => p.name === 'personal name').map(p => p.value)})@${option.id}`}
 					onChange={props.onAnotherPersonSelection}
-					sx={{width: '100%', backgroundColor: "white"}}
+					sx={{ width: '100%', backgroundColor: "white" }}
 					renderInput={(params) => {
 						params.inputProps.value = params.inputProps.value.split("@")[0];
 						return (
-							<TextField {...params}/>
+							<TextField {...params} />
 						);
 					}}
 					renderOption={(props, option) => <li component="li" {...props}>{option.name}</li>}
@@ -53,15 +52,5 @@ export function TreeNameLookup(props) {
 				</Button>
 			</div>
 		</EscapeCloseableEnterClickable>
-	);
-}
-
-function relaBetween(from, to) {
-	return (
-		<Row>
-		<label>{from}</label>
-		<label>{to}</label>
-		</Row>
-
 	);
 }
