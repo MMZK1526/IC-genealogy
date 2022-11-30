@@ -59,9 +59,6 @@ export class TreeGroups extends React.Component {
     
     let ids = [...this.personMap.keys()].filter(id => this.personMap.get(id).get("name") != undefined)
 
-    let groupItemSet = this.groupModel.groupItemSet
-    let globalSet = this.groupModel.globalSet
-
     // create set that we will then add to either global or group
     return (
       <EscapeCloseableEnterClickable>
@@ -75,20 +72,20 @@ export class TreeGroups extends React.Component {
                     name: (this.personMap.get(v)).get("name"),
                     id: v
                   }))} // Options to display in the dropdown
-                  selectedValues={[...this.groupModel.groupSet].map((v) => ({
+                  selectedValues={[...this.groupModel.getCurrGroupMembers()].map((v) => ({
                     name: (this.personMap.get(v)).get("name"),
                     id: v
                   }))} // Preselected value to persist in dropdown
-                  onSelect={(_, v) => this.groupModel.groupSet.add(v.id)} // Function will trigger on select event
-                  onRemove={(_, v) => this.groupModel.groupSet.delete(v.id)} // Function will trigger on remove event
+                  onSelect={(_, v) => this.groupModel.addPersonToGroup(v.id)} // Function will trigger on select event
+                  onRemove={(_, v) => this.groupModel.removePersonFromGroup(v.id)} // Function will trigger on remove event
                   displayValue='name' // Property name to display in the dropdown options
                   style={style}
               />
             </Form>
-            {this.showPropertiesSwitch(groupItemSet)}
+            {this.showPropertiesSwitch(this.groupModel.getCurrGroupProperties())}
 
             <h5>Default</h5>
-            {this.showPropertiesSwitch(globalSet)}
+            {this.showPropertiesSwitch(this.groupModel.getDefaultProperties())}
           </Container>
         </div>
       </EscapeCloseableEnterClickable>

@@ -636,8 +636,11 @@ class GenogramTree extends React.Component {
             this.relations = transform(this.state.relationsJSON);
             this.personMap = getPersonMap(Object.values(this.state.originalJSON.items), this.state.originalJSON.relations);
             // show all attributes at start
-            this.state.groupModel.globalSet = new Set([...this.personMap.values()].map((m) => [...m.keys()]).sort((a, b) => b.length - a.length)[0])
-            this.state.groupModel.groupItemSet = new Set([...this.state.groupModel.globalSet])
+
+            this.state.groupModel.initialize([...this.personMap.values()].map((m) => [...m.keys()]).sort((a, b) => b.length - a.length)[0]);
+            // this.state.groupModel.globalSet = new Set([...this.personMap.values()].map((m) => [...m.keys()]).sort((a, b) => b.length - a.length)[0])
+            // this.state.groupModel.groupItemSet = new Set([...this.state.groupModel.globalSet])
+
             updateDiagram = true;
             this.state.isLoading = false;
         }
@@ -771,15 +774,15 @@ class GenogramTree extends React.Component {
                                 }
                                 this.setState({ recommit: true });
                             }}
-                            onGroupAdd={() => {
-                                let group = this.state.groupModel.groupSet
-                                if (group.has(this.state.selectedPerson)) {
-                                    group.delete(this.state.selectedPerson);
-                                } else {
-                                    group.add(this.state.selectedPerson)
-                                }
-                            }}
-                            inGroup={this.state.groupModel.groupSet.has(this.state.selectedPerson)}
+                            // onGroupAdd={() => { // TODO: change this confusing handle name
+                            //     let group = this.state.groupModel.groupSet
+                            //     if (group.has(this.state.selectedPerson)) {
+                            //         group.delete(this.state.selectedPerson);
+                            //     } else {
+                            //         group.add(this.state.selectedPerson)
+                            //     }
+                            // }}
+                            // inGroup={this.state.groupModel.groupSet.has(this.state.selectedPerson)}
                             onExtend={this.handlePopupExtend}
                             allowExtend={this.props.allowExtend}
                             switchToRelations={() => this.setState({ isPopped: false, showRelations: true })}

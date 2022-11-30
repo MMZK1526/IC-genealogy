@@ -17,9 +17,18 @@ import PersonWeb from '../images/person-web.png';
 import { Utils } from './utils';
 import ToggleButton from 'react-bootstrap/ToggleButton';
 import ToggleButtonGroup from 'react-bootstrap/ToggleButtonGroup';
-import {Component} from "react";
+import React from "react";
 
-class PopupInfo extends Component<{}> {
+class PopupInfo extends React.Component {
+	constructor(props) {
+		super(props);
+		this.groupModel = props.groupModel;
+		this.id = props.id;
+		this.state = {
+			hasPerson: this.groupModel.checkPersonInCurrGroup(this.id),
+		};
+	}
+
 	onNew = (_) => {
 		this.props.onNew();
 		this.props.closePopUp();
@@ -34,8 +43,14 @@ class PopupInfo extends Component<{}> {
 		this.props.onFilterModeChanged();
 	}
 
-	onGroupAdd = (_) => {
-		this.props.onGroupAdd();
+	onGroupButtonClick = (_) => {
+		if (this.props.groupModel.checkPersonInCurrGroup(this.props.id)) {
+			this.props.groupModel.removePersonFromGroup(this.props.id);
+		} else {
+			this.props.groupModel.addPersonToGroup(this.props.id);
+		}
+
+		this.setState({ hasPerson: this.groupModel.checkPersonInCurrGroup(this.id) });
 		this.props.closePopUp();
 	}
 
@@ -96,8 +111,8 @@ class PopupInfo extends Component<{}> {
 								</Button>
 							</Col>
 							<Col xs="auto">
-								<Button variant='primary' onClick={this.onGroupAdd} className='m-1'>
-									{this.props.inGroup ? 'Remove from group' : 'Add to group'}
+								<Button variant='primary' onClick={this.onGroupButtonClick} className='m-1'>
+									{this.state.hasPerson ? 'Remove from group' : 'Add to group'}
 								</Button>
 							</Col>
 						</Row>
@@ -108,7 +123,7 @@ class PopupInfo extends Component<{}> {
 	}
 }
 
-function getAdditionalProperties(data, switchToRelations, id, groupModel, inGroup) {
+function getAdditionalProperties(data, switchToRelations, id, groupModel) {
 	const openInWikipedia = url => {
 		window.open(url, '_blank', 'noopener,noreferrer');
 	};
@@ -154,7 +169,7 @@ function getAdditionalProperties(data, switchToRelations, id, groupModel, inGrou
 			</Row>
 			<Row>
 				<Container className='overflow-auto additional-properties-container'>
-					{getAllAttr(data, id, groupModel, inGroup)}
+					{getAllAttr(data, id, groupModel)}
 				</Container>
 			</Row>
 		</Container>
@@ -162,17 +177,15 @@ function getAdditionalProperties(data, switchToRelations, id, groupModel, inGrou
 }
 
 
-function getAllAttr(data, id, groupModel, inGroup) {
+function getAllAttr(data, id, groupModel) {
 
     // pass in longest possible data list for data
 	let x = Object.keys(Object.fromEntries(data)).filter(function (k) {
 		return !Utils.specialKeywords.includes(k) && !Utils.relationsKeywords.includes(k);
 	})
 	// apply filters for both sets
-	x = x.filter((i) => groupModel.globalSet.has(i)).filter((i) => !inGroup || inGroup && groupModel.groupItemSet.has(i))
-	// console.log(groupModel.globalSet)
-	// console.log(groupModel.groupItemSet)
-	// console.log(groupModel.groupSet)
+	// x = x.filter((i) => groupModel.globalSet.has(i)).filter((i) => !inGroup || inGroup && groupModel.groupItemSet.has(i))
+	x = x.filter((i) => groupModel.checkPropertyShownForPerson(id, i));
 	return x.map((k) => (
 		<Row key={'Row ' + k}>
 			<Col xs={4} key={k}>
