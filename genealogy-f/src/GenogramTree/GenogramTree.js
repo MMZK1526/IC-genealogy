@@ -597,6 +597,7 @@ class GenogramTree extends React.Component {
             alert('Please wait for the current expansion to finish');
             return;
         }
+        const selectedPerson = this.state.selectedPerson;
         this.prevRelationsJSON = JSON.parse(JSON.stringify(this.state.relationsJSON));
         console.assert(this.prevRelationsJSON !== undefined);
         if (
@@ -610,7 +611,7 @@ class GenogramTree extends React.Component {
             isUpdated: false,
         });
         await this.fetchFromCacheOrBackend(this.state.selectedPerson, 1, false);
-        this.forceUpdate();
+        // this.forceUpdate();
         if (
             _.isEqual(this.prevRelationsJSON, this.state.relationsJSON)
         ) {
@@ -618,8 +619,8 @@ class GenogramTree extends React.Component {
         }
         this.setState(prev => {
             const extendImpossible = prev.extendImpossible;
-            extendImpossible.add(prev.selectedPerson);
-            return { extendImpossible };
+            extendImpossible.add(selectedPerson);
+            return {extendImpossible};
         });
     }
 
