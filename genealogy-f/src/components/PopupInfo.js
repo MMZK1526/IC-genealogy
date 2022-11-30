@@ -44,10 +44,10 @@ class PopupInfo extends React.Component {
 	}
 
 	onGroupButtonClick = (_) => {
-		if (this.props.groupModel.checkPersonInCurrGroup(this.props.id)) {
-			this.props.groupModel.removePersonFromGroup(this.props.id);
+		if (this.groupModel.checkPersonInCurrGroup(this.props.id)) {
+			this.groupModel.removePersonFromGroup(this.props.id);
 		} else {
-			this.props.groupModel.addPersonToGroup(this.props.id);
+			this.groupModel.addPersonToGroup(this.props.id);
 		}
 
 		this.setState({ hasPerson: this.groupModel.checkPersonInCurrGroup(this.id) });
@@ -64,7 +64,7 @@ class PopupInfo extends React.Component {
 					}
 				}>
 					<CloseButton className='close-btn' onClick={this.props.closePopUp}/>
-					{getAdditionalProperties(this.props.info, this.props.switchToRelations, this.props.id, this.props.groupModel, this.props.inGroup)}
+					{getAdditionalProperties(this.props.info, this.props.switchToRelations, this.props.id, this.groupModel, this.props.inGroup)}
 					<Container className='text-center mt-2'>
 						<Row>
 							<Col xs="auto">

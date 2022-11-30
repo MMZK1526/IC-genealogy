@@ -774,15 +774,6 @@ class GenogramTree extends React.Component {
                                 }
                                 this.setState({ recommit: true });
                             }}
-                            // onGroupAdd={() => { // TODO: change this confusing handle name
-                            //     let group = this.state.groupModel.groupSet
-                            //     if (group.has(this.state.selectedPerson)) {
-                            //         group.delete(this.state.selectedPerson);
-                            //     } else {
-                            //         group.add(this.state.selectedPerson)
-                            //     }
-                            // }}
-                            // inGroup={this.state.groupModel.groupSet.has(this.state.selectedPerson)}
                             onExtend={this.handlePopupExtend}
                             allowExtend={this.props.allowExtend}
                             switchToRelations={() => this.setState({ isPopped: false, showRelations: true })}
