@@ -23,8 +23,6 @@ export class GroupModel {
     initialize(initialSet) {
         this.defaultProperties = new Set([...initialSet].filter((x) => x !== 'id'));
         this.groupsList[this.currentGroupId].properties = new Set([...this.defaultProperties]);
-
-        // console.log(this.groupsList[this.currentGroupId]);
     }
 
     /* ### Whole group operations ### */
@@ -36,8 +34,6 @@ export class GroupModel {
             properties: new Set([...this.defaultProperties])
         });
         this.groupsCount += 1;
-
-        // console.log(this.groupsList);
     }
 
     /* ### Getters ### */
@@ -57,11 +53,22 @@ export class GroupModel {
         return this.groupsList;
     }
 
+    // Get all groups a person belongs in
+    getGroupsForPerson(personId) {
+        let result = [];
+
+        for (const groupId in this.groupsList) {
+            if (this.groupsList[groupId].members.has(personId)) {
+                result.push(this.groupsList[groupId].name);
+            }
+        }
+
+        return result;
+    }
+
     /* ### Setters ### */
     setCurrentGroupId(groupId) {
         this.currentGroupId = groupId;
-        console.log(this.currentGroupId);
-        console.log(this.groupsList);
     }
 
     addPersonToGroup(personId) {

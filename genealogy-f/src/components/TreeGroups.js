@@ -16,13 +16,27 @@ import EscapeCloseableEnterClickable from "./EscapeCloseableEnterClickable";
 export class TreeGroups extends React.Component {
   constructor(props) {
     super(props);
-    this.groups = [];
-    this.state = {
-      groupId: 1,
-    };
 
     this.groupModel = props.groupModel; // TODO: move this to state
     this.personMap = props.personMap;
+
+    this.state = {
+      currGroupMembers: [...this.groupModel.getCurrGroupMembers()],
+      groups: this.groupModel.getAllGroups(),
+    };
+
+    this.changeGroupSelection = this.changeGroupSelection.bind(this);
+    this.addNewGroup = this.addNewGroup.bind(this);
+  }
+
+  changeGroupSelection (event) {
+    this.groupModel.setCurrentGroupId(event.target.value);
+    this.setState({ currGroupMembers: [...this.groupModel.getCurrGroupMembers()] });
+  }
+
+  addNewGroup () {
+    this.groupModel.addNewGroup();
+    this.setState({ groups: this.groupModel.getAllGroups() });
   }
 
   render() {
@@ -34,7 +48,7 @@ export class TreeGroups extends React.Component {
     };
     
     let ids = [...this.personMap.keys()].filter(id => this.personMap.get(id).get("name") != undefined);
-    let groups = this.groupModel.getAllGroups();
+    // let groups = this.groupModel.getAllGroups();
 
     // create set that we will then add to either global or group
     return (
@@ -43,17 +57,18 @@ export class TreeGroups extends React.Component {
           <Container className='overflow-auto additional-properties-container'>
             <h5 className='mb-3'>All groups</h5>
 
-            <Form.Select
-              className='mb-2'
-              onChange={(event) => this.groupModel.setCurrentGroupId(event.target.value)}
-            >
-                { groups.map((group) => {
-                  // <option>lolz</option>
-                  return (<option value={group.id}>{group.name}</option>);
-                }) }
-            </Form.Select>
-
             <Form className='mb-2'>
+              <Form.Select
+                className='mb-2'
+                // onChange={(event) => this.groupModel.setCurrentGroupId(event.target.value)}
+                onChange={this.changeGroupSelection}
+              >
+                  { this.state.groups.map((group) => {
+                    // <option>lolz</option>
+                    return (<option value={group.id}>{group.name}</option>);
+                  }) }
+              </Form.Select>
+
               <Form.Label className="form-label">People in group: </Form.Label>
               <Multiselect
                 id='pob-select'
@@ -61,7 +76,7 @@ export class TreeGroups extends React.Component {
                   name: (this.personMap.get(v)).get("name"),
                   id: v
                 }))} // Options to display in the dropdown
-                selectedValues={[...this.groupModel.getCurrGroupMembers()].map((v) => ({
+                selectedValues={this.state.currGroupMembers.map((v) => ({
                   name: (this.personMap.get(v)).get("name"),
                   id: v
                 }))} // Preselected value to persist in dropdown
@@ -73,7 +88,7 @@ export class TreeGroups extends React.Component {
             </Form>
 
             {/* <label className="form-label">Create custom group</label> */}
-            <Button className='mb-3 text-center w-100' variant="success" onClick={() => this.groupModel.addNewGroup()}>
+            <Button className='mb-3 text-center w-100' variant="success" onClick={this.addNewGroup}>
               Create new group
             </Button>
 
