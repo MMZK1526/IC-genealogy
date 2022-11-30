@@ -760,14 +760,13 @@ class GenogramTree extends React.Component {
                                     personMap={this.personMap}
                                     changeGroupSelection = {(groupId) => {
                                         this.groupModel.setCurrentGroupId(groupId);
-                                        // this.setState({showGroups: false});
                                         this.setState({showGroups: true});
                                     }}
                                     addNewGroup={() => {
                                         this.groupModel.addNewGroup();
-                                        // this.setState({showGroups: false});
                                         this.setState({showGroups: true});
                                     }}
+                                    externUpdate={() => {this.setState({showGroups: true})}}
                                 />
                             }
                         </Col>

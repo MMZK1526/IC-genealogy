@@ -1,4 +1,4 @@
-// import React from 'react';
+import React from 'react';
 import Button from 'react-bootstrap/Button';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
@@ -102,31 +102,47 @@ export function TreeGroups(props) {
               Create new group
             </Button>
 
-            {showPropertiesSwitch(props.groupModel.getCurrGroupProperties(), props.personMap)}
+            {/* {showPropertiesSwitch(props.groupModel, props.personMap, false)} */}
+            {showPropertiesSwitch(props.groupModel.getCurrGroupProperties(), props.personMap, props.externUpdate)}
 
             <h5 className='mt-3 mb-3'>Default</h5>
-            {showPropertiesSwitch(props.groupModel.getDefaultProperties(), props.personMap)}
+            {/* {showPropertiesSwitch(props.groupModel, props.personMap, true)} */}
+            {showPropertiesSwitch(props.groupModel.getDefaultProperties(), props.personMap, props.externUpdate)}
           </Container>
         </div>
       </EscapeCloseableEnterClickable>
     );
   }
 
-function showPropertiesSwitch (set, personMap) {
+function showPropertiesSwitch(set, personMap, externUpdate) {
     // Display options
     let displayOptions = [...personMap.values()].map((m) => [...m.keys()]);
     let ranked = displayOptions
       .sort((a,b) => b.length - a.length)[0]
       .filter(function (k) {
         return !Utils.specialKeywords.includes(k) && !Utils.relationsKeywords.includes(k);
-      });
+      })
+      .map((property) => {return { label: property, checked: set.has(property) }});
+
+    // console.log(ranked)
+
+    const update = (ix, checked) => {
+      if (checked) {
+        set.add(ranked[ix].label);
+        ranked[ix].label = false;
+      } else {
+        set.delete(ranked[ix].label);
+        ranked[ix].label = true;
+      }
+      externUpdate();
+    }
     
     return (
       <div>
-      { ranked.map((k) => (
-        <Row key={'Row ' + k}>
-          <Col key={k}>
-              <p>{capitalizeFirstLetter(k)}</p>
+      { ranked.map((property, ix) => (
+        <Row key={'Row ' + property.label}>
+          <Col key={property.label}>
+              <p>{capitalizeFirstLetter(property.label)}</p>
           </Col>
           <Col xs={3} key="check_switch">
             <Form>
@@ -134,8 +150,9 @@ function showPropertiesSwitch (set, personMap) {
                   reverse
                   type="switch"
                   id="custom-switch"
-                  defaultChecked={ set.has(k) }
-                  onChange={(e) => { e.target.checked ? set.add(k) : set.delete(k)}}
+                  checked={ property.checked }
+                  // onChange={(e) => { e.target.checked ? set.add(property.label) : set.delete(property.label)}}
+                  onChange={(e) => update(ix, e.target.checked)}
               />
             </Form>
           </Col>
@@ -144,5 +161,4 @@ function showPropertiesSwitch (set, personMap) {
       </div>
     );
   }
-
 

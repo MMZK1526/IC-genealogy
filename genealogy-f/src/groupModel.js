@@ -83,6 +83,22 @@ export class GroupModel {
         this.groupsList[this.currentGroupId].members.delete(personId);
     }
 
+    addPropertyToGroup(property) {
+        this.groupsList[this.currentGroupId].properties.add(property);
+    }
+
+    removePropertyFromGroup(property) {
+        this.groupsList[this.currentGroupId].properties.delete(property);
+    }
+
+    addPropertyDefault(property) {
+        this.defaultProperties.add(property);
+    }
+
+    removePropertyDefault(property) {
+        this.defaultProperties.delete(property);
+    }
+
     /* Checker for properties */
     checkPropertyShownForPerson(personId, property) {
         /*
