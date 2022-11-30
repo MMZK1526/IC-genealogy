@@ -19,8 +19,8 @@ export class GroupModel {
 
     /* ### Initialize ### */
     initialize(initialSet) {
-        this.defaultProperties = new Set([...initialSet]);
-        this.groupsList[this.currentGroupId].properties = new Set([...initialSet]);
+        this.defaultProperties = new Set([...initialSet].filter((x) => x !== 'id'));
+        this.groupsList[this.currentGroupId].properties = new Set([...this.defaultProperties]);
 
         // console.log(this.groupsList[this.currentGroupId]);
     }
