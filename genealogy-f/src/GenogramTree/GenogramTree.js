@@ -755,6 +755,7 @@ class GenogramTree extends React.Component {
                             }
                             {
                                 this.state.showGroups &&
+                                /* ### setStates here used for re-rendering only ### */
                                 <TreeGroups
                                     groupModel={this.groupModel}
                                     personMap={this.personMap}
@@ -767,6 +768,11 @@ class GenogramTree extends React.Component {
                                         this.setState({showGroups: true});
                                     }}
                                     externUpdate={() => {this.setState({showGroups: true})}}
+                                    renameGroup={(name) => {
+                                        console.log(name);
+                                        this.groupModel.renameCurrGroup(name);
+                                        this.setState({showGroups: true});
+                                    }}
                                 />
                             }
                         </Col>

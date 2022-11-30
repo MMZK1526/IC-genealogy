@@ -71,10 +71,12 @@ export class GroupModel {
     }
 
     /* ### Setters ### */
+    // Group select
     setCurrentGroupId(groupId) {
         this.currentGroupId = groupId;
     }
 
+    // Set persons
     addPersonToGroup(personId) {
         this.groupsList[this.currentGroupId].members.add(personId);
     }
@@ -83,6 +85,7 @@ export class GroupModel {
         this.groupsList[this.currentGroupId].members.delete(personId);
     }
 
+    // Set properties
     addPropertyToGroup(property) {
         this.groupsList[this.currentGroupId].properties.add(property);
     }
@@ -125,6 +128,11 @@ export class GroupModel {
 
     checkPersonInCurrGroup(personId) {
         return this.groupsList[this.currentGroupId].members.has(personId);
+    }
+
+    /* Misc */
+    renameCurrGroup(name) {
+        this.groupsList[this.currentGroupId].name = name;
     }
   }
   

@@ -1,4 +1,4 @@
-import React from 'react';
+import {useState} from 'react';
 import Button from 'react-bootstrap/Button';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
@@ -49,6 +49,13 @@ export function TreeGroups(props) {
   //   this.groupModel.addNewGroup();
   //   this.setState({ groups: this.groupModel.getAllGroups() });
   // }
+  const [name, setName] = useState("");
+
+  const handleNameChange = (event) => {
+    event.preventDefault();
+    props.renameGroup(name);
+  }
+
   const style = {
     searchBox: { // To change search box element look
       'fontSize': '20px',
@@ -65,9 +72,8 @@ export function TreeGroups(props) {
       <EscapeCloseableEnterClickable>
         <div className='sidebar pe-auto'>
           <Container className='overflow-auto additional-properties-container'>
-            <h5 className='mb-3'>All groups</h5>
-
             <Form className='mb-2'>
+              <h5 className='mb-3'>All groups</h5>
               <Form.Select
                 className='mb-2'
                 value={props.groupModel.getCurrentGroupId()}
@@ -79,7 +85,23 @@ export function TreeGroups(props) {
                 }) }
               </Form.Select>
 
-              <Form.Label className="form-label">People in group: </Form.Label>
+              <Row>
+                <Form.Control
+                  className='w-50'
+                  type="text"
+                  placeholder="rename group to"
+                  onChange={(e) => setName(e.target.value)}
+                />
+                <Button
+                  className='text-center w-50'
+                  variant="success"
+                  onClick={handleNameChange}
+                >
+                  Rename
+                </Button>
+              </Row>
+
+              <Form.Label className="form-label w-100">People in group: </Form.Label>
               <Multiselect
                 id='pob-select'
                 options={ids.map((v) => ({
