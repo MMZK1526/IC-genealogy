@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react';
 import Button from 'react-bootstrap/Button';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
@@ -13,54 +13,55 @@ import './stylesheets/Sidebar.css';
 import './stylesheets/shared.css';
 import EscapeCloseableEnterClickable from "./EscapeCloseableEnterClickable";
 
-export class TreeGroups extends React.Component {
-  constructor(props) {
-    super(props);
+export function TreeGroups(props) {
+  // constructor(props) {
+  //   super(props);
 
-    this.groupModel = props.groupModel;
-    this.personMap = props.personMap;
+  //   this.groupModel = props.groupModel;
+  //   this.personMap = props.personMap;
 
-    this.state = {
-      currId: this.groupModel.getCurrentGroupId(),
-      currGroupMembers: [...this.groupModel.getCurrGroupMembers()],
-      currGroupProperties: this.groupModel.getCurrGroupProperties(),
-      groups: this.groupModel.getAllGroups(),
-    };
+  //   this.state = {
+  //     currId: this.groupModel.getCurrentGroupId(),
+  //     currGroupMembers: [...this.groupModel.getCurrGroupMembers()],
+  //     currGroupProperties: this.groupModel.getCurrGroupProperties(),
+  //     groups: this.groupModel.getAllGroups(),
+  //   };
 
-    this.changeGroupSelection = this.changeGroupSelection.bind(this);
-    this.addNewGroup = this.addNewGroup.bind(this);
-    this.showPropertiesSwitch = this.showPropertiesSwitch.bind(this);
-  }
+  //   // this.changeGroupSelection = this.changeGroupSelection.bind(this);
+  //   this.changeGroupSelection = props.changeGroupSelection;
+  //   this.addNewGroup = this.addNewGroup.bind(this);
+  //   this.showPropertiesSwitch = this.showPropertiesSwitch.bind(this);
+  // }
 
-  changeGroupSelection(groupId) {
-    this.groupModel.setCurrentGroupId(groupId);
-    this.setState({
-      currId: groupId,
-      currGroupMembers: [...this.groupModel.getCurrGroupMembers()],
-      currGroupProperties: this.groupModel.getCurrGroupProperties()
-    });
-    console.log(this.state.currGroupProperties)
-    // this.render();
-  }
+  // changeGroupSelection(groupId) {
+  //   this.groupModel.setCurrentGroupId(groupId);
+  //   this.setState({
+  //     currId: groupId,
+  //     currGroupProperties: this.groupModel.getCurrGroupProperties(),
+  //     currGroupMembers: [...this.groupModel.getCurrGroupMembers()],
+  //   }, function () {console.log(this.state.currGroupProperties)});
+  //   // console.log(this.groupModel.getCurrGroupProperties())
+  //   // console.log(this.state.currGroupProperties)
+  //   // this.render();
+  // }
 
-  addNewGroup () {
-    this.groupModel.addNewGroup();
-    this.setState({ groups: this.groupModel.getAllGroups() });
-  }
+  // addNewGroup () {
+  //   this.groupModel.addNewGroup();
+  //   this.setState({ groups: this.groupModel.getAllGroups() });
+  // }
+  const style = {
+    searchBox: { // To change search box element look
+      'fontSize': '20px',
+      'border': '1px solid',
+    },
+  };
+  
+  let ids = [...props.personMap.keys()].filter(id => props.personMap.get(id).get("name") != undefined);
 
-  render() {
-    const style = {
-      searchBox: { // To change search box element look
-        'fontSize': '20px',
-        'border': '1px solid',
-      },
-    };
-    
-    let ids = [...this.personMap.keys()].filter(id => this.personMap.get(id).get("name") != undefined);
+  return(
     // let groups = this.groupModel.getAllGroups();
 
     // create set that we will then add to either global or group
-    return (
       <EscapeCloseableEnterClickable>
         <div className='sidebar pe-auto'>
           <Container className='overflow-auto additional-properties-container'>
@@ -69,15 +70,11 @@ export class TreeGroups extends React.Component {
             <Form className='mb-2'>
               <Form.Select
                 className='mb-2'
-                value={this.state.currId}
-                // onChange={(event) => this.groupModel.setCurrentGroupId(event.target.value)}
-                onChange={(event) => this.changeGroupSelection(event.target.value)}
+                value={props.groupModel.getCurrentGroupId()}
+                // onChange={(event) => props.groupModel.setCurrentGroupId(event.target.value)}
+                onChange={(event) => props.changeGroupSelection(event.target.value)}
               >
-                { this.state.groups.map((group, id) => {
-                  // <option>lolz</option>
-                  if (id == this.state.groupId) {
-                    return (<option value={id} selected>{group.name}</option>);
-                  }
+                { props.groupModel.getAllGroups().map((group, id) => {
                   return (<option value={id}>{group.name}</option>);
                 }) }
               </Form.Select>
@@ -86,38 +83,38 @@ export class TreeGroups extends React.Component {
               <Multiselect
                 id='pob-select'
                 options={ids.map((v) => ({
-                  name: (this.personMap.get(v)).get("name"),
+                  name: (props.personMap.get(v)).get("name"),
                   id: v
                 }))} // Options to display in the dropdown
-                selectedValues={this.state.currGroupMembers.map((v) => ({
-                  name: (this.personMap.get(v)).get("name"),
+                selectedValues={[...props.groupModel.getCurrGroupMembers()].map((v) => ({
+                  name: (props.personMap.get(v)).get("name"),
                   id: v
                 }))} // Preselected value to persist in dropdown
-                onSelect={(_, v) => this.groupModel.addPersonToGroup(v.id)} // Function will trigger on select event
-                onRemove={(_, v) => this.groupModel.removePersonFromGroup(v.id)} // Function will trigger on remove event
+                onSelect={(_, v) => props.groupModel.addPersonToGroup(v.id)} // Function will trigger on select event
+                onRemove={(_, v) => props.groupModel.removePersonFromGroup(v.id)} // Function will trigger on remove event
                 displayValue='name' // Property name to display in the dropdown options
                 style={style}
               />
             </Form>
 
             {/* <label className="form-label">Create custom group</label> */}
-            <Button className='mb-3 text-center w-100' variant="success" onClick={this.addNewGroup}>
+            <Button className='mb-3 text-center w-100' variant="success" onClick={props.addNewGroup}>
               Create new group
             </Button>
 
-            {this.showPropertiesSwitch(this.state.currGroupProperties)}
+            {showPropertiesSwitch(props.groupModel.getCurrGroupProperties(), props.personMap)}
 
             <h5 className='mt-3 mb-3'>Default</h5>
-            {this.showPropertiesSwitch(this.groupModel.getDefaultProperties())}
+            {showPropertiesSwitch(props.groupModel.getDefaultProperties(), props.personMap)}
           </Container>
         </div>
       </EscapeCloseableEnterClickable>
     );
   }
 
-  showPropertiesSwitch (set) {
+function showPropertiesSwitch (set, personMap) {
     // Display options
-    let displayOptions = [...this.personMap.values()].map((m) => [...m.keys()]);
+    let displayOptions = [...personMap.values()].map((m) => [...m.keys()]);
     let ranked = displayOptions
       .sort((a,b) => b.length - a.length)[0]
       .filter(function (k) {
@@ -147,6 +144,5 @@ export class TreeGroups extends React.Component {
       </div>
     );
   }
-}
 
 
