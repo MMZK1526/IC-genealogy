@@ -64,7 +64,6 @@ export function applyFamilyFilter(id, familyName, idPerson) {
 }
 
 export function transform(data, filters) {
-    console.log(data);
     setRelMap(new Map());
 
     Object.values(data.items).forEach((person) => {
@@ -191,7 +190,7 @@ export function getPersonMap(data, allRelations) {
                 }
             }
         }
-        
+
 
 
         // wash data for additionalProperties
