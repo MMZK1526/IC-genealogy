@@ -11,10 +11,12 @@ export class GroupModel {
         this.currentGroupId = 0; // Currently shown group
         this.groupsCount = 1;
 
-        this.groupsList = { 0 : {
+        this.groupsList = [{
+            id: 0,
+            name: "Group 0",
             members: new Set(),
             properties: new Set()
-        }};
+        }];
     }
 
     /* ### Initialize ### */
@@ -27,11 +29,15 @@ export class GroupModel {
 
     /* ### Whole group operations ### */
     addNewGroup() {
-        this.groupsList[this.groupsCount] = {
+        this.groupsList.push({
+            id: this.groupsCount,
+            name: "Group " + this.groupsCount,
             members: new Set(),
-            properties: new Set()
-        };
+            properties: new Set([...this.defaultProperties])
+        });
         this.groupsCount += 1;
+
+        // console.log(this.groupsList);
     }
 
     /* ### Getters ### */
@@ -47,9 +53,15 @@ export class GroupModel {
         return this.defaultProperties;
     }
 
+    getAllGroups() {
+        return this.groupsList;
+    }
+
     /* ### Setters ### */
     setCurrentGroupId(groupId) {
         this.currentGroupId = groupId;
+        console.log(this.currentGroupId);
+        console.log(this.groupsList);
     }
 
     addPersonToGroup(personId) {
@@ -68,10 +80,6 @@ export class GroupModel {
          * 2. person blongs to NO group AND the property is displayed by default, 
          * then this property is displayed.
          */
-        
-        // if (this.defaultProperties.has(property)) {
-        //     return true;
-        // }
 
         let oneGroupHasPerson = false;
 

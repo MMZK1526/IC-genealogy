@@ -16,38 +16,14 @@ import EscapeCloseableEnterClickable from "./EscapeCloseableEnterClickable";
 export class TreeGroups extends React.Component {
   constructor(props) {
     super(props);
-    this.onClickNew = this.onClickNew.bind(this);
     this.groups = [];
     this.state = {
       groupId: 1,
     };
 
-    this.groupModel = props.groupModel;
+    this.groupModel = props.groupModel; // TODO: move this to state
     this.personMap = props.personMap;
   }
-
-  onClickNew = () => {
-    this.groups.push({groupId: this.state.groupId, name: 'New Group ' + this.state.groupId, personIds: []});
-    this.setState({groupId: this.state.groupId + 1});
-    console.log("onClickNew");
-    console.log(this.groups);
-  }
-
-  // render() {
-  //   return (
-  //     <div className='sidebar pe-auto'>
-  //       {/* <label className="form-label">Select a group</label> */}
-
-  //       <label className="form-label">Create custom group</label>
-  //       <Button className='m-1 text-center w-100' variant="success" onClick={() => this.onClickNew()}>
-  //         Create new group
-  //       </Button>
-  //       {/* <Button className='m-1 text-center w-100' variant="primary" onClick={() => {}}>
-  //         Reset
-  //       </Button> */}
-  //     </div>
-  //   );
-  // }
 
   render() {
     const style = {
@@ -57,34 +33,53 @@ export class TreeGroups extends React.Component {
       },
     };
     
-    let ids = [...this.personMap.keys()].filter(id => this.personMap.get(id).get("name") != undefined)
+    let ids = [...this.personMap.keys()].filter(id => this.personMap.get(id).get("name") != undefined);
+    let groups = this.groupModel.getAllGroups();
 
     // create set that we will then add to either global or group
     return (
       <EscapeCloseableEnterClickable>
         <div className='sidebar pe-auto'>
           <Container className='overflow-auto additional-properties-container'>
-            <Form>
+            <h5 className='mb-3'>All groups</h5>
+
+            <Form.Select
+              className='mb-2'
+              onChange={(event) => this.groupModel.setCurrentGroupId(event.target.value)}
+            >
+                { groups.map((group) => {
+                  // <option>lolz</option>
+                  return (<option value={group.id}>{group.name}</option>);
+                }) }
+            </Form.Select>
+
+            <Form className='mb-2'>
               <Form.Label className="form-label">People in group: </Form.Label>
               <Multiselect
-                  id='pob-select'
-                  options={ids.map((v) => ({
-                    name: (this.personMap.get(v)).get("name"),
-                    id: v
-                  }))} // Options to display in the dropdown
-                  selectedValues={[...this.groupModel.getCurrGroupMembers()].map((v) => ({
-                    name: (this.personMap.get(v)).get("name"),
-                    id: v
-                  }))} // Preselected value to persist in dropdown
-                  onSelect={(_, v) => this.groupModel.addPersonToGroup(v.id)} // Function will trigger on select event
-                  onRemove={(_, v) => this.groupModel.removePersonFromGroup(v.id)} // Function will trigger on remove event
-                  displayValue='name' // Property name to display in the dropdown options
-                  style={style}
+                id='pob-select'
+                options={ids.map((v) => ({
+                  name: (this.personMap.get(v)).get("name"),
+                  id: v
+                }))} // Options to display in the dropdown
+                selectedValues={[...this.groupModel.getCurrGroupMembers()].map((v) => ({
+                  name: (this.personMap.get(v)).get("name"),
+                  id: v
+                }))} // Preselected value to persist in dropdown
+                onSelect={(_, v) => this.groupModel.addPersonToGroup(v.id)} // Function will trigger on select event
+                onRemove={(_, v) => this.groupModel.removePersonFromGroup(v.id)} // Function will trigger on remove event
+                displayValue='name' // Property name to display in the dropdown options
+                style={style}
               />
             </Form>
+
+            {/* <label className="form-label">Create custom group</label> */}
+            <Button className='mb-3 text-center w-100' variant="success" onClick={() => this.groupModel.addNewGroup()}>
+              Create new group
+            </Button>
+
             {this.showPropertiesSwitch(this.groupModel.getCurrGroupProperties())}
 
-            <h5>Default</h5>
+            <h5 className='mt-3 mb-3'>Default</h5>
             {this.showPropertiesSwitch(this.groupModel.getDefaultProperties())}
           </Container>
         </div>
