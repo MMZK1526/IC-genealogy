@@ -30,8 +30,9 @@ export default class EscapeCloseableEnterClickable extends React.Component {
         document.getElementById("escapeCloseableFocus").focus();
     }
 
-    onKeyDown = (keyName) => {
+    onKeyDown = (keyName, e) => {
         if (keyName === 'escape') {
+            e.preventDefault();
             this.onEscape();
         }
         if (keyName === 'enter') {
