@@ -62,12 +62,32 @@ export class GroupModel {
 
     /* Checker for properties */
     checkPropertyShownForPerson(personId, property) {
-        if (this.defaultProperties.has(property)) {
-            return true;
+        /*
+         * If:
+         * 1. ANY one group containing this person has the property, or
+         * 2. person blongs to NO group AND the property is displayed by default, 
+         * then this property is displayed.
+         */
+        
+        // if (this.defaultProperties.has(property)) {
+        //     return true;
+        // }
+
+        let oneGroupHasPerson = false;
+
+        for (const groupId in this.groupsList) {
+            if (this.groupsList[groupId].members.has(personId)) {
+                oneGroupHasPerson = true;
+
+                if (this.groupsList[groupId].properties.has(property)) {
+                    return true;
+                }
+            }
         }
+
+        return !oneGroupHasPerson && this.defaultProperties.has(property);
     }
 
-    /* Checker for person */
     checkPersonInCurrGroup(personId) {
         return this.groupsList[this.currentGroupId].members.has(personId);
     }
