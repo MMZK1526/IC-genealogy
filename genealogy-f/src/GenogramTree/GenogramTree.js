@@ -25,7 +25,7 @@ import { TreeRelations } from '../components/TreeRelations.js';
 import { GroupModel } from '../groupModel.js';
 import { withSnackbar } from 'notistack';
 
-const ENABLE_PRE_FETCHING = true;
+const ENABLE_PRE_FETCHING = false;
 
 function toFilterModel(filters) {
     const filterModel = new FilterModel(true);

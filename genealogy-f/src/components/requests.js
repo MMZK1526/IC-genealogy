@@ -2,13 +2,13 @@ import {CustomTimer, wait} from "./utils";
 import _ from 'lodash';
 import WebSocketAsPromised from 'websocket-as-promised';
 
-const USE_HTTPS = false;
+const USE_HTTPS = true;
 
 const USE_SOCKETS = true;
 const USE_WEB_SOCKETS_AS_PROMISED = true;
-const USE_LOCAL_BACKEND = true;
+const USE_LOCAL_BACKEND = false;
 
-const USE_DB = false;
+const USE_DB = true;
 
 export class Requests {
     rawUrl = USE_LOCAL_BACKEND ? 'localhost:8080' : 'db-de-genealogie.herokuapp.com';
