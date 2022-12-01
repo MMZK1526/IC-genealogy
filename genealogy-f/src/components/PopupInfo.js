@@ -62,7 +62,7 @@ class PopupInfo extends React.Component {
 				result = result + ", ";
 			}
 			result = result + this.state.inGroups[index].name;
-			
+
 		}
 		return result;
 	}
@@ -76,7 +76,7 @@ class PopupInfo extends React.Component {
 						this.props.closePopUp();
 					}
 				}>
-					<CloseButton className='close-btn' onClick={this.props.closePopUp}/>
+					<CloseButton className='close-btn' onClick={this.props.closePopUp} />
 					{getAdditionalProperties(this.props.info, this.props.switchToRelations, this.props.id, this.groupModel, this.props.inGroup)}
 					<Container className='text-center mt-2'>
 						<Row className='mb-3'>
@@ -85,9 +85,9 @@ class PopupInfo extends React.Component {
 							</Col>
 							<Col>
 								<ToggleButtonGroup type="radio" name="filter-options"
-												   defaultValue={this.props.isHidden ? 1 : 0} onChange={(e) => {
-									this.onFilterModeChanged(e);
-								}}>
+									defaultValue={this.props.isHidden ? 1 : 0} onChange={(e) => {
+										this.onFilterModeChanged(e);
+									}}>
 									<ToggleButton
 										id="filter-always-included"
 										value={2}
@@ -117,7 +117,7 @@ class PopupInfo extends React.Component {
 								In groups:
 							</Col>
 							<Col xs="auto">
-								{ this.printGroupNames() }
+								{this.printGroupNames()}
 							</Col>
 						</Row>
 						<Row>
@@ -132,7 +132,7 @@ class PopupInfo extends React.Component {
 								</Button>
 							</Col>
 							<Col xs="auto">
-								<Button variant='primary' disabled='true' onClick={this.onGroupButtonClick} className='m-1'>
+								<Button variant='primary' onClick={this.onGroupButtonClick} className='m-1'>
 									{this.state.hasPerson ? 'Remove from group' : 'Add to group' /* NOTE: temporarily disabled */}
 								</Button>
 							</Col>
@@ -200,7 +200,7 @@ function getAdditionalProperties(data, switchToRelations, id, groupModel) {
 
 function getAllAttr(data, id, groupModel) {
 
-    // pass in longest possible data list for data
+	// pass in longest possible data list for data
 	let x = Object.keys(Object.fromEntries(data)).filter(function (k) {
 		return !Utils.specialKeywords.includes(k) && !Utils.relationsKeywords.includes(k);
 	})
