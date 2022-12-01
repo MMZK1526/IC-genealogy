@@ -696,8 +696,10 @@ export class DiagramWrapper extends React.Component {
                 focusId = this.props.nodeDataArray[0].key;
             }
             this.setupDiagram(this.props.nodeDataArray, focusId);
-            this.highlight.length = 0;
-            this.highlight.push(focusId);
+            if (!this.props.keepHighlight) {
+                this.highlight.length = 0;
+                this.highlight.push(focusId);
+            }
         }
 
         if (this.props.recentre) {
@@ -722,14 +724,12 @@ export class DiagramWrapper extends React.Component {
             const labelledNodes = {};
             this.diagram.startTransaction('highlight');
             this.diagram.clearHighlighteds();
+            let showHighlight = true;
             for (const key of highlight) {
                 const node = this.diagram.findNodeForKey(key);
                 if (!node) {
-                    if (this.props.isShownPath) {
-                        alert('This relation contains people that are not in the graph');
-                    }
                     this.diagram.clearHighlighteds();
-                    highlight.length = 0;
+                    showHighlight = false;
                     break;
                 }
                 node.isHighlighted = true;
@@ -740,18 +740,20 @@ export class DiagramWrapper extends React.Component {
                 });
             }
 
-            for (const key of highlight) {
-                const node = this.diagram.findNodeForKey(key);
-                node.findLinksConnected().each(function (l) {
-                    const otherNode = l.toNode.key === node.key ? l.fromNode : l.toNode;
-                    if (highlight.includes(otherNode.key)) {
-                        l.isHighlighted = true;
-                    }
-                    else if (labelledNodes[otherNode]) {
-                        l.isHighlighted = true;
-                        labelledNodes[otherNode].isHighlighted = true;
-                    }
-                });
+            if (showHighlight) {
+                for (const key of highlight) {
+                    const node = this.diagram.findNodeForKey(key);
+                    node.findLinksConnected().each(function (l) {
+                        const otherNode = l.toNode.key === node.key ? l.fromNode : l.toNode;
+                        if (highlight.includes(otherNode.key)) {
+                            l.isHighlighted = true;
+                        }
+                        else if (labelledNodes[otherNode]) {
+                            l.isHighlighted = true;
+                            labelledNodes[otherNode].isHighlighted = true;
+                        }
+                    });
+                }
             }
             this.diagram.commitTransaction('highlight');
         }
