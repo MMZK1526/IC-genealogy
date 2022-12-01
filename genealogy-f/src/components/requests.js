@@ -2,7 +2,7 @@ import {CustomTimer, wait} from "./utils";
 import _ from 'lodash';
 import WebSocketAsPromised from 'websocket-as-promised';
 
-const USE_HTTPS = true;
+const USE_SSL = true;
 
 const USE_SOCKETS = true;
 const USE_WEB_SOCKETS_AS_PROMISED = true;
@@ -12,8 +12,8 @@ const USE_DB = true;
 
 export class Requests {
     rawUrl = USE_LOCAL_BACKEND ? 'localhost:8080' : 'db-de-genealogie.herokuapp.com';
-    baseUrl = USE_HTTPS ? `https://${this.rawUrl}` : `http://${this.rawUrl}`;
-    wsUrl = `ws://${this.rawUrl}`;
+    baseUrl = USE_SSL ? `https://${this.rawUrl}` : `http://${this.rawUrl}`;
+    wsUrl = USE_SSL ? `wss://${this.rawUrl}` : `ws://${this.rawUrl}`;
 
     constructor() {
         if (USE_SOCKETS) {
