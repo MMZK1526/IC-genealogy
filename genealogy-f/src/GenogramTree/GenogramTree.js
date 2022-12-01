@@ -26,6 +26,8 @@ import { GroupModel } from '../groupModel.js';
 import { Navigate, useNavigate } from "react-router-dom";
 import { withSnackbar } from 'notistack';
 
+const ENABLE_PRE_FETCHING = true;
+
 function toFilterModel(filters) {
     const filterModel = new FilterModel(true);
     if (filters == null) {
@@ -42,9 +44,8 @@ function toFilterModel(filters) {
         filterModel.textFilters[key].all = new Set(filters.textFilters[key].all);
     }
     return filterModel;
-}
 
-const ENABLE_PRE_FETCHING = false;
+}
 
 // optional parameter passed to <ReactDiagram onModelChange = {handleModelChange}>
 // called whenever model is changed
@@ -637,7 +638,7 @@ class GenogramTree extends React.Component {
         }
 
         if (this.state.relationsJSON == null) {
-            this.fetchFromCacheOrBackend(this.source, 1);
+            this.fetchFromCacheOrBackend(this.source, 2);
 
             return (
                 <>
@@ -871,7 +872,7 @@ class GenogramTree extends React.Component {
         const extendPromise = this.extendInCache(id) ? Promise.resolve() : this.extendFromCache(id);
         this.extensionId = id;
         const [dbPromise, wikiDataPromise] = this.requests.relationsCacheAndWiki({
-            id: id, depth: depth, allSpouses: allSpouses,
+            id: id, depth: depth + 1, allSpouses: allSpouses,
             visitedItems: this.state.originalJSON ? Object.keys(this.state.originalJSON.items) : []
         });
         const dbRes = await dbPromise;
@@ -984,6 +985,7 @@ class GenogramTree extends React.Component {
     }
 
     neighborTree = (tree, id) => {
+        console.assert(!_.isEmpty(tree));
         const firstNeighbors = new Set(tree
             .relations[id]
             .map(x => x.item1Id)

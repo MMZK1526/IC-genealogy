@@ -3,10 +3,12 @@ import _ from 'lodash';
 import WebSocketAsPromised from 'websocket-as-promised';
 
 const USE_HTTPS = false;
+
 const USE_SOCKETS = true;
 const USE_WEB_SOCKETS_AS_PROMISED = true;
 const USE_LOCAL_BACKEND = true;
 
+const USE_DB = false;
 
 export class Requests {
     rawUrl = USE_LOCAL_BACKEND ? 'localhost:8080' : 'db-de-genealogie.herokuapp.com';
@@ -186,7 +188,9 @@ ${errorMessage.message}
     }
 
     relationsDb = async ({id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true} = {}) => {
-        return {targets: [], items: {}, relations: {}};
+        if (!USE_DB) {
+            return {targets: [], items: {}, relations: {}};
+        }
         const url = allSpouses
             ? `${this.baseUrl}/relations_db?id=${id}&depth=${depth}`
             : `${this.baseUrl}/relations_db?id=${id}&depth=${depth}&homo_strata=&hetero_strata=WD-P22,WD-P25,WD-P26,WD-P40`;
