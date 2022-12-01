@@ -105,6 +105,7 @@ class GenogramTree extends React.Component {
                 highlight: [],
                 isShownBetween: false,
                 isShownPath: true,
+                fooState: [0],
                 extendImpossible: new Set(),
             };
             this.componentRef = React.createRef();
@@ -845,10 +846,24 @@ class GenogramTree extends React.Component {
                     this.state.isShownBetween &&
                     <div className='popup'>
                         <RelSearchResult
-                            closePopUp={() => this.setState({ isShownBetween: false, isShownPath: true })}
+                            closePopUp={() => {
+                                if (this.state.fooState[0] === 2) {
+                                    console.log(this.state.highlight);
+                                    // this.setState({ isShownBetween: false, isShownPath: true, fooState: 0 });
+                                    return;
+                                }
+                                const notInGraph = this.state.highlight.filter((p) => !this.state.relationsJSON.items[p]);
+                                if (notInGraph.length != 0) {
+                                    this.state.fooState[0] = 1;
+                                    this.setState({ isShownBetween: true });
+                                } else {
+                                    this.setState({ isShownBetween: false, isShownPath: true });
+                                }
+                            }}
                             info={this.personMap.get(this.state.anotherPerson)}
                             highlight={this.state.highlight}
                             root={this.state.selectedPerson}
+                            fooState={this.state.fooState}
                         />
                     </div>
                 }
