@@ -5,10 +5,7 @@ import io.ktor.serialization.kotlinx.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import mmzk.genealogy.*
@@ -17,7 +14,7 @@ import java.time.Duration
 import java.util.*
 import kotlin.random.Random
 
-const val WRITE_TO_DB = false;
+const val WRITE_TO_DB = true;
 
 fun Application.configureSockets() {
     install(WebSockets) {
@@ -76,10 +73,12 @@ fun Application.configureSockets() {
                         sendSerialized(response)
                         tAll.end()
                         if (WRITE_TO_DB) {
-                            val tDb = CustomTimer("Database writing")
-                            Database.insertItems(result.items.values.toList())
-                            Database.insertRelations(result.relations.values.flatten())
-                            tDb.end()
+                            launch(Dispatchers.IO) {
+                                val tDb = CustomTimer("Database writing")
+                                Database.insertItems(result.items.values.toList())
+                                Database.insertRelations(result.relations.values.flatten())
+                                tDb.end()
+                            }
                         }
                     }
                 }
