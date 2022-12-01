@@ -17,6 +17,8 @@ import java.time.Duration
 import java.util.*
 import kotlin.random.Random
 
+const val WRITE_TO_DB = false;
+
 fun Application.configureSockets() {
     install(WebSockets) {
         pingPeriod = null
@@ -73,22 +75,12 @@ fun Application.configureSockets() {
                         )
                         sendSerialized(response)
                         tAll.end()
-                        val tDb = CustomTimer("Database writing")
-                        Database.insertItems(result.items.values.toList())
-                        Database.insertRelations(result.relations.values.flatten())
-                        tDb.end()
-//                        coroutineScope {
-//                            launch{
-//                                sendSerialized(response)
-//                            }.join()
-//                            tAll.end()
-//                            launch {
-//                                val tDb = CustomTimer("Database writing")
-//                                Database.insertItems(result.items.values.toList())
-//                                Database.insertRelations(result.relations.values.flatten())
-//                                tDb.end()
-//                            }
-//                        }
+                        if (WRITE_TO_DB) {
+                            val tDb = CustomTimer("Database writing")
+                            Database.insertItems(result.items.values.toList())
+                            Database.insertRelations(result.relations.values.flatten())
+                            tDb.end()
+                        }
                     }
                 }
             } catch (e: Exception) {
