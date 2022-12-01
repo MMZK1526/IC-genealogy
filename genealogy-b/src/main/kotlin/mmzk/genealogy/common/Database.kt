@@ -33,6 +33,7 @@ object Database {
         config.maximumPoolSize = 3
         config.isAutoCommit = false
         config.transactionIsolation = "TRANSACTION_REPEATABLE_READ"
+        config.addDataSourceProperty("reWriteBatchedInserts", true)
         config.validate()
         return HikariDataSource(config)
     }
@@ -59,50 +60,48 @@ object Database {
     }
 
     fun insertItems(items: List<ItemDTO>) = transaction {
-        for (item in items) {
-            ItemTable.insertIgnore {
-                it[id] = EntityID(item.id, ItemTable)
-                it[name] = item.name
-                it[description] = item.description
-                it[aliases] = item.aliases
-            }
+        ItemTable.batchInsert(items, ignore = true) { item ->
+            this[ItemTable.id] = EntityID(item.id, ItemTable)
+            this[ItemTable.name] = item.name
+            this[ItemTable.description] = item.description
+            this[ItemTable.aliases] = item.aliases
+        }
 
-            for (property in item.additionalProperties) {
-                AdditionalPropertyTable.insertIgnore {
-                    it[itemId] = item.id
-                    it[propertyId] = property.propertyId
-                    it[value] = property.value
-                    it[valueHash] = property.valueHash
-                }
-                for (qualifier in property.qualifiers) {
-                    QualifierTable.insertIgnore {
-                        it[itemId] = item.id
-                        it[qualifierType] = qualifier.typeId
-                        it[value] = qualifier.value
-                        it[valueHash] = property.valueHash
-                        it[propertyId] = property.propertyId
-                    }
-                }
-            }
+        val props = items.flatMap { item ->
+            item.additionalProperties.map { item.id to it }
+        }
+        AdditionalPropertyTable.batchInsert(props, ignore = true) { (id, property) ->
+            this[AdditionalPropertyTable.itemId] = id
+            this[AdditionalPropertyTable.propertyId] = property.propertyId
+            this[AdditionalPropertyTable.value] = property.value
+            this[AdditionalPropertyTable.valueHash] = property.valueHash
+        }
+
+        val qualifiers = props.flatMap { (id, prop) ->
+            prop.qualifiers.map { Triple(id, prop, it) }
+        }
+
+        QualifierTable.batchInsert(qualifiers, ignore = true) { (id, property, qualifier) ->
+            this[QualifierTable.itemId] = id
+            this[QualifierTable.qualifierType] = qualifier.typeId
+            this[QualifierTable.value] = qualifier.value
+            this[QualifierTable.valueHash] = property.valueHash
+            this[QualifierTable.propertyId] = property.propertyId
         }
     }
 
     fun insertRelations(relations: List<RelationshipDTO>) = transaction {
-        for (relation in relations) {
-            RelationshipTable.insertIgnore {
-                it[item1] = EntityID(relation.item1Id, ItemTable)
-                it[item2] = EntityID(relation.item2Id, ItemTable)
-                it[type] = EntityID(relation.typeId, PropertyTypeTable)
-            }
+        RelationshipTable.batchInsert(relations, ignore = true) { relation ->
+            this[RelationshipTable.item1] = EntityID(relation.item1Id, ItemTable)
+            this[RelationshipTable.item2] = EntityID(relation.item2Id, ItemTable)
+            this[RelationshipTable.type] = EntityID(relation.typeId, PropertyTypeTable)
         }
     }
 
     fun insertProperties(propertyMap: Map<String, String>) = transaction {
-        for (propertyEntry in propertyMap) {
-            PropertyTypeTable.insertIgnore {
-                it[id] = EntityID(propertyEntry.key, PropertyTypeTable)
-                it[name] = propertyEntry.value
-            }
+        PropertyTypeTable.batchInsert(propertyMap.entries, ignore = true) { propertyEntry ->
+            this[PropertyTypeTable.id] = EntityID(propertyEntry.key, PropertyTypeTable)
+            this[PropertyTypeTable.name] = propertyEntry.value
         }
     }
 

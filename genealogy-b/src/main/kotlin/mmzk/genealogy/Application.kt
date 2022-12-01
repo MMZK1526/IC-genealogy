@@ -5,6 +5,7 @@ import mmzk.genealogy.plugins.configureRouting
 import io.ktor.server.application.*
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import mmzk.genealogy.plugins.configureHTTP
+import mmzk.genealogy.plugins.configureSockets
 
 fun main(args: Array<String>): Unit =
     io.ktor.server.netty.EngineMain.main(args)
@@ -13,6 +14,7 @@ fun main(args: Array<String>): Unit =
 fun Application.module() {
     configureHTTP()
     configureRouting()
+    configureSockets()
     install(ContentNegotiation) {
         json()
     }

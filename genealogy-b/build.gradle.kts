@@ -24,6 +24,7 @@ tasks {
 
 repositories {
     mavenCentral()
+    maven { url = uri("https://maven.pkg.jetbrains.space/public/p/ktor/eap") }
 }
 
 dependencies {
@@ -42,6 +43,15 @@ dependencies {
     implementation("org.eclipse.rdf4j:rdf4j-queryresultio-sparqljson:4.2.0")
     implementation("org.eclipse.rdf4j:rdf4j-repository-sparql:4.2.0")
 
+    implementation("io.ktor:ktor-server-core:$ktor_version")
+    implementation("io.ktor:ktor-server-netty:$ktor_version")
+    implementation("io.ktor:ktor-server-websockets:$ktor_version")
+    implementation("ch.qos.logback:logback-classic:$logback_version")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
+
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
+
+    testImplementation("io.ktor:ktor-server-test-host:$ktor_version")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 }

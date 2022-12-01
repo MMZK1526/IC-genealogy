@@ -903,7 +903,7 @@ class GenogramTree extends React.Component {
         const extendPromise = this.extendInCache(id) ? this.extendFromCache(id) : Promise.resolve();
         this.extensionId = id;
         const [dbPromise, wikiDataPromise] = this.requests.relationsCacheAndWiki({
-            id: id, depth: depth, allSpouses: allSpouses,
+            id: id, depth: depth + 1, allSpouses: allSpouses,
             visitedItems: this.state.originalJSON ? Object.keys(this.state.originalJSON.items) : []
         });
         const dbRes = await dbPromise;
