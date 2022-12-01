@@ -1,18 +1,21 @@
-import {wait} from "./utils";
+import {CustomTimer, wait} from "./utils";
 import _ from 'lodash';
-import WebSocketAsPromised from 'websocket-as-promised';
+// import WebSocketAsPromised from 'websocket-as-promised';
 
 const USE_HTTPS = false;
 
 export class Requests {
-    constructor() {
-        this.socket = null;
-    }
-
     // rawUrl = 'db-de-genealogie.herokuapp.com'
     rawUrl = 'localhost:8080';
     baseUrl = USE_HTTPS ? `https://${this.rawUrl}` : `http://${this.rawUrl}`;
     wsUrl = `ws://${this.rawUrl}`;
+
+    constructor() {
+        this.socket = null;
+        this.t = null;
+        const url = `${this.wsUrl}/relations_wk`;
+        this.connectToSocket(url);
+    }
 
     search = (name = 'silvia') => {
         const url = `${this.baseUrl}/search?q=${name}`;
@@ -42,10 +45,72 @@ export class Requests {
 
     relations = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true } = {}) => {
         // return this.relationsOld({id, depth, visitedItems, allSpouses});
+        // if (this.socket === null) {
+        //     const tOpen = new CustomTimer("Opening socket");
+        //     tOpen.end();
+        // }
+        const request = {
+            requestId: 42,
+            id,
+            depth,
+            homoStrata: null,
+            heteroStrata: allSpouses ? 'WD-P22,WD-P25,WD-P26,WD-P40' : null,
+            visitedItems,
+            ping: null,
+        };
+        this.t = new CustomTimer("All");
+        this.socket.send(JSON.stringify(request));
+        return {};
+    }
+
+    connectToSocket = (url) => {
+        this.socket = new WebSocket(url);
+
+        this.socket.onconnect = async (event) => {
+            await this.relations();
+        };
+
+        this.socket.onmessage = (event) => {
+            const textData = event.data;
+            console.log('Received websocket response');
+            console.log(JSON.stringify(textData).substring(0, 100));
+            this.t.end();
+        };
+
+        this.socket.onclose = (event) => {
+            if (event.wasClean) {
+                console.log(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
+            } else {
+                console.log('[close] Connection died');
+            }
+        };
+
+        this.socket.onerror = (error) => {
+            throw new Error(error);
+        };
+    }
+
+    relationsOld = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true } = {}) => {
+        const url = allSpouses
+            ? `${this.baseUrl}/relations_wk_old?id=${id}&depth=${depth}`
+            : `${this.baseUrl}/relations_wk_old?id=${id}&depth=${depth}&homo_strata=&hetero_strata=WD-P22,WD-P25,WD-P26,WD-P40`;
+        return await this.genericPost(url, visitedItems, id, depth).then(x => {
+            console.log('Wiki data used to fetch data');
+            return x;
+        });
+    }
+
+    relationsAsPromised = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true } = {}) => {
+        // return this.relationsOld({id, depth, visitedItems, allSpouses});
+        const t = new CustomTimer("All");
         const url = `${this.wsUrl}/relations_wk`;
         if (this.socket === null) {
-            await this.connectToSocket(url);
+            const tOpen = new CustomTimer("Opening socket");
+            await this.connectToSocketAsPromised(url);
+            tOpen.end();
+            const tPing = new CustomTimer("Pinging");
             this.keepSocketOpen();
+            tPing.end();
         }
         const request = {
             id,
@@ -55,22 +120,21 @@ export class Requests {
             visitedItems,
             ping: null,
         };
-        const t1 = Date.now();
+        const tBackend = new CustomTimer("Backend");
         const response = await this.socket.sendRequest(request, {
             requestId: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
         });
-        const t2 = Date.now();
-        const delta = (t2 - t1) / 1_000;
-        console.log(`New: ${delta} seconds elapsed`);
+        tBackend.end();
         console.log('Received websocket response');
         const errorMessage = response.errorMessage;
         if (errorMessage) {
-            throw Error(```
+            throw new Error(```
 Error: ${errorMessage.statusCode}
 ${errorMessage.message}
             ```.trim());
         }
         // console.log(JSON.stringify(response));
+        t.end();
         return response.response;
     }
 
@@ -92,14 +156,17 @@ ${errorMessage.message}
         }
     }
 
-    connectToSocket = (url) => {
+    connectToSocketAsPromised = (url) => {
         this.socket = new WebSocketAsPromised(url, {
             packMessage: data => JSON.stringify(data),
             unpackMessage: data => JSON.parse(data),
             attachRequestId: (data, requestId) => Object.assign({requestId}, data), // attach requestId to message as `id` field
             extractRequestId: data => data && data.requestId,                                  // read requestId from message `id` field
         });
-        this.socket.onClose.addListener(event => console.log(`Connections closed: ${event.reason}`));
+        this.socket.onClose.addListener(event => {
+            console.log(`Connections closed: ${event.reason}.`);
+            // this.socket.open();
+        });
         return this.socket.open().then(() => console.log('Connection opened'));
     }
 
@@ -107,12 +174,8 @@ ${errorMessage.message}
         const url = allSpouses
             ? `${this.baseUrl}/relations_wk_old?id=${id}&depth=${depth}`
             : `${this.baseUrl}/relations_wk_old?id=${id}&depth=${depth}&homo_strata=&hetero_strata=WD-P22,WD-P25,WD-P26,WD-P40`;
-        const t1 = Date.now();
         return await this.genericPost(url, visitedItems, id, depth).then(x => {
             console.log('Wiki data used to fetch data');
-            const t2 = Date.now();
-            const delta = (t2 - t1) / 1_000;
-            console.log(`Old: ${delta} seconds elapsed`);
             return x;
         });
     }

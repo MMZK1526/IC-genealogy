@@ -10,6 +10,7 @@ import io.ktor.websocket.*
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import mmzk.genealogy.Connection
+import mmzk.genealogy.CustomTimer
 import mmzk.genealogy.common.Database
 import mmzk.genealogy.WikiDataDataSource
 import mmzk.genealogy.common.RelationCalculatorRequest
@@ -20,7 +21,7 @@ fun Application.configureRouting() {
     Database.init()
     routing {
         get("/search") {
-            println(call.request.queryParameters["q"])
+            // println(call.request.queryParameters["q"])
             call.request.queryParameters["q"]?.let { name ->
                 val searchedItems = WikiDataDataSource().searchIndividualByName(name) // Search in WikiData
                 Database.insertItems(searchedItems) // Put new results in database (pre-existing ones are ignored)
@@ -33,6 +34,7 @@ fun Application.configureRouting() {
         }
 
         post("/relations_wk_old") {
+            val t = CustomTimer("All")
             val depth = call.request.queryParameters["depth"]?.toIntOrNull() ?: 0
             val visitedItems = call.receive<List<String>>()
             call.request.queryParameters["id"]?.let { id ->
@@ -40,8 +42,11 @@ fun Application.configureRouting() {
                     call.request.queryParameters["homo_strata"]?.split(",") ?: listOf("WD-P26")
                 val heteroStrata =
                     call.request.queryParameters["hetero_strata"]?.split(",") ?: listOf("WD-P22", "WD-P25", "WD-P40")
+                val tWiki = CustomTimer("Wiki fetch")
                 val result = WikiDataDataSource(homoStrata, heteroStrata).findRelatedPeople(id, visitedItems, depth)
+                tWiki.end()
                 call.respond(result)
+                t.end()
                 Database.insertItems(result.items.values.toList())
                 Database.insertRelations(result.relations.values.flatten())
             } ?: call.respond(

@@ -232,7 +232,7 @@ class WikiDataDataSource(
         val results = try {
             repo.connection.prepareTupleQuery(querySelect).evaluate()
         } catch (exception: Exception) {
-            exception.printStackTrace()
+            // exception.printStackTrace()
             null
         }
 
@@ -258,7 +258,7 @@ class WikiDataDataSource(
         val results = try {
             repo.connection.prepareTupleQuery(queryStr).evaluate()
         } catch (exception: Exception) {
-            exception.printStackTrace()
+            // exception.printStackTrace()
             null
         }
 
@@ -317,7 +317,7 @@ class WikiDataDataSource(
             val results = try {
                 repo.connection.prepareTupleQuery(querySelect).evaluate()
             } catch (exception: Exception) {
-                exception.printStackTrace()
+                // exception.printStackTrace()
                 null
             }
 
@@ -355,7 +355,7 @@ class WikiDataDataSource(
             val results = try {
                 repo.connection.prepareTupleQuery(querySelect).evaluate()
             } catch (exception: Exception) {
-                exception.printStackTrace()
+                // exception.printStackTrace()
                 null
             }
             val answer =

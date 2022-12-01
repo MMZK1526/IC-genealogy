@@ -89,6 +89,19 @@ export class Utils {
     }
 }
 
+export class CustomTimer {
+    constructor(name) {
+        this.name = name;
+        this.t1 = Date.now();
+    }
+
+    end = () => {
+        const t2 = Date.now();
+        const delta = (t2 - this.t1) / 1_000;
+        console.log(`${this.name} took ${delta}s`);
+    }
+}
+
 export function setStatePromise(thisRef) {
     return util.promisify(thisRef.setState);
 }
