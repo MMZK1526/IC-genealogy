@@ -37,6 +37,7 @@ function toFilterModel(filters) {
     filterModel.fromYear = filters.fromYear;
     filterModel.toYear = filters.toYear;
     filterModel.hiddenPeople = new Set(filters.hiddenPeople);
+    filterModel.alwaysShownPeople = new Set(filters.alwaysShownPeople);
     for (const key of Object.keys(filters.textFilters)) {
         filterModel.textFilters[key] = {};
         filterModel.textFilters[key].choice = new Set(filters.textFilters[key].choice);
@@ -433,7 +434,10 @@ class GenogramTree extends React.Component {
                             var newElems = this.state.originalJSON.relations[cur]
                                 .filter((r) => r.type !== 'spouse' && (!visited[r.item1Id] || visited[r.item1Id].opacity !== Opacity.normal));
                             var newDescendants = newElems.filter((r) => r.type === 'child').map((r) => r.item1Id);
-                            newDescendants.forEach((id) => visited[id] = { opacity: Opacity.normal });
+                            newDescendants.forEach((id) => {
+                                visited[id] = { opacity: Opacity.normal };
+                                visited[id].originalOpacity = visited[id].opacity;
+                            });
                             newElems.filter((r) => !visited[r.item1Id]).map((r) => r.item1Id).forEach((id) => {
                                 visited[id] = { opacity: Opacity.outlier };
                             });
@@ -442,7 +446,10 @@ class GenogramTree extends React.Component {
                     }
                 }
             } else {
-                Object.keys(this.state.originalJSON.items).forEach((id) => visited[id] = { opacity: Opacity.normal });
+                Object.keys(this.state.originalJSON.items).forEach((id) => {
+                    visited[id] = { opacity: Opacity.normal };
+                    visited[id].originalOpacity = visited[id].opacity;
+                });
             }
 
             // filter on text-based filters
@@ -524,8 +531,17 @@ class GenogramTree extends React.Component {
             if (filters.removeHiddenPeople) {
                 this.state.filters.hiddenPeople.forEach((k) => delete visited[k]);
             } else {
-                this.state.filters.hiddenPeople.forEach((k) => visited[k] = { opacity: Opacity.hidden, originalOpacity: visited[k].opacity });
+                this.state.filters.hiddenPeople.forEach((k) => {
+                    visited[k] = { opacity: Opacity.hidden };
+                    visited[k].originalOpacity = visited[k].opacity;
+                });
             }
+
+            // Add always shown people
+            this.state.filters.alwaysShownPeople.forEach((k) => {
+                visited[k] = { opacity: Opacity.normal };
+                visited[k].originalOpacity = visited[k].opacity;
+            })
 
             var filteredJSON = { targets: this.state.originalJSON.targets, items: {}, relations: {} };
             Object.keys(visited).forEach((v) => {
@@ -708,6 +724,7 @@ class GenogramTree extends React.Component {
                         <Col xs='4'>
                             {this.state.showFilters &&
                                 <TreeFilter
+                                    allPeople={Object.values(this.state.originalJSON.items)}
                                     filters={this.state.filters}
                                     yearFromChange={e => {
                                         this.setState({
@@ -762,19 +779,19 @@ class GenogramTree extends React.Component {
                                 <TreeGroups
                                     groupModel={this.groupModel}
                                     personMap={this.personMap}
-                                    changeGroupSelection = {(groupId) => {
+                                    changeGroupSelection={(groupId) => {
                                         this.groupModel.setCurrentGroupId(groupId);
-                                        this.setState({showGroups: true});
+                                        this.setState({ showGroups: true });
                                     }}
                                     addNewGroup={() => {
                                         this.groupModel.addNewGroup();
-                                        this.setState({showGroups: true});
+                                        this.setState({ showGroups: true });
                                     }}
-                                    externUpdate={() => {this.setState({showGroups: true})}}
+                                    externUpdate={() => { this.setState({ showGroups: true }) }}
                                     renameGroup={(name) => {
                                         console.log(name);
                                         this.groupModel.renameCurrGroup(name);
-                                        this.setState({showGroups: true});
+                                        this.setState({ showGroups: true });
                                     }}
                                 />
                             }
@@ -803,14 +820,26 @@ class GenogramTree extends React.Component {
                                 this.state.root = this.state.selectedPerson;
                                 await this.fetchKinships(this.state.root, this.state.originalJSON);
                             }}
+                            isShown={this.state.filters.alwaysShownPeople.has(this.state.selectedPerson)}
                             isHidden={this.state.filters.hiddenPeople.has(this.state.selectedPerson)}
                             onFilterModeChanged={newFilterMode => {
                                 let hidden = this.state.filters.hiddenPeople;
-                                if (hidden.has(this.state.selectedPerson) && newFilterMode != 1) {
-                                    hidden.delete(this.state.selectedPerson);
-                                } else if (!hidden.has(this.state.selectedPerson) && newFilterMode != 0) {
-                                    hidden.add(this.state.selectedPerson);
+                                let shown = this.state.filters.alwaysShownPeople;
+                                switch (newFilterMode) {
+                                    case 0:
+                                        hidden.delete(this.state.selectedPerson);
+                                        shown.delete(this.state.selectedPerson);
+                                        break;
+                                    case 1:
+                                        hidden.add(this.state.selectedPerson);
+                                        shown.delete(this.state.selectedPerson);
+                                        break;
+                                    case 2:
+                                        hidden.delete(this.state.selectedPerson);
+                                        shown.add(this.state.selectedPerson);
+                                        break;
                                 }
+
                                 this.setState({ recommit: true });
                             }}
                             onExtend={this.handlePopupExtend}
@@ -881,6 +910,7 @@ class GenogramTree extends React.Component {
                         onModelChange={this.handleModelChange}
                         onDiagramEvent={this.handleDiagramEvent}
                         hiddenPeople={this.state.filters.hiddenPeople}
+                        alwaysShownPeople={this.state.filters.alwaysShownPeople}
                         ref={this.componentRef}
                         root={this.state.root}
                         getFocusPerson={this.getFocusPerson}

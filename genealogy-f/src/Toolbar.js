@@ -30,6 +30,7 @@ function Toolbar(props) {
                   'filters': props.genogramTree.state.filters,
                 };
                 result.filters.hiddenPeople = Array.from(result.filters.hiddenPeople);
+                result.filters.alwaysShownPeople = Array.from(result.filters.alwaysShownPeople);
                 for (const key of Object.keys(result.filters.textFilters)) {
                   result.filters.textFilters[key].choice = Array.from(result.filters.textFilters[key].choice);
                   result.filters.textFilters[key].all = Array.from(result.filters.textFilters[key].all);

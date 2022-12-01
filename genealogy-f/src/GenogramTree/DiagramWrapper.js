@@ -15,6 +15,7 @@ export class DiagramWrapper extends React.Component {
         this.nodeDataArray = props.nodeDataArray;
         this.root = props.root;
         this.hiddenPeople = props.hiddenPeople;
+        this.alwaysShownPeople = props.alwaysShownPeople;
         this.getFocusPerson = props.getFocusPerson;
         this.personMap = props.personMap;
         this.localZoomSwitch = props.defaultZoomSwitch;

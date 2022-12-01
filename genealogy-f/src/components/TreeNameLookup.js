@@ -1,6 +1,5 @@
 import './stylesheets/Sidebar.css';
 import { Autocomplete, TextField } from '@mui/material';
-import { Row } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 import EscapeCloseableEnterClickable from "./EscapeCloseableEnterClickable";
 

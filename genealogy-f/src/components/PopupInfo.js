@@ -40,9 +40,7 @@ class PopupInfo extends React.Component {
 		this.props.closePopUp();
 	};
 
-	onFilterModeChanged = (_) => {
-		this.props.onFilterModeChanged();
-	}
+	onFilterModeChanged = this.props.onFilterModeChanged;
 
 	onGroupButtonClick = (_) => {	/* NOTE: temporarily unused, due to complexity of multi-group */
 		if (this.groupModel.checkPersonInCurrGroup(this.props.id)) {
@@ -85,7 +83,7 @@ class PopupInfo extends React.Component {
 							</Col>
 							<Col>
 								<ToggleButtonGroup type="radio" name="filter-options"
-									defaultValue={this.props.isHidden ? 1 : 0} onChange={(e) => {
+									defaultValue={this.props.isHidden ? 1 : this.props.isShown ? 2 : 0} onChange={(e) => {
 										this.onFilterModeChanged(e);
 									}}>
 									<ToggleButton
