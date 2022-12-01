@@ -66,22 +66,27 @@ object Database {
             this[ItemTable.description] = item.description
             this[ItemTable.aliases] = item.aliases
         }
-        for (item in items) {
-            AdditionalPropertyTable.batchInsert(item.additionalProperties, ignore = true) { property ->
-                this[AdditionalPropertyTable.itemId] = item.id
-                this[AdditionalPropertyTable.propertyId] = property.propertyId
-                this[AdditionalPropertyTable.value] = property.value
-                this[AdditionalPropertyTable.valueHash] = property.valueHash
-            }
-            for (property in item.additionalProperties) {
-                QualifierTable.batchInsert(property.qualifiers, ignore = true) { qualifier ->
-                    this[QualifierTable.itemId] = item.id
-                    this[QualifierTable.qualifierType] = qualifier.typeId
-                    this[QualifierTable.value] = qualifier.value
-                    this[QualifierTable.valueHash] = property.valueHash
-                    this[QualifierTable.propertyId] = property.propertyId
-                }
-            }
+
+        val props = items.flatMap { item ->
+            item.additionalProperties.map { item.id to it }
+        }
+        AdditionalPropertyTable.batchInsert(props, ignore = true) { (id, property) ->
+            this[AdditionalPropertyTable.itemId] = id
+            this[AdditionalPropertyTable.propertyId] = property.propertyId
+            this[AdditionalPropertyTable.value] = property.value
+            this[AdditionalPropertyTable.valueHash] = property.valueHash
+        }
+
+        val qualifiers = props.flatMap { (id, prop) ->
+            prop.qualifiers.map { Triple(id, prop, it) }
+        }
+
+        QualifierTable.batchInsert(qualifiers, ignore = true) { (id, property, qualifier) ->
+            this[QualifierTable.itemId] = id
+            this[QualifierTable.qualifierType] = qualifier.typeId
+            this[QualifierTable.value] = qualifier.value
+            this[QualifierTable.valueHash] = property.valueHash
+            this[QualifierTable.propertyId] = property.propertyId
         }
     }
 
