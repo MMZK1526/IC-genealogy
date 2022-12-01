@@ -2,8 +2,8 @@ import { wait } from "./utils";
 import _ from 'lodash';
 
 export class Requests {
-    baseUrl = 'https://db-de-genealogie.herokuapp.com';
-    // baseUrl = 'http://0.0.0.0:8080';
+    // baseUrl = 'https://db-de-genealogie.herokuapp.com';
+    baseUrl = 'http://localhost:8080';
 
     search = async (name = 'silvia') => {
         const url = `${this.baseUrl}/search?q=${name}`;

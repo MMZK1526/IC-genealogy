@@ -25,6 +25,8 @@ import { TreeRelations } from '../components/TreeRelations.js';
 import { GroupModel } from '../groupModel.js';
 import { withSnackbar } from 'notistack';
 
+const ENABLE_PRE_FETCHING = true;
+
 function toFilterModel(filters) {
     const filterModel = new FilterModel(true);
     if (filters == null) {
@@ -41,9 +43,8 @@ function toFilterModel(filters) {
         filterModel.textFilters[key].all = new Set(filters.textFilters[key].all);
     }
     return filterModel;
-}
 
-const ENABLE_PRE_FETCHING = false;
+}
 
 // optional parameter passed to <ReactDiagram onModelChange = {handleModelChange}>
 // called whenever model is changed
@@ -181,18 +182,18 @@ class GenogramTree extends React.Component {
     integrateKinshipIntoRelationJSON(kinshipJSON, relationsJSON) {
         for (const key of Object.keys(kinshipJSON)) {
             const item = relationsJSON.items[key];
+            if (!item) {
+                continue;
+            }
             if (item.kinships === undefined) {
                 item.kinships = [];
                 item.kinshipKeys = new Set();
             }
+
             const kinshipStrs = kinshipJSON[key].map((arr) => {
                 arr.relation.reverse();
                 return arr.relation.join(' of the ');
             });
-
-            if (!relationsJSON.items[key]) {
-                continue;
-            }
             kinshipStrs.forEach((str, ix) => {
                 const path = kinshipJSON[key][ix].path;
                 const pathKey = path.join('');
@@ -899,7 +900,7 @@ class GenogramTree extends React.Component {
         if (!ENABLE_PRE_FETCHING) {
             return;
         }
-        const extendPromise = this.extendInCache(id) ? Promise.resolve() : this.extendFromCache(id);
+        const extendPromise = this.extendInCache(id) ? this.extendFromCache(id) : Promise.resolve();
         this.extensionId = id;
         const [dbPromise, wikiDataPromise] = this.requests.relationsCacheAndWiki({
             id: id, depth: depth, allSpouses: allSpouses,
@@ -1015,6 +1016,7 @@ class GenogramTree extends React.Component {
     }
 
     neighborTree = (tree, id) => {
+        console.assert(!_.isEmpty(tree));
         const firstNeighbors = new Set(tree
             .relations[id]
             .map(x => x.item1Id)
