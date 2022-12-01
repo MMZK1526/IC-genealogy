@@ -1,29 +1,36 @@
 import {CustomTimer, wait} from "./utils";
 import _ from 'lodash';
-// import WebSocketAsPromised from 'websocket-as-promised';
+import WebSocketAsPromised from 'websocket-as-promised';
 
 const USE_HTTPS = false;
+const USE_SOCKETS = true;
+const USE_WEB_SOCKETS_AS_PROMISED = true;
+const USE_LOCAL_BACKEND = true;
+
 
 export class Requests {
-    // rawUrl = 'db-de-genealogie.herokuapp.com'
-    rawUrl = 'localhost:8080';
+    rawUrl = USE_LOCAL_BACKEND ? 'localhost:8080' : 'db-de-genealogie.herokuapp.com';
     baseUrl = USE_HTTPS ? `https://${this.rawUrl}` : `http://${this.rawUrl}`;
     wsUrl = `ws://${this.rawUrl}`;
 
     constructor() {
-        this.socket = null;
-        this.t = null;
-        const url = `${this.wsUrl}/relations_wk`;
-        this.connectToSocket(url);
+        if (USE_SOCKETS) {
+            this.socket = null;
+            const ws_url = `${this.wsUrl}/relations_wk_ws`;
+            if (!USE_WEB_SOCKETS_AS_PROMISED) {
+                this.connectToVanillaWebSocket(ws_url);
+                this.t = null;
+            }
+        }
     }
 
     search = (name = 'silvia') => {
         const url = `${this.baseUrl}/search?q=${name}`;
-        return this.genericRequest({ requestOrUrl: url });
+        return this.genericRequest({requestOrUrl: url});
     }
 
-    relationsCacheAndWiki = ({ id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true } = {}) => {
-        const params = { id: id, depth: depth, visitedItems: visitedItems, allSpouses: allSpouses };
+    relationsCacheAndWiki = ({id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true} = {}) => {
+        const params = {id: id, depth: depth, visitedItems: visitedItems, allSpouses: allSpouses};
         return [
             this.relationsDb(params),
             this.relations(params),
@@ -31,8 +38,8 @@ export class Requests {
     }
 
     // { targets: [], items: {}, relations: {} }
-    relationsCacheOrWiki = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [] } = {}) => {
-        const params = { id: id, depth: depth, visitedItems: visitedItems };
+    relationsCacheOrWiki = async ({id = 'WD-Q152308', depth = 2, visitedItems = []} = {}) => {
+        const params = {id: id, depth: depth, visitedItems: visitedItems};
         const dbRes = await this.relationsDb(params);
         if (!this.dbResEmpty(dbRes)) {
             // console.log('Database used to fetch data');
@@ -43,12 +50,18 @@ export class Requests {
         return wikiDataRes;
     }
 
-    relations = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true } = {}) => {
-        // return this.relationsOld({id, depth, visitedItems, allSpouses});
-        // if (this.socket === null) {
-        //     const tOpen = new CustomTimer("Opening socket");
-        //     tOpen.end();
-        // }
+    relations = ({id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true} = {}) => {
+        let params = {id, depth, visitedItems, allSpouses};
+        if (!USE_SOCKETS) {
+            return this.relationsHttp(params)
+        }
+        if (USE_WEB_SOCKETS_AS_PROMISED) {
+            return this.relationsWebSocketAsPromised(params);
+        }
+        return this.relationsVanillaWebSocket(params);
+    }
+
+    relationsVanillaWebSocket = async ({id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true} = {}) => {
         const request = {
             requestId: 42,
             id,
@@ -63,7 +76,48 @@ export class Requests {
         return {};
     }
 
-    connectToSocket = (url) => {
+    relationsWebSocketAsPromised = async ({
+                                              id = 'WD-Q152308',
+                                              depth = 2,
+                                              visitedItems = [],
+                                              allSpouses = true
+                                          } = {}) => {
+        const t = new CustomTimer("All");
+        const url = `${this.wsUrl}/relations_wk_ws`;
+        if (this.socket === null) {
+            const tOpen = new CustomTimer("Opening socket");
+            await this.connectToSocketAsPromised(url);
+            tOpen.end();
+            const tPing = new CustomTimer("Pinging");
+            this.keepSocketAsPromisedOpen();
+            tPing.end();
+        }
+        const request = {
+            id,
+            depth,
+            homoStrata: null,
+            heteroStrata: allSpouses ? 'WD-P22,WD-P25,WD-P26,WD-P40' : null,
+            visitedItems,
+            ping: null,
+        };
+        const tBackend = new CustomTimer("Backend");
+        const response = await this.socket.sendRequest(request, {
+            requestId: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
+        });
+        tBackend.end();
+        console.log('Received websocket response');
+        const errorMessage = response.errorMessage;
+        if (errorMessage) {
+            throw new Error(```
+Error: ${errorMessage.statusCode}
+${errorMessage.message}
+            ```.trim());
+        }
+        t.end();
+        return response.response;
+    }
+
+    connectToVanillaWebSocket = (url) => {
         this.socket = new WebSocket(url);
 
         this.socket.onconnect = async (event) => {
@@ -90,55 +144,17 @@ export class Requests {
         };
     }
 
-    relationsOld = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true } = {}) => {
+    relationsHttp = async ({id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true} = {}) => {
         const url = allSpouses
-            ? `${this.baseUrl}/relations_wk_old?id=${id}&depth=${depth}`
-            : `${this.baseUrl}/relations_wk_old?id=${id}&depth=${depth}&homo_strata=&hetero_strata=WD-P22,WD-P25,WD-P26,WD-P40`;
+            ? `${this.baseUrl}/relations_wk?id=${id}&depth=${depth}`
+            : `${this.baseUrl}/relations_wk?id=${id}&depth=${depth}&homo_strata=&hetero_strata=WD-P22,WD-P25,WD-P26,WD-P40`;
         return await this.genericPost(url, visitedItems, id, depth).then(x => {
             console.log('Wiki data used to fetch data');
             return x;
         });
     }
 
-    relationsAsPromised = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true } = {}) => {
-        // return this.relationsOld({id, depth, visitedItems, allSpouses});
-        const t = new CustomTimer("All");
-        const url = `${this.wsUrl}/relations_wk`;
-        if (this.socket === null) {
-            const tOpen = new CustomTimer("Opening socket");
-            await this.connectToSocketAsPromised(url);
-            tOpen.end();
-            const tPing = new CustomTimer("Pinging");
-            this.keepSocketOpen();
-            tPing.end();
-        }
-        const request = {
-            id,
-            depth,
-            homoStrata: null,
-            heteroStrata: allSpouses ? 'WD-P22,WD-P25,WD-P26,WD-P40' : null,
-            visitedItems,
-            ping: null,
-        };
-        const tBackend = new CustomTimer("Backend");
-        const response = await this.socket.sendRequest(request, {
-            requestId: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
-        });
-        tBackend.end();
-        console.log('Received websocket response');
-        const errorMessage = response.errorMessage;
-        if (errorMessage) {
-            throw new Error(```
-Error: ${errorMessage.statusCode}
-${errorMessage.message}
-            ```.trim());
-        }
-        // console.log(JSON.stringify(response));
-        t.end();
-        return response.response;
-    }
-
-    keepSocketOpen = async () => {
+    keepSocketAsPromisedOpen = async () => {
         while (true) {
             const request = {
                 id: 'foo',
@@ -165,22 +181,11 @@ ${errorMessage.message}
         });
         this.socket.onClose.addListener(event => {
             console.log(`Connections closed: ${event.reason}.`);
-            // this.socket.open();
         });
         return this.socket.open().then(() => console.log('Connection opened'));
     }
 
-    relationsOld = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true } = {}) => {
-        const url = allSpouses
-            ? `${this.baseUrl}/relations_wk_old?id=${id}&depth=${depth}`
-            : `${this.baseUrl}/relations_wk_old?id=${id}&depth=${depth}&homo_strata=&hetero_strata=WD-P22,WD-P25,WD-P26,WD-P40`;
-        return await this.genericPost(url, visitedItems, id, depth).then(x => {
-            console.log('Wiki data used to fetch data');
-            return x;
-        });
-    }
-
-    relationsDb = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true } = {}) => {
+    relationsDb = async ({id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true} = {}) => {
         return {targets: [], items: {}, relations: {}};
         const url = allSpouses
             ? `${this.baseUrl}/relations_db?id=${id}&depth=${depth}`
@@ -191,7 +196,7 @@ ${errorMessage.message}
         });
     }
 
-    relationCalc = ({ start, relations }) => {
+    relationCalc = ({start, relations}) => {
         const url = `${this.baseUrl}/relation_calc`;
         const body = {
             start: start,
@@ -211,10 +216,10 @@ ${errorMessage.message}
                 body: JSON.stringify(body),
             }
         );
-        return this.genericRequest({ requestOrUrl: request, id, depth });
+        return this.genericRequest({requestOrUrl: request, id, depth});
     }
 
-    genericRequest = async ({ requestOrUrl, id = null, depth = null, retryNum = 3, totalRetry = 3 } = {}) => {
+    genericRequest = async ({requestOrUrl, id = null, depth = null, retryNum = 3, totalRetry = 3} = {}) => {
         const response = await fetch(requestOrUrl);
         const ok = response.ok;
         const status = response.status;
@@ -222,7 +227,7 @@ ${errorMessage.message}
             console.log(`Request retry number ${totalRetry - retryNum + 1}`);
             const waitTime = (totalRetry + 1 - retryNum) * 1_000;
             await wait(waitTime);
-            await this.genericRequest({ requestOrUrl, id, depth, retryNum: retryNum - 1 });
+            await this.genericRequest({requestOrUrl, id, depth, retryNum: retryNum - 1});
             return;
         }
         if (!ok) {

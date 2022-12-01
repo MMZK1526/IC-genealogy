@@ -33,7 +33,7 @@ fun Application.configureRouting() {
             )
         }
 
-        post("/relations_wk_old") {
+        post("/relations_wk") {
             val t = CustomTimer("All")
             val depth = call.request.queryParameters["depth"]?.toIntOrNull() ?: 0
             val visitedItems = call.receive<List<String>>()
