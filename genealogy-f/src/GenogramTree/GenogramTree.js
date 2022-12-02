@@ -27,6 +27,7 @@ import {withSnackbar} from 'notistack';
 import {Mutex} from 'async-mutex';
 
 const ENABLE_PRE_FETCHING = false;
+const USE_FRONTEND_CACHE = true;
 const INITIAL_DEPTH = 2;
 const EXTENSION_DEPTH = 1;
 
@@ -340,7 +341,19 @@ class GenogramTree extends React.Component {
                 }
             }
         }
-
+        // const foo = (this.state.originalJSON == null) ? relationsJSON : this.mergeRelations(this.state.originalJSON, relationsJSON);
+        // this.state.originalJSON = foo;
+        // console.assert(foo !== null);
+        // await this.fetchKinships(this.state.root, foo);
+        // this.applyFilterAndDrawTree();
+        // if (id == null) {
+        //     id = this.state.root;
+        // }
+        // this.setState({
+        //     isLoading: false,
+        //     isUpdated: true,
+        //     selectedPerson: id,
+        // });
         if (this.state.originalJSON == null) {
             this.state.originalJSON = relationsJSON;
         } else {
@@ -348,14 +361,17 @@ class GenogramTree extends React.Component {
         }
         await this.fetchKinships(this.state.root, this.state.originalJSON);
         this.applyFilterAndDrawTree();
-        if (id == null) {
-            id = this.state.root;
+        if (id == null || id === undefined) {
+            this.state.isLoading = false;
+            this.state.isUpdated = true;
+            this.state.selectedPerson = this.state.root;
+        } else {
+            this.setState({
+                isLoading: false,
+                isUpdated: true,
+                selectedPerson: id,
+            });
         }
-        this.setState({
-            isLoading: false,
-            isUpdated: true,
-            selectedPerson: id,
-        });
     }
 
     calculateFilter() {
@@ -546,9 +562,10 @@ class GenogramTree extends React.Component {
         }
     }
 
-    async fetchKinships(id, relationsJSON) {
+    fetchKinships = async (id, relationsJSON) => {
         const newRelationJSON = await this.injectKinship(id, relationsJSON);
         this.setState({originalJSON: newRelationJSON});
+        return newRelationJSON;
     }
 
     injectKinship = async (id, relationsJSON) => {
@@ -561,12 +578,11 @@ class GenogramTree extends React.Component {
 
     // Merge two relational JSONs.
     mergeRelations(oldRel, newRel) {
-        const oldRelCpy = JSON.parse(JSON.stringify(oldRel));
-        oldRelCpy.items = {...oldRelCpy.items, ...newRel.items};
+        oldRel.items = {...oldRel.items, ...newRel.items};
 
         const idRelMap = new Map();
 
-        for (const [key, relations] of Object.entries(oldRelCpy.relations)) {
+        for (const [key, relations] of Object.entries(oldRel.relations)) {
             let curRelations = idRelMap.get(key);
             if (curRelations) {
                 relations.forEach((r) => curRelations.add(r));
@@ -588,11 +604,9 @@ class GenogramTree extends React.Component {
             }
         }
 
-        oldRelCpy.relations = {};
-        idRelMap.forEach((v, k) => oldRelCpy.relations[k] = Array.from(v));
-        let res = cleanIfNeeded(oldRelCpy);
-        oldRel = res;
-        return res;
+        oldRel.relations = {};
+        idRelMap.forEach((v, k) => oldRel.relations[k] = Array.from(v));
+        return cleanIfNeeded(oldRel);
     }
 
     // Handle tree extension
@@ -950,19 +964,22 @@ class GenogramTree extends React.Component {
             this.pendingExtensionId = id;
         };
         await this.mutex.runExclusive(f);
-        await this.tryExtendFromCache(id);
+        if (USE_FRONTEND_CACHE) {
+            await this.tryExtendFromCache(id);
+        }
         const smallFastPromise = this.smallFastFetch(id, depth, allSpouses);
         const bigFastPromise = this.bigFastFetch(id, depth, allSpouses);
-        // const [smallFastArr, bigFastArr] = await Promise.all([smallFastPromise, bigFastPromise]);
         const smallFastArr = await smallFastPromise;
         const [smallFastData, smallFastFromDb] = smallFastArr;
-        const g = (id) => {this.loadRelations(smallFastData, id)};
+        const g = async (id) => {await this.loadRelations(smallFastData, id)};
         await this.tryExecPendingExtension(g, false, id);
         const bigFastArr = await bigFastPromise;
         const [bigFastData, bigFastFromDb] = bigFastArr;
         const smallFastSet = new Set(Object.keys(smallFastData.items));
         this.preFetchedIds.fast = new Set([...this.preFetchedIds.fast, ...smallFastSet]);
-        await this.tryExtendFromCache(id);
+        if (USE_FRONTEND_CACHE) {
+            await this.tryExtendFromCache(id);
+        }
         let smallSlowData = smallFastData;
         if (smallFastFromDb) {
             smallSlowData = await this.smallSlowFetch(id, depth, allSpouses, smallFastData);
