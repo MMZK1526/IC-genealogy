@@ -2,6 +2,8 @@ import _ from "lodash";
 import {Requests} from './requests';
 import util from "util";
 
+const BLOODLINE_ONLY_EXTEND = true;
+
 export class Utils {
     constructor() {
         this.requests = new Requests();
@@ -174,16 +176,21 @@ function pruneUndefinedItems(tree) {
 
 export function subTree(tree, startId, depth) {
     let toDo = new Map();
-    toDo.set(startId, depth);
+    toDo.set(startId, 0);
     const done = new Set();
     while (!_.isEmpty(toDo)) {
         for (const [id, offset] of toDo) {
+            if (BLOODLINE_ONLY_EXTEND && id !== startId) {
+                toDo.delete(id);
+                done.add(id);
+                continue;
+            }
             console.assert(id in tree.relations);
             const neighbours = (tree.relations)[id].map(y => {
                 const id = y.item1Id;
-                const offset = calcOffset(y.type);
-                return [id, offset];
-            }).filter(([id, yOffset]) => Math.abs(offset + yOffset) <= depth);
+                const yOffset = calcOffset(y.type) + offset;
+                return [id, yOffset];
+            }).filter(([id, yOffset]) => Math.abs(yOffset) <= depth);
             toDo.delete(id);
             done.add(id);
             for (const [id, offset] of neighbours) {

@@ -905,19 +905,19 @@ class GenogramTree extends React.Component {
             this.pendingExtensionId = id;
         };
         await this.mutex.runExclusive(f);
-        await this.tryExtendFromCache();
+        await this.tryExtendFromCache(id);
         const smallFastPromise = this.smallFastFetch(id, depth, allSpouses);
         const bigFastPromise = this.bigFastFetch(id, depth, allSpouses);
         // const [smallFastArr, bigFastArr] = await Promise.all([smallFastPromise, bigFastPromise]);
         const smallFastArr = await smallFastPromise;
         const [smallFastData, smallFastFromDb] = smallFastArr;
         const g = (id) => {this.loadRelations(smallFastData, id)};
-        await this.tryExecPendingExtension(g, false);
+        await this.tryExecPendingExtension(g, false, id);
         const bigFastArr = await bigFastPromise;
         const [bigFastData, bigFastFromDb] = bigFastArr;
         const smallFastSet = new Set(Object.keys(smallFastData.items));
         this.preFetchedIds.fast = new Set([...this.preFetchedIds.fast, ...smallFastSet]);
-        await this.tryExtendFromCache();
+        await this.tryExtendFromCache(id);
         let smallSlowData = smallFastData;
         if (smallFastFromDb) {
             smallSlowData = await this.smallSlowFetch(id, depth, allSpouses, smallFastData);
@@ -1031,21 +1031,20 @@ class GenogramTree extends React.Component {
         }
     }
 
-    tryExtendFromCache = async () => {
-        const f = (id) => this.extendFromCache(id);
-        await this.tryExecPendingExtension(f, true);
+    tryExtendFromCache = async (id) => {
+        const f = (fooId) => this.extendFromCache(fooId);
+        await this.tryExecPendingExtension(f, true, id);
     }
 
-    tryExecPendingExtension = async (f, fromCache) => {
+    tryExecPendingExtension = async (f, fromCache, id) => {
         const g = async () => {
-            if (this.pendingExtensionId !== null &&
+            if (this.pendingExtensionId === id &&
                 (
                     !fromCache ||
                     this.preFetchedIds.fast.has(this.pendingExtensionId) ||
                     this.preFetchedIds.slow.has(this.pendingExtensionId)
                 )
             ) {
-                const id = this.pendingExtensionId;
                 this.pendingExtensionId = null;
                 await f(id);
             }
@@ -1066,13 +1065,11 @@ class GenogramTree extends React.Component {
     extendFromCache = async (id) => {
         const curTree = this.state.originalJSON;
         const cachedTree = this.tree.cache;
-        const kinshipTree = await this.getRenderTreeUsingCache(id, curTree, cachedTree);
-        this.tree.slow = kinshipTree;
+        const extendedTree = await this.getRenderTreeUsingCache(id, curTree, cachedTree);
         this.setState({
-            originalJSON: kinshipTree,
+            originalJSON: extendedTree,
             isLoading: false,
             isUpdated: true,
-            newDataAvailable: true,
         });
         console.log('Cache was used for rendering');
     }
