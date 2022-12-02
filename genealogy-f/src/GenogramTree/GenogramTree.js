@@ -204,9 +204,11 @@ class GenogramTree extends React.Component {
                 item.kinships = [];
                 item.kinshipKeys = new Set();
             }
-
-            if (!'kinshipKeys' in item) {
-                throw Error();
+            if (!('kinshipKeys' in item) ||
+                !(item.kinshipKeys instanceof Set) ||
+                _.isEmpty(item.kinshipKeys)
+            ) {
+                item.kinshipKeys = new Set();
             }
             const kinshipStrs = kinshipJSON[key].map((arr) => {
                 arr.relation.reverse();
