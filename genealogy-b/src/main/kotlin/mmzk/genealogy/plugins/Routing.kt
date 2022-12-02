@@ -12,6 +12,7 @@ import mmzk.genealogy.common.Database
 import mmzk.genealogy.WikiDataDataSource
 import mmzk.genealogy.common.RelationCalculatorRequest
 import mmzk.genealogy.common.calculateRelations
+
 fun Application.configureRouting() {
     Database.init()
     routing {
