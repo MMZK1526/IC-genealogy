@@ -1004,7 +1004,7 @@ class GenogramTree extends React.Component {
 
     fetchOld = async ({id = null, depth = null, allSpouses = true} = {}) => {
         const [dbPromise, wikiDataPromise] = this.requests.relationsCacheAndWiki({
-            id: id, depth: depth + 1, allSpouses: allSpouses,
+            id: id, depth: depth, allSpouses: allSpouses,
             visitedItems: this.state.originalJSON ? Object.keys(this.state.originalJSON.items) : []
         });
         const dbRes = await dbPromise;

@@ -4,7 +4,7 @@ import WebSocketAsPromised from 'websocket-as-promised';
 
 const USE_SSL = true;
 
-const USE_SOCKETS = true;
+const USE_SOCKETS = false;
 const USE_WEB_SOCKETS_AS_PROMISED = true;
 const USE_LOCAL_BACKEND = false;
 
