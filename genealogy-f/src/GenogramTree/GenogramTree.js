@@ -26,7 +26,7 @@ import {GroupModel} from '../groupModel.js';
 import {withSnackbar} from 'notistack';
 import {Mutex} from 'async-mutex';
 
-const ENABLE_PRE_FETCHING = true;
+const ENABLE_PRE_FETCHING = false;
 const USE_FRONTEND_CACHE = true;
 const USE_VISITED_ITEMS = false;
 const INITIAL_DEPTH = 2;
@@ -1004,7 +1004,7 @@ class GenogramTree extends React.Component {
 
     fetchOld = async ({id = null, depth = null, allSpouses = true} = {}) => {
         const [dbPromise, wikiDataPromise] = this.requests.relationsCacheAndWiki({
-            id: id, depth: depth + 1, allSpouses: allSpouses,
+            id: id, depth: depth, allSpouses: allSpouses,
             visitedItems: this.state.originalJSON ? Object.keys(this.state.originalJSON.items) : []
         });
         const dbRes = await dbPromise;
