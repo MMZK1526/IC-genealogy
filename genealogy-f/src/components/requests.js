@@ -2,11 +2,11 @@ import {CustomTimer, wait} from "./utils";
 import _ from 'lodash';
 import WebSocketAsPromised from 'websocket-as-promised';
 
-const USE_SSL = true;
+const USE_SSL = false;
 
 const USE_SOCKETS = true;
 const USE_WEB_SOCKETS_AS_PROMISED = true;
-const USE_LOCAL_BACKEND = false;
+const USE_LOCAL_BACKEND = true;
 
 const USE_DB = true;
 
@@ -17,9 +17,10 @@ export class Requests {
 
     constructor() {
         if (USE_SOCKETS) {
-            this.socket = null;
-            const ws_url = `${this.wsUrl}/relations_wk_ws`;
+            this.wkSocket = null;
+            this.dbSocket = null;
             if (!USE_WEB_SOCKETS_AS_PROMISED) {
+                const ws_url = `${this.wsUrl}/relations_wk_ws`;
                 this.connectToVanillaWebSocket(ws_url);
                 this.t = null;
             }
@@ -34,7 +35,7 @@ export class Requests {
     relationsCacheAndWiki = ({id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true} = {}) => {
         const params = {id: id, depth: depth, visitedItems: visitedItems, allSpouses: allSpouses};
         return [
-            this.relationsDb(params),
+            this.relationsDbHttp(params),
             this.relations(params),
         ];
     }
@@ -42,7 +43,7 @@ export class Requests {
     // { targets: [], items: {}, relations: {} }
     relationsCacheOrWiki = async ({id = 'WD-Q152308', depth = 2, visitedItems = []} = {}) => {
         const params = {id: id, depth: depth, visitedItems: visitedItems};
-        const dbRes = await this.relationsDb(params);
+        const dbRes = await this.relationsDbHttp(params);
         if (!this.dbResEmpty(dbRes)) {
             // console.log('Database used to fetch data');
             return dbRes;
@@ -63,6 +64,14 @@ export class Requests {
         return this.relationsVanillaWebSocket(params);
     }
 
+    relationsDb = async ({id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true} = {}) => {
+        let params = {id, depth, visitedItems, allSpouses};
+        if (USE_SOCKETS) {
+            return this.relationsWebSocketAsPromised(params);
+        }
+        return this.relationsDbHttp(params);
+    }
+
     relationsVanillaWebSocket = async ({id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true} = {}) => {
         const request = {
             requestId: 42,
@@ -74,7 +83,7 @@ export class Requests {
             ping: null,
         };
         this.t = new CustomTimer("All");
-        this.socket.send(JSON.stringify(request));
+        this.wkSocket.send(JSON.stringify(request));
         return {};
     }
 
@@ -86,12 +95,12 @@ export class Requests {
                                           } = {}) => {
         const t = new CustomTimer("All");
         const url = `${this.wsUrl}/relations_wk_ws`;
-        if (this.socket === null) {
+        if (this.wkSocket === null) {
             const tOpen = new CustomTimer("Opening socket");
-            await this.connectToSocketAsPromised(url);
+            await this.connectToSocketAsPromised(url, this.wkSocket);
             tOpen.end();
             const tPing = new CustomTimer("Pinging");
-            this.keepSocketAsPromisedOpen();
+            this.keepSocketAsPromisedOpen(this.wkSocket);
             tPing.end();
         }
         const request = {
@@ -103,7 +112,7 @@ export class Requests {
             ping: null,
         };
         const tBackend = new CustomTimer("Backend");
-        const response = await this.socket.sendRequest(request, {
+        const response = await this.wkSocket.sendRequest(request, {
             requestId: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
         });
         tBackend.end();
@@ -119,31 +128,45 @@ ${errorMessage.message}
         return response.response;
     }
 
-    connectToVanillaWebSocket = (url) => {
-        this.socket = new WebSocket(url);
-
-        this.socket.onconnect = async (event) => {
-            await this.relations();
+    relationsDbWebSocketAsPromised = async ({
+                                              id = 'WD-Q152308',
+                                              depth = 2,
+                                              visitedItems = [],
+                                              allSpouses = true
+                                          } = {}) => {
+        const t = new CustomTimer("All");
+        const url = `${this.wsUrl}/relations_db_ws`;
+        if (this.dbSocket === null) {
+            const tOpen = new CustomTimer("Opening socket");
+            await this.connectToSocketAsPromised(url, this.dbSocket);
+            tOpen.end();
+            const tPing = new CustomTimer("Pinging");
+            this.keepSocketAsPromisedOpen(this.dbSocket);
+            tPing.end();
+        }
+        const request = {
+            id,
+            depth,
+            homoStrata: null,
+            heteroStrata: allSpouses ? 'WD-P22,WD-P25,WD-P26,WD-P40' : null,
+            visitedItems,
+            ping: null,
         };
-
-        this.socket.onmessage = (event) => {
-            const textData = event.data;
-            console.log('Received websocket response');
-            console.log(JSON.stringify(textData).substring(0, 100));
-            this.t.end();
-        };
-
-        this.socket.onclose = (event) => {
-            if (event.wasClean) {
-                console.log(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
-            } else {
-                console.log('[close] Connection died');
-            }
-        };
-
-        this.socket.onerror = (error) => {
-            throw new Error(error);
-        };
+        const tBackend = new CustomTimer("Backend");
+        const response = await this.dbSocket.sendRequest(request, {
+            requestId: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
+        });
+        tBackend.end();
+        console.log('Received websocket response');
+        const errorMessage = response.errorMessage;
+        if (errorMessage) {
+            throw new Error(```
+Error: ${errorMessage.statusCode}
+${errorMessage.message}
+            ```.trim());
+        }
+        t.end();
+        return response.response;
     }
 
     relationsHttp = async ({id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true} = {}) => {
@@ -156,38 +179,7 @@ ${errorMessage.message}
         });
     }
 
-    keepSocketAsPromisedOpen = async () => {
-        while (true) {
-            const request = {
-                id: 'foo',
-                depth: 0,
-                homoStrata: null,
-                heteroStrata: null,
-                visitedItems: [],
-                ping: 'ping',
-            };
-            await this.socket.sendRequest(request, {
-                requestId: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
-            });
-            console.log('Pinged backend');
-            await wait(10_000);
-        }
-    }
-
-    connectToSocketAsPromised = (url) => {
-        this.socket = new WebSocketAsPromised(url, {
-            packMessage: data => JSON.stringify(data),
-            unpackMessage: data => JSON.parse(data),
-            attachRequestId: (data, requestId) => Object.assign({requestId}, data), // attach requestId to message as `id` field
-            extractRequestId: data => data && data.requestId,                                  // read requestId from message `id` field
-        });
-        this.socket.onClose.addListener(event => {
-            console.log(`Connections closed: ${event.reason}.`);
-        });
-        return this.socket.open().then(() => console.log('Connection opened'));
-    }
-
-    relationsDb = async ({id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true} = {}) => {
+    relationsDbHttp = async ({id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true} = {}) => {
         if (!USE_DB) {
             return {targets: [], items: {}, relations: {}};
         }
@@ -198,6 +190,64 @@ ${errorMessage.message}
             console.log('Database used to fetch data');
             return x;
         });
+    }
+
+    connectToVanillaWebSocket = (url) => {
+        this.wkSocket = new WebSocket(url);
+
+        this.wkSocket.onconnect = async (event) => {
+            await this.relations();
+        };
+
+        this.wkSocket.onmessage = (event) => {
+            const textData = event.data;
+            console.log('Received websocket response');
+            console.log(JSON.stringify(textData).substring(0, 100));
+            this.t.end();
+        };
+
+        this.wkSocket.onclose = (event) => {
+            if (event.wasClean) {
+                console.log(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
+            } else {
+                console.log('[close] Connection died');
+            }
+        };
+
+        this.wkSocket.onerror = (error) => {
+            throw new Error(error);
+        };
+    }
+
+    keepSocketAsPromisedOpen = async (socket) => {
+        while (true) {
+            const request = {
+                id: 'foo',
+                depth: 0,
+                homoStrata: null,
+                heteroStrata: null,
+                visitedItems: [],
+                ping: 'ping',
+            };
+            await socket.sendRequest(request, {
+                requestId: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
+            });
+            console.log('Pinged backend');
+            await wait(10_000);
+        }
+    }
+
+    connectToSocketAsPromised = (url, socket) => {
+        socket = new WebSocketAsPromised(url, {
+            packMessage: data => JSON.stringify(data),
+            unpackMessage: data => JSON.parse(data),
+            attachRequestId: (data, requestId) => Object.assign({requestId}, data), // attach requestId to message as `id` field
+            extractRequestId: data => data && data.requestId,                                  // read requestId from message `id` field
+        });
+        socket.onClose.addListener(event => {
+            console.log(`Connections closed: ${event.reason}.`);
+        });
+        return socket.open().then(() => console.log('Connection opened'));
     }
 
     relationCalc = ({start, relations}) => {
