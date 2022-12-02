@@ -207,9 +207,15 @@ export function subTree(tree, startId, depth) {
     subTree.relations = {};
 
     for (const id of done) {
+        if (!(id in tree.items)) {
+            throw new Error();
+        }
         console.assert(id in tree.items);
         subTree.items[id] = tree.items[id];
 
+        if (!(id in tree.relations)) {
+            throw new Error();
+        }
         console.assert(id in tree.relations);
         subTree.relations[id] = tree.relations[id].filter(({item1Id}) => done.has(item1Id));
     }
