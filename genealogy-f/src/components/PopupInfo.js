@@ -132,7 +132,7 @@ class PopupInfo extends React.Component {
 								</Button>
 							</Col>
 							<Col xs="auto">
-								<Button variant='primary' disabled='true' onClick={this.onGroupButtonClick} className='m-1'>
+								<Button variant='primary' disabled={true} onClick={this.onGroupButtonClick} className='m-1'>
 									{this.state.hasPerson ? 'Remove from group' : 'Add to group' /* NOTE: temporarily disabled */}
 								</Button>
 							</Col>

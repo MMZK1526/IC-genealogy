@@ -60,9 +60,12 @@ function Toolbar(props) {
             {
               props.genogramTree.state.newDataAvailable &&
               <ButtonGroup className="me-2">
-                <Button className="show-full-data-button" variant="secondary" onClick={() => {
+                <Button className="show-full-data-button" variant="secondary" onClick={async () => {
                   console.log("Load Full Data!");
-                  props.genogramTree.loadRelations(props.genogramTree.state.newData, props.genogramTree.state.newData.targets[0].id);
+                  await props.genogramTree.loadRelations(
+                      props.genogramTree.tree.slow,
+                      props.genogramTree.tree.slow.targets[0].id
+                  );
                   props.genogramTree.setState({
                     newDataAvailable: false
                   });
