@@ -28,6 +28,7 @@ import {Mutex} from 'async-mutex';
 
 const ENABLE_PRE_FETCHING = false;
 const USE_FRONTEND_CACHE = true;
+const USE_VISITED_ITEMS = false;
 const INITIAL_DEPTH = 2;
 const EXTENSION_DEPTH = 1;
 
@@ -582,6 +583,10 @@ class GenogramTree extends React.Component {
 
         const idRelMap = new Map();
 
+        if (!('relations' in oldRel)) {
+            oldRel.relations = {};
+        }
+
         for (const [key, relations] of Object.entries(oldRel.relations)) {
             let curRelations = idRelMap.get(key);
             if (curRelations) {
@@ -663,7 +668,7 @@ class GenogramTree extends React.Component {
         }
 
         if (this.state.relationsJSON == null) {
-            this.fetchNewData(this.source, INITIAL_DEPTH);
+            this.fetchNewData(this.source, INITIAL_DEPTH, true);
 
             return (
                 <>
@@ -983,7 +988,12 @@ class GenogramTree extends React.Component {
         let smallSlowData = smallFastData;
         if (smallFastFromDb) {
             smallSlowData = await this.smallSlowFetch(id, depth, allSpouses, smallFastData);
-            this.updateSlowTree(smallSlowData);
+            if (this.containsMoreData(
+                smallSlowData,
+                smallFastData
+            )) {
+                this.updateSlowTree(smallSlowData);
+            }
         }
         const smallSlowSet = new Set(Object.keys(smallSlowData.items));
         this.preFetchedIds.slow = new Set([...this.preFetchedIds.slow, ...smallSlowSet]);
@@ -1015,7 +1025,10 @@ class GenogramTree extends React.Component {
     smallFastFetch = async (id, depth, allSpouses) => {
         const [dbPromise, wikiDataPromise] = this.requests.relationsCacheAndWiki({
             id: id, depth: depth, allSpouses: allSpouses,
-            visitedItems: this.state.originalJSON ? Object.keys(this.state.originalJSON.items) : []
+            visitedItems:
+                (this.state.originalJSON && USE_VISITED_ITEMS) ?
+                    Object.keys(this.state.originalJSON.items) :
+                    []
         });
         const dbRes = await dbPromise;
         if (this.requests.dbResEmpty(dbRes)) {
@@ -1028,7 +1041,10 @@ class GenogramTree extends React.Component {
     smallSlowFetch = async (id, depth, allSpouses, fastData) => {
         const slowDataPromise = this.requests.relations({
             id: id, depth: depth, allSpouses: allSpouses,
-            visitedItems: this.state.originalJSON ? Object.keys(this.state.originalJSON.items) : []
+            visitedItems:
+                (this.state.originalJSON && USE_VISITED_ITEMS) ?
+                    Object.keys(this.state.originalJSON.items) :
+                    []
         });
         const slowData = await slowDataPromise;
         if (this.containsMoreData(
@@ -1043,7 +1059,10 @@ class GenogramTree extends React.Component {
     bigFastFetch = async (id, depth, allSpouses) => {
         const [dbPromise, wikiDataPromise] = this.requests.relationsCacheAndWiki({
             id: id, depth: depth + EXTENSION_DEPTH, allSpouses: allSpouses,
-            visitedItems: this.state.originalJSON ? Object.keys(this.state.originalJSON.items) : []
+            visitedItems:
+                (this.state.originalJSON && USE_VISITED_ITEMS) ?
+                    Object.keys(this.state.originalJSON.items) :
+                    []
         });
         const dbRes = await dbPromise;
         if (this.requests.dbResEmpty(dbRes)) {
@@ -1059,7 +1078,10 @@ class GenogramTree extends React.Component {
     bigSlowFetch = async (id, depth, allSpouses, fastData) => {
         const slowDataPromise = this.requests.relations({
             id: id, depth: depth + EXTENSION_DEPTH, allSpouses: allSpouses,
-            visitedItems: this.state.originalJSON ? Object.keys(this.state.originalJSON.items) : []
+            visitedItems:
+                (this.state.originalJSON && USE_VISITED_ITEMS) ?
+                    Object.keys(this.state.originalJSON.items) :
+                    []
         });
         const slowData = await slowDataPromise;
         if (this.containsMoreData(

@@ -65,7 +65,7 @@ function Toolbar(props) {
                   console.log("Load Full Data!");
                   await props.genogramTree.loadRelations(
                       props.genogramTree.tree.slow,
-                      props.genogramTree.tree.slow.targets[0].id
+                      props.genogramTree.state.root,
                   );
                   props.genogramTree.setState({
                     newDataAvailable: false
