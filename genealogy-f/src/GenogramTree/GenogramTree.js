@@ -26,7 +26,7 @@ import {GroupModel} from '../groupModel.js';
 import {withSnackbar} from 'notistack';
 import {Mutex} from 'async-mutex';
 
-const ENABLE_PRE_FETCHING = false;
+const ENABLE_PRE_FETCHING = true;
 const USE_FRONTEND_CACHE = true;
 const USE_VISITED_ITEMS = false;
 const INITIAL_DEPTH = 2;
