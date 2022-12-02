@@ -2,11 +2,11 @@ import {CustomTimer, wait} from "./utils";
 import _ from 'lodash';
 import WebSocketAsPromised from 'websocket-as-promised';
 
-const USE_SSL = false;
+const USE_SSL = true;
 
 const USE_SOCKETS = true;
 const USE_WEB_SOCKETS_AS_PROMISED = true;
-const USE_LOCAL_BACKEND = true;
+const USE_LOCAL_BACKEND = false;
 
 const USE_DB = true;
 
