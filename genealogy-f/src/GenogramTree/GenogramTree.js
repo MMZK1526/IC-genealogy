@@ -498,6 +498,12 @@ class GenogramTree extends React.Component {
                 }
             }
 
+            // Add always shown people
+            this.state.filters.alwaysShownPeople.forEach((k) => {
+                visited[k] = { opacity: Opacity.normal };
+                visited[k].originalOpacity = visited[k].opacity;
+            })
+
             // Add outliers
             let outlierVisited = (new go.Set()).addAll(Object.keys(visited));
             var frontier = (new go.Set()).addAll(Object.keys(visited));
@@ -536,12 +542,6 @@ class GenogramTree extends React.Component {
                     visited[k].originalOpacity = visited[k].opacity;
                 });
             }
-
-            // Add always shown people
-            this.state.filters.alwaysShownPeople.forEach((k) => {
-                visited[k] = { opacity: Opacity.normal };
-                visited[k].originalOpacity = visited[k].opacity;
-            })
 
             var filteredJSON = { targets: this.state.originalJSON.targets, items: {}, relations: {} };
             Object.keys(visited).forEach((v) => {
@@ -864,7 +864,22 @@ class GenogramTree extends React.Component {
                     this.state.showRelations &&
                     <div className='popup'>
                         <TreeRelations
-                            closePopUp={() => this.setState({ showRelations: false })}
+                            fooState={this.state.fooState}
+                            closePopUp={() => {
+                                const notInGraph = this.state.highlight.filter((p) => !this.state.relationsJSON.items[p]);
+                                if (this.state.fooState[0] === 2) {
+                                    this.state.fooState[0] = 0;
+                                    notInGraph.forEach((p) => this.state.filters.alwaysShownPeople.add(p));
+                                    this.setState({ showRelations: false, isUpdated: true, keepHighlight: true });
+                                    return;
+                                }
+                                if (notInGraph.length != 0) {
+                                    this.state.fooState[0] = 1;
+                                    this.setState({ showRelations: true });
+                                } else {
+                                    this.setState({ showRelations: false });
+                                }
+                            }}
                             info={this.personMap.get(this.state.selectedPerson)}
                             highlight={this.state.highlight}
                             root={this.state.root}
