@@ -5,18 +5,13 @@ import io.ktor.server.application.*
 import io.ktor.server.request.receive
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.ktor.server.websocket.*
-import io.ktor.websocket.*
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
-import mmzk.genealogy.Connection
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import mmzk.genealogy.CustomTimer
 import mmzk.genealogy.common.Database
 import mmzk.genealogy.WikiDataDataSource
 import mmzk.genealogy.common.RelationCalculatorRequest
 import mmzk.genealogy.common.calculateRelations
-import java.util.*
-
 fun Application.configureRouting() {
     Database.init()
     routing {
@@ -47,8 +42,10 @@ fun Application.configureRouting() {
                 tWiki.end()
                 call.respond(result)
                 t.end()
-                Database.insertItems(result.items.values.toList())
-                Database.insertRelations(result.relations.values.flatten())
+                launch(Dispatchers.IO) {
+                    Database.insertItems(result.items.values.toList())
+                    Database.insertRelations(result.relations.values.flatten())
+                }
             } ?: call.respond(
                 HttpStatusCode.BadRequest,
                 mapOf("error" to "Missing query parameter \"q\"!")
