@@ -12,6 +12,7 @@ data class RelationsWkRequest(
     val heteroStrata: String?,
     val visitedItems: List<String>,
     val ping: String?,
+    val endpoint: String,
     )
 
 @Serializable

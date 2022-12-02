@@ -17,10 +17,16 @@ export class Requests {
 
     constructor() {
         if (USE_SOCKETS) {
-            this.wkSocket = null;
-            this.dbSocket = null;
-            if (!USE_WEB_SOCKETS_AS_PROMISED) {
-                const ws_url = `${this.wsUrl}/relations_wk_ws`;
+            this.socket = null;
+            const ws_url = `${this.wsUrl}/relations_ws`;
+            if (USE_WEB_SOCKETS_AS_PROMISED) {
+                const tOpen = new CustomTimer("Opening socket");
+                this.connectToSocketAsPromised(ws_url);
+                tOpen.end();
+                const tPing = new CustomTimer("Pinging");
+                this.keepSocketAsPromisedOpen();
+                tPing.end();
+            } else {
                 this.connectToVanillaWebSocket(ws_url);
                 this.t = null;
             }
@@ -35,7 +41,7 @@ export class Requests {
     relationsCacheAndWiki = ({id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true} = {}) => {
         const params = {id: id, depth: depth, visitedItems: visitedItems, allSpouses: allSpouses};
         return [
-            this.relationsDbHttp(params),
+            this.relationsDb(params),
             this.relations(params),
         ];
     }
@@ -64,10 +70,10 @@ export class Requests {
         return this.relationsVanillaWebSocket(params);
     }
 
-    relationsDb = async ({id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true} = {}) => {
+    relationsDb = ({id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true} = {}) => {
         let params = {id, depth, visitedItems, allSpouses};
         if (USE_SOCKETS) {
-            return this.relationsWebSocketAsPromised(params);
+            return this.relationsDbWebSocketAsPromised(params);
         }
         return this.relationsDbHttp(params);
     }
@@ -83,7 +89,7 @@ export class Requests {
             ping: null,
         };
         this.t = new CustomTimer("All");
-        this.wkSocket.send(JSON.stringify(request));
+        this.socket.send(JSON.stringify(request));
         return {};
     }
 
@@ -94,15 +100,7 @@ export class Requests {
                                               allSpouses = true
                                           } = {}) => {
         const t = new CustomTimer("All");
-        const url = `${this.wsUrl}/relations_wk_ws`;
-        if (this.wkSocket === null) {
-            const tOpen = new CustomTimer("Opening socket");
-            await this.connectToSocketAsPromised(url, this.wkSocket);
-            tOpen.end();
-            const tPing = new CustomTimer("Pinging");
-            this.keepSocketAsPromisedOpen(this.wkSocket);
-            tPing.end();
-        }
+        const url = `${this.wsUrl}/relations_ws`;
         const request = {
             id,
             depth,
@@ -110,9 +108,10 @@ export class Requests {
             heteroStrata: allSpouses ? 'WD-P22,WD-P25,WD-P26,WD-P40' : null,
             visitedItems,
             ping: null,
+            endpoint: 'wk',
         };
         const tBackend = new CustomTimer("Backend");
-        const response = await this.wkSocket.sendRequest(request, {
+        const response = await this.socket.sendRequest(request, {
             requestId: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
         });
         tBackend.end();
@@ -135,15 +134,7 @@ ${errorMessage.message}
                                               allSpouses = true
                                           } = {}) => {
         const t = new CustomTimer("All");
-        const url = `${this.wsUrl}/relations_db_ws`;
-        if (this.dbSocket === null) {
-            const tOpen = new CustomTimer("Opening socket");
-            await this.connectToSocketAsPromised(url, this.dbSocket);
-            tOpen.end();
-            const tPing = new CustomTimer("Pinging");
-            this.keepSocketAsPromisedOpen(this.dbSocket);
-            tPing.end();
-        }
+        const url = `${this.wsUrl}/relations_ws`;
         const request = {
             id,
             depth,
@@ -151,9 +142,10 @@ ${errorMessage.message}
             heteroStrata: allSpouses ? 'WD-P22,WD-P25,WD-P26,WD-P40' : null,
             visitedItems,
             ping: null,
+            endpoint: 'db',
         };
         const tBackend = new CustomTimer("Backend");
-        const response = await this.dbSocket.sendRequest(request, {
+        const response = await this.socket.sendRequest(request, {
             requestId: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
         });
         tBackend.end();
@@ -193,20 +185,20 @@ ${errorMessage.message}
     }
 
     connectToVanillaWebSocket = (url) => {
-        this.wkSocket = new WebSocket(url);
+        this.socket = new WebSocket(url);
 
-        this.wkSocket.onconnect = async (event) => {
+        this.socket.onconnect = async (event) => {
             await this.relations();
         };
 
-        this.wkSocket.onmessage = (event) => {
+        this.socket.onmessage = (event) => {
             const textData = event.data;
             console.log('Received websocket response');
             console.log(JSON.stringify(textData).substring(0, 100));
             this.t.end();
         };
 
-        this.wkSocket.onclose = (event) => {
+        this.socket.onclose = (event) => {
             if (event.wasClean) {
                 console.log(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
             } else {
@@ -214,12 +206,12 @@ ${errorMessage.message}
             }
         };
 
-        this.wkSocket.onerror = (error) => {
+        this.socket.onerror = (error) => {
             throw new Error(error);
         };
     }
 
-    keepSocketAsPromisedOpen = async (socket) => {
+    keepSocketAsPromisedOpen = async () => {
         while (true) {
             const request = {
                 id: 'foo',
@@ -229,7 +221,7 @@ ${errorMessage.message}
                 visitedItems: [],
                 ping: 'ping',
             };
-            await socket.sendRequest(request, {
+            await this.socket.sendRequest(request, {
                 requestId: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
             });
             console.log('Pinged backend');
@@ -237,17 +229,17 @@ ${errorMessage.message}
         }
     }
 
-    connectToSocketAsPromised = (url, socket) => {
-        socket = new WebSocketAsPromised(url, {
+    connectToSocketAsPromised = (url) => {
+        this.socket = new WebSocketAsPromised(url, {
             packMessage: data => JSON.stringify(data),
             unpackMessage: data => JSON.parse(data),
             attachRequestId: (data, requestId) => Object.assign({requestId}, data), // attach requestId to message as `id` field
             extractRequestId: data => data && data.requestId,                                  // read requestId from message `id` field
         });
-        socket.onClose.addListener(event => {
+        this.socket.onClose.addListener(event => {
             console.log(`Connections closed: ${event.reason}.`);
         });
-        return socket.open().then(() => console.log('Connection opened'));
+        return this.socket.open().then(() => console.log('Connection opened'));
     }
 
     relationCalc = ({start, relations}) => {
