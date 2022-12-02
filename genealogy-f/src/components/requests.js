@@ -42,7 +42,6 @@ export class Requests {
     }
 
     relationsDb = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true } = {}) => {
-        return { targets: [], items: {}, relations: {} };
         const url = allSpouses
             ? `${this.baseUrl}/relations_db?id=${id}&depth=${depth}`
             : `${this.baseUrl}/relations_db?id=${id}&depth=${depth}&homo_strata=&hetero_strata=WD-P22,WD-P25,WD-P26,WD-P40`;
