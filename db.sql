@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.5 (Ubuntu 14.5-1.pgdg20.04+1)
+-- Dumped from database version 14.5 (Ubuntu 14.5-2.pgdg20.04+2)
 -- Dumped by pg_dump version 14.4
 
 SET statement_timeout = 0;
@@ -21,6 +21,13 @@ SET row_security = off;
 --
 
 CREATE SCHEMA heroku_ext;
+
+
+--
+-- Name: pg_stat_statements; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS pg_stat_statements WITH SCHEMA heroku_ext;
 
 
 --
@@ -83,7 +90,7 @@ CREATE TABLE public.qualifier (
     item_id character varying(32) NOT NULL,
     qualifier_type character varying(32) NOT NULL,
     value_hash text NOT NULL,
-    value text,
+    value text NOT NULL,
     property_id character varying(32) NOT NULL
 );
 
@@ -191,6 +198,14 @@ ALTER TABLE ONLY public.item
 
 ALTER TABLE ONLY public.qualifier
     ADD CONSTRAINT qualifier_pkey PRIMARY KEY (item_id, qualifier_type, value_hash, property_id);
+
+
+--
+-- Name: relationship relationship_item1_item2_type_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.relationship
+    ADD CONSTRAINT relationship_item1_item2_type_key UNIQUE (item1, item2, type);
 
 
 --
