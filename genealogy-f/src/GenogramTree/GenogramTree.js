@@ -59,6 +59,7 @@ class GenogramTree extends React.Component {
             cache: {},
             slow: {},
         };
+        this.isLatestReadNotFromWikiData = true;
         // this.fullCache = {};
         this.preFetchedIds = {
             fast: new Set(),
@@ -940,9 +941,11 @@ class GenogramTree extends React.Component {
         }
 
         if (!ENABLE_PRE_FETCHING) {
-            await this.fetchDataNoPreFetch({ id: id, depth: depth, allSpouses: allSpouses });
+            this.fetchDataNoPreFetch({ id: id, depth: depth, allSpouses: allSpouses });
             return;
         }
+
+        // TODO: Pre-fetching logic
         const f = async () => {
             console.assert(this.pendingExtensionId === null);
             this.pendingExtensionId = id;
@@ -982,21 +985,45 @@ class GenogramTree extends React.Component {
     }
 
     fetchDataNoPreFetch = async ({ id = null, depth = null, allSpouses = true } = {}) => {
+        // Two requests, one for database, one for WikiData
         const [dbPromise, wikiDataPromise] = this.requests.relationsCacheAndWiki({
             id: id, depth: depth, allSpouses: allSpouses,
             visitedItems: this.state.originalJSON ? Object.keys(this.state.originalJSON.items) : []
         });
-        const dbRes = await dbPromise;
-        if (this.requests.dbResEmpty(dbRes)) {
-            const wikiDataRes = await wikiDataPromise;
-            return await this.loadRelations(wikiDataRes, id);
-        }
-        await this.loadRelations(dbRes, id);
-        const wikiDataRes = await wikiDataPromise;
-        if (this.containsMoreData(wikiDataRes, dbRes)) {
-            this.tree.slow = wikiDataRes;
-            this.setState({ newDataAvailable: true });
-        }
+
+        this.isLatestReadNotFromWikiData = true;
+        let dbRes = null;
+
+        // When database returns result, use it if the result from WikiData isn't back yet. Usually
+        // the database is faster than WikiData, but the latter may contain more up-to-date data.
+        // On the rare occasion that the WikiData returns faster, we will not reload the page since
+        // the database result definitely does not contain more information
+        dbPromise.then(async (_dbRes) => {
+            dbRes = _dbRes;
+            if (!this.requests.dbResEmpty(dbRes)) {
+                this.mutex.runExclusive(() => {
+                    if (this.isLatestReadNotFromWikiData) {
+                        this.loadRelations(dbRes, id);
+                    }
+                });
+            }
+        });
+
+        // When WikiData returns result, if the database has yet to return, we load the WikiData
+        // result immediately and ignore the database result. Otherwise, if the WikiData result
+        // has more information, we show a "Load Full Data" button
+        wikiDataPromise.then(async (wikiDataRes) => {
+            this.mutex.runExclusive(() => {
+                if (dbRes === null) {
+                    this.tree.slow = wikiDataRes;
+                    this.loadRelations(wikiDataRes, id);
+                } else if (this.containsMoreData(wikiDataRes, dbRes)) {
+                    this.tree.slow = wikiDataRes;
+                    this.setState({ newDataAvailable: true });
+                }
+                this.isLatestReadNotFromWikiData = false;
+            });
+        });
     }
 
     smallFastFetch = async (id, depth, allSpouses) => {
