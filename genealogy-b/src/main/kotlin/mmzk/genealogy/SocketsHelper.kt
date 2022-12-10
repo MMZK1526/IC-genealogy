@@ -11,7 +11,6 @@ data class RelationsWkRequest(
     val homoStrata: String?,
     val heteroStrata: String?,
     val visitedItems: List<String>,
-    val ping: String?,
     val endpoint: String,
     )
 

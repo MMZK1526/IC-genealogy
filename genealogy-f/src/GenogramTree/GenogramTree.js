@@ -26,9 +26,10 @@ import {GroupModel} from '../groupModel.js';
 import {withSnackbar} from 'notistack';
 import {Mutex} from 'async-mutex';
 
-const ENABLE_PRE_FETCHING = false;
+const ENABLE_PRE_FETCHING = true;
 const USE_FRONTEND_CACHE = true;
-const USE_VISITED_ITEMS = false;
+
+const USE_VISITED_ITEMS = true;
 const INITIAL_DEPTH = 2;
 const EXTENSION_DEPTH = 1;
 
@@ -964,21 +965,21 @@ class GenogramTree extends React.Component {
             await this.fetchOld({id: id, depth: depth, allSpouses: allSpouses});
             return;
         }
-        const f = async () => {
-            console.assert(this.pendingExtensionId === null);
-            this.pendingExtensionId = id;
-        };
-        await this.mutex.runExclusive(f);
+        await this.mutex.acquire();
+        console.assert(this.pendingExtensionId === null);
+        this.pendingExtensionId = id;
+        this.mutex.release();
+        const [smallDbPromise, smallWikiPromise, bigDbPromise, bigWikiPromise] = this.makeRequests(
+            id, depth, allSpouses);
         if (USE_FRONTEND_CACHE) {
             await this.tryExtendFromCache(id);
         }
-        const smallFastPromise = this.smallFastFetch(id, depth, allSpouses);
-        const bigFastPromise = this.bigFastFetch(id, depth, allSpouses);
-        const smallFastArr = await smallFastPromise;
-        const [smallFastData, smallFastFromDb] = smallFastArr;
+        const [smallFastData, smallFastFromDb] = await this.smallFastFetch(
+            id, depth, allSpouses, smallDbPromise, smallWikiPromise);
+        console.log('smallFastData arrived');
         const g = async (id) => {await this.loadRelations(smallFastData, id)};
         await this.tryExecPendingExtension(g, false, id);
-        const bigFastArr = await bigFastPromise;
+        const bigFastArr = await this.bigFastFetch(id, depth, allSpouses, bigDbPromise, bigWikiPromise);
         const [bigFastData, bigFastFromDb] = bigFastArr;
         const smallFastSet = new Set(Object.keys(smallFastData.items));
         this.preFetchedIds.fast = new Set([...this.preFetchedIds.fast, ...smallFastSet]);
@@ -987,7 +988,7 @@ class GenogramTree extends React.Component {
         }
         let smallSlowData = smallFastData;
         if (smallFastFromDb) {
-            smallSlowData = await this.smallSlowFetch(id, depth, allSpouses, smallFastData);
+            smallSlowData = await this.smallSlowFetch(id, depth, allSpouses, smallFastData, smallWikiPromise);
             if (this.containsMoreData(
                 smallSlowData,
                 smallFastData
@@ -998,7 +999,7 @@ class GenogramTree extends React.Component {
         const smallSlowSet = new Set(Object.keys(smallSlowData.items));
         this.preFetchedIds.slow = new Set([...this.preFetchedIds.slow, ...smallSlowSet]);
         if (bigFastFromDb) {
-            await this.bigSlowFetch(id, depth, allSpouses, bigFastData);
+            await this.bigSlowFetch(id, depth, allSpouses, bigFastData, bigWikiPromise);
         }
     }
 
@@ -1022,31 +1023,48 @@ class GenogramTree extends React.Component {
         }
     }
 
-    smallFastFetch = async (id, depth, allSpouses) => {
-        const [dbPromise, wikiDataPromise] = this.requests.relationsCacheAndWiki({
+    makeRequests = (id, depth, allSpouses) => {
+        const smallParams = {
             id: id, depth: depth, allSpouses: allSpouses,
             visitedItems:
-                (this.state.originalJSON && USE_VISITED_ITEMS) ?
-                    Object.keys(this.state.originalJSON.items) :
-                    []
-        });
+                (!USE_VISITED_ITEMS) ?
+                    [] :
+                    (this.state.originalJSON) ?
+                        Object.keys(this.state.originalJSON.items) :
+                        []
+        };
+        let smallDbPromise = this.requests.relationsDb(smallParams);
+        let smallWikiPromise = this.requests.relations(smallParams);
+        const bigParams = {
+            id: id, depth: depth + EXTENSION_DEPTH, allSpouses: allSpouses,
+            visitedItems:
+                (!USE_VISITED_ITEMS) ?
+                    [] :
+                    (!_.isEmpty(this.tree.cache)) ?
+                        Object.keys(this.tree.cache.items) :
+                        (this.state.originalJSON) ?
+                            Object.keys(this.state.originalJSON.items) :
+                            []
+        };
+        let bigDbPromise = this.requests.relationsDb(bigParams);
+        let bigWikiPromise = this.requests.relations(bigParams);
+        return [smallDbPromise, smallWikiPromise, bigDbPromise, bigWikiPromise];
+    }
+
+    smallFastFetch = async (id, depth, allSpouses, dbPromise, wikiPromise) => {
         const dbRes = await dbPromise;
+        console.log("dbRes received");
         if (this.requests.dbResEmpty(dbRes)) {
-            const wikiDataRes = await wikiDataPromise;
+            const wikiDataRes = await wikiPromise;
+            console.log("wikiDataRes received");
             return [wikiDataRes, false];
         }
         return [dbRes, true];
     }
 
-    smallSlowFetch = async (id, depth, allSpouses, fastData) => {
-        const slowDataPromise = this.requests.relations({
-            id: id, depth: depth, allSpouses: allSpouses,
-            visitedItems:
-                (this.state.originalJSON && USE_VISITED_ITEMS) ?
-                    Object.keys(this.state.originalJSON.items) :
-                    []
-        });
-        const slowData = await slowDataPromise;
+    smallSlowFetch = async (id, depth, allSpouses, fastData, wikiPromise) => {
+        const slowData = await wikiPromise;
+        console.log("wikiDataRes received");
         if (this.containsMoreData(
             slowData,
             fastData
@@ -1056,17 +1074,10 @@ class GenogramTree extends React.Component {
         return slowData;
     }
 
-    bigFastFetch = async (id, depth, allSpouses) => {
-        const [dbPromise, wikiDataPromise] = this.requests.relationsCacheAndWiki({
-            id: id, depth: depth + EXTENSION_DEPTH, allSpouses: allSpouses,
-            visitedItems:
-                (this.state.originalJSON && USE_VISITED_ITEMS) ?
-                    Object.keys(this.state.originalJSON.items) :
-                    []
-        });
+    bigFastFetch = async (id, depth, allSpouses, dbPromise, wikiPromise) => {
         const dbRes = await dbPromise;
         if (this.requests.dbResEmpty(dbRes)) {
-            const wikiDataRes = await wikiDataPromise;
+            const wikiDataRes = await wikiPromise;
             await this.updateTreeCache(wikiDataRes);
             return [wikiDataRes, false];
         }
@@ -1075,15 +1086,8 @@ class GenogramTree extends React.Component {
         return [dbRes, true];
     }
 
-    bigSlowFetch = async (id, depth, allSpouses, fastData) => {
-        const slowDataPromise = this.requests.relations({
-            id: id, depth: depth + EXTENSION_DEPTH, allSpouses: allSpouses,
-            visitedItems:
-                (this.state.originalJSON && USE_VISITED_ITEMS) ?
-                    Object.keys(this.state.originalJSON.items) :
-                    []
-        });
-        const slowData = await slowDataPromise;
+    bigSlowFetch = async (id, depth, allSpouses, fastData, wikiPromise) => {
+        const slowData = await wikiPromise;
         if (this.containsMoreData(
             subTree(slowData, id, EXTENSION_DEPTH),
             subTree(fastData, id, EXTENSION_DEPTH)
@@ -1121,19 +1125,18 @@ class GenogramTree extends React.Component {
     }
 
     tryExecPendingExtension = async (f, fromCache, id) => {
-        const g = async () => {
-            if (this.pendingExtensionId === id &&
-                (
-                    !fromCache ||
-                    this.preFetchedIds.fast.has(this.pendingExtensionId) ||
-                    this.preFetchedIds.slow.has(this.pendingExtensionId)
-                )
-            ) {
-                this.pendingExtensionId = null;
-                await f(id);
-            }
-        };
-        await this.mutex.runExclusive(g);
+        await this.mutex.acquire();
+        if (this.pendingExtensionId === id &&
+            (
+                !fromCache ||
+                this.preFetchedIds.fast.has(this.pendingExtensionId) ||
+                this.preFetchedIds.slow.has(this.pendingExtensionId)
+            )
+        ) {
+            this.pendingExtensionId = null;
+            await f(id);
+        }
+        this.mutex.release();
     }
 
     updateTreeCache = async (relations) => {

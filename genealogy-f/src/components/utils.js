@@ -120,9 +120,9 @@ export function getIds(relationsJSON) {
     return Array.from(relationsJSON.items.map(x => x.id));
 }
 
-export function wait(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
+    export function wait(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
 
 export function cleanIfNeeded(tree) {
     if (isClean(tree)) {
@@ -214,26 +214,28 @@ export function subTree(tree, startId, depth) {
         }
     }
 
-    const subTree = {};
-    subTree.targets = JSON.parse(JSON.stringify(tree.targets));
-    subTree.items = {};
-    subTree.relations = {};
+    const res = {};
+    res.targets = JSON.parse(JSON.stringify(tree.targets));
+    res.items = {};
+    res.relations = {};
 
     for (const id of done) {
         if (!(id in tree.items)) {
-            throw new Error();
+            // throw new Error();
+            continue;
         }
         console.assert(id in tree.items);
-        subTree.items[id] = tree.items[id];
-
         if (!(id in tree.relations)) {
-            throw new Error();
+            // throw new Error();
+            continue;
         }
         console.assert(id in tree.relations);
-        subTree.relations[id] = tree.relations[id].filter(({item1Id}) => done.has(item1Id));
+
+        res.items[id] = tree.items[id];
+        res.relations[id] = tree.relations[id].filter(({item1Id}) => done.has(item1Id));
     }
 
-    return subTree;
+    return res;
 }
 
 function calcOffset(type) {
