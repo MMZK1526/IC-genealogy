@@ -1,4 +1,4 @@
-import {CustomTimer, wait} from "./utils";
+import { CustomTimer, wait } from "./utils";
 import _ from 'lodash';
 import WebSocketAsPromised from 'websocket-as-promised';
 
@@ -35,11 +35,11 @@ export class Requests {
 
     search = (name = 'silvia') => {
         const url = `${this.baseUrl}/search?q=${name}`;
-        return this.genericRequest({requestOrUrl: url});
+        return this.genericRequest({ requestOrUrl: url });
     }
 
-    relationsCacheAndWiki = ({id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true} = {}) => {
-        const params = {id: id, depth: depth, visitedItems: visitedItems, allSpouses: allSpouses};
+    relationsCacheAndWiki = ({ id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true } = {}) => {
+        const params = { id: id, depth: depth, visitedItems: visitedItems, allSpouses: allSpouses };
         return [
             this.relationsDb(params),
             this.relations(params),
@@ -47,8 +47,8 @@ export class Requests {
     }
 
     // { targets: [], items: {}, relations: {} }
-    relationsCacheOrWiki = async ({id = 'WD-Q152308', depth = 2, visitedItems = []} = {}) => {
-        const params = {id: id, depth: depth, visitedItems: visitedItems};
+    relationsCacheOrWiki = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [] } = {}) => {
+        const params = { id: id, depth: depth, visitedItems: visitedItems };
         const dbRes = await this.relationsDbHttp(params);
         if (!this.dbResEmpty(dbRes)) {
             // console.log('Database used to fetch data');
@@ -59,8 +59,8 @@ export class Requests {
         return wikiDataRes;
     }
 
-    relations = ({id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true} = {}) => {
-        let params = {id, depth, visitedItems, allSpouses};
+    relations = ({ id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true } = {}) => {
+        let params = { id, depth, visitedItems, allSpouses };
         if (!USE_SOCKETS) {
             return this.relationsHttp(params)
         }
@@ -70,15 +70,15 @@ export class Requests {
         return this.relationsVanillaWebSocket(params);
     }
 
-    relationsDb = ({id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true} = {}) => {
-        let params = {id, depth, visitedItems, allSpouses};
+    relationsDb = ({ id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true } = {}) => {
+        let params = { id, depth, visitedItems, allSpouses };
         if (USE_SOCKETS) {
             return this.relationsDbWebSocketAsPromised(params);
         }
         return this.relationsDbHttp(params);
     }
 
-    relationsVanillaWebSocket = async ({id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true} = {}) => {
+    relationsVanillaWebSocket = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true } = {}) => {
         const request = {
             requestId: 42,
             id,
@@ -94,11 +94,11 @@ export class Requests {
     }
 
     relationsWebSocketAsPromised = async ({
-                                              id = 'WD-Q152308',
-                                              depth = 2,
-                                              visitedItems = [],
-                                              allSpouses = true
-                                          } = {}) => {
+        id = 'WD-Q152308',
+        depth = 2,
+        visitedItems = [],
+        allSpouses = true
+    } = {}) => {
         const t = new CustomTimer("All");
         const url = `${this.wsUrl}/relations_ws`;
         const request = {
@@ -128,11 +128,11 @@ ${errorMessage.message}
     }
 
     relationsDbWebSocketAsPromised = async ({
-                                              id = 'WD-Q152308',
-                                              depth = 2,
-                                              visitedItems = [],
-                                              allSpouses = true
-                                          } = {}) => {
+        id = 'WD-Q152308',
+        depth = 2,
+        visitedItems = [],
+        allSpouses = true
+    } = {}) => {
         const t = new CustomTimer("All");
         const url = `${this.wsUrl}/relations_ws`;
         const request = {
@@ -161,7 +161,7 @@ ${errorMessage.message}
         return response.response;
     }
 
-    relationsHttp = async ({id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true} = {}) => {
+    relationsHttp = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true } = {}) => {
         const url = allSpouses
             ? `${this.baseUrl}/relations_wk?id=${id}&depth=${depth}`
             : `${this.baseUrl}/relations_wk?id=${id}&depth=${depth}&homo_strata=&hetero_strata=WD-P22,WD-P25,WD-P26,WD-P40`;
@@ -171,9 +171,9 @@ ${errorMessage.message}
         });
     }
 
-    relationsDbHttp = async ({id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true} = {}) => {
+    relationsDbHttp = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true } = {}) => {
         if (!USE_DB) {
-            return {targets: [], items: {}, relations: {}};
+            return { targets: [], items: {}, relations: {} };
         }
         const url = allSpouses
             ? `${this.baseUrl}/relations_db?id=${id}&depth=${depth}`
@@ -233,7 +233,7 @@ ${errorMessage.message}
         this.socket = new WebSocketAsPromised(url, {
             packMessage: data => JSON.stringify(data),
             unpackMessage: data => JSON.parse(data),
-            attachRequestId: (data, requestId) => Object.assign({requestId}, data), // attach requestId to message as `id` field
+            attachRequestId: (data, requestId) => Object.assign({ requestId }, data), // attach requestId to message as `id` field
             extractRequestId: data => data && data.requestId,                                  // read requestId from message `id` field
         });
         this.socket.onClose.addListener(event => {
@@ -242,7 +242,7 @@ ${errorMessage.message}
         return this.socket.open().then(() => console.log('Connection opened'));
     }
 
-    relationCalc = ({start, relations}) => {
+    relationCalc = ({ start, relations }) => {
         const url = `${this.baseUrl}/relation_calc`;
         const body = {
             start: start,
@@ -262,10 +262,10 @@ ${errorMessage.message}
                 body: JSON.stringify(body),
             }
         );
-        return this.genericRequest({requestOrUrl: request, id, depth});
+        return this.genericRequest({ requestOrUrl: request, id, depth });
     }
 
-    genericRequest = async ({requestOrUrl, id = null, depth = null, retryNum = 3, totalRetry = 3} = {}) => {
+    genericRequest = async ({ requestOrUrl, id = null, depth = null, retryNum = 3, totalRetry = 3 } = {}) => {
         const response = await fetch(requestOrUrl);
         const ok = response.ok;
         const status = response.status;
@@ -273,7 +273,7 @@ ${errorMessage.message}
             console.log(`Request retry number ${totalRetry - retryNum + 1}`);
             const waitTime = (totalRetry + 1 - retryNum) * 1_000;
             await wait(waitTime);
-            await this.genericRequest({requestOrUrl, id, depth, retryNum: retryNum - 1});
+            await this.genericRequest({ requestOrUrl, id, depth, retryNum: retryNum - 1 });
             return;
         }
         if (!ok) {

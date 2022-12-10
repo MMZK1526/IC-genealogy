@@ -1,30 +1,29 @@
-import {TreeFilter} from '../components/TreeFilter.js';
+import { TreeFilter } from '../components/TreeFilter.js';
 import Container from 'react-bootstrap/Container';
 import React from 'react';
 import * as go from 'gojs';
 import '../stylesheets/App.css';
 import PopupInfo from '../components/PopupInfo.js'
 import RelSearchResult from '../components/RelSearchResult.js'
-// import PopupTemplate from '../components/PopupTemplate.js';
 import '../stylesheets/GenogramTree.css';
-import {StatsPanel} from '../components/StatsPanel';
+import { StatsPanel } from '../components/StatsPanel';
 import '../components/stylesheets/shared.css';
 import _ from 'lodash';
-import {cleanIfNeeded, subTree} from '../components/utils';
+import { cleanIfNeeded, subTree } from '../components/utils';
 import ModalSpinner from '../ModalSpinner';
 import Toolbar from '../Toolbar';
-import {FilterModel} from '../filterModel';
+import { FilterModel } from '../filterModel';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import {DiagramWrapper} from './DiagramWrapper';
-import {getPersonMap, ndb, transform, withRouter} from './utilFunctions';
-import {TreeNameLookup} from '../components/TreeNameLookup.js';
-import {Opacity} from './Const';
-import {TreeGroups} from '../components/TreeGroups.js';
-import {TreeRelations} from '../components/TreeRelations.js';
-import {GroupModel} from '../groupModel.js';
-import {withSnackbar} from 'notistack';
-import {Mutex} from 'async-mutex';
+import { DiagramWrapper } from './DiagramWrapper';
+import { getPersonMap, ndb, transform, withRouter } from './utilFunctions';
+import { TreeNameLookup } from '../components/TreeNameLookup.js';
+import { Opacity } from './Const';
+import { TreeGroups } from '../components/TreeGroups.js';
+import { TreeRelations } from '../components/TreeRelations.js';
+import { GroupModel } from '../groupModel.js';
+import { withSnackbar } from 'notistack';
+import { Mutex } from 'async-mutex';
 
 const ENABLE_PRE_FETCHING = false;
 const USE_FRONTEND_CACHE = true;
@@ -52,16 +51,8 @@ function toFilterModel(filters) {
 
 }
 
-// initialises tree (in theory should only be called once, diagram should be .clear() and then data updated for re-initialisation)
-// see https://gojs.net/latest/intro/react.html
-// majority of code below is from https://gojs.net/latest/samples/genogram.html
-
-// optional parameter passed to <ReactDiagram onModelChange = {handleModelChange}>
-// called whenever model is changed
-
 // class encapsulating the tree initialisation and rendering
 class GenogramTree extends React.Component {
-
     constructor(props) {
         super(props);
         this.tree = {
@@ -191,9 +182,9 @@ class GenogramTree extends React.Component {
             this.state.highlight.length = 0;
         }
         this.setState({
-                selectedPerson: event.subject.part.key,
-                isPopped: true
-            }
+            selectedPerson: event.subject.part.key,
+            isPopped: true
+        }
         );
     }
 
@@ -222,7 +213,7 @@ class GenogramTree extends React.Component {
                 const pathKey = path.join('');
                 if (!item.kinshipKeys.has(pathKey)) {
                     item.kinshipKeys.add(pathKey);
-                    item.kinships.push({'kinship': str, 'path': kinshipJSON[key][ix].path});
+                    item.kinships.push({ 'kinship': str, 'path': kinshipJSON[key][ix].path });
                 }
             });
         }
@@ -342,19 +333,7 @@ class GenogramTree extends React.Component {
                 }
             }
         }
-        // const foo = (this.state.originalJSON == null) ? relationsJSON : this.mergeRelations(this.state.originalJSON, relationsJSON);
-        // this.state.originalJSON = foo;
-        // console.assert(foo !== null);
-        // await this.fetchKinships(this.state.root, foo);
-        // this.applyFilterAndDrawTree();
-        // if (id == null) {
-        //     id = this.state.root;
-        // }
-        // this.setState({
-        //     isLoading: false,
-        //     isUpdated: true,
-        //     selectedPerson: id,
-        // });
+
         if (this.state.originalJSON == null) {
             this.state.originalJSON = relationsJSON;
         } else {
@@ -386,10 +365,6 @@ class GenogramTree extends React.Component {
         }
 
         // Get filter options
-        // let famMap = new Set();
-        // let pobMap = new Set();
-        // let podMap = new Set();
-        // set up id map for getting attributes later
         for (let x of Object.keys(this.state.originalJSON.items)) {
             let people = this.state.originalJSON.items[x];
             for (let fid of textFilterIDs) {
@@ -405,7 +380,7 @@ class GenogramTree extends React.Component {
 
         // Use filter
         const filters = this.state.filters;
-        var filteredJSON = {targets: this.state.originalJSON.targets};
+        var filteredJSON = { targets: this.state.originalJSON.targets };
         var useTextFilter = false;
         for (let key of Object.keys(filters.textFilters)) {
             if (filters.textFilters[key].choice.size > 0) {
@@ -415,7 +390,7 @@ class GenogramTree extends React.Component {
         if (filters.bloodline || filters.fromYear !== '' || filters.toYear !== '' || useTextFilter || filters.removeHiddenPeople) {
             // Map from item ID to opacity
             let visited = {};
-            visited[this.state.root] = {opacity: Opacity.normal};
+            visited[this.state.root] = { opacity: Opacity.normal };
             if (filters.bloodline) {
                 // console.log('血胤');
                 var frontier = [this.state.root];
@@ -429,7 +404,7 @@ class GenogramTree extends React.Component {
                                 .filter((r) => r.type !== 'spouse' && (!visited[r.item1Id] || visited[r.item1Id].opacity !== Opacity.normal));
                             var newFrontier = newElems.filter((r) => r.type !== 'child').map((r) => r.item1Id);
                             var newDescendants = newElems.filter((r) => r.type === 'child').map((r) => r.item1Id);
-                            newElems.map((r) => r.item1Id).forEach((id) => visited[id] = {opacity: Opacity.normal});
+                            newElems.map((r) => r.item1Id).forEach((id) => visited[id] = { opacity: Opacity.normal });
                             frontier.push(...newFrontier);
                             descendants.push(...newDescendants);
                         }
@@ -440,11 +415,11 @@ class GenogramTree extends React.Component {
                                 .filter((r) => r.type !== 'spouse' && (!visited[r.item1Id] || visited[r.item1Id].opacity !== Opacity.normal));
                             var newDescendants = newElems.filter((r) => r.type === 'child').map((r) => r.item1Id);
                             newDescendants.forEach((id) => {
-                                visited[id] = {opacity: Opacity.normal};
+                                visited[id] = { opacity: Opacity.normal };
                                 visited[id].originalOpacity = visited[id].opacity;
                             });
                             newElems.filter((r) => !visited[r.item1Id]).map((r) => r.item1Id).forEach((id) => {
-                                visited[id] = {opacity: Opacity.outlier};
+                                visited[id] = { opacity: Opacity.outlier };
                             });
                             descendants.push(...newDescendants);
                         }
@@ -452,7 +427,7 @@ class GenogramTree extends React.Component {
                 }
             } else {
                 Object.keys(this.state.originalJSON.items).forEach((id) => {
-                    visited[id] = {opacity: Opacity.normal};
+                    visited[id] = { opacity: Opacity.normal };
                     visited[id].originalOpacity = visited[id].opacity;
                 });
             }
@@ -533,7 +508,7 @@ class GenogramTree extends React.Component {
                 frontier.addAll(outlierVisited);
                 outlierVisited.each((ov) => {
                     if (!visited[ov]) {
-                        visited[ov] = {opacity: Opacity.outlier};
+                        visited[ov] = { opacity: Opacity.outlier };
                     }
                 })
             }
@@ -542,17 +517,19 @@ class GenogramTree extends React.Component {
             if (filters.removeHiddenPeople) {
                 this.state.filters.hiddenPeople.forEach((k) => delete visited[k]);
             } else {
-                this.state.filters.hiddenPeople.forEach((k) => {visited[k] = {
-                    opacity: Opacity.hidden};
+                this.state.filters.hiddenPeople.forEach((k) => {
+                    visited[k] = {
+                        opacity: Opacity.hidden
+                    };
                     visited[k].
-                    originalOpacity= visited[k].opacity
-               ;
+                        originalOpacity = visited[k].opacity
+                        ;
                 });
             }
 
-            var filteredJSON = {targets: this.state.originalJSON.targets, items: {}, relations: {}};
+            var filteredJSON = { targets: this.state.originalJSON.targets, items: {}, relations: {} };
             Object.keys(visited).forEach((v) => {
-                filteredJSON.items[v] = {...this.state.originalJSON.items[v], ...visited[v]};
+                filteredJSON.items[v] = { ...this.state.originalJSON.items[v], ...visited[v] };
                 if (this.state.originalJSON.relations[v]) {
                     filteredJSON.relations[v] = this.state.originalJSON.relations[v].filter((r) => visited[r.item1Id]);
                 }
@@ -565,7 +542,7 @@ class GenogramTree extends React.Component {
 
     fetchKinships = async (id, relationsJSON) => {
         const newRelationJSON = await this.injectKinship(id, relationsJSON);
-        this.setState({originalJSON: newRelationJSON});
+        this.setState({ originalJSON: newRelationJSON });
         return newRelationJSON;
     }
 
@@ -579,7 +556,7 @@ class GenogramTree extends React.Component {
 
     // Merge two relational JSONs.
     mergeRelations(oldRel, newRel) {
-        oldRel.items = {...oldRel.items, ...newRel.items};
+        oldRel.items = { ...oldRel.items, ...newRel.items };
 
         const idRelMap = new Map();
 
@@ -651,7 +628,7 @@ class GenogramTree extends React.Component {
         this.setState(prev => {
             const extendImpossible = prev.extendImpossible;
             extendImpossible.add(selectedPerson);
-            return {extendImpossible};
+            return { extendImpossible };
         });
     }
 
@@ -672,9 +649,9 @@ class GenogramTree extends React.Component {
 
             return (
                 <>
-                    <Toolbar onlyHome={true}/>
-                    <Container style={{height: '100vh'}} className='d-flex justify-content-center'>
-                        <ModalSpinner/>
+                    <Toolbar onlyHome={true} />
+                    <Container style={{ height: '100vh' }} className='d-flex justify-content-center'>
+                        <ModalSpinner />
                     </Container>
                 </>
             );
@@ -728,7 +705,7 @@ class GenogramTree extends React.Component {
                 }}>
                     <Row>
                         {this.state.showBtns &&
-                            <Toolbar genogramTree={this}/>
+                            <Toolbar genogramTree={this} />
                         }
                     </Row>
                     <Row className='me-4 mh-50 justify-content-end'>
@@ -768,7 +745,7 @@ class GenogramTree extends React.Component {
                                             }
                                         }
                                         this.calculateFilter();
-                                        this.setState({isUpdated: true, isLoading: true});
+                                        this.setState({ isUpdated: true, isLoading: true });
                                     }}
                                 />
                             }
@@ -784,7 +761,7 @@ class GenogramTree extends React.Component {
                                     getPersonMap={this.getPersonMap}
                                     onChange={async () => {
                                         await this.fetchKinships(this.state.selectedPerson, this.state.originalJSON);
-                                        this.setState({isPopped: false, isShownBetween: true});
+                                        this.setState({ isPopped: false, isShownBetween: true });
                                     }}
                                 />
                             }
@@ -803,7 +780,7 @@ class GenogramTree extends React.Component {
                                         this.setState({ showGroups: true });
                                     }}
                                     externUpdate={() => {
-                                        this.setState({showGroups: true})
+                                        this.setState({ showGroups: true })
                                     }}
                                     renameGroup={(name) => {
                                         console.log(name);
@@ -818,7 +795,7 @@ class GenogramTree extends React.Component {
                         <Col xs='2'>
                             {this.state.isLoading &&
                                 <div className='pe-auto'>
-                                    <ModalSpinner/>
+                                    <ModalSpinner />
                                 </div>
                             }
                         </Col>
@@ -829,7 +806,7 @@ class GenogramTree extends React.Component {
                     this.state.isPopped &&
                     <div className='popup'>
                         <PopupInfo
-                            closePopUp={() => this.setState({isPopped: false})}
+                            closePopUp={() => this.setState({ isPopped: false })}
                             info={this.personMap.get(this.state.selectedPerson)}
                             id={this.state.selectedPerson}
                             groupModel={this.groupModel}
@@ -857,11 +834,11 @@ class GenogramTree extends React.Component {
                                         break;
                                 }
 
-                                this.setState({recommit: true});
+                                this.setState({ recommit: true });
                             }}
                             onExtend={this.handlePopupExtend}
                             allowExtend={this.props.allowExtend}
-                            switchToRelations={() => this.setState({isPopped: false, showRelations: true})}
+                            switchToRelations={() => this.setState({ isPopped: false, showRelations: true })}
                             extendImpossible={this.state.extendImpossible.has(this.state.selectedPerson)}
                         />
                     </div>
@@ -871,7 +848,7 @@ class GenogramTree extends React.Component {
                     this.state.showStats &&
                     <div className='popup'>
                         <StatsPanel
-                            closePopUp={() => this.setState({showStats: false})}
+                            closePopUp={() => this.setState({ showStats: false })}
                             data={this.state.relationsJSON}
                         />
                     </div>
@@ -887,12 +864,12 @@ class GenogramTree extends React.Component {
                                 if (this.state.fooState[0] === 2) {
                                     this.state.fooState[0] = 0;
                                     notInGraph.forEach((p) => this.state.filters.alwaysShownPeople.add(p));
-                                    this.setState({showRelations: false, isUpdated: true, keepHighlight: true });
+                                    this.setState({ showRelations: false, isUpdated: true, keepHighlight: true });
                                     return;
                                 }
                                 if (notInGraph.length != 0) {
                                     this.state.fooState[0] = 1;
-                                    this.setState({ showRelations: true});
+                                    this.setState({ showRelations: true });
                                 } else {
                                     this.setState({ showRelations: false });
                                 }
@@ -918,9 +895,9 @@ class GenogramTree extends React.Component {
                                 }
                                 if (notInGraph.length != 0) {
                                     this.state.fooState[0] = 1;
-                                    this.setState({isShownBetween: true});
+                                    this.setState({ isShownBetween: true });
                                 } else {
-                                    this.setState({isShownBetween: false});
+                                    this.setState({ isShownBetween: false });
                                 }
                             }}
                             info={this.personMap.get(this.state.anotherPerson)}
@@ -957,11 +934,13 @@ class GenogramTree extends React.Component {
     }
 
     fetchNewData = async (id, depth, allSpouses) => {
+        // Read from custom JSON file
         if (id === null) {
             return await this.loadCustomData();
         }
+
         if (!ENABLE_PRE_FETCHING) {
-            await this.fetchOld({id: id, depth: depth, allSpouses: allSpouses});
+            await this.fetchDataNoPreFetch({ id: id, depth: depth, allSpouses: allSpouses });
             return;
         }
         const f = async () => {
@@ -976,7 +955,7 @@ class GenogramTree extends React.Component {
         const bigFastPromise = this.bigFastFetch(id, depth, allSpouses);
         const smallFastArr = await smallFastPromise;
         const [smallFastData, smallFastFromDb] = smallFastArr;
-        const g = async (id) => {await this.loadRelations(smallFastData, id)};
+        const g = async (id) => { await this.loadRelations(smallFastData, id) };
         await this.tryExecPendingExtension(g, false, id);
         const bigFastArr = await bigFastPromise;
         const [bigFastData, bigFastFromDb] = bigFastArr;
@@ -1002,7 +981,7 @@ class GenogramTree extends React.Component {
         }
     }
 
-    fetchOld = async ({id = null, depth = null, allSpouses = true} = {}) => {
+    fetchDataNoPreFetch = async ({ id = null, depth = null, allSpouses = true } = {}) => {
         const [dbPromise, wikiDataPromise] = this.requests.relationsCacheAndWiki({
             id: id, depth: depth, allSpouses: allSpouses,
             visitedItems: this.state.originalJSON ? Object.keys(this.state.originalJSON.items) : []
@@ -1016,9 +995,7 @@ class GenogramTree extends React.Component {
         const wikiDataRes = await wikiDataPromise;
         if (this.containsMoreData(wikiDataRes, dbRes)) {
             this.tree.slow = wikiDataRes;
-            this.setState({
-                newDataAvailable: true
-            });
+            this.setState({ newDataAvailable: true });
         }
     }
 
