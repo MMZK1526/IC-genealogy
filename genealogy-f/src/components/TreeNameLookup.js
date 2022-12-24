@@ -3,7 +3,7 @@ import { Autocomplete, TextField } from '@mui/material';
 import Button from 'react-bootstrap/Button';
 import EscapeCloseableEnterClickable from "./EscapeCloseableEnterClickable";
 
-
+// The panel to search for any people in the tree as well as the relationship between any two
 export function TreeNameLookup(props) {
 	const allPersonsRelations = props.getPersonsRelations();
 	const personMap = props.getPersonMap();
@@ -34,7 +34,8 @@ export function TreeNameLookup(props) {
 				<label className="m-1 form-label">Relationship with: </label>
 				<Autocomplete
 					options={props.allPeople}
-					getOptionLabel={(option) => `${option.name} (${option.additionalProperties.filter((p) => p.name === 'personal name').map(p => p.value)})@${option.id}`}
+					getOptionLabel={(option) => `${option.name} (${option.additionalProperties
+						.filter((p) => p.name === 'personal name').map(p => p.value)})@${option.id}`}
 					onChange={props.onAnotherPersonSelection}
 					sx={{ width: '100%', backgroundColor: "white" }}
 					renderInput={(params) => {
