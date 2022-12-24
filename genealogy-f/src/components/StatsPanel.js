@@ -16,9 +16,8 @@ export class StatsPanel extends React.Component {
         return (
             <div className='popup-inner'>
                 <EscapeCloseableEnterClickable className='stats-panel' onClick={this.props.closePopUp}>
-                    <CloseButton className='close-button' onClick={this.props.closePopUp}/>
+                    <CloseButton className='close-button' onClick={this.props.closePopUp} />
                     <div id='stat'>{this.numberOfFamilyMembers()}</div>
-                    {/*{this.avgChildrenPerPerson()}*/}
                     <div id='stat'>{this.topCountriesOfBirth()}</div>
                     <div id='stat'>{this.topFamilies()}</div>
                 </EscapeCloseableEnterClickable>
@@ -30,19 +29,8 @@ export class StatsPanel extends React.Component {
         const total = this.calcTotalMembers();
         return (
             <div>
-                <b>Number of family members:</b><br/>
+                <b>Number of family members:</b><br />
                 {total}
-            </div>
-        );
-    }
-
-    avgChildrenPerPerson() {
-        const children = this.props.data.relations.filter((x) => (x.type === 'child')).length;
-        const avgChildren = children / this.calcTotalMembers();
-        return (
-            <div>
-                <b>Avg children per person:</b><br/>
-                {avgChildren.toFixed(2)}
             </div>
         );
     }
@@ -54,6 +42,9 @@ export class StatsPanel extends React.Component {
     topFamilies() {
         return this.listCreator(this.getFamily, 'Most popular families');
     }
+
+
+    /// Helpers
 
     listCreator(propertyGetter, text) {
         const arr = Object.values(this.props.data.items).map((item) => propertyGetter(item));
