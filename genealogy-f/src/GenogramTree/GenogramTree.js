@@ -70,57 +70,58 @@ class GenogramTree extends React.Component {
         this.prevOriginalJSON = {};
         this.mutex = new Mutex();
         let rawJSON = null;
+        let rawFilters = props.router.location.state.filters
+            ? toFilterModel(props.router.location.state.filters)
+            : new FilterModel(true);
         this.source = props.router.location.state ? props.router.location.state.source : null;
         this.sourceName = props.router.location.state ? props.router.location.state.sourceName : null;
         if (this.source) {
             rawJSON = props.router.location.state.relations;
-            let rawFilters = props.router.location.state.filters
-                ? toFilterModel(props.router.location.state.filters)
-                : new FilterModel(true);
-            this.handleModelChange = this.handleModelChange.bind(this);
-            this.handleDiagramEvent = this.handleDiagramEvent.bind(this);
-            this.handlePopupExtend = this.handlePopupExtend.bind(this);
-            this.getPersonsRelations = this.getPersonsRelations.bind(this);
-            this.getPersonMap = this.getPersonMap.bind(this);
-            this.setFocusPerson = this.setFocusPerson.bind(this);
-            this.getFocusPerson = this.getFocusPerson.bind(this);
-
-            this.setAnotherPerson = this.setAnotherPerson.bind(this);
-            this.getAnotherPerson = this.getAnotherPerson.bind(this);
-
-            this.requests = this.props.requests;
-            this.isLoading = !rawJSON;
-
-            this.groupModel = new GroupModel();
-
-            this.state = {
-                root: this.source,
-                isUpdated: !this.isLoading,
-                isLoading: this.isLoading,
-                originalJSON: rawJSON,
-                relationsJSON: rawJSON,
-                kinshipJSON: null,
-                selectedPerson: null,
-                anotherPerson: null,
-                isPopped: false,
-                showStats: false,
-                filters: rawFilters,
-                // groupModel: new GroupModel(),
-                showBtns: true,
-                recentre: false,
-                recommit: false,
-                newDataAvailable: false,
-                defaultZoomSwitch: false,
-                showLookup: false,
-                showFilters: false,
-                highlight: [],
-                isShownBetween: false,
-                fooState: [0],
-                keepHighlight: false,
-                extendImpossible: new Set(),
-            };
-            this.componentRef = React.createRef();
         }
+
+        this.handleModelChange = this.handleModelChange.bind(this);
+        this.handleDiagramEvent = this.handleDiagramEvent.bind(this);
+        this.handlePopupExtend = this.handlePopupExtend.bind(this);
+        this.getPersonsRelations = this.getPersonsRelations.bind(this);
+        this.getPersonMap = this.getPersonMap.bind(this);
+        this.setFocusPerson = this.setFocusPerson.bind(this);
+        this.getFocusPerson = this.getFocusPerson.bind(this);
+
+        this.setAnotherPerson = this.setAnotherPerson.bind(this);
+        this.getAnotherPerson = this.getAnotherPerson.bind(this);
+
+        this.requests = this.props.requests;
+        this.isLoading = !rawJSON;
+
+        this.groupModel = new GroupModel();
+
+        this.state = {
+            root: this.source,
+            isUpdated: !this.isLoading,
+            isLoading: this.isLoading,
+            originalJSON: rawJSON,
+            relationsJSON: rawJSON,
+            kinshipJSON: null,
+            selectedPerson: null,
+            anotherPerson: null,
+            isPopped: false,
+            showStats: false,
+            filters: rawFilters,
+            // groupModel: new GroupModel(),
+            showBtns: true,
+            recentre: false,
+            recommit: false,
+            newDataAvailable: false,
+            defaultZoomSwitch: false,
+            showLookup: false,
+            showFilters: false,
+            highlight: [],
+            isShownBetween: false,
+            fooState: [0],
+            keepHighlight: false,
+            extendImpossible: new Set(),
+        };
+        this.componentRef = React.createRef();
     }
 
     componentDidMount() {
@@ -611,7 +612,7 @@ class GenogramTree extends React.Component {
         this.prevOriginalJSON = JSON.parse(JSON.stringify(this.state.originalJSON));
         console.assert(this.prevOriginalJSON !== undefined);
         if (
-            this.state.extendImpossible.has(this.state.selectedPerson)
+            this.state.extendImpossible.has(selectedPerson)
         ) {
             this.displayExtendImpossibleSnackbar();
             return;
@@ -621,16 +622,10 @@ class GenogramTree extends React.Component {
             isUpdated: false,
         });
         await this.fetchNewData(this.state.selectedPerson, EXTENSION_DEPTH, false);
-        if (
-            _.isEqual(this.prevOriginalJSON, this.state.originalJSON)
-        ) {
-            this.displayExtendImpossibleSnackbar();
-        }
-        this.setState(prev => {
-            const extendImpossible = prev.extendImpossible;
-            extendImpossible.add(selectedPerson);
-            return { extendImpossible };
-        });
+
+        this.state.extendImpossible.add(selectedPerson);
+
+        this.setState({ extendImpossible: this.state.extendImpossible });
     }
 
     resetDiagram = async () => {
