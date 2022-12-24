@@ -805,7 +805,7 @@ class GenogramTree extends React.Component {
                             info={this.personMap.get(this.state.selectedPerson)}
                             id={this.state.selectedPerson}
                             groupModel={this.groupModel}
-                            onNew={async () => {
+                            onUseAsRoot={async () => {
                                 this.state.root = this.state.selectedPerson;
                                 await this.fetchKinships(this.state.root, this.state.originalJSON);
                             }}

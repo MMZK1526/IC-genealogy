@@ -24,13 +24,15 @@ class PopupInfo extends React.Component {
 		this.groupModel = props.groupModel;
 		this.id = props.id;
 		this.state = {
+			// If the selected person is in the current group
 			hasPerson: this.groupModel.checkPersonInCurrGroup(this.id),
+			// A list of group names in which the selected person is in
 			inGroups: this.groupModel.getGroupsForPerson(this.id)
 		};
 	}
 
-	onNew = (_) => {
-		this.props.onNew();
+	onUseAsRoot = (_) => {
+		this.props.onUseAsRoot();
 		this.props.closePopUp();
 	};
 
@@ -41,7 +43,7 @@ class PopupInfo extends React.Component {
 
 	onFilterModeChanged = this.props.onFilterModeChanged;
 
-	onGroupButtonClick = (_) => {	/* NOTE: temporarily unused, due to complexity of multi-group */
+	onGroupButtonClick = (_) => {
 		if (this.groupModel.checkPersonInCurrGroup(this.props.id)) {
 			this.groupModel.removePersonFromGroup(this.props.id);
 		} else {
@@ -74,7 +76,8 @@ class PopupInfo extends React.Component {
 					}
 				}>
 					<CloseButton className='close-btn' onClick={this.props.closePopUp} />
-					{getAdditionalProperties(this.props.info, this.props.switchToRelations, this.props.id, this.groupModel, this.props.inGroup)}
+					{getAdditionalProperties(this.props.info,
+						this.props.switchToRelations, this.props.id, this.groupModel, this.props.inGroup)}
 					<Container className='text-center mt-2'>
 						<Row className='mb-3'>
 							<Col xs="auto">
@@ -82,7 +85,8 @@ class PopupInfo extends React.Component {
 							</Col>
 							<Col>
 								<ToggleButtonGroup type="radio" name="filter-options"
-									defaultValue={this.props.isHidden ? 1 : this.props.isShown ? 2 : 0} onChange={(e) => {
+									defaultValue={this.props.isHidden ? 1 : this.props.isShown ? 2 : 0}
+									onChange={(e) => {
 										this.onFilterModeChanged(e);
 									}}>
 									<ToggleButton
@@ -119,18 +123,19 @@ class PopupInfo extends React.Component {
 						</Row>
 						<Row>
 							<Col xs="auto">
-								<Button variant={this.props.extendImpossible ? 'warning' : 'primary'} onClick={this.onExtend} className='m-1'>
+								<Button variant={this.props.extendImpossible ? 'warning' : 'primary'}
+									onClick={this.onExtend} className='m-1'>
 									Extend tree from this person
 								</Button>
 							</Col>
 							<Col xs="auto">
-								<Button variant='primary' onClick={this.onNew} className='m-1'>
+								<Button variant='primary' onClick={this.onUseAsRoot} className='m-1'>
 									Use this person as root
 								</Button>
 							</Col>
 							<Col xs="auto">
 								<Button variant='primary' onClick={this.onGroupButtonClick} className='m-1'>
-									{this.state.hasPerson ? 'Remove from group' : 'Add to group' /* NOTE: temporarily disabled */}
+									{this.state.hasPerson ? 'Remove from group' : 'Add to group'}
 								</Button>
 							</Col>
 						</Row>
@@ -141,6 +146,7 @@ class PopupInfo extends React.Component {
 	}
 }
 
+// Show individual properties of the selected person
 function getAdditionalProperties(data, switchToRelations, id, groupModel) {
 	const openInWikipedia = url => {
 		window.open(url, '_blank', 'noopener,noreferrer');
@@ -154,7 +160,9 @@ function getAdditionalProperties(data, switchToRelations, id, groupModel) {
 		<Container>
 			<Row>
 				<Col md='auto' className='mb-4'>
-					<Image className='rounded' src={data.has('image') ? data.get('image') : DefaultImg} height='140px' />
+					<Image className='rounded' src={data.has('image')
+						? data.get('image')
+						: DefaultImg} height='140px' />
 				</Col>
 				<Col className='mb-4'>
 					<Row className='mb-1 justify-content-start'>
@@ -162,19 +170,23 @@ function getAdditionalProperties(data, switchToRelations, id, groupModel) {
 					</Row>
 					<Row className='mb-1'>
 						<p className='fst-italic'>
-							{data.has('description') ? capitalizeFirstLetter(data.get('description')) : '(No description)'}
+							{data.has('description')
+								? capitalizeFirstLetter(data.get('description'))
+								: '(No description)'}
 						</p>
 					</Row>
 
 					<ButtonGroup className='me-2' aria-label='LinksGroup'>
 						{
 							data.has('wikipedia link') &&
-							<Button variant='light' className='wikilink' onClick={() => openInWikipedia(data.get('wikipedia link'))}>
+							<Button variant='light' className='wikilink'
+								onClick={() => openInWikipedia(data.get('wikipedia link'))}>
 								<FaWikipediaW size={30} />
 							</Button>
 						}
 
-						<Button variant='light' className='search' onClick={() => openSearch(data.get('name'))}>
+						<Button variant='light' className='search'
+							onClick={() => openSearch(data.get('name'))}>
 							<FcGoogle size={30} />
 						</Button>
 					</ButtonGroup>
@@ -196,15 +208,15 @@ function getAdditionalProperties(data, switchToRelations, id, groupModel) {
 
 
 function getAllAttr(data, id, groupModel) {
+	const googleMapQueryLink = keyword => 'http://www.google.com/maps?q=' + keyword;
 
-	// pass in longest possible data list for data
-	let x = Object.keys(Object.fromEntries(data)).filter(function (k) {
-		return !Utils.specialKeywords.includes(k) && !Utils.relationsKeywords.includes(k);
-	})
-	// apply filters for both sets
-	// x = x.filter((i) => groupModel.globalSet.has(i)).filter((i) => !inGroup || inGroup && groupModel.groupItemSet.has(i))
-	x = x.filter((i) => groupModel.checkPropertyShownForPerson(id, i));
-	return x.map((k) => (
+	// All properties of the person that can be filtered (things like Wikipedia link are never 
+	// filtered and always shown)
+	const filterableProperties = Object.keys(Object.fromEntries(data)).filter((k) =>
+		!Utils.specialKeywords.includes(k) && !Utils.relationsKeywords.includes(k));
+	let filteredProperties = filterableProperties
+		.filter((i) => groupModel.checkPropertyShownForPerson(id, i));
+	return filteredProperties.map((k) => (
 		<Row key={'Row ' + k}>
 			<Col xs={4} key={k}>
 				<p>{capitalizeFirstLetter(k)}</p>
@@ -212,7 +224,7 @@ function getAllAttr(data, id, groupModel) {
 			<Col key={data.get(k)}>
 				{
 					Utils.locationKeywords.includes(k)
-						? <a href={'http://www.google.com/maps?q=' + data.get(k)} target='_blank' rel='noopener noreferrer'>
+						? <a href={googleMapQueryLink(data.get(k))} target='_blank' rel='noopener noreferrer'>
 							<TbMapSearch />
 							{' ' + data.get(k)}
 						</a>

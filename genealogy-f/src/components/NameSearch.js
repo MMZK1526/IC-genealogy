@@ -38,7 +38,7 @@ export class NameSearch extends React.Component {
                     <Image className="align-self-center mt-2" src={PersonWeb} width='240px' />
 
                     <h1>Ancesta - Genealogy Project</h1>
-                    <Form onSubmit={this.handleChangeInitialName} className="w-50 m-auto">
+                    <Form onSubmit={this.handleChangeSearchName} className="w-50 m-auto">
                         <InputGroup>
                             <MdOutlinePersonSearch size={50} color='darkslategray' />
                             <Form.Control
@@ -48,7 +48,7 @@ export class NameSearch extends React.Component {
                                 type="text"
                                 className="fs-3"
                                 placeholder="Search a name to start..."
-                                onChange={this.handleChangeInitialName}
+                                onChange={this.handleChangeSearchName}
                             />
                             <Button
                                 variant="primary"
@@ -80,7 +80,7 @@ export class NameSearch extends React.Component {
         );
     }
 
-    handleChangeInitialName = (event) => {
+    handleChangeSearchName = (event) => {
         this.setState({ initialName: event.target.value });
     }
 
