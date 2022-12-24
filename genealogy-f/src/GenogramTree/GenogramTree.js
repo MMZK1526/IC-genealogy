@@ -7,7 +7,6 @@ import PopupInfo from '../components/PopupInfo.js'
 import RelSearchResult from '../components/RelSearchResult.js'
 import '../stylesheets/GenogramTree.css';
 import { StatsPanel } from '../components/StatsPanel';
-import '../components/stylesheets/shared.css';
 import _ from 'lodash';
 import { cleanIfNeeded, subTree } from '../components/Utils.js';
 import ModalSpinner from '../ModalSpinner';
