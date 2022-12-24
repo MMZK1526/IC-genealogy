@@ -27,10 +27,19 @@ export class NameSearch extends React.Component {
 
     render() {
         if (this.state.result) {
-            return (<Navigate to="/result" replace={true} state={{ result: this.state.result, name: this.state.initialName }} />);
+            return (<Navigate to="/result" replace={true} state={{
+                result: this.state.result,
+                name: this.state.initialName
+            }} />);
         }
         if (this.state.showTree) {
-            return (<Navigate to="/tree" replace={true} state={{ source: this.id, relations: this.relations, filters: this.filters }} />);
+            return (<Navigate to="/tree" replace={true}
+                state={{
+                    source: this.id,
+                    relations: this.relations,
+                    filters: this.filters,
+                    sourceName: this.sourceName
+                }} />);
         }
         return (
             <div className="m-5">
@@ -88,6 +97,7 @@ export class NameSearch extends React.Component {
         this.id = data.tree.targets[0].id;
         this.relations = data.tree;
         this.filters = data.filters;
+        this.sourceName = data.tree.targets[0].name;
         this.setState({ showTree: true });
     }
 
