@@ -2,10 +2,19 @@ import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button'
 import { BiHomeAlt } from 'react-icons/bi';
-import { downloadJsonFile } from './components/exportAsJson';
 import { AiFillFilter } from 'react-icons/ai';
 import { MdPersonSearch } from 'react-icons/md';
 import { GrGroup } from 'react-icons/gr';
+
+function downloadJsonFile(obj) {
+  const element = document.createElement('a');
+  const file = new Blob([JSON.stringify(obj)],
+    { type: 'text/json' });
+  element.href = URL.createObjectURL(file);
+  element.download = 'family-tree.json';
+  document.body.appendChild(element);
+  element.click();
+}
 
 function Toolbar(props) {
   return (
@@ -64,8 +73,8 @@ function Toolbar(props) {
                 <Button className="show-full-data-button" variant="secondary" onClick={async () => {
                   console.log("Load Full Data!");
                   await props.genogramTree.loadRelations(
-                      props.genogramTree.tree.slow,
-                      props.genogramTree.state.root,
+                    props.genogramTree.tree.slow,
+                    props.genogramTree.state.root,
                   );
                   props.genogramTree.setState({
                     newDataAvailable: false
