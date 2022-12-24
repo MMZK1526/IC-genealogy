@@ -4,16 +4,17 @@ import './stylesheets/Sidebar.css';
 import Multiselect from 'multiselect-react-dropdown';
 import EscapeCloseableEnterClickable from "./EscapeCloseableEnterClickable";
 
+// Render the filter panel
 export function TreeFilter(props) {
 	const style = {
-		searchBox: { // To change search box element look
+		searchBox: {
 			'fontSize': '20px',
 			'border': '1px solid',
 		},
 	};
 
+	// Clear all selections
 	const clearSelections = () => {
-		// Clear all selections
 		for (let key of Object.keys(props.filters.textFilters)) {
 			props.filters.textFilters[key].choice.clear();
 		}
@@ -21,7 +22,7 @@ export function TreeFilter(props) {
 		// Reset to bloodline only
 		props.filters.bloodline = true;
 
-		props.onChange(true);
+		props.onChange(true /* true for resetting */);
 	}
 
 	return (
@@ -30,6 +31,7 @@ export function TreeFilter(props) {
 				<Form className="w-100 mb-3 overflow-auto" style={{ maxHeight: "44vh" }}>
 					<Form.Label className="form-label">Family: </Form.Label>
 					<Multiselect
+						// Filter for families
 						id='family-select'
 						options={Array.from(props.filters.textFilters['WD-P53'].all).sort().map((v) => ({
 							name: v,
@@ -39,14 +41,17 @@ export function TreeFilter(props) {
 							name: v,
 							id: v
 						}))} // Preselected value to persist in dropdown
-						onSelect={(_, i) => props.filters.textFilters['WD-P53'].choice.add(i.name)} // Function will trigger on select event
-						onRemove={(_, i) => props.filters.textFilters['WD-P53'].choice.delete(i.name)} // Function will trigger on remove event
+						// Function will trigger on select event
+						onSelect={(_, i) => props.filters.textFilters['WD-P53'].choice.add(i.name)}
+						// Function will trigger on remove event
+						onRemove={(_, i) => props.filters.textFilters['WD-P53'].choice.delete(i.name)}
 						displayValue='name' // Property name to display in the dropdown options
 						style={style}
 					/>
 
 					<Form.Group className='form-group' controlId='bloodline-checkbox'>
 						<Form.Check className="mb-1" title='Bloodline' label='Bloodline only' type='checkbox'
+							// Filter for bloodline (only blood relatives to the root)
 							defaultChecked={props.filters.bloodline}
 							onChange={(e) => {
 								props.filters.bloodline = e.target.checked;
@@ -56,6 +61,7 @@ export function TreeFilter(props) {
 
 					<Form.Group className='form-group' controlId='hiddenPeople-checkbox'>
 						<Form.Check className="mb-1" title='Hide' label='Hide uninterested' type='checkbox'
+							// Filter to remove people deliberately hidden by the user
 							defaultChecked={props.filters.removeHiddenPeople}
 							onChange={(e) => {
 								props.filters.removeHiddenPeople = e.target.checked;
@@ -65,6 +71,7 @@ export function TreeFilter(props) {
 
 					<Form.Label className="form-label">Place Of Birth: </Form.Label>
 					<Multiselect
+						// Filter by place of birth
 						id='pob-select'
 						options={Array.from(props.filters.textFilters['SW-P2'].all).sort().map((v) => ({
 							name: v,
@@ -74,14 +81,17 @@ export function TreeFilter(props) {
 							name: v,
 							id: v
 						}))} // Preselected value to persist in dropdown
-						onSelect={(_, i) => props.filters.textFilters['SW-P2'].choice.add(i.name)} // Function will trigger on select event
-						onRemove={(_, i) => props.filters.textFilters['SW-P2'].choice.delete(i.name)} // Function will trigger on remove event
+						// Function will trigger on select event
+						onSelect={(_, i) => props.filters.textFilters['SW-P2'].choice.add(i.name)}
+						// Function will trigger on remove event
+						onRemove={(_, i) => props.filters.textFilters['SW-P2'].choice.delete(i.name)}
 						displayValue='name' // Property name to display in the dropdown options
 						style={style}
 					/>
 
 					<Form.Label className="form-label">Place Of Death: </Form.Label>
 					<Multiselect
+						// Filter by place of death
 						id='pod-select'
 						options={Array.from(props.filters.textFilters['SW-P3'].all).sort().map((v) => ({
 							name: v,
@@ -91,8 +101,10 @@ export function TreeFilter(props) {
 							name: v,
 							id: v
 						}))} // Preselected value to persist in dropdown
-						onSelect={(_, i) => props.filters.textFilters['SW-P3'].choice.add(i.name)} // Function will trigger on select event
-						onRemove={(_, i) => props.filters.textFilters['SW-P3'].choice.delete(i.name)} // Function will trigger on remove event
+						// Function will trigger on select event
+						onSelect={(_, i) => props.filters.textFilters['SW-P3'].choice.add(i.name)}
+						// Function will trigger on remove event
+						onRemove={(_, i) => props.filters.textFilters['SW-P3'].choice.delete(i.name)}
 						displayValue='name' // Property name to display in the dropdown options
 						style={style}
 					/>
@@ -117,17 +129,22 @@ export function TreeFilter(props) {
 
 					<Form.Label className="form-label">Always Show: </Form.Label>
 					<Multiselect
+						// Filter for the list of people that the user want them to be always visible
 						id='pob-always-show'
 						options={props.allPeople.map((id) => ({
 							name: id.name,
 							id: id.id
 						}))} // Options to display in the dropdown
-						selectedValues={props.allPeople.filter(id => props.filters.alwaysShownPeople.has(id.id)).map((id) => ({
-							name: id.name,
-							id: id.id
-						}))} // Preselected value to persist in dropdown
-						onSelect={(_, i) => props.filters.alwaysShownPeople.add(i.id)} // Function will trigger on select event
-						onRemove={(_, i) => props.filters.alwaysShownPeople.delete(i.id)} // Function will trigger on remove event
+						selectedValues={props.allPeople.filter(id =>
+							props.filters.alwaysShownPeople.has(id.id)).map((id) => ({
+								name: id.name,
+								id: id.id
+							}))
+						} // Preselected value to persist in dropdown
+						// Function will trigger on select event
+						onSelect={(_, i) => props.filters.alwaysShownPeople.add(i.id)}
+						// Function will trigger on remove event
+						onRemove={(_, i) => props.filters.alwaysShownPeople.delete(i.id)}
 						displayValue='name' // Property name to display in the dropdown options
 						style={style}
 					/>
@@ -147,3 +164,5 @@ export function TreeFilter(props) {
 		</EscapeCloseableEnterClickable>
 	);
 }
+
+// TODO: Alert-box on pruning
