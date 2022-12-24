@@ -1,8 +1,7 @@
 import _ from "lodash";
-import {Requests} from './components/requests';
-import {Home} from './Home';
+import { Requests } from './components/requests';
+import { Home } from './Home';
 import './stylesheets/App.css';
-import './components/stylesheets/shared.css';
 
 import ResultPage from "./components/ResultPage.js";
 import React from "react";
@@ -10,17 +9,17 @@ import {
     BrowserRouter as Router,
     Routes,
     Route,
-  } from "react-router-dom";
+} from "react-router-dom";
 import * as util from 'util';
 
 import GenogramTree from "./GenogramTree/GenogramTree";
 import { SnackbarProvider } from 'notistack';
 
 class App extends React.Component {
-    componentDidMount(){
+    componentDidMount() {
         document.title = "Ancesta - Genealogy Project";
     }
-    
+
     constructor(props) {
         super(props);
         this.state = {
@@ -47,14 +46,14 @@ class App extends React.Component {
                     />
                     <Router>
                         <Routes>
-                            <Route path="/" element={<Home requests={this.requests}/>} />
-                            <Route path="/result" element={<ResultPage requests={this.requests}/>} />
-                            <Route path="/tree" element={<GenogramTree requests={this.requests} onPopupExtend={this.handlePopupExtend}/>} />
+                            <Route path="/" element={<Home requests={this.requests} />} />
+                            <Route path="/result" element={<ResultPage requests={this.requests} />} />
+                            <Route path="/tree" element={<GenogramTree requests={this.requests} onPopupExtend={this.handlePopupExtend} />} />
                         </Routes>
                     </Router>
                 </SnackbarProvider>
             </div>
-          );
+        );
     }
 
     setStatePromise = util.promisify(this.setState);

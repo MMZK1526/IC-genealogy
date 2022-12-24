@@ -1,5 +1,4 @@
 import './stylesheets/PopupInfo.css'
-import './stylesheets/shared.css';
 import EscapeCloseableEnterClickable from './EscapeCloseableEnterClickable';
 import Button from 'react-bootstrap/Button';
 import Container from 'react-bootstrap/Container';

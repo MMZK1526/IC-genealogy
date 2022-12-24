@@ -10,7 +10,6 @@ import Multiselect from 'multiselect-react-dropdown';
 
 import './stylesheets/PopupInfo.css'
 import './stylesheets/Sidebar.css';
-import './stylesheets/shared.css';
 import EscapeCloseableEnterClickable from "./EscapeCloseableEnterClickable";
 
 export function TreeGroups(props) {
