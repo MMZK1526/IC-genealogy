@@ -1,4 +1,4 @@
-import { CustomTimer, wait } from "./utils";
+import { CustomTimer, wait } from "./Utils";
 import _ from 'lodash';
 import WebSocketAsPromised from 'websocket-as-promised';
 

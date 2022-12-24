@@ -4,7 +4,7 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import { capitalizeFirstLetter } from '../GenogramTree/utilFunctions';
-import { Utils } from './utils';
+import { Utils } from './Utils';
 import Form from 'react-bootstrap/Form';
 import Multiselect from 'multiselect-react-dropdown';
 

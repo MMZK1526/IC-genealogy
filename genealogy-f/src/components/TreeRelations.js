@@ -7,7 +7,7 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import { capitalizeFirstLetter } from '../GenogramTree/utilFunctions';
-import { Utils } from './utils';
+import { Utils } from './Utils';
 import { useState } from 'react';
 
 export function TreeRelations(props) {

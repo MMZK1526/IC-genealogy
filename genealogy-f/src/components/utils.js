@@ -1,5 +1,4 @@
 import _ from "lodash";
-import {Requests} from './requests';
 import util from "util";
 
 const BLOODLINE_ONLY_EXTEND = true;
@@ -57,7 +56,7 @@ export class Utils {
     }
 
     fetchRelations = async (id) => {
-        const relations = await this.requests.relations({id: id});
+        const relations = await this.requests.relations({ id: id });
         return await this.addKinship(
             id,
             relations,
@@ -66,7 +65,7 @@ export class Utils {
 
     addKinship = async (id, relationsJSON) => {
         const kinshipJSON = await this.requests.relationCalc(
-            {start: id, relations: Object.values(relationsJSON.relations).flat()});
+            { start: id, relations: Object.values(relationsJSON.relations).flat() });
         return this.addKinshipHelper(kinshipJSON, relationsJSON);
     }
 
@@ -90,7 +89,7 @@ export class Utils {
                 const pathKey = path.join('');
                 if (!item.kinshipKeys.has(pathKey)) {
                     item.kinshipKeys.add(pathKey);
-                    item.kinships.push({'kinship': str, 'path': kinshipJSON[key][ix].path});
+                    item.kinships.push({ 'kinship': str, 'path': kinshipJSON[key][ix].path });
                 }
             });
         }
@@ -230,7 +229,7 @@ export function subTree(tree, startId, depth) {
             throw new Error();
         }
         console.assert(id in tree.relations);
-        subTree.relations[id] = tree.relations[id].filter(({item1Id}) => done.has(item1Id));
+        subTree.relations[id] = tree.relations[id].filter(({ item1Id }) => done.has(item1Id));
     }
 
     return subTree;

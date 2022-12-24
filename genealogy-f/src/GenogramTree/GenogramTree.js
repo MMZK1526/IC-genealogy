@@ -9,7 +9,7 @@ import '../stylesheets/GenogramTree.css';
 import { StatsPanel } from '../components/StatsPanel';
 import '../components/stylesheets/shared.css';
 import _ from 'lodash';
-import { cleanIfNeeded, subTree } from '../components/utils';
+import { cleanIfNeeded, subTree } from '../components/Utils.js';
 import ModalSpinner from '../ModalSpinner';
 import Toolbar from '../Toolbar';
 import { FilterModel } from '../filterModel';

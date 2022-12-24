@@ -14,7 +14,7 @@ import { capitalizeFirstLetter } from '../GenogramTree/utilFunctions';
 import Image from 'react-bootstrap/Image';
 import DefaultImg from '../images/default.png';
 import PersonWeb from '../images/person-web.png';
-import { Utils } from './utils';
+import { Utils } from './Utils';
 import ToggleButton from 'react-bootstrap/ToggleButton';
 import ToggleButtonGroup from 'react-bootstrap/ToggleButtonGroup';
 import React from "react";
