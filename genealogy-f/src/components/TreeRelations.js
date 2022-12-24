@@ -10,7 +10,7 @@ import { Utils } from './Utils';
 import { useState } from 'react';
 
 export function TreeRelations(props) {
-	if (props.fooState[0] === 1) {
+	if (props.relSearchState[0] === 1) {
 		return (
 			<div className='popup-inner w-50'>
 				<EscapeCloseableEnterClickable onClick={props.closeRelSearchResult}>
@@ -19,7 +19,7 @@ export function TreeRelations(props) {
 						className='text-start'
 						variant='link'
 						onClick={() => {
-							props.fooState[0] = 2;
+							props.relSearchState[0] = 2;
 							props.closePopUp();
 						}}>{'This relation contains people that are not in the graph. Click me to show them.'}
 					</Button>

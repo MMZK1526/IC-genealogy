@@ -116,7 +116,7 @@ class GenogramTree extends React.Component {
             showFilters: false,
             highlight: [],
             isShownBetween: false,
-            fooState: [0],
+            relSearchState: [0],
             keepHighlight: false,
             extendImpossible: new Set(),
         };
@@ -853,17 +853,17 @@ class GenogramTree extends React.Component {
                     this.state.showRelations &&
                     <div className='popup'>
                         <TreeRelations
-                            fooState={this.state.fooState}
+                            relSearchState={this.state.relSearchState}
                             closePopUp={() => {
                                 const notInGraph = this.state.highlight.filter((p) => !this.state.relationsJSON.items[p]);
-                                if (this.state.fooState[0] === 2) {
-                                    this.state.fooState[0] = 0;
+                                if (this.state.relSearchState[0] === 2) {
+                                    this.state.relSearchState[0] = 0;
                                     notInGraph.forEach((p) => this.state.filters.alwaysShownPeople.add(p));
                                     this.setState({ showRelations: false, isUpdated: true, keepHighlight: true });
                                     return;
                                 }
                                 if (notInGraph.length != 0) {
-                                    this.state.fooState[0] = 1;
+                                    this.state.relSearchState[0] = 1;
                                     this.setState({ showRelations: true });
                                 } else {
                                     this.setState({ showRelations: false });
@@ -882,14 +882,14 @@ class GenogramTree extends React.Component {
                         <RelSearchResult
                             closePopUp={() => {
                                 const notInGraph = this.state.highlight.filter((p) => !this.state.relationsJSON.items[p]);
-                                if (this.state.fooState[0] === 2) {
-                                    this.state.fooState[0] = 0;
+                                if (this.state.relSearchState[0] === 2) {
+                                    this.state.relSearchState[0] = 0;
                                     notInGraph.forEach((p) => this.state.filters.alwaysShownPeople.add(p));
                                     this.setState({ isShownBetween: false, isUpdated: true, keepHighlight: true });
                                     return;
                                 }
                                 if (notInGraph.length != 0) {
-                                    this.state.fooState[0] = 1;
+                                    this.state.relSearchState[0] = 1;
                                     this.setState({ isShownBetween: true });
                                 } else {
                                     this.setState({ isShownBetween: false });
@@ -898,7 +898,7 @@ class GenogramTree extends React.Component {
                             info={this.personMap.get(this.state.anotherPerson)}
                             highlight={this.state.highlight}
                             root={this.state.selectedPerson}
-                            fooState={this.state.fooState}
+                            relSearchState={this.state.relSearchState}
                         />
                     </div>
                 }
