@@ -12,42 +12,8 @@ import './stylesheets/PopupInfo.css'
 import './stylesheets/Sidebar.css';
 import EscapeCloseableEnterClickable from "./EscapeCloseableEnterClickable";
 
+// The panel to manage groups
 export function TreeGroups(props) {
-  // constructor(props) {
-  //   super(props);
-
-  //   this.groupModel = props.groupModel;
-  //   this.personMap = props.personMap;
-
-  //   this.state = {
-  //     currId: this.groupModel.getCurrentGroupId(),
-  //     currGroupMembers: [...this.groupModel.getCurrGroupMembers()],
-  //     currGroupProperties: this.groupModel.getCurrGroupProperties(),
-  //     groups: this.groupModel.getAllGroups(),
-  //   };
-
-  //   // this.changeGroupSelection = this.changeGroupSelection.bind(this);
-  //   this.changeGroupSelection = props.changeGroupSelection;
-  //   this.addNewGroup = this.addNewGroup.bind(this);
-  //   this.showPropertiesSwitch = this.showPropertiesSwitch.bind(this);
-  // }
-
-  // changeGroupSelection(groupId) {
-  //   this.groupModel.setCurrentGroupId(groupId);
-  //   this.setState({
-  //     currId: groupId,
-  //     currGroupProperties: this.groupModel.getCurrGroupProperties(),
-  //     currGroupMembers: [...this.groupModel.getCurrGroupMembers()],
-  //   }, function () {console.log(this.state.currGroupProperties)});
-  //   // console.log(this.groupModel.getCurrGroupProperties())
-  //   // console.log(this.state.currGroupProperties)
-  //   // this.render();
-  // }
-
-  // addNewGroup () {
-  //   this.groupModel.addNewGroup();
-  //   this.setState({ groups: this.groupModel.getAllGroups() });
-  // }
   const [name, setName] = useState("");
 
   const handleNameChange = (event) => {
@@ -56,7 +22,7 @@ export function TreeGroups(props) {
   }
 
   const style = {
-    searchBox: { // To change search box element look
+    searchBox: {
       'fontSize': '20px',
       'border': '1px solid',
     },
@@ -65,9 +31,7 @@ export function TreeGroups(props) {
   let ids = [...props.personMap.keys()].filter(id => props.personMap.get(id).get("name") != undefined);
 
   return (
-    // let groups = this.groupModel.getAllGroups();
-
-    // create set that we will then add to either global or group
+    // Create set that we will then add to either global or group
     <EscapeCloseableEnterClickable>
       <div className='sidebar pe-auto'>
         <Container className='overflow-auto additional-properties-container'>
@@ -76,7 +40,6 @@ export function TreeGroups(props) {
             <Form.Select
               className='mb-2'
               value={props.groupModel.getCurrentGroupId()}
-              // onChange={(event) => props.groupModel.setCurrentGroupId(event.target.value)}
               onChange={(event) => props.changeGroupSelection(event.target.value)}
             >
               {props.groupModel.getAllGroups().map((group, id) => {
@@ -111,23 +74,22 @@ export function TreeGroups(props) {
                 name: (props.personMap.get(v)).get("name"),
                 id: v
               }))} // Preselected value to persist in dropdown
-              onSelect={(_, v) => props.groupModel.addPersonToGroup(v.id)} // Function will trigger on select event
-              onRemove={(_, v) => props.groupModel.removePersonFromGroup(v.id)} // Function will trigger on remove event
+              // Function will trigger on select event
+              onSelect={(_, v) => props.groupModel.addPersonToGroup(v.id)}
+              // Function will trigger on remove event
+              onRemove={(_, v) => props.groupModel.removePersonFromGroup(v.id)}
               displayValue='name' // Property name to display in the dropdown options
               style={style}
             />
           </Form>
 
-          {/* <label className="form-label">Create custom group</label> */}
           <Button className='mb-3 text-center w-100' variant="success" onClick={props.addNewGroup}>
             Create new group
           </Button>
 
-          {/* {showPropertiesSwitch(props.groupModel, props.personMap, false)} */}
           {showPropertiesSwitch(props.groupModel.getCurrGroupProperties(), props.personMap, props.externUpdate)}
 
           <h5 className='mt-3 mb-3'>Default</h5>
-          {/* {showPropertiesSwitch(props.groupModel, props.personMap, true)} */}
           {showPropertiesSwitch(props.groupModel.getDefaultProperties(), props.personMap, props.externUpdate)}
         </Container>
       </div>
@@ -144,8 +106,6 @@ function showPropertiesSwitch(set, personMap, externUpdate) {
       return !Utils.specialKeywords.includes(k) && !Utils.relationsKeywords.includes(k);
     })
     .map((property) => { return { label: property, checked: set.has(property) } });
-
-  // console.log(ranked)
 
   const update = (ix, checked) => {
     if (checked) {
@@ -172,7 +132,6 @@ function showPropertiesSwitch(set, personMap, externUpdate) {
                 type="switch"
                 id="custom-switch"
                 checked={property.checked}
-                // onChange={(e) => { e.target.checked ? set.add(property.label) : set.delete(property.label)}}
                 onChange={(e) => update(ix, e.target.checked)}
               />
             </Form>
@@ -182,4 +141,3 @@ function showPropertiesSwitch(set, personMap, externUpdate) {
     </div>
   );
 }
-
