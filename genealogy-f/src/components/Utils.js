@@ -254,8 +254,3 @@ Unrecognized relationship type detected
 when calculating depth offset
     ```.trim());
 }
-
-
-
-
-
