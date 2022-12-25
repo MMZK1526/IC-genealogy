@@ -1,5 +1,4 @@
 import './stylesheets/PopupInfo.css'
-import EscapeCloseableEnterClickable from './EscapeCloseableEnterClickable';
 import Button from 'react-bootstrap/Button';
 import Row from 'react-bootstrap/Row';
 import CloseButton from 'react-bootstrap/CloseButton';
@@ -11,32 +10,39 @@ function RelSearchResult(props) {
     if (props.relSearchState[0] === 1) {
         return (
             <div className='popup-inner w-50'>
-                <EscapeCloseableEnterClickable onClick={props.closeRelSearchResult}>
-                    <CloseButton className='close-btn' onClick={props.closePopUp} />
-                    <Button
-                        className='text-start'
-                        variant='link'
-                        onClick={() => {
-                            props.relSearchState[0] = 2;
-                            props.closePopUp();
-                        }}>{'This relation contains people that are not in the graph. Click me to show them.'}
-                    </Button>
-                </EscapeCloseableEnterClickable>
+                <CloseButton className='close-btn' onClick={() => {
+                    props.relSearchState[0] = 3;
+                    props.closePopUp();
+                }} />
+                <Button
+                    className='text-start'
+                    variant='link'
+                    onClick={() => {
+                        props.relSearchState[0] = 2;
+                        props.closePopUp();
+                    }}>{'This relation contains people that are not in the graph. Click me to show them.'}
+                </Button>
             </div >
         );
     }
 
     return (
         <div className='popup-inner w-50'>
-            <EscapeCloseableEnterClickable onClick={props.closeRelSearchResult}>
-                <CloseButton className='close-btn' onClick={props.closePopUp} />
-                {getRelationsFrom(props.info, props.highlight, props.closePopUp)}
-            </EscapeCloseableEnterClickable>
+            <CloseButton className='close-btn' onClick={props.closePopUp} />
+            {getRelationsFrom(props.info, props.highlight, props.closePopUp)}
         </div >
     );
 
     function getRelationsFrom(data, highlight, close) {
         if (!data || data.get('kinship') === undefined) {
+            return (
+                <label>No valid relationship is found!</label>
+            );
+        }
+
+        let validRelations = data.get('kinship').filter((v) => v.path[0] === props.root);
+
+        if (validRelations.length === 0) {
             return (
                 <label>No valid relationship is found!</label>
             );

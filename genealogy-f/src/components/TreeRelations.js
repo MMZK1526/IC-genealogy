@@ -1,5 +1,4 @@
 import './stylesheets/PopupInfo.css';
-import EscapeCloseableEnterClickable from './EscapeCloseableEnterClickable';
 import Button from 'react-bootstrap/Button';
 import CloseButton from 'react-bootstrap/CloseButton';
 import Row from 'react-bootstrap/Row';
@@ -14,27 +13,26 @@ export function TreeRelations(props) {
 	if (props.relSearchState[0] === 1) {
 		return (
 			<div className='popup-inner w-50'>
-				<EscapeCloseableEnterClickable onClick={props.closeRelSearchResult}>
-					<CloseButton className='close-btn' onClick={props.closePopUp} />
-					<Button
-						className='text-start'
-						variant='link'
-						onClick={() => {
-							props.relSearchState[0] = 2;
-							props.closePopUp();
-						}}>{'This relation contains people that are not in the graph. Click me to show them.'}
-					</Button>
-				</EscapeCloseableEnterClickable>
+				<CloseButton className='close-btn' onClick={() => {
+					props.relSearchState[0] = 3;
+					props.closePopUp();
+				}} />
+				<Button
+					className='text-start'
+					variant='link'
+					onClick={() => {
+						props.relSearchState[0] = 2;
+						props.closePopUp();
+					}}>{'This relation contains people that are not in the graph. Click me to show them.'}
+				</Button>
 			</div >
 		);
 	}
 
 	return (
 		<div className='popup-inner w-50 overflow-auto' style={{ maxHeight: "50%" }}>
-			<EscapeCloseableEnterClickable onClick={props.closePopUp}>
-				<CloseButton className='close-btn' onClick={props.closePopUp} />
-				{getRelationFields(props.info, props.highlight, props.closePopUp)}
-			</EscapeCloseableEnterClickable>
+			<CloseButton className='close-btn' onClick={props.closePopUp} />
+			{getRelationFields(props.info, props.highlight, props.closePopUp)}
 		</div >
 	);
 

@@ -558,7 +558,6 @@ export class DiagramWrapper extends React.Component {
         if (node !== null) {
             this.diagram.select(node);
 
-            // this.diagram.commandHandler.scrollToPart(node);
             this.diagram.centerRect(node.actualBounds);
         }
         this.diagram.layout.diagram = this.diagram;

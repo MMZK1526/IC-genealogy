@@ -88,6 +88,7 @@ class GenogramTree extends React.Component {
 
         this.setAnotherPerson = this.setAnotherPerson.bind(this);
         this.getAnotherPerson = this.getAnotherPerson.bind(this);
+        this.loadRelations = this.loadRelations.bind(this);
 
         this.requests = this.props.requests;
         this.isLoading = !rawJSON;
@@ -253,7 +254,6 @@ class GenogramTree extends React.Component {
     }
 
     loadRelations = async (relationsJSON, id) => {
-        // console.log('Loading relations!');
         // Add reciprocal relations.
         for (const [key, relations] of Object.entries(relationsJSON.relations)) {
             for (const relation of relations) {
@@ -340,12 +340,12 @@ class GenogramTree extends React.Component {
         } else {
             this.mergeRelations(this.state.originalJSON, relationsJSON);
         }
-        await this.fetchKinships(this.state.root, this.state.originalJSON);
+        await this.fetchKinships(id, this.state.originalJSON);
         this.applyFilterAndDrawTree();
         if (id == null || id === undefined) {
             this.state.isLoading = false;
             this.state.isUpdated = true;
-            this.state.selectedPerson = this.state.root;
+            this.state.selectedPerson = id;
         } else {
             this.setState({
                 isLoading: false,
@@ -662,8 +662,6 @@ class GenogramTree extends React.Component {
             // show all attributes at start
 
             this.groupModel.initialize([...this.personMap.values()].map((m) => [...m.keys()]).sort((a, b) => b.length - a.length)[0]);
-            // this.state.groupModel.globalSet = new Set([...this.personMap.values()].map((m) => [...m.keys()]).sort((a, b) => b.length - a.length)[0])
-            // this.state.groupModel.groupItemSet = new Set([...this.state.groupModel.globalSet])
 
             updateDiagram = true;
             this.state.isLoading = false;
@@ -684,13 +682,6 @@ class GenogramTree extends React.Component {
             this.state.recommit = false;
         }
         this.personMap = getPersonMap(Object.values(this.state.originalJSON.items), this.state.originalJSON.relations);
-
-        // if (
-        //     !this.state.isLoading &&
-        //     _.isEqual(this.prevRelationsJSON, this.state.relationsJSON)
-        // ) {
-        //     this.displayExtendImpossibleSnackbar();
-        // }
 
         return (
             <>
@@ -747,6 +738,7 @@ class GenogramTree extends React.Component {
                             {
                                 this.state.showLookup &&
                                 <TreeNameLookup
+                                    requests={this.requests}
                                     allPeople={Object.values(this.state.originalJSON.items)}
                                     onPersonSelection={(_, v) => this.setFocusPerson(v.key)}
                                     onAnotherPersonSelection={(_, v) => this.setAnotherPerson(v)}
@@ -756,6 +748,12 @@ class GenogramTree extends React.Component {
                                     getPersonMap={this.getPersonMap}
                                     onChange={async () => {
                                         await this.fetchKinships(this.state.selectedPerson, this.state.originalJSON);
+                                        this.setState({ isPopped: false, isShownBetween: true });
+                                    }}
+                                    onSearchNew={async (relationsJSON, anotherPerson) => {
+                                        await this.loadRelations(relationsJSON, this.state.selectedPerson);
+                                        this.state.anotherPerson = anotherPerson;
+                                        console.log(this.state.selectedPerson);
                                         this.setState({ isPopped: false, isShownBetween: true });
                                     }}
                                 />
@@ -887,6 +885,11 @@ class GenogramTree extends React.Component {
                                     notInGraph.forEach((p) => this.state.filters.alwaysShownPeople.add(p));
                                     this.setState({ isShownBetween: false, isUpdated: true, keepHighlight: true });
                                     return;
+                                }
+                                if (this.state.relSearchState[0] === 3) {
+                                    this.state.relSearchState[0] = 0;
+                                    notInGraph.length = 0;
+                                    this.setState({ isShownBetween: false });
                                 }
                                 if (notInGraph.length != 0) {
                                     this.state.relSearchState[0] = 1;
