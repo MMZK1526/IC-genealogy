@@ -162,6 +162,7 @@ ${errorMessage.message}
     }
 
     relationsHttp = async ({ id = 'WD-Q152308', depth = 2, visitedItems = [], allSpouses = true } = {}) => {
+        console.log(allSpouses);
         const url = allSpouses
             ? `${this.baseUrl}/relations_wk?id=${id}&depth=${depth}`
             : `${this.baseUrl}/relations_wk?id=${id}&depth=${depth}&homo_strata=&hetero_strata=WD-P22,WD-P25,WD-P26,WD-P40`;
