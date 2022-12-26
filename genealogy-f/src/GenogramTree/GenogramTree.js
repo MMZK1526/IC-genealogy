@@ -24,9 +24,6 @@ import { GroupModel } from '../models/groupModel.js';
 import { withSnackbar } from 'notistack';
 import { Mutex } from 'async-mutex';
 
-const ENABLE_PRE_FETCHING = false;
-const USE_FRONTEND_CACHE = true;
-const USE_VISITED_ITEMS = false;
 const INITIAL_DEPTH = 2;
 const EXTENSION_DEPTH = 1;
 
@@ -937,48 +934,8 @@ class GenogramTree extends React.Component {
             return await this.loadCustomData();
         }
 
-        if (!ENABLE_PRE_FETCHING) {
-            this.fetchDataNoPreFetch({ id: id, depth: depth, allSpouses: allSpouses });
-            return;
-        }
-
-        // TODO: Pre-fetching logic
-        const f = async () => {
-            console.assert(this.pendingExtensionId === null);
-            this.pendingExtensionId = id;
-        };
-        await this.mutex.runExclusive(f);
-        if (USE_FRONTEND_CACHE) {
-            await this.tryExtendFromCache(id);
-        }
-        const smallFastPromise = this.smallFastFetch(id, depth, allSpouses);
-        const bigFastPromise = this.bigFastFetch(id, depth, allSpouses);
-        const smallFastArr = await smallFastPromise;
-        const [smallFastData, smallFastFromDb] = smallFastArr;
-        const g = async (id) => { await this.loadRelations(smallFastData, id) };
-        await this.tryExecPendingExtension(g, false, id);
-        const bigFastArr = await bigFastPromise;
-        const [bigFastData, bigFastFromDb] = bigFastArr;
-        const smallFastSet = new Set(Object.keys(smallFastData.items));
-        this.preFetchedIds.fast = new Set([...this.preFetchedIds.fast, ...smallFastSet]);
-        if (USE_FRONTEND_CACHE) {
-            await this.tryExtendFromCache(id);
-        }
-        let smallSlowData = smallFastData;
-        if (smallFastFromDb) {
-            smallSlowData = await this.smallSlowFetch(id, depth, allSpouses, smallFastData);
-            if (this.containsMoreData(
-                smallSlowData,
-                smallFastData
-            )) {
-                this.updateSlowTree(smallSlowData);
-            }
-        }
-        const smallSlowSet = new Set(Object.keys(smallSlowData.items));
-        this.preFetchedIds.slow = new Set([...this.preFetchedIds.slow, ...smallSlowSet]);
-        if (bigFastFromDb) {
-            await this.bigSlowFetch(id, depth, allSpouses, bigFastData);
-        }
+        this.fetchDataNoPreFetch({ id: id, depth: depth, allSpouses: allSpouses });
+        return;
     }
 
     fetchDataNoPreFetch = async ({ id = null, depth = null, allSpouses = true } = {}) => {
@@ -1021,148 +978,6 @@ class GenogramTree extends React.Component {
                 this.isLatestReadNotFromWikiData = false;
             });
         });
-    }
-
-    smallFastFetch = async (id, depth, allSpouses) => {
-        const [dbPromise, wikiDataPromise] = this.requests.relationsCacheAndWiki({
-            id: id, depth: depth, allSpouses: allSpouses,
-            visitedItems:
-                (this.state.originalJSON && USE_VISITED_ITEMS) ?
-                    Object.keys(this.state.originalJSON.items) :
-                    []
-        });
-        const dbRes = await dbPromise;
-        if (this.requests.dbResEmpty(dbRes)) {
-            const wikiDataRes = await wikiDataPromise;
-            return [wikiDataRes, false];
-        }
-        return [dbRes, true];
-    }
-
-    smallSlowFetch = async (id, depth, allSpouses, fastData) => {
-        const slowDataPromise = this.requests.relations({
-            id: id, depth: depth, allSpouses: allSpouses,
-            visitedItems:
-                (this.state.originalJSON && USE_VISITED_ITEMS) ?
-                    Object.keys(this.state.originalJSON.items) :
-                    []
-        });
-        const slowData = await slowDataPromise;
-        if (this.containsMoreData(
-            slowData,
-            fastData
-        )) {
-            this.updateSlowTree(slowData);
-        }
-        return slowData;
-    }
-
-    bigFastFetch = async (id, depth, allSpouses) => {
-        const [dbPromise, wikiDataPromise] = this.requests.relationsCacheAndWiki({
-            id: id, depth: depth + EXTENSION_DEPTH, allSpouses: allSpouses,
-            visitedItems:
-                (this.state.originalJSON && USE_VISITED_ITEMS) ?
-                    Object.keys(this.state.originalJSON.items) :
-                    []
-        });
-        const dbRes = await dbPromise;
-        if (this.requests.dbResEmpty(dbRes)) {
-            const wikiDataRes = await wikiDataPromise;
-            await this.updateTreeCache(wikiDataRes);
-            return [wikiDataRes, false];
-        }
-        await this.updateTreeCache(dbRes);
-        this.preFetchedIds.fastExtend.add(id);
-        return [dbRes, true];
-    }
-
-    bigSlowFetch = async (id, depth, allSpouses, fastData) => {
-        const slowDataPromise = this.requests.relations({
-            id: id, depth: depth + EXTENSION_DEPTH, allSpouses: allSpouses,
-            visitedItems:
-                (this.state.originalJSON && USE_VISITED_ITEMS) ?
-                    Object.keys(this.state.originalJSON.items) :
-                    []
-        });
-        const slowData = await slowDataPromise;
-        if (this.containsMoreData(
-            subTree(slowData, id, EXTENSION_DEPTH),
-            subTree(fastData, id, EXTENSION_DEPTH)
-        )) {
-            await this.handleBigSlow(slowData, id);
-        }
-    }
-
-    updateSlowTree = (slowData) => {
-        this.tree.slow = this.mergeRelations(this.tree.slow, this.state.originalJSON);
-        this.tree.slow = this.mergeRelations(this.tree.slow, slowData);
-        this.setState({
-            newDataAvailable: true,
-        });
-        console.log('More complete data available');
-    }
-
-    handleBigSlow = async (slowData, id) => {
-        this.tree.cache = this.mergeRelations(this.tree.cache, slowData);
-        const newData = subTree(this.tree.cache, id, EXTENSION_DEPTH);
-        if (this.preFetchedIds.fastExtend.has(id)) {
-            this.tree.slow = this.mergeRelations(this.tree.slow, this.state.originalJSON);
-            this.tree.slow = this.mergeRelations(this.tree.slow, newData);
-            this.setState({
-                newDataAvailable: true,
-            });
-            this.preFetchedIds.fastExtend.delete(id);
-            console.log('More complete data available');
-        }
-    }
-
-    tryExtendFromCache = async (id) => {
-        const f = (fooId) => this.extendFromCache(fooId);
-        await this.tryExecPendingExtension(f, true, id);
-    }
-
-    tryExecPendingExtension = async (f, fromCache, id) => {
-        const g = async () => {
-            if (this.pendingExtensionId === id &&
-                (
-                    !fromCache ||
-                    this.preFetchedIds.fast.has(this.pendingExtensionId) ||
-                    this.preFetchedIds.slow.has(this.pendingExtensionId)
-                )
-            ) {
-                this.pendingExtensionId = null;
-                await f(id);
-            }
-        };
-        await this.mutex.runExclusive(g);
-    }
-
-    updateTreeCache = async (relations) => {
-        if (_.isEmpty(this.tree.cache)) {
-            this.tree.cache = relations;
-            console.log('Cache has been updated');
-            return;
-        }
-        this.tree.cache = this.mergeRelations(this.tree.cache, relations);
-        console.log('Cache has been updated');
-    }
-
-    extendFromCache = async (id) => {
-        const curTree = this.state.originalJSON;
-        const cachedTree = this.tree.cache;
-        const extendedTree = await this.getRenderTreeUsingCache(id, curTree, cachedTree);
-        this.setState({
-            originalJSON: extendedTree,
-            isLoading: false,
-            isUpdated: true,
-        });
-        console.log('Cache was used for rendering');
-    }
-
-    getRenderTreeUsingCache = async (extendId, curTree, cachedTree) => {
-        const renderTree = subTree(cachedTree, extendId, EXTENSION_DEPTH);
-        const newTree = this.mergeRelations(curTree, renderTree);
-        return await this.injectKinship(this.state.root, newTree);
     }
 }
 
