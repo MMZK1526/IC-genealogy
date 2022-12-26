@@ -1,3 +1,4 @@
+// Shared opacity level constants.
 export class Opacity {
     static normal = '0.9';
     static outlier = '0.5';
