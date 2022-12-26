@@ -7,6 +7,7 @@ import { Opacity } from './Const';
 
 const $ = go.GraphObject.make;
 
+// The family tree diagram with some wrapper states.
 export class DiagramWrapper extends React.Component {
     constructor(props) {
         super(props);
@@ -48,18 +49,17 @@ export class DiagramWrapper extends React.Component {
         }
         this.state.diagram = $(go.Diagram,
             {
-                // initialAutoScale: go.Diagram.initialAutoScale,
                 initialContentAlignment: go.Spot.Center,
                 'undoManager.isEnabled': false,
                 // when a node is selected, draw a big yellow circle behind it
                 nodeSelectionAdornmentTemplate:
                     $(go.Adornment, 'Auto',
-                        { layerName: 'Grid' },  // the predefined layer that is behind everything else
+                        { layerName: 'Grid' }, // the predefined layer that is behind everything else
                         $(go.Shape, 'Circle', { fill: '#c1cee3', stroke: null }),
                         $(go.Placeholder, { margin: 0 })
                     ),
                 scrollMargin: 250,
-                layout:  // use a custom layout, defined below
+                layout: // use a custom layout, defined below
                     $(GenogramLayout, { direction: 90, layerSpacing: 50, columnSpacing: 0 }),
                 'InitialLayoutCompleted': _ => {
                     var node = this.diagram.findNodeForKey(this.getFocusPerson());
@@ -84,8 +84,6 @@ export class DiagramWrapper extends React.Component {
                 // only iterates through simple Parts in the diagram, not Nodes or Links
                 dia.parts.each(function (part) {
                     // and only on those that have the "_viewPosition" property set to a Point
-                    // console.log(part.position)
-                    // console.log(dia.transformViewToDoc(part._viewPosition))
                     if (part._viewPosition) {
                         if (dia.transformViewToDoc(part._viewPosition).x > 0) {
                             // part.position is now a Doc cor
@@ -94,10 +92,10 @@ export class DiagramWrapper extends React.Component {
                             // part.position is now a View coordinate
                             part.position = part._viewPosition
                         }
-                        // part.scale = 1/dia.scale;  // counteract any zooming
+                        // part.scale = 1/dia.scale; counteract any zooming
                     }
                 })
-            }, null);  // set skipsUndoManager to true, to avoid recording these changes
+            }, null); // set skipsUndoManager to true, to avoid recording these changes
         });
         // determine the color for each attribute shape
         function attrFill(a) {
@@ -217,18 +215,11 @@ export class DiagramWrapper extends React.Component {
         function mouseEnter(e, obj) {
             if (highlight.length > 0) return;
             var node = obj.findObject('NODE2');
-            // var shape = obj.findObject('SHAPE');
-            // shape.fill = '#6DAB80';
-            // shape.stroke = '#A6E6A1';
-            // var text = obj.findObject('TEXT');
-            // text.stroke = 'white';
             // highlight all Links and Nodes coming out of a given Node
             var diagram = node.diagram;
-            // node.shape.fill = '#7ec2d7'
             diagram.startTransaction('highlight');
             // remove any previous highlighting
             diagram.clearHighlighteds();
-            // node.isHighlighted = true;
             // for each Link coming out of the Node, set Link.isHighlighted
             node.isHighlighted = true;
             node.findLinksConnected().each(function (l) {
@@ -254,19 +245,10 @@ export class DiagramWrapper extends React.Component {
             diagram.commitTransaction('highlight');
         }
 
-        function mouseLeave(e, obj) {
-            // e.diagram.commit(function (d) {
-            //     d.clearHighlighteds();
-            // }, 'no highlighteds');
-        }
-
-
-        // two different node templates, one for each sex,
+        // Nodes: three different node templates, one for each sex (including unknown),
         // named by the category value in the node data object
         this.diagram.nodeTemplateMap.add('male',  // male
             $(go.Node, 'Vertical',
-                // TODO can make this non-selectable with selectable: false, but we want clickable but not movable?
-                // see this for how to do stuff on click? - https://gojs.net/latest/extensions/Robot.html
                 {
                     movable: true,
                     locationSpot: go.Spot.Center,
@@ -274,11 +256,8 @@ export class DiagramWrapper extends React.Component {
                     selectionObjectName: 'ICON',
                     name: 'NODE2',
                     mouseEnter: mouseEnter,
-                    mouseLeave: mouseLeave,
                     deletable: false,
                 },
-                // new go.Binding('opacity', 'hide', h => h ? 0 : 1),
-                // new go.Binding('pickable', 'hide', h => !h),
                 $(go.Panel,
                     { name: 'ICON' },
                     $(go.Shape, 'Square',
@@ -317,11 +296,6 @@ export class DiagramWrapper extends React.Component {
                     { textAlign: 'center', maxSize: new go.Size(80, NaN), background: 'rgba(255,255,255,0.5)' },
                     new go.Binding('text', 'name'), new go.Binding('opacity', 'opacity'))
             ));
-        // remove highlighting form all nodes, when user clicks on background
-        this.diagram.click = function (e) {
-            highlight.length = 0;
-            e.diagram.commit(function (d) { d.clearHighlighteds(); }, 'no highlighteds');
-        };
         this.diagram.nodeTemplateMap.add('female',  // female
             $(go.Node, 'Vertical',
                 {
@@ -331,7 +305,6 @@ export class DiagramWrapper extends React.Component {
                     selectionObjectName: 'ICON',
                     name: 'NODE2',
                     mouseEnter: mouseEnter,
-                    mouseLeave: mouseLeave,
                     deletable: false,
                 },
                 // new go.Binding('opacity', 'hide', h => h ? 0 : 1),
@@ -384,7 +357,6 @@ export class DiagramWrapper extends React.Component {
                     selectionObjectName: 'ICON',
                     name: 'NODE2',
                     mouseEnter: mouseEnter,
-                    mouseLeave: mouseLeave,
                     deletable: false,
                 },
                 // new go.Binding('opacity', 'hide', h => h ? 0 : 1),
@@ -414,6 +386,12 @@ export class DiagramWrapper extends React.Component {
                     new go.Binding('text', 'name'), new go.Binding('opacity', 'opacity'))
             ));
 
+        // remove highlighting form all nodes, when user clicks on background
+        this.diagram.click = function (e) {
+            highlight.length = 0;
+            e.diagram.commit(function (d) { d.clearHighlighteds(); }, 'no highlighteds');
+        };
+
         // the representation of each label node -- nothing shows on a Marriage Link
         this.diagram.nodeTemplateMap.add('LinkLabel',
             $(go.Node, {
@@ -431,7 +409,7 @@ export class DiagramWrapper extends React.Component {
                 //     })
             ));
 
-
+        // Links: three relationships: parent-child, marriage, have children
         this.diagram.linkTemplate =  // for parent-child relationships
             $(go.Link,
                 {
@@ -506,6 +484,7 @@ export class DiagramWrapper extends React.Component {
         return this.diagram;
     }
 
+    // Utility function for saving the tree as a SVG.
     downloadSvg = (blob) => {
         const url = window.URL.createObjectURL(blob);
         const filename = 'family-tree.svg';
@@ -515,7 +494,7 @@ export class DiagramWrapper extends React.Component {
         a.href = url;
         a.download = filename;
 
-        // IE 11
+        // IE 11 backward compatibility
         if (window.navigator.msSaveBlob !== undefined) {
             window.navigator.msSaveBlob(blob, filename);
             return;
@@ -548,7 +527,6 @@ export class DiagramWrapper extends React.Component {
                     // if a node data object is copied, copy its data.a Array
                     copiesArrays: true,
                     // create all of the nodes for people
-                    //TODO this should be got from this.state.relationJSON from App.js
                     nodeDataArray: array
                 });
         this.setupParents(this.diagram);
@@ -565,11 +543,11 @@ export class DiagramWrapper extends React.Component {
 
     }
 
-    findMarriage(diagram, a, b) {  // A and B are node keys
+    findMarriage(diagram, a, b) { // A and B are node keys
         const nodeA = diagram.findNodeForKey(a);
         const nodeB = diagram.findNodeForKey(b);
         if (nodeA !== null && nodeB !== null) {
-            const it = nodeA.findLinksBetween(nodeB);  // in either direction
+            const it = nodeA.findLinksBetween(nodeB); // in either direction
             while (it.next()) {
                 const link = it.value;
                 // Link.data.category === 'Marriage' means it'gender a marriage relationship
