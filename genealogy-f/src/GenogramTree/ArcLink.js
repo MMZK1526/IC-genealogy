@@ -1,5 +1,6 @@
 import * as go from "gojs";
 
+// Custom link shape for the marriage relation.
 export class ArcLink extends go.Link {
     rotate(x, y, rad) {
         return {
@@ -31,14 +32,14 @@ export class ArcLink extends go.Link {
         var sy21 = Math.pow(y2, 2) - Math.pow(y1, 2);
 
         var f = ((sx13) * (x12)
-                + (sy13) * (x12)
-                + (sx21) * (x13)
-                + (sy21) * (x13))
+            + (sy13) * (x12)
+            + (sx21) * (x13)
+            + (sy21) * (x13))
             / (2 * ((y31) * (x12) - (y21) * (x13)));
         var g = ((sx13) * (y12)
-                + (sy13) * (y12)
-                + (sx21) * (y13)
-                + (sy21) * (y13))
+            + (sy13) * (y12)
+            + (sx21) * (y13)
+            + (sy21) * (y13))
             / (2 * ((x31) * (y12) - (x21) * (y13)));
 
         var c = -(Math.pow(x1, 2)) -
@@ -101,8 +102,8 @@ export class ArcLink extends go.Link {
         let endAngle = Math.atan2(rotatedToPoint.y - circle.cY, rotatedToPoint.x - circle.cX);
         let increment = (endAngle - startAngle) / 10;
         for (var currentAngle = startAngle;
-             startAngle < endAngle ? currentAngle <= endAngle : currentAngle >= endAngle;
-             currentAngle += increment) {
+            startAngle < endAngle ? currentAngle <= endAngle : currentAngle >= endAngle;
+            currentAngle += increment) {
             let parametricResult = parametric(currentAngle);
             let point = this.rotate(parametricResult.x, parametricResult.y, slopeAngle);
             this.addPointAt(point.x, point.y);
