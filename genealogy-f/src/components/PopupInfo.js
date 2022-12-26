@@ -9,7 +9,7 @@ import { FcGoogle } from 'react-icons/fc'
 import { ButtonGroup } from 'react-bootstrap';
 import CloseButton from 'react-bootstrap/CloseButton';
 import { TbMapSearch } from 'react-icons/tb'
-import { capitalizeFirstLetter } from '../GenogramTree/utilFunctions';
+import { capitalizeFirstLetter } from '../GenogramTree/UtilFunctions';
 import Image from 'react-bootstrap/Image';
 import DefaultImg from '../images/default.png';
 import PersonWeb from '../images/person-web.png';

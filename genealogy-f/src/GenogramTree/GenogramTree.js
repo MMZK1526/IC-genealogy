@@ -15,7 +15,7 @@ import { FilterModel } from '../models/filterModel.js';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import { DiagramWrapper } from './DiagramWrapper';
-import { getPersonMap, ndb, transform, withRouter } from './utilFunctions';
+import { getPersonMap, ndb, transform, withRouter } from './UtilFunctions';
 import { TreeNameLookup } from '../components/TreeNameLookup.js';
 import { Opacity } from './Const';
 import { TreeGroups } from '../components/TreeGroups.js';

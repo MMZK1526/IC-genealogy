@@ -3,7 +3,7 @@ import Button from 'react-bootstrap/Button';
 import CloseButton from 'react-bootstrap/CloseButton';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import { capitalizeFirstLetter } from '../GenogramTree/utilFunctions';
+import { capitalizeFirstLetter } from '../GenogramTree/UtilFunctions';
 import { Utils } from './Utils';
 
 // Show relations from the selected users (e.g. their parents, spouse etc.)
