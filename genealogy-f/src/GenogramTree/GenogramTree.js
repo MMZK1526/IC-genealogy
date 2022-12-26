@@ -27,6 +27,7 @@ import { Mutex } from 'async-mutex';
 const INITIAL_DEPTH = 2;
 const EXTENSION_DEPTH = 1;
 
+// Utility function that converts a filter JSON to a filter model.
 function toFilterModel(filters) {
     const filterModel = new FilterModel(true);
     if (filters == null) {
@@ -47,22 +48,11 @@ function toFilterModel(filters) {
 
 }
 
-// class encapsulating the tree initialisation and rendering
+// class encapsulating the tree initialisation and rendering.
 class GenogramTree extends React.Component {
     constructor(props) {
         super(props);
-        this.tree = {
-            cache: {},
-            slow: {},
-        };
         this.isLatestReadNotFromWikiData = true;
-        // this.fullCache = {};
-        this.preFetchedIds = {
-            fast: new Set(),
-            slow: new Set(),
-            fastExtend: new Set(),
-        };
-        this.pendingExtensionId = null;
         this.prevOriginalJSON = {};
         this.mutex = new Mutex();
         let rawJSON = null;
@@ -104,7 +94,6 @@ class GenogramTree extends React.Component {
             isPopped: false,
             showStats: false,
             filters: rawFilters,
-            // groupModel: new GroupModel(),
             showBtns: true,
             recentre: false,
             recommit: false,
@@ -123,12 +112,6 @@ class GenogramTree extends React.Component {
 
     componentDidMount() {
         document.title = this.sourceName + "'s family tree - Ancesta";
-    }
-
-    flipZoomSwitch = () => {
-        this.setState(prev => ({
-            defaultZoomSwitch: !prev.defaultZoomSwitch
-        }));
     }
 
     // Returns all persons nodes in tree
@@ -262,7 +245,8 @@ class GenogramTree extends React.Component {
                             type: 'spouse',
                             typeId: 'WD-P26'
                         }];
-                    } else if (!relationsJSON.relations[relation.item1Id].some((r) => r.type === 'spouse' && r.item1Id === key)) {
+                    } else if (!relationsJSON.relations[relation.item1Id]
+                        .some((r) => r.type === 'spouse' && r.item1Id === key)) {
                         relationsJSON.relations[relation.item1Id].push({
                             item1Id: key,
                             item2Id: relation.item1Id,
@@ -278,7 +262,8 @@ class GenogramTree extends React.Component {
                             type: 'child',
                             typeId: 'WD-P40'
                         }];
-                    } else if (!relationsJSON.relations[relation.item1Id].some((r) => (r.type === 'child') && r.item1Id === key)) {
+                    } else if (!relationsJSON.relations[relation.item1Id]
+                        .some((r) => (r.type === 'child') && r.item1Id === key)) {
                         relationsJSON.relations[relation.item1Id].push({
                             item1Id: key,
                             item2Id: relation.item1Id,
@@ -311,7 +296,8 @@ class GenogramTree extends React.Component {
                                 typeId: 'WD-P25'
                             }];
                         }
-                    } else if (!relationsJSON.relations[relation.item1Id].some((r) => (r.type === 'father' || r.type === 'mother') && r.item1Id === key)) {
+                    } else if (!relationsJSON.relations[relation.item1Id]
+                        .some((r) => (r.type === 'father' || r.type === 'mother') && r.item1Id === key)) {
                         if (gender === 'male') {
                             relationsJSON.relations[relation.item1Id].push({
                                 item1Id: key,
@@ -385,12 +371,14 @@ class GenogramTree extends React.Component {
                 useTextFilter = true;
             }
         }
-        if (filters.bloodline || filters.fromYear !== '' || filters.toYear !== '' || useTextFilter || filters.removeHiddenPeople) {
+        if (filters.bloodline || filters.fromYear !== '' || filters.toYear !== ''
+            || useTextFilter || filters.removeHiddenPeople) {
             // Map from item ID to opacity
             let visited = {};
             visited[this.state.root] = { opacity: Opacity.normal };
+
+            // Bloodline filter
             if (filters.bloodline) {
-                // console.log('血胤');
                 var frontier = [this.state.root];
                 var descendants = [];
 
@@ -399,7 +387,8 @@ class GenogramTree extends React.Component {
                     if (cur) {
                         if (this.state.originalJSON.relations[cur]) {
                             var newElems = this.state.originalJSON.relations[cur]
-                                .filter((r) => r.type !== 'spouse' && (!visited[r.item1Id] || visited[r.item1Id].opacity !== Opacity.normal));
+                                .filter((r) => r.type !== 'spouse'
+                                    && (!visited[r.item1Id] || visited[r.item1Id].opacity !== Opacity.normal));
                             var newFrontier = newElems.filter((r) => r.type !== 'child').map((r) => r.item1Id);
                             var newDescendants = newElems.filter((r) => r.type === 'child').map((r) => r.item1Id);
                             newElems.map((r) => r.item1Id).forEach((id) => visited[id] = { opacity: Opacity.normal });
@@ -410,7 +399,8 @@ class GenogramTree extends React.Component {
                         cur = descendants.shift();
                         if (this.state.originalJSON.relations[cur]) {
                             var newElems = this.state.originalJSON.relations[cur]
-                                .filter((r) => r.type !== 'spouse' && (!visited[r.item1Id] || visited[r.item1Id].opacity !== Opacity.normal));
+                                .filter((r) => r.type !== 'spouse'
+                                    && (!visited[r.item1Id] || visited[r.item1Id].opacity !== Opacity.normal));
                             var newDescendants = newElems.filter((r) => r.type === 'child').map((r) => r.item1Id);
                             newDescendants.forEach((id) => {
                                 visited[id] = { opacity: Opacity.normal };
@@ -434,7 +424,8 @@ class GenogramTree extends React.Component {
             for (let key of Object.keys(filters.textFilters)) {
                 if (filters.textFilters[key].choice.size > 0) {
                     for (const [k, _] of Object.entries(visited)) {
-                        const criteria = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.propertyId == key)
+                        const criteria = this.state.originalJSON.items[k]
+                            .additionalProperties.filter((p) => p.propertyId == key)
                             .map((p) => p.value).some((f) => filters.textFilters[key].choice.has(f));
                         if (!criteria) {
                             delete visited[k];
@@ -446,13 +437,15 @@ class GenogramTree extends React.Component {
             // filter on From birth year
             if (filters.fromYear !== '') {
                 for (const [k, _] of Object.entries(visited)) {
-                    let dob = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'date of birth')[0];
+                    let dob = this.state.originalJSON.items[k].additionalProperties
+                        .filter((p) => p.name == 'date of birth')[0];
                     if (dob === undefined) {
                         delete visited[k];
                         continue;
                     }
                     dob = ndb(dob.value.split('T')[0]);
-                    let fromYear = filters.fromYear[0] == '-' ? '-' + (filters.fromYear.substring(1)).padStart(6, '0') : filters.fromYear.padStart(4, '0');
+                    let fromYear = filters.fromYear[0] == '-' ? '-'
+                        + (filters.fromYear.substring(1)).padStart(6, '0') : filters.fromYear.padStart(4, '0');
                     if (new Date(dob).getFullYear() < new Date(fromYear).getFullYear()) {
                         delete visited[k];
                         continue;
@@ -462,13 +455,15 @@ class GenogramTree extends React.Component {
             // filter on To birth year
             if (filters.toYear !== '') {
                 for (const [k, _] of Object.entries(visited)) {
-                    let dob = this.state.originalJSON.items[k].additionalProperties.filter((p) => p.name == 'date of birth')[0];
+                    let dob = this.state.originalJSON.items[k].additionalProperties
+                        .filter((p) => p.name == 'date of birth')[0];
                     if (dob === undefined) {
                         delete visited[k];
                         continue;
                     }
                     dob = ndb(dob.value.split('T')[0]);
-                    let toYear = filters.toYear[0] == '-' ? '-' + (filters.toYear.substring(1)).padStart(6, '0') : filters.toYear.padStart(4, '0');
+                    let toYear = filters.toYear[0] == '-' ? '-'
+                        + (filters.toYear.substring(1)).padStart(6, '0') : filters.toYear.padStart(4, '0');
                     if (new Date(dob).getFullYear() > new Date(toYear).getFullYear()) {
                         delete visited[k];
                         continue;
@@ -496,8 +491,10 @@ class GenogramTree extends React.Component {
                         if (newElems.length === 0) {
                             remover.add(v);
                         } else {
-                            outlierParents.addAll(newElems.filter((r) => r.type !== 'spouse').map((r) => r.item1Id));
-                            outlierSpouses.addAll(newElems.filter((r) => r.type === 'spouse').map((r) => r.item1Id));
+                            outlierParents.addAll(newElems.filter((r) => r.type !== 'spouse')
+                                .map((r) => r.item1Id));
+                            outlierSpouses.addAll(newElems.filter((r) => r.type === 'spouse')
+                                .map((r) => r.item1Id));
                         }
                     }
                 });
@@ -525,11 +522,13 @@ class GenogramTree extends React.Component {
                 });
             }
 
+            // Summing up all filters
             var filteredJSON = { targets: this.state.originalJSON.targets, items: {}, relations: {} };
             Object.keys(visited).forEach((v) => {
                 filteredJSON.items[v] = { ...this.state.originalJSON.items[v], ...visited[v] };
                 if (this.state.originalJSON.relations[v]) {
-                    filteredJSON.relations[v] = this.state.originalJSON.relations[v].filter((r) => visited[r.item1Id]);
+                    filteredJSON.relations[v] = this.state.originalJSON.relations[v]
+                        .filter((r) => visited[r.item1Id]);
                 }
             });
             this.state.relationsJSON = filteredJSON;
@@ -628,8 +627,6 @@ class GenogramTree extends React.Component {
         location.reload();
     }
 
-    // renders ReactDiagram
-
     render() {
         if (this.source == null) {
             alert('Invalid URL!');
@@ -655,10 +652,14 @@ class GenogramTree extends React.Component {
             this.state.isUpdated = false;
             this.applyFilterAndDrawTree();
             this.relations = transform(this.state.relationsJSON);
-            this.personMap = getPersonMap(Object.values(this.state.originalJSON.items), this.state.originalJSON.relations);
-            // show all attributes at start
+            this.personMap = getPersonMap(
+                Object.values(this.state.originalJSON.items),
+                this.state.originalJSON.relations
+            );
 
-            this.groupModel.initialize([...this.personMap.values()].map((m) => [...m.keys()]).sort((a, b) => b.length - a.length)[0]);
+            // show all attributes at start
+            this.groupModel.initialize([...this.personMap.values()].map((m) => [...m.keys()])
+                .sort((a, b) => b.length - a.length)[0]);
 
             updateDiagram = true;
             this.state.isLoading = false;
@@ -678,7 +679,8 @@ class GenogramTree extends React.Component {
             recommit = true;
             this.state.recommit = false;
         }
-        this.personMap = getPersonMap(Object.values(this.state.originalJSON.items), this.state.originalJSON.relations);
+        this.personMap = getPersonMap(
+            Object.values(this.state.originalJSON.items), this.state.originalJSON.relations);
 
         return (
             <>
@@ -694,6 +696,7 @@ class GenogramTree extends React.Component {
                     <Row className='me-4 mh-50 justify-content-end'>
                         <Col xs='4'>
                             {this.state.showFilters &&
+                                // Filter panel
                                 <TreeFilter
                                     allPeople={Object.values(this.state.originalJSON.items)}
                                     filters={this.state.filters}
@@ -721,7 +724,8 @@ class GenogramTree extends React.Component {
                                         showFilters: !isReset
                                     })}
                                     onPrune={() => {
-                                        this.state.originalJSON.relations = JSON.parse(JSON.stringify(this.state.relationsJSON.relations));
+                                        this.state.originalJSON.relations =
+                                            JSON.parse(JSON.stringify(this.state.relationsJSON.relations));
                                         for (const key of Object.keys(this.state.originalJSON.items)) {
                                             if (!this.state.relationsJSON.items[key] && key !== this.state.root) {
                                                 delete this.state.originalJSON.items[key];
@@ -735,6 +739,7 @@ class GenogramTree extends React.Component {
                             {
                                 this.state.showLookup &&
                                 <TreeNameLookup
+                                    // Lookup panel
                                     requests={this.requests}
                                     allPeople={Object.values(this.state.originalJSON.items)}
                                     onPersonSelection={(_, v) => this.setFocusPerson(v.key)}
@@ -757,7 +762,7 @@ class GenogramTree extends React.Component {
                             }
                             {
                                 this.state.showGroups &&
-                                /* ### setStates here used for re-rendering only ### */
+                                // Group panel
                                 <TreeGroups
                                     groupModel={this.groupModel}
                                     personMap={this.personMap}
@@ -796,6 +801,7 @@ class GenogramTree extends React.Component {
                     this.state.isPopped &&
                     <div className='popup'>
                         <PopupInfo
+                            // Individual popup
                             closePopUp={() => this.setState({ isPopped: false })}
                             info={this.personMap.get(this.state.selectedPerson)}
                             id={this.state.selectedPerson}
@@ -848,9 +854,11 @@ class GenogramTree extends React.Component {
                     this.state.showRelations &&
                     <div className='popup'>
                         <TreeRelations
+                            // Relation popup
                             relSearchState={this.state.relSearchState}
                             closePopUp={() => {
-                                const notInGraph = this.state.highlight.filter((p) => !this.state.relationsJSON.items[p]);
+                                const notInGraph = this.state.highlight
+                                    .filter((p) => !this.state.relationsJSON.items[p]);
                                 if (this.state.relSearchState[0] === 2) {
                                     this.state.relSearchState[0] = 0;
                                     notInGraph.forEach((p) => this.state.filters.alwaysShownPeople.add(p));
@@ -876,7 +884,9 @@ class GenogramTree extends React.Component {
                     <div className='popup'>
                         <RelSearchResult
                             closePopUp={() => {
-                                const notInGraph = this.state.highlight.filter((p) => !this.state.relationsJSON.items[p]);
+                                // Relation result popup
+                                const notInGraph = this.state.highlight
+                                    .filter((p) => !this.state.relationsJSON.items[p]);
                                 if (this.state.relSearchState[0] === 2) {
                                     this.state.relSearchState[0] = 0;
                                     notInGraph.forEach((p) => this.state.filters.alwaysShownPeople.add(p));
@@ -905,6 +915,7 @@ class GenogramTree extends React.Component {
 
                 <div className='tree-box'>
                     <DiagramWrapper
+                        // Family tree diagram
                         highlight={this.state.highlight}
                         updateDiagram={updateDiagram}
                         recentre={recentre}
@@ -969,10 +980,8 @@ class GenogramTree extends React.Component {
         wikiDataPromise.then(async (wikiDataRes) => {
             this.mutex.runExclusive(() => {
                 if (dbRes === null) {
-                    this.tree.slow = wikiDataRes;
                     this.loadRelations(wikiDataRes, id);
                 } else if (this.containsMoreData(wikiDataRes, dbRes)) {
-                    this.tree.slow = wikiDataRes;
                     this.setState({ newDataAvailable: true });
                 }
                 this.isLatestReadNotFromWikiData = false;
