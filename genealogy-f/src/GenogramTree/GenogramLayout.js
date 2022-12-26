@@ -1,12 +1,14 @@
 import * as go from "gojs";
 const $ = go.GraphObject.make;
+
+// Custom layout for our family tree.
 export class GenogramLayout extends go.LayeredDigraphLayout {
     constructor() {
         super();
         this.initializeOption = go.LayeredDigraphLayout.InitDepthFirstIn;
-        this.spouseSpacing = 10;  // minimum space between spouses
+        this.spouseSpacing = 10; // minimum space between spouses
         this.personMap = null;
-        this.diagram = null; // could we also call super.super.diagram? I dont risk to try
+        this.diagram = null;
     }
 
     makeNetwork(coll) {
@@ -44,13 +46,19 @@ export class GenogramLayout extends go.LayeredDigraphLayout {
                 const vertex = net.addNode(node);
                 // now define the vertex size to be big enough to hold both spouses
                 if (horiz) {
-                    vertex.height = spouseA.actualBounds.height + this.spouseSpacing + spouseB.actualBounds.height;
-                    vertex.width = Math.max(spouseA.actualBounds.width, spouseB.actualBounds.width);
-                    vertex.focus = new go.Point(vertex.width / 2, spouseA.actualBounds.height + this.spouseSpacing / 2);
+                    vertex.height
+                        = spouseA.actualBounds.height + this.spouseSpacing + spouseB.actualBounds.height;
+                    vertex.width
+                        = Math.max(spouseA.actualBounds.width, spouseB.actualBounds.width);
+                    vertex.focus
+                        = new go.Point(vertex.width / 2, spouseA.actualBounds.height + this.spouseSpacing / 2);
                 } else {
-                    vertex.width = spouseA.actualBounds.width + this.spouseSpacing + spouseB.actualBounds.width;
-                    vertex.height = Math.max(spouseA.actualBounds.height, spouseB.actualBounds.height);
-                    vertex.focus = new go.Point(spouseA.actualBounds.width + this.spouseSpacing / 2, vertex.height / 2);
+                    vertex.width
+                        = spouseA.actualBounds.width + this.spouseSpacing + spouseB.actualBounds.width;
+                    vertex.height
+                        = Math.max(spouseA.actualBounds.height, spouseB.actualBounds.height);
+                    vertex.focus
+                        = new go.Point(spouseA.actualBounds.width + this.spouseSpacing / 2, vertex.height / 2);
                 }
             } else {
                 // don't add a vertex for any married person!
@@ -68,22 +76,22 @@ export class GenogramLayout extends go.LayeredDigraphLayout {
             }
         }
 
-        // now do all Links
+        // Now do all Links
         it.reset();
         while (it.next()) {
             const link = it.value;
             if (!(link instanceof go.Link)) continue;
             if (!link.isLayoutPositioned || !link.isVisible()) continue;
             if (nonmemberonly && link.containingGroup !== null) continue;
-            // if it'gender a parent-child link, add a LayoutEdge for it
+            // if it's a parent-child link, add a LayoutEdge for it
             if (!link.isLabeledLink) {
                 const parent = net.findVertex(link.fromNode);  // should be a label node
                 const child = net.findVertex(link.toNode);
-                if (child !== null) {  // an unmarried child
+                if (child !== null) { // an unmarried child
                     net.linkVertexes(parent, child, link);
-                } else {  // a married child
+                } else { // a married child
                     link.toNode.linksConnected.each(l => {
-                        if (!l.isLabeledLink) return;  // if it has no label node, it'gender a parent-child link
+                        if (!l.isLabeledLink) return;  // if it has no label node, it's a parent-child link
                         // found the Marriage Link, now get its label Node
                         const mlab = l.labelNodes.first();
                         // parent-child link should connect with the label node,
@@ -129,7 +137,7 @@ export class GenogramLayout extends go.LayeredDigraphLayout {
         if (coll.has(node)) return;
         coll.add(node);
         node.linksConnected.each(l => {
-            if (l.isLabeledLink) {  // if it'gender a marriage link, continue with both spouses
+            if (l.isLabeledLink) {  // if it's a marriage link, continue with both spouses
                 this.extendCohort(coll, l.fromNode);
                 this.extendCohort(coll, l.toNode);
             }
@@ -139,7 +147,7 @@ export class GenogramLayout extends go.LayeredDigraphLayout {
     assignLayers() {
         super.assignLayers();
         const horiz = this.direction === 0.0 || this.direction === 180.0;
-        // for every vertex, record the maximum vertex width or height for the vertex'gender layer
+        // for every vertex, record the maximum vertex width or height for the vertex's layer
         const maxsizes = [];
         this.network.vertexes.each(v => {
             const lay = v.layer;
@@ -331,7 +339,7 @@ export class GenogramLayout extends go.LayeredDigraphLayout {
                 } else {
                     newbnds.x = mvert.centerX - v.node.actualBounds.width / 2;
                 }
-                // see if there'gender any empty space at the horizontal mid-point in that layer
+                // see if there's any empty space at the horizontal mid-point in that layer
                 const overlaps = this.diagram.findObjectsIn(newbnds, x => x.part, p => p !== v.node, true);
                 if (overlaps.count === 0) {
                     v.node.move(newbnds.position);
@@ -347,16 +355,11 @@ export class GenogramLayout extends go.LayeredDigraphLayout {
                     const spouseB = link.toNode;
                     idPos.push({ x: spouseA.location.x, y: spouseA.location.y - 21, key: spouseA.key }); //  or spouseA.x
                     idPos.push({ x: spouseB.location.x, y: spouseB.location.y - 21, key: spouseB.key }); //  or spouseA.x
-                    // idPosMap.set(spouseA.key, {x : spouseA.x, y : spouseB.y}); //  or spouseA.x
-                    // idPosMap.set(spouseB.key, {x : spouseB.x, y : spouseB.y}); //  or spouseA.x
                 } else {
                     idPos.push({ x: v.x, y: v.y, key: v.node.key });
                 }
             }
         })
-        // console.log(idPos);
-        // console.log(`F: ${this.personMap}`);
-        // console.log(typeof this.diagram);
         this.diagram.removeParts(this.diagram.findLayer("Grid").parts);
         this.addRecs(this.diagram, idPos);
     }
@@ -369,9 +372,6 @@ export class GenogramLayout extends go.LayeredDigraphLayout {
         // sort lowest to highest based on y co-ordinates
         let startXs = [...new Set(idPos.map(p => p.x.valueOf()))].sort((a, b) => a - b);
         let startYs = [...new Set(idPos.map(p => p.y.valueOf()))].sort((a, b) => a - b);
-        // console.log(startXs);
-        // console.log(startYs);
-        let startX = startXs[0]; // get lowest x co node
         let endX = startXs[startXs.length - 1] + 100;
         for (let i = 0; i < startYs.length; i++) {
             let startY = startYs[i];
@@ -383,38 +383,45 @@ export class GenogramLayout extends go.LayeredDigraphLayout {
                 console.log("no nodes in this region so broke early");
                 break
             }
-            let personInfo = pos2.filter(p => !((p.key).startsWith('_'))).map(p => (this.personMap.get(p.key))).filter(p => !(p == undefined));
-            let bd = personInfo.map(p => { return { dob: p.get("date of birth"), dod: p.get("date of death") } });
-            // console.log(bd);
+            let personInfo = pos2.filter(p => !((p.key).startsWith('_')))
+                .map(p => (this.personMap.get(p.key))).filter(p => !(p == undefined));
+            let bd = personInfo.map(p => {
+                return { dob: p.get("date of birth"), dod: p.get("date of death") }
+            });
             // calculate start date for the era
-            let dob = bd.filter(p => p.dob != undefined).map(p => new Date(p.dob)).sort((a, b) => a - b);
-            // console.log(dob)
+            let dob = bd.filter(p => p.dob != undefined)
+                .map(p => new Date(p.dob)).sort((a, b) => a - b);
             let startDate = dob.length < 1 ? "*" : dob[0].getFullYear();
 
             // calculate end date for the era
-            let dod = bd.filter(p => p.dod != undefined).map(p => new Date(p.dod)).sort((a, b) => a - b);
-            // console.log(dod);
-            let unknownsAlive = bd.filter(p => p.dod == undefined && (p.dob != undefined && (new Date(p.dob) > new Date("1912")))).length > 0; // i.e. some of the unknowns are alive so we cannot end era
+            let dod = bd.filter(p => p.dod != undefined)
+                .map(p => new Date(p.dod)).sort((a, b) => a - b);
+            let unknownsAlive = bd.filter(p =>
+                p.dod == undefined && (p.dob != undefined && (new Date(p.dob) > new Date("1912"))))
+                .length > 0; // i.e. some of the unknowns are alive so we cannot end era
             let endDate = unknownsAlive ? "*" : (dod.length < 1 ? "*" : dod[dod.length - 1].getFullYear());
 
-            // console.log("start", startDate, "end", endDate);
             // create "eras" as a part in the grid background made up of date in the corner and an opaque rectangle covering the diagram
-            let part = $(go.Part, {position: new go.Point(0,startY - 45), selectable: false, layerName: "Grid", _viewPosition:  new go.Point(0,startY - 45)},
+            let part = $(go.Part, {
+                position: new go.Point(0, startY - 45),
+                selectable: false, layerName: "Grid", _viewPosition: new go.Point(0, startY - 45)
+            },
                 $(go.Shape, "Rectangle",
-                    { width: endX - 0, height: endY - startY, margin: 0, fill: i % 2 == 0 ? "#FFFFE0" : "#ADD8E6", opacity: 0.15, stroke: null }),
+                    {
+                        width: endX - 0, height: endY - startY, margin: 0,
+                        fill: i % 2 == 0 ? "#FFFFE0" : "#ADD8E6", opacity: 0.15, stroke: null
+                    }),
                 $(go.TextBlock,
-                    { font: "Italic 24pt calligraphy", text: this.bcDate(startDate) + " - " + this.bcDate(endDate), stroke: "black" },
+                    {
+                        font: "Italic 24pt calligraphy",
+                        text: this.bcDate(startDate) + " - " + this.bcDate(endDate), stroke: "black"
+                    },
                 ),
             );
             // add to mapping so can be determined later
             diagram.add(part);
-
         }
-            // Whenever the Diagram.position or Diagram.scale change,
-            // update the position of all simple Parts that have a _viewPosition property.
-
     };
-
 
     findParentsMarriageLabelNode(node) {
         const it = node.findNodesInto();
