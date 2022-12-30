@@ -10,6 +10,13 @@ const showResults = 0;
 const noResult = 1;
 const loading = 2;
 const noRelationship = 3;
+const searching = 4;
+const dbResult2 = 5;
+const dbResult3 = 5;
+const wkResult = 7;
+const idle = 8;
+
+let searchStatus = idle;
 
 // The panel to search for any people in the tree as well as the relationship between any two
 export function TreeNameLookup(props) {
@@ -101,9 +108,33 @@ export function TreeNameLookup(props) {
 						{searchResult.map((entry) => (<Row key={entry.id}
 							className='mt-2 text-center'>
 							<Button onClick={async () => {
-								let result = await props.requests.relations({ id: entry.id, depth: 2, visitedItems: [], allSpouses: true });
-								if (props.allPeople.some((p) => result.items[p.id] !== undefined)) {
-									props.onSearchNew(result, entry.id);
+								if (searchStatus !== idle) {
+									console.log("TODO: Searching...");
+								} else {
+									searchStatus = searching;
+									props.requests.relationsDb({ id: entry.id, depth: 2, visitedItems: [], allSpouses: true }).then((result) => {
+										console.log(searchStatus);
+										if (searchStatus === searching && props.allPeople.some((p) => result.items[p.id] !== undefined)) {
+											searchStatus = dbResult2;
+											props.onSearchNew(result, entry.id);
+										}
+									});
+									props.requests.relationsDb({ id: entry.id, depth: 3, visitedItems: [], allSpouses: true }).then((result) => {
+										console.log(searchStatus);
+										if (searchStatus === searching && props.allPeople.some((p) => result.items[p.id] !== undefined)) {
+											searchStatus = dbResult3;
+											props.onSearchNew(result, entry.id);
+										}
+									});
+									props.requests.relations({ id: entry.id, depth: 3, visitedItems: [], allSpouses: true }).then((result) => {
+										console.log(searchStatus);
+										if (searchStatus === searching) {
+											searchStatus = wkResult;
+											if (props.allPeople.some((p) => result.items[p.id] !== undefined)) {
+												props.onSearchNew(result, entry.id);
+											}
+										}
+									});
 								}
 							}}>
 								{entry.name + ": " + entry.description}
