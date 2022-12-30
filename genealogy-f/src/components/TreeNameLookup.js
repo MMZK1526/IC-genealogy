@@ -6,10 +6,6 @@ import Button from 'react-bootstrap/Button';
 import Row from 'react-bootstrap/Row';
 import EscapeCloseableEnterClickable from "./EscapeCloseableEnterClickable";
 
-const showResults = 0;
-const noResult = 1;
-const loading = 2;
-const noRelationship = 3;
 const searching = 4;
 const dbResult2 = 5;
 const dbResult3 = 5;
@@ -23,6 +19,7 @@ export function TreeNameLookup(props) {
 	const [isExisting, setIsExisting] = React.useState(true);
 	const [inputValue, setInputValue] = React.useState('');
 	const [searchResult, setSearchResult] = React.useState([]);
+	const [msg, setMsg] = React.useState('');
 	const [oldInputValue, setOldInputValue] = React.useState('');
 	const allPersonsRelations = props.getPersonsRelations();
 	const personMap = props.getPersonMap();
@@ -82,7 +79,7 @@ export function TreeNameLookup(props) {
 					renderOption={(props, option) => <li component="li" {...props}>{option.name}</li>}
 				/>
 
-				<Button className='mt-1 text-center w-100' variant="success" onClick={async () => {
+				<Button className='mt-5 text-center w-100' variant="success" onClick={async () => {
 					if (isExisting) {
 						setSearchResult([]);
 						props.onChange(false);
@@ -94,6 +91,11 @@ export function TreeNameLookup(props) {
 							} else {
 								console.log(r);
 							}
+							if (r.length === 0) {
+								setMsg("No Result");
+							} else {
+								setMsg("Search Results:");
+							}
 							setSearchResult(r);
 						});
 					}
@@ -101,7 +103,9 @@ export function TreeNameLookup(props) {
 					Search
 				</Button>
 
-				{searchResult.length === 0 ?
+				{msg == "" ? <div></div> : <Container className='mt-3'>{msg}</Container>}
+
+				{searchResult.length === 0 || searchStatus === searching ?
 					<div></div>
 					: <Container className="ml-5 overflow-auto additional-properties-container"
 						style={{ height: '35vh' }}>
@@ -112,26 +116,45 @@ export function TreeNameLookup(props) {
 									console.log("TODO: Searching...");
 								} else {
 									searchStatus = searching;
+									setMsg("Searching for relationships. This can up to 40 seconds...");
 									props.requests.relationsDb({ id: entry.id, depth: 2, visitedItems: [], allSpouses: true }).then((result) => {
 										console.log(searchStatus);
 										if (searchStatus === searching && props.allPeople.some((p) => result.items[p.id] !== undefined)) {
 											searchStatus = dbResult2;
-											props.onSearchNew(result, entry.id).then((_) => searchStatus = idle);
+											props.onSearchNew(result, entry.id).then((_) => {
+												searchStatus = idle;
+												searchResult.length = 0;
+												setMsg("");
+											});
 										}
 									});
+
 									props.requests.relationsDb({ id: entry.id, depth: 3, visitedItems: [], allSpouses: true }).then((result) => {
 										console.log(searchStatus);
 										if (searchStatus === searching && props.allPeople.some((p) => result.items[p.id] !== undefined)) {
 											searchStatus = dbResult3;
-											props.onSearchNew(result, entry.id).then((_) => searchStatus = idle);
+											props.onSearchNew(result, entry.id).then((_) => {
+												searchStatus = idle;
+												searchResult.length = 0;
+												setMsg("");
+											});
 										}
 									});
+
 									props.requests.relations({ id: entry.id, depth: 3, visitedItems: [], allSpouses: true }).then((result) => {
 										console.log(searchStatus);
 										if (searchStatus === searching) {
 											searchStatus = wkResult;
 											if (props.allPeople.some((p) => result.items[p.id] !== undefined)) {
-												props.onSearchNew(result, entry.id).then((_) => searchStatus = idle);
+												props.onSearchNew(result, entry.id).then((_) => {
+													searchStatus = idle;
+													searchResult.length = 0;
+													setMsg("");
+												});
+											} else {
+												searchStatus = idle;
+												searchResult.length = 0;
+												setMsg("Relations not found! There's either no known relations, or the relations are too far away.");
 											}
 										}
 									});
