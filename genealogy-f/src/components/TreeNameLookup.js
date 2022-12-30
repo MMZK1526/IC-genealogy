@@ -116,14 +116,14 @@ export function TreeNameLookup(props) {
 										console.log(searchStatus);
 										if (searchStatus === searching && props.allPeople.some((p) => result.items[p.id] !== undefined)) {
 											searchStatus = dbResult2;
-											props.onSearchNew(result, entry.id);
+											props.onSearchNew(result, entry.id).then((_) => searchStatus = idle);
 										}
 									});
 									props.requests.relationsDb({ id: entry.id, depth: 3, visitedItems: [], allSpouses: true }).then((result) => {
 										console.log(searchStatus);
 										if (searchStatus === searching && props.allPeople.some((p) => result.items[p.id] !== undefined)) {
 											searchStatus = dbResult3;
-											props.onSearchNew(result, entry.id);
+											props.onSearchNew(result, entry.id).then((_) => searchStatus = idle);
 										}
 									});
 									props.requests.relations({ id: entry.id, depth: 3, visitedItems: [], allSpouses: true }).then((result) => {
@@ -131,7 +131,7 @@ export function TreeNameLookup(props) {
 										if (searchStatus === searching) {
 											searchStatus = wkResult;
 											if (props.allPeople.some((p) => result.items[p.id] !== undefined)) {
-												props.onSearchNew(result, entry.id);
+												props.onSearchNew(result, entry.id).then((_) => searchStatus = idle);
 											}
 										}
 									});

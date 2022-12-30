@@ -9,7 +9,7 @@ function RelSearchResult(props) {
     /// like a re-render and show those people
     if (props.relSearchState[0] === 1) {
         return (
-            <div className='popup-inner w-50'>
+            <div className='popup-inner w-50 overflow-auto' style={{ maxHeight: "80vh" }}>
                 <CloseButton className='close-btn' onClick={() => {
                     props.relSearchState[0] = 3;
                     props.closePopUp();
@@ -27,7 +27,7 @@ function RelSearchResult(props) {
     }
 
     return (
-        <div className='popup-inner w-50'>
+        <div className='popup-inner w-50 overflow-auto' style={{ maxHeight: "80vh" }}>
             <CloseButton className='close-btn' onClick={props.closePopUp} />
             {getRelationsFrom(props.info, props.highlight, props.closePopUp)}
         </div >

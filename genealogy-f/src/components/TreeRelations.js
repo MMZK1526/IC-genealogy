@@ -30,7 +30,7 @@ export function TreeRelations(props) {
 	}
 
 	return (
-		<div className='popup-inner w-50 overflow-auto' style={{ maxHeight: "50%" }}>
+		<div className='popup-inner w-50 overflow-auto' style={{ maxHeight: "80vh" }}>
 			<CloseButton className='close-btn' onClick={props.closePopUp} />
 			{getRelationFields(props.info, props.highlight, props.closePopUp)}
 		</div >
