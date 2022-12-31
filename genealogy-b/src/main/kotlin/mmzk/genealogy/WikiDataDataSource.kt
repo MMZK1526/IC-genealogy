@@ -126,7 +126,7 @@ class WikiDataDataSource(
                 AdditionalPropertyDTO(makeID(Fields.family), "family", it, getHash(row, SPARQL.family))
             }
             val occupation = row["${SPARQL.occupation}Label"]?.let {
-                AdditionalPropertyDTO(makeID(Fields.occupation), "family", it, getHash(row, SPARQL.occupation))
+                AdditionalPropertyDTO(makeID(Fields.occupation), "occupation", it, getHash(row, SPARQL.occupation))
             }
             val givenName = row["${SPARQL.givenName}Label"]?.let {
                 AdditionalPropertyDTO(makeID(Fields.givenName),
