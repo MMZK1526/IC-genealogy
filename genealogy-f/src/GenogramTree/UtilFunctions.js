@@ -158,7 +158,7 @@ export function getPersonMap(data, allRelations) {
             // If field doesn't present, don't put in the Map
             if (attr.value === null || attr.value === '') continue;
             if (attr.propertyId === 'WD-P19' || attr.propertyId === 'WD-P20') continue;
-            // this two fields not show, use personal name instead
+            // these two fields are not shown, use personal name instead
             if (attr.name === 'family name' || attr.name === 'given name') continue;
             // Ignore ID values that are not parsed successfully in the back-end
             if (attr.value.includes('.well-known')) continue;

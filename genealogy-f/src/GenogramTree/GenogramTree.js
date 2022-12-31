@@ -756,7 +756,6 @@ class GenogramTree extends React.Component {
                                     onSearchNew={async (relationsJSON, anotherPerson) => {
                                         await this.loadRelations(relationsJSON, this.state.selectedPerson);
                                         this.state.anotherPerson = anotherPerson;
-                                        console.log(this.state.selectedPerson);
                                         this.setState({ isPopped: false, isShownBetween: true });
                                     }}
                                 />
@@ -984,6 +983,9 @@ class GenogramTree extends React.Component {
                     this.loadRelations(wikiDataRes, id);
                 } else if (this.containsMoreData(wikiDataRes, dbRes)) {
                     this.setState({ newDataAvailable: true, cacheTree: wikiDataRes });
+                } else {
+                    this.state.originalJSON.items = { ...this.state.originalJSON.items, ...wikiDataRes.items };
+                    this.setState({});
                 }
                 this.isLatestReadNotFromWikiData = false;
             });

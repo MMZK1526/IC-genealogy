@@ -24,6 +24,7 @@ class PopupInfo extends React.Component {
 		this.groupModel = props.groupModel;
 		this.id = props.id;
 		this.state = {
+			info: props.info,
 			// If the selected person is in the current group
 			hasPerson: this.groupModel.checkPersonInCurrGroup(this.id),
 			// A list of group names in which the selected person is in
@@ -76,7 +77,7 @@ class PopupInfo extends React.Component {
 					}
 				}>
 					<CloseButton className='close-btn' onClick={this.props.closePopUp} />
-					{getAdditionalProperties(this.props.info,
+					{getAdditionalProperties(this.state.info,
 						this.props.switchToRelations, this.props.id, this.groupModel, this.props.inGroup)}
 					<Container className='text-center mt-2'>
 						<Row className='mb-3'>
