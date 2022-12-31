@@ -172,8 +172,9 @@ export function TreeFilter(props) {
 					<Form.Group className='form-group mt-2' controlId='family-member-checkbox'>
 						<Form.Check className="mb-1" title='Filter By Family' label={"Filter by Family: show families that has at least one family member satisfying the filters above."} type='checkbox'
 							// Filter for bloodline (only blood relatives to the root)
-							defaultChecked={false}
-							onChange={(e) => {
+							defaultChecked={props.filters.filterByFamily}
+							onChange={(_) => {
+								props.filters.filterByFamily = !props.filters.filterByFamily;
 							}}
 						/>
 					</Form.Group>

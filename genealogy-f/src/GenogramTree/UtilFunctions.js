@@ -163,7 +163,7 @@ export function getPersonMap(data, allRelations) {
             // Ignore ID values that are not parsed successfully in the back-end
             if (attr.value.includes('.well-known')) continue;
 
-            if (attrMap.has(attr.name)) {
+            if (attrMap.has(attr.name) && attr.name !== 'image') {
                 let newVal = attrMap.get(attr.name) + '; ' + attr.value;
                 attrMap.set(attr.name, newVal);
             } else {

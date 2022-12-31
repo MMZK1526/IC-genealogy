@@ -116,7 +116,7 @@ export function TreeNameLookup(props) {
 									console.log("TODO: Searching...");
 								} else {
 									searchStatus = searching;
-									setMsg("Searching for relationships. This can up to 40 seconds...");
+									setMsg("Searching for relationships. This can take up to 40 seconds...");
 									props.requests.relationsDb({ id: entry.id, depth: 2, visitedItems: [], allSpouses: true }).then((result) => {
 										console.log(searchStatus);
 										if (searchStatus === searching && props.allPeople.some((p) => result.items[p.id] !== undefined)) {
@@ -156,6 +156,9 @@ export function TreeNameLookup(props) {
 												searchResult.length = 0;
 												setMsg("Relations not found! There's either no known relations, or the relations are too far away.");
 											}
+										} else {
+											console.log("HERE");
+											props.updateItems(result);
 										}
 									});
 								}

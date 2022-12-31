@@ -7,5 +7,6 @@ export class FilterModel {
     this.textFilters = {};
     this.hiddenPeople = new Set();
     this.alwaysShownPeople = new Set();
+    this.filterByFamily = false;
   }
 }

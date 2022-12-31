@@ -421,20 +421,57 @@ class GenogramTree extends React.Component {
                 });
             }
 
-            // filter on text-based filters
-            for (let key of Object.keys(filters.textFilters)) {
-                if (filters.textFilters[key].choice.size > 0) {
+            if (filters.filterByFamily) {
+                let extraFamilies = new go.Set();
+                // filter on text-based filters
+                for (const [k, _] of Object.entries(visited)) {
+                    var isSatisfied = true;
+                    for (let key of Object.keys(filters.textFilters)) {
+                        if (filters.textFilters[key].choice.size > 0) {
+                            const criteria = this.state.originalJSON.items[k]
+                                .additionalProperties.filter((p) => p.propertyId == key)
+                                .map((p) => p.value).some((f) => filters.textFilters[key].choice.has(f));
+                            if (!criteria) {
+                                isSatisfied = false;
+                                break;
+                            }
+                        }
+                    }
+                    if (isSatisfied) {
+                        extraFamilies.addAll(this.state.originalJSON.items[k]
+                            .additionalProperties.filter((p) => p.propertyId == 'WD-P53')
+                            .map((p) => p.value));
+                    }
+                }
+
+                if (extraFamilies.size > 0) {
                     for (const [k, _] of Object.entries(visited)) {
                         const criteria = this.state.originalJSON.items[k]
-                            .additionalProperties.filter((p) => p.propertyId == key)
-                            .map((p) => p.value).some((f) => filters.textFilters[key].choice.has(f));
+                            .additionalProperties.filter((p) => p.propertyId == 'WD-P53')
+                            .map((p) => p.value).some((f) => extraFamilies.has(f));
                         if (!criteria) {
                             delete visited[k];
                             continue;
                         }
                     }
                 }
+            } else {
+                // filter on text-based filters
+                for (let key of Object.keys(filters.textFilters)) {
+                    if (filters.textFilters[key].choice.size > 0) {
+                        for (const [k, _] of Object.entries(visited)) {
+                            const criteria = this.state.originalJSON.items[k]
+                                .additionalProperties.filter((p) => p.propertyId == key)
+                                .map((p) => p.value).some((f) => filters.textFilters[key].choice.has(f));
+                            if (!criteria) {
+                                delete visited[k];
+                                continue;
+                            }
+                        }
+                    }
+                }
             }
+
             // filter on From birth year
             if (filters.fromYear !== '') {
                 for (const [k, _] of Object.entries(visited)) {
@@ -757,6 +794,13 @@ class GenogramTree extends React.Component {
                                         await this.loadRelations(relationsJSON, this.state.selectedPerson);
                                         this.state.anotherPerson = anotherPerson;
                                         this.setState({ isPopped: false, isShownBetween: true });
+                                    }}
+                                    updateItems={(relationsJSON) => {
+                                        for (const key of Object.keys(relationsJSON.items)) {
+                                            // console.log(key);
+                                            // console.log(JSON.stringify(relationsJSON.items[key]));
+                                            this.state.originalJSON.items[key] = relationsJSON.items[key];
+                                        }
                                     }}
                                 />
                             }
