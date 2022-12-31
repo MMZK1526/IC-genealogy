@@ -109,6 +109,26 @@ export function TreeFilter(props) {
 						style={style}
 					/>
 
+					<Form.Label className="form-label">Occupation: </Form.Label>
+					<Multiselect
+						// Filter by occupation
+						id='pod-select'
+						options={Array.from(props.filters.textFilters['WD-P106'].all).sort().map((v) => ({
+							name: v,
+							id: v
+						}))} // Options to display in the dropdown
+						selectedValues={Array.from(props.filters.textFilters['WD-P106'].choice).map((v) => ({
+							name: v,
+							id: v
+						}))} // Preselected value to persist in dropdown
+						// Function will trigger on select event
+						onSelect={(_, i) => props.filters.textFilters['WD-P106'].choice.add(i.name)}
+						// Function will trigger on remove event
+						onRemove={(_, i) => props.filters.textFilters['WD-P106'].choice.delete(i.name)}
+						displayValue='name' // Property name to display in the dropdown options
+						style={style}
+					/>
+
 					<Form.Group className="mb-1" controlId='fromYear-control'>
 						<Form.Label>From</Form.Label>
 						<Form.Control type='text' placeholder="Year of Birth, e.g. 1900"

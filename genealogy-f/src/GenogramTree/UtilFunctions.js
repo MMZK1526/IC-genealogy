@@ -153,8 +153,6 @@ export function getPersonMap(data, allRelations) {
             }
         }
 
-
-
         // wash data for additionalProperties
         for (let attr of person.additionalProperties) {
             // If field doesn't present, don't put in the Map
@@ -165,11 +163,9 @@ export function getPersonMap(data, allRelations) {
             // Ignore ID values that are not parsed successfully in the back-end
             if (attr.value.includes('.well-known')) continue;
 
-            if (attrMap.has(attr.name) && attr.name === 'family') {
+            if (attrMap.has(attr.name)) {
                 let newVal = attrMap.get(attr.name) + '; ' + attr.value;
                 attrMap.set(attr.name, newVal);
-            } else if (attrMap.has(attr.name)) {
-                // TODO: Use list
             } else {
                 attrMap.set(attr.name, attr.value);
             }

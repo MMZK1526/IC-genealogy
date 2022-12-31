@@ -339,7 +339,7 @@ class GenogramTree extends React.Component {
     }
 
     calculateFilter() {
-        let textFilterIDs = ['SW-P2', 'SW-P3', 'WD-P53'];
+        let textFilterIDs = ['SW-P2', 'SW-P3', 'WD-P53', 'WD-P106'];
         for (let fid of textFilterIDs) {
             if (this.state.filters.textFilters[fid] === undefined) {
                 this.state.filters.textFilters[fid] = {};
