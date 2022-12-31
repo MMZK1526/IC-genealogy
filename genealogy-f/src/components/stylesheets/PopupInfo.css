@@ -1,10 +1,11 @@
 .popup-inner {
-    position: relative;
+    /*position: relative;*/
     padding: 30px;
     width: 60%;
     background-color: white;
     block-size: fit-content;
     border-radius: 5px;
+    overflow: scroll;
 }
 
 .popup-inner .close-btn {
