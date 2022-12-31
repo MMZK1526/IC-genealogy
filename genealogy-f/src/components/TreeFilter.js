@@ -1,4 +1,4 @@
-import { Form } from 'react-bootstrap';
+import { Container, Form } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 import './stylesheets/Sidebar.css';
 import Multiselect from 'multiselect-react-dropdown';
@@ -148,6 +148,16 @@ export function TreeFilter(props) {
 						displayValue='name' // Property name to display in the dropdown options
 						style={style}
 					/>
+
+					<Form.Group className='form-group mt-2' controlId='family-member-checkbox'>
+						<Form.Check className="mb-1" title='Filter By Family' label={"Filter by Family: show families that has at least one family member satisfying the filters above."} type='checkbox'
+							// Filter for bloodline (only blood relatives to the root)
+							defaultChecked={false}
+							onChange={(e) => {
+							}}
+						/>
+					</Form.Group>
+					<Container>For example, to show a royal family tree, we can choose 'monarch' in the Occupation filter and tick the box above.</Container>
 
 				</Form>
 

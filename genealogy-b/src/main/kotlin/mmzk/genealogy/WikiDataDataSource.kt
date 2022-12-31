@@ -125,6 +125,9 @@ class WikiDataDataSource(
             val family = row["${SPARQL.family}Label"]?.let {
                 AdditionalPropertyDTO(makeID(Fields.family), "family", it, getHash(row, SPARQL.family))
             }
+            val occupation = row["${SPARQL.occupation}Label"]?.let {
+                AdditionalPropertyDTO(makeID(Fields.occupation), "family", it, getHash(row, SPARQL.occupation))
+            }
             val givenName = row["${SPARQL.givenName}Label"]?.let {
                 AdditionalPropertyDTO(makeID(Fields.givenName),
                     "given name",
@@ -156,6 +159,7 @@ class WikiDataDataSource(
                     family,
                     givenName,
                     familyName,
+                    occupation,
                     image
                 )
             }
@@ -189,10 +193,12 @@ class WikiDataDataSource(
         repo.additionalHttpHeaders = Collections.singletonMap("User-Agent", userAgent)
 
         val querySelect = """
-              SELECT ?photoLabel ?photo_ ?article ?${SPARQL.item} ?${SPARQL.name} ?${SPARQL.alias} ?${SPARQL.description} ?${SPARQL.family}_ ?${SPARQL.family}Label ?${SPARQL.givenName}_ ?${SPARQL.givenName}Label ?${SPARQL.familyName}_ ?${SPARQL.familyName}Label ?${SPARQL.ordinal} ?${SPARQL.familyNameType}Label ?${SPARQL.dateOfBirth} ?${SPARQL.dateOfBirth}_ ?${SPARQL.dateOfDeath} ?${SPARQL.dateOfDeath}_ ?${SPARQL.placeOfBirth}Label ?${SPARQL.placeOfBirth}_ ?${SPARQL.placeOfBirthCountry}Label ?${SPARQL.placeOfDeath}Label ?${SPARQL.placeOfDeath}_ ?${SPARQL.placeOfDeathCountry}Label ?${SPARQL.gender}Label ?${SPARQL.gender}_ WHERE {
+              SELECT ?photoLabel ?photo_ ?article ?${SPARQL.item} ?${SPARQL.name} ?${SPARQL.alias} ?${SPARQL.description} ?${SPARQL.occupation}_ ?${SPARQL.occupation}Label ?${SPARQL.family}_ ?${SPARQL.family}Label ?${SPARQL.givenName}_ ?${SPARQL.givenName}Label ?${SPARQL.familyName}_ ?${SPARQL.familyName}Label ?${SPARQL.ordinal} ?${SPARQL.familyNameType}Label ?${SPARQL.dateOfBirth} ?${SPARQL.dateOfBirth}_ ?${SPARQL.dateOfDeath} ?${SPARQL.dateOfDeath}_ ?${SPARQL.placeOfBirth}Label ?${SPARQL.placeOfBirth}_ ?${SPARQL.placeOfBirthCountry}Label ?${SPARQL.placeOfDeath}Label ?${SPARQL.placeOfDeath}_ ?${SPARQL.placeOfDeathCountry}Label ?${SPARQL.gender}Label ?${SPARQL.gender}_ WHERE {
                   ?${SPARQL.item} wdt:P31 wd:Q5 .
                   OPTIONAL { ?${SPARQL.item} schema:description ?${SPARQL.description} .
                              FILTER ( lang(?${SPARQL.description}) = "en" ). }
+                  OPTIONAL { ?${SPARQL.item} p:P106 ?${SPARQL.occupation}_ .
+                             ?${SPARQL.occupation}_ ps:P106 ?${SPARQL.occupation} . }
                   OPTIONAL { ?${SPARQL.item} p:P53 ?${SPARQL.family}_ .
                              ?${SPARQL.family}_ ps:P53 ?${SPARQL.family} . }
                   OPTIONAL { ?${SPARQL.item} p:P735 ?${SPARQL.givenName}_ .
@@ -282,10 +288,12 @@ class WikiDataDataSource(
             val userAgent = "WikiData Crawler for Genealogy Visualiser WebApp, Contact piopio555888@gmail.com"
             repo.additionalHttpHeaders = Collections.singletonMap("User-Agent", userAgent)
             val querySelect = """
-              SELECT ?photoLabel ?photo_ ?article ?${SPARQL.item} ?${SPARQL.name} ?${SPARQL.alias} ?${SPARQL.description} ?${SPARQL.family}_ ?${SPARQL.family}Label ?${SPARQL.givenName}_ ?${SPARQL.givenName}Label ?${SPARQL.familyName}_ ?${SPARQL.familyName}Label ?${SPARQL.ordinal} ?${SPARQL.familyNameType}Label ?${SPARQL.dateOfBirth} ?${SPARQL.dateOfBirth}_ ?${SPARQL.dateOfDeath} ?${SPARQL.dateOfDeath}_ ?${SPARQL.placeOfBirth}Label ?${SPARQL.placeOfBirth}_ ?${SPARQL.placeOfBirthCountry}Label ?${SPARQL.placeOfDeath}Label ?${SPARQL.placeOfDeath}_ ?${SPARQL.placeOfDeathCountry}Label ?${SPARQL.gender}Label ?${SPARQL.gender}_ WHERE {
+              SELECT ?photoLabel ?photo_ ?article ?${SPARQL.item} ?${SPARQL.name} ?${SPARQL.alias} ?${SPARQL.description} ?${SPARQL.occupation}_ ?${SPARQL.occupation}Label ?${SPARQL.family}_ ?${SPARQL.family}Label ?${SPARQL.givenName}_ ?${SPARQL.givenName}Label ?${SPARQL.familyName}_ ?${SPARQL.familyName}Label ?${SPARQL.ordinal} ?${SPARQL.familyNameType}Label ?${SPARQL.dateOfBirth} ?${SPARQL.dateOfBirth}_ ?${SPARQL.dateOfDeath} ?${SPARQL.dateOfDeath}_ ?${SPARQL.placeOfBirth}Label ?${SPARQL.placeOfBirth}_ ?${SPARQL.placeOfBirthCountry}Label ?${SPARQL.placeOfDeath}Label ?${SPARQL.placeOfDeath}_ ?${SPARQL.placeOfDeathCountry}Label ?${SPARQL.gender}Label ?${SPARQL.gender}_ WHERE {
                   VALUES ?${SPARQL.item} { ${ids.joinToString(" ") { "wd:$it" }} } .
                   OPTIONAL { ?${SPARQL.item} schema:description ?${SPARQL.description} .
                              FILTER ( lang(?${SPARQL.description}) = "en" ). }
+                  OPTIONAL { ?${SPARQL.item} p:P106 ?${SPARQL.occupation}_ .
+                             ?${SPARQL.occupation}_ ps:P106 ?${SPARQL.occupation} . }
                   OPTIONAL { ?${SPARQL.item} p:P53 ?${SPARQL.family}_ .
                              ?${SPARQL.family}_ ps:P53 ?${SPARQL.family} . }
                   OPTIONAL { ?${SPARQL.item} p:P735 ?${SPARQL.givenName}_ .
@@ -407,6 +415,7 @@ class WikiDataDataSource(
         const val sparqlEndpoint = "https://query.wikidata.org/sparql"
         const val item = "item"
         const val family = "family"
+        const val occupation = "occupation"
         const val description = "description"
         const val name = "itemLabel"
         const val alias = "itemAltLabel"

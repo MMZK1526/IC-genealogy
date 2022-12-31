@@ -31,6 +31,7 @@ object Fields {
     const val child = "P40"
     const val givenName = "P735"
     const val familyName = "P734"
+    const val occupation = "P106"
     const val string = "string"
 
     val prunableTriangles = listOf(
