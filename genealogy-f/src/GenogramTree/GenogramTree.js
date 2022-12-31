@@ -34,6 +34,7 @@ function toFilterModel(filters) {
         return filterModel;
     }
     filterModel.bloodline = filters.bloodline;
+    filterModel.filterByFamily = filters.filterByFamily;
     filterModel.removeHiddenPeople = filters.removeHiddenPeople;
     filterModel.fromYear = filters.fromYear;
     filterModel.toYear = filters.toYear;
