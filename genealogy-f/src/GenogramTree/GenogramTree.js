@@ -105,6 +105,7 @@ class GenogramTree extends React.Component {
             isShownBetween: false,
             relSearchState: [0],
             keepHighlight: false,
+            cacheTree: null,
             extendImpossible: new Set(),
         };
         this.componentRef = React.createRef();
@@ -982,7 +983,7 @@ class GenogramTree extends React.Component {
                 if (dbRes === null) {
                     this.loadRelations(wikiDataRes, id);
                 } else if (this.containsMoreData(wikiDataRes, dbRes)) {
-                    this.setState({ newDataAvailable: true });
+                    this.setState({ newDataAvailable: true, cacheTree: wikiDataRes });
                 }
                 this.isLatestReadNotFromWikiData = false;
             });

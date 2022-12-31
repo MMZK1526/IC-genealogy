@@ -59,21 +59,13 @@ function Toolbar(props) {
                 Show stats
               </Button>
             </ButtonGroup>
-            {/* <ButtonGroup className="me-2">
-              <Button variant='secondary' onClick={props.genogramTree.flipZoomSwitch}>
-                Default zoom
-              </Button>
-              <Button variant='secondary' onClick={props.genogramTree.resetDiagram}>
-                Reset
-              </Button>
-            </ButtonGroup> */}
             {
               props.genogramTree.state.newDataAvailable &&
               <ButtonGroup className="me-2">
                 <Button className="show-full-data-button" variant="secondary" onClick={async () => {
                   console.log("Load Full Data!");
                   await props.genogramTree.loadRelations(
-                    props.genogramTree.tree.slow,
+                    props.genogramTree.state.cacheTree,
                     props.genogramTree.state.root,
                   );
                   props.genogramTree.setState({
