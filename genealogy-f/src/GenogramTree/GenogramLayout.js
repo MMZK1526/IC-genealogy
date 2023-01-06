@@ -360,6 +360,7 @@ export class GenogramLayout extends go.LayeredDigraphLayout {
                 }
             }
         })
+        console.log(idPos)
         this.diagram.removeParts(this.diagram.findLayer("Grid").parts);
         this.addRecs(this.diagram, idPos);
     }
@@ -383,16 +384,19 @@ export class GenogramLayout extends go.LayeredDigraphLayout {
                 console.log("no nodes in this region so broke early");
                 break
             }
+            console.log(pos2)
             let personInfo = pos2.filter(p => !((p.key).startsWith('_')))
                 .map(p => (this.personMap.get(p.key))).filter(p => !(p == undefined));
+            console.log(personInfo)
             let bd = personInfo.map(p => {
                 return { dob: p.get("date of birth"), dod: p.get("date of death") }
             });
+            console.log(bd)
             // calculate start date for the era
             let dob = bd.filter(p => p.dob != undefined)
                 .map(p => new Date(p.dob)).sort((a, b) => a - b);
             let startDate = dob.length < 1 ? "*" : dob[0].getFullYear();
-
+            console.log(startDate)
             // calculate end date for the era
             let dod = bd.filter(p => p.dod != undefined)
                 .map(p => new Date(p.dod)).sort((a, b) => a - b);

@@ -529,6 +529,9 @@ export class DiagramWrapper extends React.Component {
                     // create all of the nodes for people
                     nodeDataArray: array
                 });
+        // person map needs to be updated before setting up nodes, as we need it for accessing the dob
+        // of the nodes when they are placed accorindg setupMarriages (this sets the x, y co-ors)
+        this.diagram.layout.personMap = this.props.personMap;
         this.setupParents(this.diagram);
         this.setupMarriages(this.diagram);
 
@@ -539,7 +542,6 @@ export class DiagramWrapper extends React.Component {
             this.diagram.centerRect(node.actualBounds);
         }
         this.diagram.layout.diagram = this.diagram;
-        this.diagram.layout.personMap = this.props.personMap;
 
     }
 
