@@ -188,10 +188,12 @@ class GenogramTree extends React.Component {
             ) {
                 item.kinshipKeys = new Set();
             }
+
             const kinshipStrs = kinshipJSON[key].map((arr) => {
                 arr.relation.reverse();
                 return arr.relation.join(' of the ');
             });
+
             kinshipStrs.forEach((str, ix) => {
                 const path = kinshipJSON[key][ix].path;
                 const pathKey = path.join('');
@@ -720,6 +722,7 @@ class GenogramTree extends React.Component {
         }
         this.personMap = getPersonMap(
             Object.values(this.state.originalJSON.items), this.state.originalJSON.relations);
+        console.log(this.personMap.get('WD-Q702231'));
 
         return (
             <>
@@ -1022,14 +1025,15 @@ class GenogramTree extends React.Component {
         // When WikiData returns result, if the database has yet to return, we load the WikiData
         // result immediately and ignore the database result. Otherwise, if the WikiData result
         // has more information, we show a "Load Full Data" button
-        wikiDataPromise.then(async (wikiDataRes) => {
-            this.mutex.runExclusive(() => {
+        wikiDataPromise.then((wikiDataRes) => {
+            this.mutex.runExclusive(async () => {
                 if (dbRes === null) {
                     this.loadRelations(wikiDataRes, id);
                 } else if (this.containsMoreData(wikiDataRes, dbRes)) {
                     this.setState({ newDataAvailable: true, cacheTree: wikiDataRes });
                 } else {
                     this.state.originalJSON.items = { ...this.state.originalJSON.items, ...wikiDataRes.items };
+                    await this.fetchKinships(this.state.selectedPerson, this.state.originalJSON);
                     this.setState({});
                 }
                 this.isLatestReadNotFromWikiData = false;

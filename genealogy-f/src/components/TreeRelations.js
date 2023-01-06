@@ -40,6 +40,7 @@ export function TreeRelations(props) {
 		// Show all the relation fields, including parents, spouses, children, and relation to the root
 		// The value for relation to the root is an array, and we render it differently since they are
 		// clickable
+		console.log(data);
 		return Object.keys(Object.fromEntries(data)).filter((k) =>
 			Utils.relationsKeywords.includes(k)).map((k) => (
 				<Row key={'Row ' + k}>
