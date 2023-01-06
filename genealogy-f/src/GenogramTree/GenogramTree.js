@@ -722,7 +722,6 @@ class GenogramTree extends React.Component {
         }
         this.personMap = getPersonMap(
             Object.values(this.state.originalJSON.items), this.state.originalJSON.relations);
-        console.log(this.personMap.get('WD-Q702231'));
 
         return (
             <>
@@ -799,11 +798,11 @@ class GenogramTree extends React.Component {
                                         this.state.anotherPerson = anotherPerson;
                                         this.setState({ isPopped: false, isShownBetween: true });
                                     }}
-                                    updateItems={(relationsJSON) => {
-                                        for (const key of Object.keys(relationsJSON.items)) {
-                                            // console.log(key);
-                                            // console.log(JSON.stringify(relationsJSON.items[key]));
-                                            this.state.originalJSON.items[key] = relationsJSON.items[key];
+                                    updateItems={async (relationsJSON) => {
+                                        for (const key of Object.keys(this.state.originalJSON.items)) {
+                                            if (relationsJSON.items[key]) {
+                                                this.state.originalJSON.items[key] = { ...this.state.originalJSON.items[key], ...relationsJSON.items[key] };
+                                            }
                                         }
                                     }}
                                 />
@@ -1025,7 +1024,7 @@ class GenogramTree extends React.Component {
         // When WikiData returns result, if the database has yet to return, we load the WikiData
         // result immediately and ignore the database result. Otherwise, if the WikiData result
         // has more information, we show a "Load Full Data" button
-        wikiDataPromise.then((wikiDataRes) => {
+        wikiDataPromise.then(async (wikiDataRes) => {
             this.mutex.runExclusive(async () => {
                 if (dbRes === null) {
                     this.loadRelations(wikiDataRes, id);
