@@ -24,6 +24,7 @@ object Database {
 
     private fun hikari(): HikariDataSource {
         val config = HikariConfig()
+        println(dbUrl)
         config.driverClassName = "org.postgresql.Driver"
         val url = URI(dbUrl)
         config.jdbcUrl = "jdbc:postgresql://" + url.host + url.path + "?sslmode=require"
