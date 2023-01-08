@@ -25,9 +25,9 @@ class App extends React.Component {
         this.state = {
             chosenId: '',
         };
-        window.onerror = (event, source, lineno, colon, error) => {
-            alert(event);
-        }
+        // window.onerror = (event, source, lineno, colon, error) => {
+        //     alert(event);
+        // }
         this.initialState = JSON.parse(JSON.stringify(this.state));
         this.requests = new Requests();
 
