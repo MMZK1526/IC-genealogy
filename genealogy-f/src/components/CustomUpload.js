@@ -1,5 +1,4 @@
 import React from 'react';
-import _ from "lodash";
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
@@ -51,8 +50,15 @@ export class CustomUpload extends React.Component {
     async handleSubmit(event) {
         event.preventDefault();
         try {
-            let foo = JSON.parse(await this.state.file.text());
-            this.props.onSubmit(foo);
+            let parse = JSON.parse(await this.state.file.text());
+            console.assert(Object.hasOwn(parse, 'tree'));
+            console.assert(Object.hasOwn(parse, 'filters'));
+            let tree = parse.tree;
+            let filters = parse.filters;
+            console.assert(Object.hasOwn(tree, 'targets'));
+            console.assert(Object.hasOwn(tree, 'items'));
+            console.assert(Object.hasOwn(tree, 'relations'));
+            this.props.onSubmit(parse);
         } catch {
             alert("Invalid JSON!");
         }
