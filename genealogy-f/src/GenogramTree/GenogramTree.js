@@ -765,15 +765,17 @@ class GenogramTree extends React.Component {
                                         showFilters: !isReset
                                     })}
                                     onPrune={() => {
-                                        this.state.originalJSON.relations =
-                                            JSON.parse(JSON.stringify(this.state.relationsJSON.relations));
-                                        for (const key of Object.keys(this.state.originalJSON.items)) {
-                                            if (!this.state.relationsJSON.items[key] && key !== this.state.root) {
-                                                delete this.state.originalJSON.items[key];
+                                        if (confirm('Are you sure you want to delete all data that has been filtered out?')) {
+                                            this.state.originalJSON.relations =
+                                                JSON.parse(JSON.stringify(this.state.relationsJSON.relations));
+                                            for (const key of Object.keys(this.state.originalJSON.items)) {
+                                                if (!this.state.relationsJSON.items[key] && key !== this.state.root) {
+                                                    delete this.state.originalJSON.items[key];
+                                                }
                                             }
+                                            this.calculateFilter();
+                                            this.setState({ isUpdated: true, isLoading: true });
                                         }
-                                        this.calculateFilter();
-                                        this.setState({ isUpdated: true, isLoading: true });
                                     }}
                                 />
                             }
