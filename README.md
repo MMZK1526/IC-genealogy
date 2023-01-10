@@ -24,7 +24,7 @@ be purchased or an alternative open-source library would need to be found.
 
 To run the backend open the repository in IntelliJ IDEA, set the necessary environmental variables and run Application.kt.
 
-To run the frontend navigate to genealogy-f and run ```npm run dev```.
+To run the frontend navigate to genealogy-f and run ```npm install``` then ```npm run dev```.
 
 **Contributors**
 
