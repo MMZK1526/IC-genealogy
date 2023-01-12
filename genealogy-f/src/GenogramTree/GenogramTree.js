@@ -426,11 +426,13 @@ class GenogramTree extends React.Component {
 
             if (filters.filterByFamily) {
                 let extraFamilies = new go.Set();
+                var showNoFamilies = true;
                 // filter on text-based filters
                 for (const [k, _] of Object.entries(visited)) {
                     var isSatisfied = true;
                     for (let key of Object.keys(filters.textFilters)) {
                         if (filters.textFilters[key].choice.size > 0) {
+                            showNoFamilies = false;
                             const criteria = this.state.originalJSON.items[k]
                                 .additionalProperties.filter((p) => p.propertyId == key)
                                 .map((p) => p.value).some((f) => filters.textFilters[key].choice.has(f));
@@ -449,9 +451,11 @@ class GenogramTree extends React.Component {
 
                 if (extraFamilies.size > 0) {
                     for (const [k, _] of Object.entries(visited)) {
-                        const criteria = this.state.originalJSON.items[k]
+                        const families = this.state.originalJSON.items[k]
                             .additionalProperties.filter((p) => p.propertyId == 'WD-P53')
-                            .map((p) => p.value).some((f) => extraFamilies.has(f));
+                            .map((p) => p.value);
+                        const criteria = families.some((f) => extraFamilies.has(f))
+                            || (showNoFamilies && families.length === 0);
                         if (!criteria) {
                             delete visited[k];
                             continue;
