@@ -20,8 +20,12 @@ fun Application.configureRouting() {
             // println(call.request.queryParameters["q"])
             call.request.queryParameters["q"]?.let { name ->
                 val searchedItems = WikiDataDataSource().searchIndividualByName(name) // Search in WikiData
-                Database.insertItems(searchedItems) // Put new results in database (pre-existing ones are ignored)
-                val matchedItemsInDB = Database.findItemByName(name) // Fetch items with matching names
+                val matchedItemsInDB = if (Database.useDatabase) {
+                    Database.insertItems(searchedItems) // Put new results in database (pre-existing ones are ignored)
+                    Database.findItemByName(name) // Fetch items with matching names
+                } else {
+                    searchedItems
+                }
                 call.respond(matchedItemsInDB)
             } ?: call.respond(
                 HttpStatusCode.BadRequest,
@@ -43,9 +47,11 @@ fun Application.configureRouting() {
                 tWiki.end()
                 call.respond(result)
                 t.end()
-                launch(Dispatchers.IO) {
-                    Database.insertItems(result.items.values.toList())
-                    Database.insertRelations(result.relations.values.flatten())
+                if (Database.useDatabase) {
+                    launch(Dispatchers.IO) {
+                        Database.insertItems(result.items.values.toList())
+                        Database.insertRelations(result.relations.values.flatten())
+                    }
                 }
             } ?: call.respond(
                 HttpStatusCode.BadRequest,
@@ -54,6 +60,12 @@ fun Application.configureRouting() {
         }
 
         post("/relations_db") {
+            if (!Database.useDatabase) {
+                return@post call.respond(
+                    HttpStatusCode.InternalServerError,
+                    mapOf("error" to "Database is not enabled in the server!")
+                )
+            }
             val depth = call.request.queryParameters["depth"]?.toIntOrNull() ?: 0
             val visitedItems = call.receive<List<String>>()
             call.request.queryParameters["id"]?.let { id ->

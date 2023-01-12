@@ -16,13 +16,18 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object Database {
+    const val useDatabase = false
     private val dbUrl = System.getenv("DATABASE_URL")
 
     fun init() {
-        Database.connect(hikari())
+        if (useDatabase) {
+            Database.connect(_hikari())
+        } else {
+            println("Database disabled!")
+        }
     }
 
-    private fun hikari(): HikariDataSource {
+    private fun _hikari(): HikariDataSource {
         val config = HikariConfig()
         println(dbUrl)
         config.driverClassName = "org.postgresql.Driver"

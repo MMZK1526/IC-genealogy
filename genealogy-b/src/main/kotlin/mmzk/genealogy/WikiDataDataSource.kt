@@ -274,7 +274,9 @@ class WikiDataDataSource(
             idMap.mapNotNull { entry -> labelMap["${entry.value}Label"]?.let { value -> entry.key to value } }.toMap()
         } ?: mapOf()
         repo.shutDown()
-        Database.insertProperties(answer)
+        if (Database.useDatabase) {
+            Database.insertProperties(answer)
+        }
         answer
     }
 
