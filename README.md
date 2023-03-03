@@ -3,6 +3,8 @@
 This is the repository for the Ancesta web app (www.ancesta.uk) that allows to visualise complex family trees of 
 famous people using data from WikiData.
 
+This is a third-year SED project at Imperial College London
+
 **Dependencies**
 
 The most notable backend dependencies include:
@@ -28,9 +30,9 @@ To run the frontend navigate to genealogy-f and run ```npm install``` then ```np
 
 **Contributors**
 
-- Piotr Blaszyk
-- Yitang Chen
+- Piotr Błaszyk
+- Yìtáng Chén
 - Yutong Jiang
 - Max Meng
-- Josh Soyke-Pinon
+- Josh Soyke-Piñón
 - Mulang Su
