@@ -3,6 +3,8 @@
 This is the repository for the Ancesta web app (www.ancesta.uk) that allows to visualise complex family trees of 
 famous people using data from WikiData.
 
+Note that since the website is hosted on a Heroku dyno, it could take up to 30 seconds to open the website.
+
 This is a third-year SED project at Imperial College London
 
 **Dependencies**
