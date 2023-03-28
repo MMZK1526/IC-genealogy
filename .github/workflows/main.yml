@@ -43,6 +43,6 @@ jobs:
       - name: Build
         run: |
           cd genealogy-b
-          gradle clean build
+          gradle clean build --info
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
