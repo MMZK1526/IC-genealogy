@@ -1,3 +1,9 @@
+**Notice**
+
+This project was originally a third-year project @ Imperial College London.
+
+We have since stopped paying for the Heroku database, which means all search data will not be cached at the moment, resulting in slower responses.
+
 **Short description**
 
 This is the repository for the Ancesta web app (www.ancesta.uk) that allows to visualise complex family trees of 
